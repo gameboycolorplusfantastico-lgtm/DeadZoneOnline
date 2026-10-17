@@ -265,6 +265,11 @@
     pointer-events:none;transition:opacity .08s;z-index: 15;
   }
 
+  #waterShade{position:absolute;inset:0;z-index:16;pointer-events:none;opacity:0;overflow:hidden;
+    background:linear-gradient(to bottom,rgba(40,140,200,.10) 0%,rgba(30,110,175,.16) 55%,rgba(12,70,135,.34) 100%);}
+  #waterShade::after{content:"";position:absolute;left:-6%;right:-6%;bottom:-6%;height:30%;transform:translateY(var(--wy,0px));
+    background:linear-gradient(to bottom,rgba(150,215,245,.06),rgba(60,150,210,.30) 20%,rgba(12,78,140,.52));
+    border-top:2px solid rgba(190,235,255,.30);border-radius:50% 50% 0 0 / 16px 16px 0 0;}
   #touchLayer{position:absolute;inset:0;z-index:20;display:none;touch-action:none;}
   #joyZone{position:absolute;left:0;bottom:0;width:45%;height:100%;touch-action:none;}
   #lookZone{position:absolute;right:0;bottom:0;width:55%;height:100%;touch-action:none;}
@@ -503,6 +508,12 @@
     color:var(--green);background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.3);
     border-radius:3px;padding:2px 6px;font-size:10.5px;letter-spacing:.5px;white-space:nowrap;
   }
+
+  .controls-scheme-col.active{border-color:var(--cs-y,var(--amber));box-shadow:0 0 0 1px var(--cs-y,var(--amber)) inset;}
+  .ctl-inuse{display:none;float:right;font-size:9px;letter-spacing:1px;padding:1px 6px;border-radius:3px;background:var(--cs-y,var(--amber));color:#000;}
+  .controls-scheme-col.active .ctl-inuse{display:inline-block;}
+  .controls-row{flex-wrap:wrap;}
+  .controls-row .controls-keys{white-space:normal;text-align:right;}
 
   /* In-HUD small gamepad connected badge */
   #gamepadHudBadge{
@@ -931,6 +942,7 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
   .tab-btn{min-width:0;font-size:11px;padding:9px 4px;}
 }
 @media (pointer:coarse){
+  #colTouch{order:-1;}
   #mainMenu .btn{padding-top:11px;padding-bottom:11px;}
   .seg-btn,.tab-btn,.weapon-chip{min-height:42px;}
   .checkbox-label input[type=checkbox]{width:46px;height:26px;}
@@ -943,6 +955,40 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
   content:'';display:block;height:30px;margin:0 auto 4px;background:center/contain no-repeat;filter:drop-shadow(0 1px 2px #000);}
 #dmTeamSeg .seg-btn[data-val="CT"]::before{background-image:url('https://i.postimg.cc/LX40ZNTF/CounterTerroristIcon.webp');}
 #dmTeamSeg .seg-btn[data-val="T"]::before{background-image:url('https://i.postimg.cc/bJYF23Tj/TerroristIcon.webp');}
+
+  /* ===== CHAT DE TEXTO (multiplayer) ===== */
+  #chatBtn{
+    position:absolute;top:8px;right:88px;z-index:35;display:none;
+    width:38px;height:34px;padding:0;font-size:18px;line-height:1;cursor:pointer;
+    background:rgba(0,0,0,.4);border:1px solid rgba(159,227,255,.55);border-radius:4px;color:#fff;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #chatBtn:active{transform:scale(.94);}
+  #chatWrap{
+    position:absolute;left:8px;bottom:calc(16% + 12px);width:min(46%,380px);z-index:35;
+    display:none;flex-direction:column;gap:4px;pointer-events:none;
+    font-family:'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;
+  }
+  #chatLog{display:flex;flex-direction:column;gap:2px;}
+  #chatLog .chat-line{
+    padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.45);color:#fff;
+    font-size:clamp(11px,2.3vh,15px);line-height:1.25;text-shadow:1px 1px 0 #000;word-break:break-word;
+    transition:opacity .8s;
+  }
+  #chatLog .chat-line b{margin-right:5px;}
+  #chatLog .chat-line.old{opacity:0;}
+  #chatInputRow{display:none;gap:4px;pointer-events:auto;}
+  #chatWrap.open #chatInputRow{display:flex;}
+  #chatWrap.open #chatLog .chat-line.old{opacity:1;}
+  #chatInput{
+    flex:1;min-width:0;padding:6px 8px;font-size:16px;color:#fff;
+    background:rgba(0,0,0,.7);border:1px solid rgba(159,227,255,.7);border-radius:4px;outline:none;
+    font-family:inherit;-webkit-user-select:text;user-select:text;
+  }
+  #chatSend{
+    padding:0 10px;font-size:16px;color:#fff;cursor:pointer;
+    background:rgba(20,60,90,.8);border:1px solid rgba(159,227,255,.7);border-radius:4px;
+  }
 
   /* ===== Troca de arma do chão (limite de 2 armas) ===== */
   #swapPrompt{
@@ -975,7 +1021,7 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
   }
   #fireBtn{background-image:url('https://i.postimg.cc/JnZTHSws/HUDMOBILESHOOT.png');width:75px;height:75px;border-width:3px;}
   #reloadBtn{background-image:url('https://i.postimg.cc/G2GMT608/HUDMOBILERELOADING.png');width:58px;height:58px;right:105px;}
-  #swapBtn{background-image:url('https://i.postimg.cc/d1rWZgMy/HUDMOBILESWAP.png');width:58px;height:58px;right:105px;bottom:calc(16% + 90px);}
+  #swapBtn{background-image:url('https://i.postimg.cc/d1rWZgMy/HUDMOBILESWAP.png');width:58px;height:58px;right:190px;bottom:calc(16% + 20px);}
   #fireBtn:active,#reloadBtn:active,#swapBtn:active{
     transform:scale(.94);background-color:rgba(70,185,255,.45);filter:none;
   }
@@ -1014,6 +1060,43 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
     -webkit-tap-highlight-color:transparent;transition:transform .06s,background-color .06s;
   }
   #useBtn:active{transform:scale(.94);background-color:rgba(70,185,255,.45);}
+
+  /* ===== MODO FUTEBOL ===== */
+  #socHud{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:none;display:none;flex-direction:column;align-items:center;gap:3px;font-family:'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;}
+  #socHud .soc-board{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.55);border:1px solid rgba(159,227,255,.55);border-radius:6px;padding:3px 10px;box-shadow:0 0 10px rgba(0,0,0,.45);}
+  #socHud .soc-board img{height:clamp(26px,6.4vh,44px);width:auto;filter:drop-shadow(0 1px 2px #000);}
+  #socHud .soc-score{font-size:clamp(20px,5vh,34px);font-weight:800;color:#fff;text-shadow:0 2px 3px #000;min-width:1ch;text-align:center;}
+  #socHud .soc-x{font-size:clamp(14px,3vh,20px);color:var(--cs-hud,#e8b93a);font-weight:700;}
+  #socHud .soc-clock{font-size:clamp(11px,2.2vh,15px);letter-spacing:1px;color:var(--cs-hud,#e8b93a);background:rgba(0,0,0,.5);padding:1px 8px;border-radius:3px;text-shadow:0 1px 2px #000;}
+  #socHud .soc-clock.golden{color:#ffd54a;animation:socPulse .8s infinite alternate;}
+  @keyframes socPulse{from{opacity:.6}to{opacity:1}}
+  #socGoal{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:31;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 30%,rgba(0,0,0,.45) 100%);font-family:'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;}
+  #socGoal.on{display:flex;animation:socGoalPop .5s ease-out;}
+  #socGoal img{height:clamp(70px,22vh,150px);width:auto;filter:drop-shadow(0 0 18px rgba(255,255,255,.65)) drop-shadow(0 3px 4px #000);}
+  #socGoal .g-txt{font-size:clamp(34px,11vh,86px);font-weight:900;letter-spacing:4px;color:#fff;text-shadow:0 0 22px var(--cs-hud-glow,rgba(232,185,58,.8)),0 4px 0 #000;}
+  #socGoal .g-sub{font-size:clamp(13px,3vh,22px);letter-spacing:2px;color:var(--cs-hud,#e8b93a);text-shadow:0 2px 3px #000;font-weight:700;}
+  @keyframes socGoalPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  #kickBtn,#jumpBtn{
+    position:absolute;width:62px;height:62px;border-radius:50%;
+    background-color:rgba(20,60,90,.45);background-repeat:no-repeat;background-position:center;background-size:62%;
+    border:2px solid var(--cs-hud,#e8b93a);
+    box-shadow:0 0 12px var(--cs-hud-glow,rgba(232,185,58,.45)), inset 0 0 10px rgba(0,0,0,.3);
+    display:none;align-items:center;justify-content:center;z-index:22;pointer-events:auto;touch-action:none;
+    -webkit-tap-highlight-color:transparent;transition:transform .06s,background-color .06s;
+  }
+  #kickBtn{right:20px;bottom:calc(16% + 105px);width:68px;height:68px;background-image:url('https://i.postimg.cc/cJPFv635/HUDMOBILEKICKBALL.png');}
+  #jumpBtn{right:105px;bottom:calc(16% + 90px);background-image:url('https://i.postimg.cc/N0KNGRyq/HUDMOBILEJUMP.png');}
+  body.soc-ui #useBtn{bottom:calc(16% + 185px);}
+  #kickBtn:active,#jumpBtn:active{transform:scale(.94);background-color:rgba(70,185,255,.45);}
+  .club-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .club-chip{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;background:rgba(0,0,0,.5);border:2px solid var(--panel-border);border-radius:5px;color:#bbb;font-family:'Courier New',monospace;font-size:8.5px;cursor:pointer;transition:border-color .15s,box-shadow .15s,color .15s;}
+  .club-chip img{height:34px;width:auto;max-width:100%;object-fit:contain;}
+  .club-chip .chip-dice{font-size:22px;line-height:34px;height:34px;}
+  .club-chip:hover,.club-chip:focus-visible{border-color:#ffd54a;color:#ffd54a;outline:none;}
+  .club-chip.active{border-color:var(--green);color:var(--green);background:rgba(57,255,20,.09);box-shadow:0 0 10px rgba(57,255,20,.55), inset 0 0 0 1px var(--green);}
+  .club-chip.active::after{content:'✔';position:absolute;top:1px;right:4px;font-size:9px;color:var(--green);}
+  .club-chip.disabled{opacity:.35;pointer-events:none;}
+  .club-chip.gp-focus{outline-offset:-3px;}
 
   #fnafHud{position:absolute;top:calc(clamp(90px,17vh,150px) + 24px);left:8px;z-index:30;pointer-events:none;display:none;flex-direction:column;gap:4px;}
   #fnafHud .ctf-row{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.45);border:2px solid var(--panel-border);border-radius:4px;padding:3px 8px;
@@ -1060,11 +1143,20 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
 <div id="game">
   <canvas id="screen"></canvas>
   <div id="damageFlash"></div>
+  <div id="waterShade"></div>
   <div id="minimapWrapper">
     <span class="radar-label">RADAR</span>
     <canvas id="minimap" width="100" height="100"></canvas>
   </div>
   <button id="menuBtn" data-i18n="pause">PAUSA</button>
+  <button id="chatBtn" type="button" aria-label="Chat">💬</button>
+  <div id="chatWrap">
+    <div id="chatLog"></div>
+    <div id="chatInputRow">
+      <input id="chatInput" type="text" maxlength="100" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button id="chatSend" type="button">➤</button>
+    </div>
+  </div>
   <div id="gamepadHudBadge"><span id="gamepadHudBadgeText">CONTROLE CONECTADO</span></div>
   <div id="viewmodelWrapper">
     <img id="viewmodel" src="" alt="Weapon Viewmodel">
@@ -1086,6 +1178,8 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
     <div class="ctf-carry" id="hrCarry"></div>
   </div>
   <div id="fnafHud"></div>
+  <div id="socHud"></div>
+  <div id="socGoal"></div>
   <div id="countdownOverlay">10</div>
 
   <div id="weaponIconBar"></div>
@@ -1128,6 +1222,8 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
     <div id="swapBtn"></div>
     <div id="useBtn"></div>
     <div id="fireBtn"></div>
+    <div id="kickBtn"></div>
+    <div id="jumpBtn"></div>
   </div>
 </div>
 
@@ -1156,6 +1252,7 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
         <button type="button" class="seg-btn" data-val="ctf"><img class="mode-icon" src="https://i.postimg.cc/Hk3w8B8p/IconCTF.png" alt=""><span>CAPTURE THE FLAG</span></button>
         <button type="button" class="seg-btn" data-val="hostage"><img class="mode-icon" src="https://i.postimg.cc/nrkzSwJm/IconHostage.png" alt=""><span>HOSTAGE RESCUE</span></button>
         <button type="button" class="seg-btn" data-val="fnaf"><img class="mode-icon" src="https://i.postimg.cc/pr3xrSgt/Fnaf-Doom-Icon.png" alt=""><span>FNAF DOOM</span></button>
+        <button type="button" class="seg-btn" data-val="soccer"><img class="mode-icon" src="https://i.postimg.cc/CxBDz74H/Icon-Soccermode.png" alt=""><span>FUTEBOL</span></button>
       </div>
       <select id="gameModeSelect" style="display:none">
         <option value="waves">ZOMBIE SURVIVAL</option>
@@ -1164,6 +1261,7 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
         <option value="ctf">CAPTURE THE FLAG</option>
         <option value="hostage">HOSTAGE RESCUE</option>
         <option value="fnaf">FNAF DOOM</option>
+        <option value="soccer">FUTEBOL</option>
       </select>
     </div>
     <div id="gunOptions" style="display:none">
@@ -1274,6 +1372,7 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
         <option value="72">AS_OILRIG</option>
         <option value="73">AS_OILRIG</option>
         <option value="74">FNAF_PIZZERIA</option>
+        <option value="75">ESTADIO_FUTEBOL</option>
       </select>
     </div>
 
@@ -1300,6 +1399,17 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
           <label data-i18n="dmSecondaryLabel">ARMA SECUNDÁRIA (LEVE):</label>
           <div class="weapon-grid" id="dmSecondaryGrid"></div>
         </div>
+      </div>
+    </div>
+
+    <div id="socOptions" style="display:none">
+      <div class="setting-group">
+        <label data-i18n="socHomeLabel">SEU TIME (BRASILEIRÃO):</label>
+        <div class="club-grid" id="socHomeGrid"></div>
+      </div>
+      <div class="setting-group">
+        <label data-i18n="socAwayLabel">ADVERSÁRIO:</label>
+        <div class="club-grid" id="socAwayGrid"></div>
       </div>
     </div>
 
@@ -1402,33 +1512,59 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
         <input type="range" id="gpDeadRange" min="0.05" max="0.40" step="0.01" value="0.18">
       </div>
 
+            <div class="setting-group">
+        <label for="pitchSensRange"><span data-i18n="pitchSensLabel">SENSIBILIDADE VERTICAL (CÂMERA)</span>: <span id="pitchSensVal">1.0</span></label>
+        <input type="range" id="pitchSensRange" min="0.3" max="2.0" step="0.1" value="1.0">
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optInvertY">
+          <span data-i18n="invertYLabel">INVERTER EIXO VERTICAL (OLHAR)</span>
+        </label>
+      </div>
+
       <div class="controls-scheme-grid">
-        <div class="controls-scheme-col">
-          <div class="controls-scheme-title" data-i18n="controlsKbTitle">TECLADO / MOUSE</div>
+        <div class="controls-scheme-col" id="colKb">
+          <div class="controls-scheme-title"><span data-i18n="controlsKbTitle">TECLADO / MOUSE</span><span class="ctl-inuse" data-i18n="ctlInUse">EM USO</span></div>
           <div class="controls-row"><span data-i18n="ctlMove">Mover</span><span class="controls-keys">W A S D</span></div>
-          <div class="controls-row"><span data-i18n="ctlLook">Mirar</span><span class="controls-keys" data-i18n="ctlMouseLook">MOUSE</span></div>
+          <div class="controls-row"><span data-i18n="ctlLookH">Girar (esquerda/direita)</span><span class="controls-keys" data-i18n="ctlKbLookH">MOUSE ↔ / ← →</span></div>
+          <div class="controls-row"><span data-i18n="ctlLookV">Olhar (cima/baixo)</span><span class="controls-keys" data-i18n="ctlKbLookV">MOUSE ↕ / PGUP PGDN</span></div>
+          <div class="controls-row"><span data-i18n="ctlCamCenter">Centralizar câmera</span><span class="controls-keys" data-i18n="ctlKbCenter">C / HOME</span></div>
           <div class="controls-row"><span data-i18n="ctlFire">Atirar</span><span class="controls-keys" data-i18n="ctlMouseClick">CLIQUE ESQ.</span></div>
           <div class="controls-row"><span data-i18n="ctlReload">Recarregar</span><span class="controls-keys">R</span></div>
           <div class="controls-row"><span data-i18n="ctlWeapons">Trocar arma</span><span class="controls-keys">1-9 / 0 / - = [ ]</span></div>
           <div class="controls-row"><span data-i18n="ctlSwap">Trocar arma do chão</span><span class="controls-keys">E</span></div>
+          <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys">F</span></div>
+          <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys">ESPAÇO</span></div>
           <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys">ESC</span></div>
         </div>
-        <div class="controls-scheme-col">
-          <div class="controls-scheme-title" data-i18n="controlsTouchTitle">TOQUE (MOBILE)</div>
+        <div class="controls-scheme-col" id="colTouch">
+          <div class="controls-scheme-title"><span data-i18n="controlsTouchTitle">TOQUE (MOBILE)</span><span class="ctl-inuse" data-i18n="ctlInUse">EM USO</span></div>
           <div class="controls-row"><span data-i18n="ctlMove">Mover</span><span class="controls-keys" data-i18n="ctlTouchStick">ANALÓGICO ESQ.</span></div>
-          <div class="controls-row"><span data-i18n="ctlLook">Mirar</span><span class="controls-keys" data-i18n="ctlTouchSwipe">ARRASTAR DIREITA</span></div>
+          <div class="controls-row"><span data-i18n="ctlLookH">Girar (esquerda/direita)</span><span class="controls-keys" data-i18n="ctlTouchLookH">ARRASTAR ↔ NA DIREITA</span></div>
+          <div class="controls-row"><span data-i18n="ctlLookV">Olhar (cima/baixo)</span><span class="controls-keys" data-i18n="ctlTouchLookV">ARRASTAR ↕ NA DIREITA</span></div>
+          <div class="controls-row"><span data-i18n="ctlCamCenter">Centralizar câmera</span><span class="controls-keys" data-i18n="ctlTouchCenter">2 TOQUES NA DIREITA</span></div>
           <div class="controls-row"><span data-i18n="ctlFire">Atirar</span><span class="controls-keys" data-i18n="ctlTouchFire">BOTÃO TIRO</span></div>
-          <div class="controls-row"><span data-i18n="ctlReload">Recarregar</span><span class="controls-keys">R</span></div>
+          <div class="controls-row"><span data-i18n="ctlReload">Recarregar</span><span class="controls-keys" data-i18n="ctlTouchReload">BOTÃO RECARGA</span></div>
+          <div class="controls-row"><span data-i18n="ctlSwap">Trocar arma do chão</span><span class="controls-keys" data-i18n="ctlTouchSwap">BOTÃO TROCAR</span></div>
+          <div class="controls-row"><span data-i18n="ctlUse">Usar (portas/luzes)</span><span class="controls-keys" data-i18n="ctlTouchUse">BOTÃO USAR</span></div>
+          <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys" data-i18n="ctlTouchKick">BOTÃO CHUTE</span></div>
+          <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys" data-i18n="ctlTouchJump">BOTÃO PULO</span></div>
+          <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys" data-i18n="ctlTouchPause">BOTÃO PAUSA</span></div>
         </div>
-        <div class="controls-scheme-col">
-          <div class="controls-scheme-title" data-i18n="controlsGamepadTitle">XBOX SERIES X / PS4 / PS5</div>
+        <div class="controls-scheme-col" id="colGp">
+          <div class="controls-scheme-title"><span data-i18n="controlsGamepadTitle">XBOX SERIES X / PS4 / PS5</span><span class="ctl-inuse" data-i18n="ctlInUse">EM USO</span></div>
           <div class="controls-row"><span data-i18n="ctlMove">Mover</span><span class="controls-keys" data-i18n="ctlStickL">ANALÓGICO ESQ.</span></div>
-          <div class="controls-row"><span data-i18n="ctlLook">Mirar</span><span class="controls-keys" data-i18n="ctlStickR">ANALÓGICO DIR.</span></div>
+          <div class="controls-row"><span data-i18n="ctlLookH">Girar (esquerda/direita)</span><span class="controls-keys" data-i18n="ctlGpLookH">ANALÓGICO DIR. ↔</span></div>
+          <div class="controls-row"><span data-i18n="ctlLookV">Olhar (cima/baixo)</span><span class="controls-keys" data-i18n="ctlGpLookV">ANALÓGICO DIR. ↕</span></div>
+          <div class="controls-row"><span data-i18n="ctlCamCenter">Centralizar câmera</span><span class="controls-keys" data-i18n="ctlGpCenter">R3 / CLICAR ANALÓGICO DIR.</span></div>
           <div class="controls-row"><span data-i18n="ctlFire">Atirar</span><span class="controls-keys" data-i18n="ctlRT">RT / R2</span></div>
           <div class="controls-row"><span data-i18n="ctlReload">Recarregar</span><span class="controls-keys" data-i18n="ctlX">X / □</span></div>
           <div class="controls-row"><span data-i18n="ctlWeapons">Trocar arma</span><span class="controls-keys" data-i18n="ctlBumpers">LB/RB · L1/R1</span></div>
           <div class="controls-row"><span data-i18n="ctlQuick">Arma anterior</span><span class="controls-keys">Y / △</span></div>
           <div class="controls-row"><span data-i18n="ctlSwap">Trocar arma do chão</span><span class="controls-keys">A / ✕</span></div>
+          <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys">B / ○</span></div>
+          <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys">A / ✕</span></div>
           <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys" data-i18n="ctlStart">START / OPTIONS</span></div>
           <div class="controls-row"><span data-i18n="ctlMenuNav">Navegar nos menus</span><span class="controls-keys">D-PAD / L-STICK</span></div>
           <div class="controls-row"><span data-i18n="ctlMenuOk">Confirmar</span><span class="controls-keys">A / ✕</span></div>
@@ -1539,6 +1675,8 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
             <button type="button" id="dbgTpPick" class="btn btn-secondary" data-i18n="tpPick">PICKUPS / ARMAS</button>
             <button type="button" id="dbgTpInter" class="btn btn-secondary" data-i18n="tpInter">INTERAÇÕES</button>
             <button type="button" id="dbgTpAudio" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="tpAudio">ÁUDIO / SONS</button>
+            <button type="button" id="dbgTpSoc" class="btn btn-secondary" data-i18n="tpSoc">FUTEBOL</button>
+            <button type="button" id="dbgTpWater" class="btn btn-secondary" data-i18n="tpWater">ÁGUA</button>
           </div>
         </div>
         <div class="setting-group">
@@ -1559,6 +1697,7 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
 
     <div class="modal-footer-actions">
       <button id="applySettingsBtn" class="btn" data-i18n="apply">APLICAR</button>
+      <button id="resetSettingsBtn" class="btn btn-secondary" data-i18n="resetSettings">↺ RESTAURAR PADRÃO</button>
       <button id="backToMenuFromSettingsBtn" class="btn btn-secondary" data-i18n="mainMenuBtn">MENU PRINCIPAL</button>
       <button id="closeSettingsBtn" class="btn btn-secondary" data-i18n="back">VOLTAR</button>
     </div>
@@ -1649,7 +1788,8 @@ const MODE_ICONS = {
   deathmatch: 'https://i.postimg.cc/7ZX3JmJq/IconDeath.png',
   ctf:        'https://i.postimg.cc/Hk3w8B8p/IconCTF.png',
   hostage:    'https://i.postimg.cc/nrkzSwJm/IconHostage.png',
-  fnaf:       'https://i.postimg.cc/pr3xrSgt/Fnaf-Doom-Icon.png'
+  fnaf:       'https://i.postimg.cc/pr3xrSgt/Fnaf-Doom-Icon.png',
+  soccer:     'https://i.postimg.cc/CxBDz74H/Icon-Soccermode.png'
 };
 Object.values(MODE_ICONS).forEach(url => {
   const done = AssetLoader.track();
@@ -1757,6 +1897,22 @@ const HOST_CT_URLS = ['https://file.garden/aoj4oJPXcy0zW16k/hostct1.wav','https:
 const HOST_T_URLS  = ['https://file.garden/aoj4oJPXcy0zW16k/hostt1.wav','https://file.garden/aoj4oJPXcy0zW16k/hostt2.wav','https://file.garden/aoj4oJPXcy0zW16k/hostt3.wav'];
 const ZOMBIE_START_URL = 'https://file.garden/aoj4oJPXcy0zW16k/zombiestart.mp3';   // música completa de abertura do modo Zumbi
 const ZOMBIE_START_FADE = 4;                      // segundos finais em que a música de fundo entra em fade in
+
+// ===== Áudios exclusivos do modo Futebol =====
+const SOC_AUDIO_BASE = 'https://file.garden/aoj4oJPXcy0zW16k/';
+const SOC_KICK_URLS   = [1, 2, 3, 4, 5].map(i => SOC_AUDIO_BASE + 'ballkick' + i + '.wav');   // chutes na bola
+const SOC_WHISTLE_URLS = { start: SOC_AUDIO_BASE + 'apito1.wav', end: SOC_AUDIO_BASE + 'apito2.wav' };   // apito: início / fim
+const SOC_CROWD_URL   = SOC_AUDIO_BASE + 'backgroundsoccermode.wav';   // torcida constante (loop)
+const SOC_REACT_URLS  = { goal: SOC_AUDIO_BASE + 'backgroundgoal.wav', miss: SOC_AUDIO_BASE + 'backgroundmiss.wav' };   // reações da torcida
+
+// ===== Água: sons e estado =====
+const WATER_AUDIO_BASE = 'https://file.garden/aoj4oJPXcy0zW16k/';
+const WATER_JUMP_URLS = [1, 2].map(i => WATER_AUDIO_BASE + 'WaterJump0' + i + '.wav');   // entrar / sair da água
+const WATER_RUN_URLS  = [1, 2, 3, 4].map(i => WATER_AUDIO_BASE + 'WaterRun0' + i + '.wav');   // correndo em água rasa
+const WATER_SWIM_URLS = [1, 2, 3, 4, 5, 6, 7].map(i => WATER_AUDIO_BASE + 'Swim0' + i + '.wav');   // nadando (água funda)
+const WATER_TEX_IDX = 12;   // índice da textura da água em TEX_FLOOR_URLS
+// state: 0 seco · 1 raso (anda no fundo) · 2 fundo (flutua/nada). mix = quanto a câmera já está "boiando" (0..1)
+const WATER = { on: false, state: 0, shallowRun: false, mix: 0, off: 0, applied: 0, bob: 0, fl: 0, surfZ: 0, lastBase: null, lastTotal: 0, initDone: false, lastSplash: -1e9 };
 
 const SFX = (function(){
   let ctx = null;
@@ -1872,6 +2028,8 @@ const SFX = (function(){
   // Pré-carrega todos os áudios de armas assim que possível.
   Object.values(WEAPON_SOUND_URLS).forEach(url=>getAudio(url));
   getAudio(RELOAD_SOUND_URL);
+  SOC_KICK_URLS.forEach(u => getAudio(u));
+  Object.values(SOC_WHISTLE_URLS).forEach(u => getAudio(u));
   getAudio(EMPTY_SOUND_URL);
   getAudio(ZUMBI_CAIR_URL);
   getAudio(ZUMBI_GRITO_URL);
@@ -2132,7 +2290,15 @@ const SFX = (function(){
 
   // Passos do jogador: alterna entre os 3 clipes de andar disponíveis
   let footstepIdx = 0;
+  const lastWIdx = {}; let lastSwimAt = 0;
+  function pickW(arr, key){ let i; do { i = Math.floor(Math.random() * arr.length); } while(arr.length > 1 && i === lastWIdx[key]); lastWIdx[key] = i; return arr[i]; }
+  function waterJump(){ playClip(pickW(WATER_JUMP_URLS, 'j'), 0.75, 'dmg'); }   // entrar / sair da água
   function footstep(){
+    if(WATER.state === 2){   // nadando: braçada a cada ~0,6 s
+      const n = performance.now(); if(n - lastSwimAt < 620) return; lastSwimAt = n;
+      playClip(pickW(WATER_SWIM_URLS, 's'), 0.55, 'dmg'); return;
+    }
+    if(WATER.state === 1 && WATER.shallowRun){ playClip(pickW(WATER_RUN_URLS, 'r'), 0.55, 'dmg'); return; }   // água rasa (só nos mapas/áreas com essa opção)
     const url = ANDAR_URLS[footstepIdx % ANDAR_URLS.length];
     footstepIdx++;
     playClip(url, 0.5, 'dmg');          // passos do jogador: livres (sobrepõem), sempre no mesmo volume
@@ -2335,6 +2501,7 @@ const SFX = (function(){
   function setVolume(v){
     if(master) master.gain.value = Math.max(0, Math.min(1, v));
     clipVolume = Math.max(0, Math.min(1, v));
+    crowdApply();
   }
 
   // Controle da música de fundo do jogo
@@ -2353,6 +2520,7 @@ const SFX = (function(){
     }
   }
   function stopMusic(){
+    if(!crowdFading) crowdHardStop();   // torcida do Futebol só continua se estiver no fade final
     testAudioStop(true);
     [musicEl, dmMusicEl, zIntroEl, fnafAmbEl].forEach(m => { if(m){ m.pause(); m.currentTime = 0; } });
     stopFnafSteps();
@@ -2363,10 +2531,12 @@ const SFX = (function(){
     activeMusic = null;
   }
   function pauseMusic(){
+    socCrowdPause();
     if(activeMusic && !activeMusic.paused) activeMusic.pause();
     if(zIntroEl && zIntroEl.dataset.on === '1' && !zIntroEl.paused) zIntroEl.pause();
   }
   function resumeMusic(){
+    socCrowdResume();
     if(activeMusic && activeMusic.paused && enabled){
       const p = activeMusic.play();
       if(p && p.catch) p.catch(()=>{});
@@ -2471,7 +2641,91 @@ const SFX = (function(){
     testMusicStop(!noResume);
   }
 
-  return { unlock, testClip, testMusic, testMusicOn, testStop: ()=>testAudioStop(false), shoot, botShoot, noAmmo, reloadStart, reloadDone, hit, kill, hurt, zombieScream, pickupAmmo, pickupHealth, pickupWeapon, menuAccept, menuBack, menuSelect, footstep, gameOverJingle, victoryJingle, waveStart, gameStartGeneric, modeStart, modeOver, teamWin, botPain, gunShell, hostageCT, hostageT, botFootstep, fnafAmbient, fnafQuote, fnafDoor, fnafJumpscare, fnafPowerDown, fnafEnergyZero, fnafLaugh, fnafWindowScare, fnafKeepAmbient, fnafStopAmbient, fnafStopLoops, fnafRobotStep, fnafClick, fnafDeny, fnafSixAM, fnafGameOver, zombieStart, stopModeOver, releaseEnd, setEnabled, setVolume, playMusic, stopMusic, pauseMusic, resumeMusic, setMusicVolume, playMenuMusic, stopMenuMusic };
+  // ----- Futebol: chutes, apitos, torcida de fundo e reações -----
+  let lastKickIdx = -1;
+  function socKick(vol, synth){
+    const v = (vol === undefined ? 1 : vol);
+    if(!synth && enabled && !endLock){
+      let i;
+      do { i = Math.floor(Math.random() * SOC_KICK_URLS.length); } while(i === lastKickIdx && SOC_KICK_URLS.length > 1);
+      lastKickIdx = i;
+      if(playClip(SOC_KICK_URLS[i], Math.max(0.15, Math.min(1, v)), 'dmg')) return;
+    }
+    socKickSynth(v);
+  }
+  function socKickSynth(v){ playTone({freq:190, freqEnd:55, duration:0.12, volume:0.55*v, type:'sine', dmg:true}); playNoise({dmg:true, duration:0.06, volume:0.2*v, filterType:'lowpass', filterFreq:1100, q:0.7}); }
+  function socGoal(){ socReact('goal'); }
+  // Apito (kind = 'start' | 'end'): toca solto, sem ser cortado pela sequência de fim de partida
+  function socWhistle(kind){
+    if(!enabled) return;
+    try{
+      const node = getAudio(SOC_WHISTLE_URLS[kind === 'end' ? 'end' : 'start']).cloneNode();
+      node.volume = Math.max(0, Math.min(1, clipVolume));
+      const p = node.play(); if(p && p.catch) p.catch(()=>{});
+    }catch(e){}
+  }
+  // Torcida de fundo: loop contínuo cujo volume acompanha o "nível" pedido pelo jogo (começa baixo e abaixa no fim da partida).
+  // Durante uma reação (gol / quase gol) ela é abafada para a reação aparecer.
+  let crowdEl = null, crowdWanted = false, crowdLevel = 0.25, crowdTarget = 0.25, crowdDuck = 1, crowdDuckTarget = 1;
+  let crowdStopAt = 0, crowdFading = false, crowdTick = null, reactEl = null, reactKind = '';
+  function crowdApply(){
+    if(!crowdEl) return;
+    crowdEl.volume = Math.max(0, Math.min(1, clipVolume * 0.7 * crowdLevel * crowdDuck));
+  }
+  function crowdLoop(){
+    const k = 0.12;
+    crowdLevel += (crowdTarget - crowdLevel) * k;
+    crowdDuck += (crowdDuckTarget - crowdDuck) * 0.2;
+    crowdApply();
+    if(crowdFading && (performance.now() >= crowdStopAt || crowdLevel < 0.01)) crowdHardStop();
+  }
+  function crowdHardStop(){
+    crowdWanted = false; crowdFading = false;
+    if(crowdTick){ clearInterval(crowdTick); crowdTick = null; }
+    if(crowdEl){ try{ crowdEl.pause(); crowdEl.currentTime = 0; }catch(e){} }
+    if(reactEl){ try{ reactEl.pause(); }catch(e){} reactEl = null; }
+    crowdDuck = crowdDuckTarget = 1;
+  }
+  function socCrowdStart(){
+    crowdHardStop();
+    if(!enabled) return;
+    if(!crowdEl){ crowdEl = new Audio(SOC_CROWD_URL); crowdEl.loop = true; crowdEl.preload = 'auto'; }
+    crowdWanted = true; crowdFading = false; crowdLevel = crowdTarget = 0.25;
+    try{ crowdEl.currentTime = 0; }catch(e){}
+    crowdApply();
+    const p = crowdEl.play(); if(p && p.catch) p.catch(()=>{});
+    crowdTick = setInterval(crowdLoop, 100);
+  }
+  function socCrowdSet(level){ if(crowdWanted && !crowdFading) crowdTarget = Math.max(0, Math.min(1, level)); }
+  // fadeSec = 0: para na hora; senão abaixa lentamente até sumir (stopMusic() não corta durante o fade)
+  function socCrowdStop(fadeSec){
+    if(!crowdWanted) return;
+    if(!fadeSec){ crowdHardStop(); return; }
+    crowdFading = true; crowdTarget = 0; crowdStopAt = performance.now() + fadeSec * 1000 + 300;
+  }
+  // Reação da torcida ('goal' | 'miss'): abafa a torcida de fundo e toca a reação por cima. Gol substitui um "quase".
+  function socReact(kind){
+    if(!enabled || !crowdWanted || crowdFading) return;
+    if(reactEl && !reactEl.paused && !reactEl.ended){
+      if(kind !== 'goal' || reactKind === 'goal') return;
+      try{ reactEl.pause(); }catch(e){}
+    }
+    try{
+      const a = new Audio(SOC_REACT_URLS[kind]);
+      a.volume = Math.max(0, Math.min(1, clipVolume));
+      reactEl = a; reactKind = kind; crowdDuckTarget = 0.18;
+      const done = () => { if(reactEl === a){ reactEl = null; crowdDuckTarget = 1; } };
+      a.addEventListener('ended', done); a.addEventListener('error', done); a.addEventListener('pause', done);
+      const p = a.play(); if(p && p.catch) p.catch(done);
+    }catch(e){ crowdDuckTarget = 1; }
+  }
+  function socCrowdPause(){ if(crowdEl && !crowdEl.paused) crowdEl.pause(); if(reactEl && !reactEl.paused) reactEl.pause(); }
+  function socCrowdResume(){
+    if(!enabled || !crowdWanted) return;
+    if(crowdEl && crowdEl.paused){ const p = crowdEl.play(); if(p && p.catch) p.catch(()=>{}); }
+    if(reactEl && reactEl.paused && !reactEl.ended){ const p2 = reactEl.play(); if(p2 && p2.catch) p2.catch(()=>{}); }
+  }
+  return { waterJump, socKick, socGoal, socWhistle, socCrowdStart, socCrowdSet, socCrowdStop, socReact, unlock, testClip, testMusic, testMusicOn, testStop: ()=>testAudioStop(false), shoot, botShoot, noAmmo, reloadStart, reloadDone, hit, kill, hurt, zombieScream, pickupAmmo, pickupHealth, pickupWeapon, menuAccept, menuBack, menuSelect, footstep, gameOverJingle, victoryJingle, waveStart, gameStartGeneric, modeStart, modeOver, teamWin, botPain, gunShell, hostageCT, hostageT, botFootstep, fnafAmbient, fnafQuote, fnafDoor, fnafJumpscare, fnafPowerDown, fnafEnergyZero, fnafLaugh, fnafWindowScare, fnafKeepAmbient, fnafStopAmbient, fnafStopLoops, fnafRobotStep, fnafClick, fnafDeny, fnafSixAM, fnafGameOver, zombieStart, stopModeOver, releaseEnd, setEnabled, setVolume, playMusic, stopMusic, pauseMusic, resumeMusic, setMusicVolume, playMenuMusic, stopMenuMusic };
 })();
 
 function loadTexture(key, url) {
@@ -2508,7 +2762,8 @@ const TEX_FLOOR_URLS = [
   'https://i.postimg.cc/W1sMQjVt/Wood-25-512x512.png',    // 8 madeira 25
   'https://i.postimg.cc/t7Qsddq4/Dirt-09-512x512.png',    // 9 terra 09
   'https://i.postimg.cc/nMbXKKFr/Dirt-10-512x512.png',    // 10 terra 10
-  'https://i.postimg.cc/4nkYvvfh/Dirt-12-512x512.png'     // 11 terra 12
+  'https://i.postimg.cc/4nkYvvfh/Dirt-12-512x512.png',    // 11 terra 12
+  'https://i.postimg.cc/GpJjf5gV/AGUA.jpg'       // 12 água
 ];
 const TEX_WALL_URLS = [
   'https://i.postimg.cc/q7jCfCLx/Bricks-08-512x512.png',  // 0 tijolo 08
@@ -2603,8 +2858,19 @@ const DOOR_URLS = [
   'https://i.postimg.cc/XqmyXSG1/Door-2.png',    // 2
   'https://i.postimg.cc/cC286yg2/Door-5.png',    // 3
   'https://i.postimg.cc/fyp0knSn/Door-6.png',    // 4
-  'https://i.postimg.cc/N0XNvzxB/FNAFDOOR.png'   // 5 — porta do modo FNAF Doom
+  'https://i.postimg.cc/N0XNvzxB/FNAFDOOR.png',  // 5 — porta do modo FNAF Doom
+  'https://i.postimg.cc/NMfjrfwk/Soccer-Ad1.webp',   // 6 — patrocinador (Futebol)
+  'https://i.postimg.cc/vBHZ6Hdh/Soccer-Ad2.png',   // 7 — patrocinador (Futebol)
+  'https://i.postimg.cc/Jn4zB4WN/Soccer-Ad3.jpg',   // 8 — patrocinador (Futebol)
+  'https://i.postimg.cc/k4XgtXdK/Soccer-Ad4.jpg',   // 9 — patrocinador (Futebol)
+  'https://i.postimg.cc/50N2FNMz/Soccer-Ad5.jpg',   // 10 — patrocinador (Futebol)
+  'https://i.postimg.cc/vBHZ6Hd5/Soccer-Ad6.jpg',   // 11 — patrocinador (Futebol)
+  'https://i.postimg.cc/mD2gF2GV/Soccer-Ad7.png',   // 12 — patrocinador (Futebol)
+  'https://i.postimg.cc/k4XgtXdN/Soccer-Ad8.png',   // 13 — patrocinador (Futebol)
+  'https://i.postimg.cc/tTC4VCHh/Soccer-Ad9.png',   // 14 — patrocinador (Futebol)
+  'https://i.postimg.cc/k4VV1Fj5/Soccer-Ad10.png',   // 15 — patrocinador (Futebol)
 ];
+const DOOR_AD_FROM = 6;   // a partir daqui são anúncios: mantêm a proporção e não ocupam a parede inteira
 const doorSets = DOOR_URLS.map(() => null);
 DOOR_URLS.forEach((url, i) => {
   const done = AssetLoader.track();
@@ -2615,8 +2881,15 @@ DOOR_URLS.forEach((url, i) => {
       const c = document.createElement('canvas');
       c.width = TEX_SIZE; c.height = TEX_SIZE;
       const cx = c.getContext('2d');
-      cx.drawImage(img, 0, 0, TEX_SIZE, TEX_SIZE);
-      const frac = Math.max(0.45, Math.min(1, (img.naturalWidth || 1) / (img.naturalHeight || 1)));
+      let frac;
+      if (i >= DOOR_AD_FROM) {
+        const iw = img.naturalWidth || 1, ih = img.naturalHeight || 1, sc = Math.min(TEX_SIZE * 0.94 / iw, TEX_SIZE * 0.9 / ih);
+        cx.drawImage(img, (TEX_SIZE - iw * sc) / 2, (TEX_SIZE - ih * sc) / 2, iw * sc, ih * sc);
+        frac = 1;
+      } else {
+        cx.drawImage(img, 0, 0, TEX_SIZE, TEX_SIZE);
+        frac = Math.max(0.45, Math.min(1, (img.naturalWidth || 1) / (img.naturalHeight || 1)));
+      }
       doorSets[i] = { data: cx.getImageData(0, 0, TEX_SIZE, TEX_SIZE).data, frac };
     } catch(e) {}
     done();
@@ -2645,6 +2918,7 @@ const STYLES = {
   PRISON:     { fo: [5, 2, 9],   fi: [5, 2],  w: [5, 7, 6, 4],  c: [3, 1], lt: [5, 0.8], s: [0, 4, 5],          d: [4, 3],    doorP: 0.07, winP: 0.06 },
   FNAF:       { fo: [4, 3],      fi: [4, 3],  w: [7, 1, 8],     c: [3],    lt: null,     s: [4],                d: [],        doorP: 0,    winP: 0 }
 };
+STYLES.SOCCER = { fo: [0, 1, 0], fi: [0, 1], w: [5, 7, 5], c: [3], lt: null, s: [0, 1, 2, 3], d: [], doorP: 0, winP: 0 };
 const TEST_STYLE = { fo: [3], fi: [3], w: [7], c: [1], lt: null, s: [0], d: [], doorP: 0, winP: 0 };
 const LEVEL_THEMES = {};
 function setStyle(idxs, name) { idxs.forEach(i => { LEVEL_THEMES[i] = STYLES[name]; }); }
@@ -2928,6 +3202,46 @@ Object.values(ctfImgs).forEach(entry => {
 document.getElementById('ctfImgT').src  = MODE_ICONS.ctf;   // HUD do CTF usa o ícone do modo
 document.getElementById('ctfImgCT').src = MODE_ICONS.ctf;
 
+// ===== MODO FUTEBOL (BRASILEIRÃO): clubes, escudos, sprites dos bots, bola e rede =====
+// k = chave interna · n = nome no menu · s = sigla · shield = escudo (menu, HUD e placar do estádio) · bot = sprite dos jogadores
+const SOC_CLUBS = [
+  { k: 'flamengo',      n: 'FLAMENGO',      s: 'FLA', shield: 'https://i.postimg.cc/hPbn0JB4/Flamengo-Escudo.webp',     bot: 'https://i.postimg.cc/fbVHWYV6/FLAB.png' },
+  { k: 'fluminense',    n: 'FLUMINENSE',    s: 'FLU', shield: 'https://i.postimg.cc/gkqpKwP1/Fluminense-Escudo.webp',   bot: 'https://i.postimg.cc/0Nzt57zd/FLUB.png' },
+  { k: 'vasco',         n: 'VASCO',         s: 'VAS', shield: 'https://i.postimg.cc/SN74GXhK/Vasco-Escudo.webp',        bot: 'https://i.postimg.cc/zfydDTyj/VASB.png' },
+  { k: 'botafogo',      n: 'BOTAFOGO',      s: 'BOT', shield: 'https://i.postimg.cc/rFCT9dk8/Botafogo-Escudo.webp',     bot: 'https://i.postimg.cc/s2Mnf5MY/BOTB.png' },
+  { k: 'palmeiras',     n: 'PALMEIRAS',     s: 'PAL', shield: 'https://i.postimg.cc/J4c8QyLn/Palmeiras-Escudo.webp',    bot: 'https://i.postimg.cc/s2Mnf5M4/PALB.png' },
+  { k: 'corinthians',   n: 'CORINTHIANS',   s: 'COR', shield: 'https://i.postimg.cc/wTczktpM/Corinthians-Escudo.webp',  bot: 'https://i.postimg.cc/R0WPCwWk/CORB.png' },
+  { k: 'saopaulo',      n: 'SÃO PAULO',     s: 'SAO', shield: 'https://i.postimg.cc/65LKh7Xp/Sao-Paulo-Escudo.webp',    bot: 'https://i.postimg.cc/wB1WxD1F/SAOB.png' },
+  { k: 'santos',        n: 'SANTOS',        s: 'SAN', shield: 'https://i.postimg.cc/15ZP6GLs/Santos-Escudo.webp',       bot: 'https://i.postimg.cc/DzSCf1SB/SANB.png' },
+  { k: 'cruzeiro',      n: 'CRUZEIRO',      s: 'CRU', shield: 'https://i.postimg.cc/02dvC6s2/Cruzeiro-Escudo.webp',     bot: 'https://i.postimg.cc/vm4P854k/CRUB.png' },
+  { k: 'atleticomg',    n: 'ATLÉTICO-MG',   s: 'ATL', shield: 'https://i.postimg.cc/DydhcWT7/Atletico-MGEscudo.webp',   bot: 'https://i.postimg.cc/7L5BPS5c/ATLB.png' },
+  { k: 'gremio',        n: 'GRÊMIO',        s: 'GRE', shield: 'https://i.postimg.cc/vHLyv1dj/Gremio-Escudo.webp',       bot: 'https://i.postimg.cc/fbVHWYV2/GREB.png' },
+  { k: 'internacional', n: 'INTERNACIONAL', s: 'INT', shield: 'https://i.postimg.cc/RVQmT3zj/Internacional-Escudo.webp', bot: 'https://i.postimg.cc/Xvr2N9r2/INTB.png' }
+];
+const SOC_BALL_URL = 'https://i.postimg.cc/pVSPs9yy/Bola-Fut.png';       // BolaFutebol
+const SOC_POST_URL = 'https://i.postimg.cc/d1zhzkXQ/Travegol.jpg';       // Travegol: trave, travessão (renderizado como parede)
+const SOC_NET_URL  = 'https://i.postimg.cc/3xR3FrfM/Redegol.png';        // Redegol: rede (renderizada como parede)
+function socLoadImg(url){
+  const e = { img: new Image(), loaded: false, url };
+  const done = AssetLoader.track();
+  e.img.crossOrigin = 'anonymous';
+  e.img.onload = () => { e.loaded = true; done(); };
+  e.img.onerror = done;
+  e.img.src = url;
+  return e;
+}
+const socShieldImgs = {}, socBotImgs = {};
+SOC_CLUBS.forEach(c => { socShieldImgs[c.k] = socLoadImg(c.shield); socBotImgs[c.k] = socLoadImg(c.bot); });
+const socBallImg = socLoadImg(SOC_BALL_URL);
+const socPostImg = socLoadImg(SOC_POST_URL);
+const socNetImg = socLoadImg(SOC_NET_URL);
+
+// Estado do modo (declarado aqui no começo para as funções do jogo poderem consultá-lo a qualquer momento)
+let soc = null;                                       // partida em andamento (null fora do modo Futebol)
+const socJump = { z: 0, v: 0, applied: 0 };           // pulo do jogador (altura da câmera)
+const socPick  = { home: 'flamengo', away: 'random' }; // escolha no menu
+const socMatch = { home: 'flamengo', away: 'vasco' };  // times efetivos da partida (já sorteados)
+
 // Texturas dos reféns do modo Hostage Rescue (0-3 masculinos, 4-7 femininos)
 const HOSTAGE_URLS = [
   "https://i.postimg.cc/4yPBBZ2W/HOSTAGEM1.png",
@@ -3010,7 +3324,7 @@ const I18N = {
     menuSub: "SELECIONE UMA OPÇÃO PARA COMEÇAR", selectLevel: "JOGAR", fullscreen: "TELA CHEIA",
     selectLevelTitle: "CONFIGURAR PARTIDA", modeLabel: "MODO DE JOGO:", play: "JOGAR", mainMenuBtn: "MENU PRINCIPAL",
     settings: "CONFIGURAÇÕES", settingsTitle: "CONFIGURAÇÕES DE JOGO", langLabel: "IDIOMA / LANGUAGE:", 
-    levelLabel: "SELECIONAR MAPA:", sensLabel: "SENSIBILIDADE DA MIRA", apply: "✓ APLICAR", back: "← VOLTAR",
+    levelLabel: "SELECIONAR MAPA:", sensLabel: "SENSIBILIDADE DA MIRA", apply: "✓ APLICAR", back: "← VOLTAR", resetSettings: "↺ RESTAURAR PADRÃO", resetSettingsDone: "CONFIGURAÇÕES RESTAURADAS PARA O PADRÃO",
     youDied: "VOCÊ MORREU", retry: "TENTAR NOVAMENTE",
     fullAmmo: "MUNIÇÃO CHEIA", reloading: "RECARREGANDO...", reloaded: "RECARREGADO",
     noReload: "ESTA ARMA NÃO RECARREGA!",
@@ -3039,7 +3353,7 @@ const I18N = {
     lvl15Desc: "Estilo Vertigo: topo de arranha-céu com sites elevados, plataforma central em degraus e vãos nos cantos.",
     lvl16Desc: "Ilhas elevadas cercadas por abismo, ligadas por pontes estreitas.",
     lvl17Desc: "Crista elevada e comprida com linhas de tiro longas e pouca cobertura.",
-    lvlTestDesc: "Laboratório de testes: todas as texturas (pisos, tetos, paredes, portas, janelas), elevação (escadas, rampa, poço, espiral), skins, pickups, armas e itens de interação.",
+    lvlTestDesc: "Laboratório de testes: todas as texturas (pisos, tetos, paredes, portas, janelas), elevação (escadas, rampa, poço, espiral), skins, pickups, armas, itens de interação, campo de futebol (gols, bola, clubes, patrocinadores) e água (rasa e profunda).",
     lvl18: "DE_RIALTO", lvl19: "CS_BAGGAGE", lvl20: "CS_AGENCY", lvl21: "CS_MILITIA",
     lvl18Desc: "Praça aberta com barracas e muros baixos. Lados T (oeste) e CT (leste).",
     lvl19Desc: "Armazém com fileiras de caixotes e corredores largos. Combate de média distância.",
@@ -3063,7 +3377,7 @@ const I18N = {
     lvl34Desc: "Salas e corredores ligados por portas largas. Combate em curta e média distância.",
     lvl35Desc: "Pirâmide central escalonada com pilares ao redor. Disputa pelo alto.",
     lvl36Desc: "Colunas em grade num salão baixo e largo. Cobertura por todo lado.",
-    lvl37Desc: "Abismo central cruzado por 3 pontes. Cair é rápido, voltar custa tempo.",
+    lvl37Desc: "Rio profundo no centro cruzado por 3 pontes. Dá para nadar, mas voltar custa tempo.",
     lvl38Desc: "Réplica do Dust 2: Long A a leste, Meio no centro, Túneis do B a oeste. T ao sul, CT ao norte.",
     lvl39Desc: "Dust 2 para Zombie Survival e Gun Game. Comece no spawn T e explore Long, Meio e Túneis.",
     lvl40Desc: "Estilo Inferno: Banana curva a oeste, Meio no centro e Apartamentos a leste. Site B ao noroeste, site A ao leste. (Deathmatch)",
@@ -3101,6 +3415,8 @@ const I18N = {
     lvl72: "AS_OILRIG", lvl72Desc: "Estilo Oilrig (CS): plataforma de petróleo. Os reféns estão no alojamento central, no convés elevado. Os CT resgatam na doca oeste.",
     lvl73: "AS_OILRIG", lvl73Desc: "Estilo Oilrig (CS): plataforma com módulos nos cantos e alojamento central em convés elevado. T a oeste, CT a leste. (Deathmatch / CTF)",
     lvl74: "FNAF_PIZZERIA", lvl74Desc: "Pizzaria do Freddy: sobreviva da meia-noite às 6 AM. Feche as portas, use as luzes do corredor e economize energia. Armas e munição escassas.",
+    lvl75: "ESTADIO_FUTEBOL", lvl75Desc: "Estádio exclusivo do modo Futebol: gramado com dois gols. Chute a bola (F) e faça gols — todos com a Desert Eagle.",
+    socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
     gunFoeLabel: "CONTRA:", gunFoeZombies: "ZUMBIS", gunFoeBots: "BOTS",
     dmPrimaryLabel: "ARMA PRINCIPAL (PESADA):", dmSecondaryLabel: "ARMA SECUNDÁRIA (LEVE):", dmRandomWeapon: "ALEATÓRIA",
@@ -3110,13 +3426,13 @@ const I18N = {
     showFpsLabel: "MOSTRAR FPS", showMinimapLabel: "MOSTRAR MINIMAPA (RADAR)", viewBobLabel: "BALANÇO DA ARMA / CÂMERA",
     dbgOneShot: "Matar com 1 tiro", dbgTileInfo: "Info na tela (piso, teto, parede, alvo)", dbgNoCeiling: "Remover teto (mostrar céu)",
     dbgSpeedLabel: "VELOCIDADE DO JOGADOR", dbgFogLabel: "ALCANCE DE VISÃO (NEBLINA)", dbgSkyLabel: "CÉU (SKYBOX):",
-    dbgTeleportLabel: "TELEPORTE (MAPA DE TESTES):", tpTex: "TEXTURAS", tpHub: "CORREDOR", tpElev: "ELEVAÇÃO", tpSkins: "SKINS / ALVOS", tpPick: "PICKUPS / ARMAS", tpInter: "INTERAÇÕES", tpAudio: "ÁUDIO / SONS",
+    dbgTeleportLabel: "TELEPORTE (MAPA DE TESTES):", tpTex: "TEXTURAS", tpHub: "CORREDOR", tpElev: "ELEVAÇÃO", tpSkins: "SKINS / ALVOS", tpPick: "PICKUPS / ARMAS", tpInter: "INTERAÇÕES", tpAudio: "ÁUDIO / SONS", tpSoc: "FUTEBOL", tpWater: "ÁGUA",
     dbgToolsLabel: "FERRAMENTAS:", dbgRespawn: "RENASCER ALVOS", dbgKillAll: "ELIMINAR TODOS", dbgSpawnZombie: "+ ZUMBI", dbgHeal: "CURAR + MUNIÇÃO", dbgSpawnT: "+ BOT T", dbgSpawnCT: "+ BOT CT", dbgResetMap: "REINICIAR MAPA",
     tabAudio: "ÁUDIO", sfxVolumeLabel: "VOLUME DOS EFEITOS", musicVolumeLabel: "VOLUME DA MÚSICA",
     gamepadNone: "NENHUM CONTROLE CONECTADO", gamepadConnected: "CONTROLE CONECTADO",
     controlsKbTitle: "TECLADO / MOUSE", controlsTouchTitle: "TOQUE (MOBILE)", controlsGamepadTitle: "XBOX SERIES X / PS4 / PS5",
-    ctlMove: "Mover", ctlLook: "Mirar", ctlFire: "Atirar", ctlReload: "Recarregar", ctlWeapons: "Trocar arma", ctlPause: "Pausar", ctlSwap: "Trocar arma do chão",
-    ctlMouseLook: "MOUSE", ctlMouseClick: "CLIQUE ESQ.", ctlTouchStick: "ANALÓGICO ESQ.", ctlTouchSwipe: "ARRASTAR DIREITA", ctlTouchFire: "BOTÃO TIRO",
+    ctlMove: "Mover", ctlLook: "Mirar / olhar", ctlFire: "Atirar", ctlReload: "Recarregar", ctlWeapons: "Trocar arma", ctlPause: "Pausar", ctlSwap: "Trocar arma do chão",
+    ctlMouseLook: "MOUSE", ctlMouseClick: "CLIQUE ESQ.", ctlTouchStick: "ANALÓGICO ESQ.", ctlTouchSwipe: "ARRASTAR NA DIREITA", ctlTouchFire: "BOTÃO TIRO",
     ctlStickL: "ANALÓGICO ESQ.", ctlStickR: "ANALÓGICO DIR.", ctlRT: "RT / R2", ctlX: "X / □", ctlBumpers: "LB/RB · L1/R1", ctlStart: "MENU ☰ / OPTIONS",
     ctlMenuNav: "Navegar nos menus", ctlMenuOk: "Confirmar", ctlMenuBack: "Voltar (menus)", ctlMenuTabs: "Abas / mapas",
     gpHintBase: "<b>A</b> CONFIRMAR   <b>B</b> VOLTAR   <b>D-PAD/ANALÓGICO</b> NAVEGAR",
@@ -3129,7 +3445,12 @@ const I18N = {
     gpClose: "FECHAR", gpRandomMap: "MAPA ALEATÓRIO", gpSide: "LADO", gpSettings: "CONFIG.", gpFullscreen: "TELA CHEIA",
     gpRetry: "TENTAR DE NOVO", gpMenu: "MENU", gpChange: "TROCAR",
     gpVibLabel: "VIBRAÇÃO DO CONTROLE", gpDeadLabel: "ZONA MORTA DOS ANALÓGICOS", gpDisconnected: "CONTROLE DESCONECTADO – JOGO PAUSADO",
-    ctlQuick: "Arma anterior", ctlMenuRandom: "Mapa aleatório", ctlMenuSide: "Lado (Deathmatch)", ctlMenuChange: "Trocar opção"
+    ctlQuick: "Arma anterior", ctlMenuRandom: "Mapa aleatório", ctlMenuSide: "Lado (Deathmatch)", ctlMenuChange: "Trocar opção", ctlInUse: "EM USO", pitchSensLabel: "SENSIBILIDADE VERTICAL (CÂMERA)", invertYLabel: "INVERTER EIXO VERTICAL (OLHAR)",
+    ctlLookH: "Girar (esquerda/direita)", ctlLookV: "Olhar (cima/baixo)", ctlCamCenter: "Centralizar câmera", ctlUse: "Usar (portas/luzes)",
+    ctlKbLookH: "MOUSE ↔ / ← →", ctlKbLookV: "MOUSE ↕ / PGUP PGDN", ctlKbCenter: "C / HOME",
+    ctlTouchLookH: "ARRASTAR ↔ NA DIREITA", ctlTouchLookV: "ARRASTAR ↕ NA DIREITA", ctlTouchCenter: "2 TOQUES NA DIREITA",
+    ctlTouchReload: "BOTÃO RECARGA", ctlTouchSwap: "BOTÃO TROCAR", ctlTouchUse: "BOTÃO USAR", ctlTouchPause: "BOTÃO PAUSA",
+    ctlGpLookH: "ANALÓGICO DIR. ↔", ctlGpLookV: "ANALÓGICO DIR. ↕", ctlGpCenter: "R3 / CLICAR ANALÓGICO DIR."
   },
   en: {
     pause: "⏸ PAUSE", health: "HEALTH", sector: "WAVE", ammo: "AMMO", score: "SCORE",
@@ -3137,7 +3458,7 @@ const I18N = {
     menuSub: "SELECT AN OPTION TO START", selectLevel: "PLAY", fullscreen: "FULLSCREEN",
     selectLevelTitle: "SETUP GAME", modeLabel: "GAME MODE:", play: "PLAY", mainMenuBtn: "MAIN MENU",
     settings: "SETTINGS", settingsTitle: "GAME SETTINGS", langLabel: "LANGUAGE / IDIOMA:", 
-    levelLabel: "SELECT MAP:", sensLabel: "AIM SENSITIVITY", apply: "✓ APPLY", back: "← BACK",
+    levelLabel: "SELECT MAP:", sensLabel: "AIM SENSITIVITY", apply: "✓ APPLY", back: "← BACK", resetSettings: "↺ RESET TO DEFAULT", resetSettingsDone: "SETTINGS RESET TO DEFAULT",
     youDied: "YOU DIED", retry: "TRY AGAIN",
     fullAmmo: "AMMO FULL", reloading: "RELOADING...", reloaded: "RELOADED",
     noReload: "THIS WEAPON CANNOT BE RELOADED!",
@@ -3166,7 +3487,7 @@ const I18N = {
     lvl15Desc: "Vertigo style: skyscraper rooftop with raised sites, a stepped central platform and drops in the corners.",
     lvl16Desc: "Elevated islands surrounded by a chasm, linked by narrow bridges.",
     lvl17Desc: "Long elevated ridge with long sightlines and little cover.",
-    lvlTestDesc: "Test lab: every texture (floors, ceilings, walls, doors, windows), elevation (stairs, ramp, pit, spiral), skins, pickups, weapons and interactive items.",
+    lvlTestDesc: "Test lab: every texture (floors, ceilings, walls, doors, windows), elevation (stairs, ramp, pit, spiral), skins, pickups, weapons, interactive items, a soccer pitch (goals, ball, clubs, sponsors) and water (shallow and deep).",
     lvl18: "DE_RIALTO", lvl19: "CS_BAGGAGE", lvl20: "CS_AGENCY", lvl21: "CS_MILITIA",
     lvl18Desc: "Open square with stalls and low walls. T side (west) and CT side (east).",
     lvl19Desc: "Warehouse with crate rows and wide aisles. Mid-range fights.",
@@ -3190,7 +3511,7 @@ const I18N = {
     lvl34Desc: "Rooms and corridors linked by wide doorways. Close to mid-range fights.",
     lvl35Desc: "Stepped central pyramid ringed by pillars. Fight for the high ground.",
     lvl36Desc: "Grid of columns in a low, wide hall. Cover everywhere.",
-    lvl37Desc: "Central chasm crossed by 3 bridges. Falling is quick, getting back takes time.",
+    lvl37Desc: "Deep river in the middle crossed by 3 bridges. You can swim, but getting back takes time.",
     lvl38Desc: "Dust 2 replica: Long A to the east, Mid in the center, B Tunnels to the west. T south, CT north.",
     lvl39Desc: "Dust 2 for Zombie Survival and Gun Game. Start at T spawn and explore Long, Mid and Tunnels.",
     lvl40Desc: "Inferno style: curved Banana to the west, Mid in the center, Apartments to the east. B site NW, A site east. (Deathmatch)",
@@ -3228,6 +3549,8 @@ const I18N = {
     lvl72: "AS_OILRIG", lvl72Desc: "Oilrig style (CS): oil platform. The hostages are in the central quarters on the raised deck. CT rescue at the west dock.",
     lvl73: "AS_OILRIG", lvl73Desc: "Oilrig style (CS): platform with corner modules and central quarters on a raised deck. T in the west, CT in the east. (Deathmatch / CTF)",
     lvl74: "FNAF_PIZZERIA", lvl74Desc: "Freddy's pizzeria: survive from midnight to 6 AM. Close the doors, use the hall lights and save power. Scarce weapons and ammo.",
+    lvl75: "SOCCER_STADIUM", lvl75Desc: "Exclusive Soccer-mode stadium: a pitch with two goals. Kick the ball (F) and score — everyone carries the Desert Eagle.",
+    socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
     gunFoeLabel: "VERSUS:", gunFoeZombies: "ZOMBIES", gunFoeBots: "BOTS",
     dmPrimaryLabel: "PRIMARY WEAPON (HEAVY):", dmSecondaryLabel: "SECONDARY WEAPON (LIGHT):", dmRandomWeapon: "RANDOM",
@@ -3237,13 +3560,13 @@ const I18N = {
     showFpsLabel: "SHOW FPS", showMinimapLabel: "SHOW MINIMAP (RADAR)", viewBobLabel: "WEAPON / CAMERA BOB",
     dbgOneShot: "One-shot kills", dbgTileInfo: "On-screen info (floor, ceiling, wall, target)", dbgNoCeiling: "Remove ceiling (show sky)",
     dbgSpeedLabel: "PLAYER SPEED", dbgFogLabel: "VIEW DISTANCE (FOG)", dbgSkyLabel: "SKY (SKYBOX):",
-    dbgTeleportLabel: "TELEPORT (TEST MAP):", tpTex: "TEXTURES", tpHub: "HALL", tpElev: "ELEVATION", tpSkins: "SKINS / TARGETS", tpPick: "PICKUPS / WEAPONS", tpInter: "INTERACTIONS", tpAudio: "AUDIO / SOUNDS",
+    dbgTeleportLabel: "TELEPORT (TEST MAP):", tpTex: "TEXTURES", tpHub: "HALL", tpElev: "ELEVATION", tpSkins: "SKINS / TARGETS", tpPick: "PICKUPS / WEAPONS", tpInter: "INTERACTIONS", tpAudio: "AUDIO / SOUNDS", tpSoc: "SOCCER", tpWater: "WATER",
     dbgToolsLabel: "TOOLS:", dbgRespawn: "RESPAWN TARGETS", dbgKillAll: "KILL ALL", dbgSpawnZombie: "+ ZOMBIE", dbgHeal: "HEAL + AMMO", dbgSpawnT: "+ BOT T", dbgSpawnCT: "+ BOT CT", dbgResetMap: "RESTART MAP",
     tabAudio: "AUDIO", sfxVolumeLabel: "EFFECTS VOLUME", musicVolumeLabel: "MUSIC VOLUME",
     gamepadNone: "NO CONTROLLER CONNECTED", gamepadConnected: "CONTROLLER CONNECTED",
     controlsKbTitle: "KEYBOARD / MOUSE", controlsTouchTitle: "TOUCH (MOBILE)", controlsGamepadTitle: "XBOX SERIES X / PS4 / PS5",
-    ctlMove: "Move", ctlLook: "Look", ctlFire: "Fire", ctlReload: "Reload", ctlWeapons: "Switch weapon", ctlPause: "Pause", ctlSwap: "Swap with floor weapon",
-    ctlMouseLook: "MOUSE", ctlMouseClick: "LEFT CLICK", ctlTouchStick: "LEFT STICK", ctlTouchSwipe: "DRAG RIGHT SIDE", ctlTouchFire: "FIRE BUTTON",
+    ctlMove: "Move", ctlLook: "Look / aim", ctlFire: "Fire", ctlReload: "Reload", ctlWeapons: "Switch weapon", ctlPause: "Pause", ctlSwap: "Swap with floor weapon",
+    ctlMouseLook: "MOUSE", ctlMouseClick: "LEFT CLICK", ctlTouchStick: "LEFT STICK", ctlTouchSwipe: "DRAG ON THE RIGHT", ctlTouchFire: "FIRE BUTTON",
     ctlStickL: "LEFT STICK", ctlStickR: "RIGHT STICK", ctlRT: "RT / R2", ctlX: "X / □", ctlBumpers: "LB/RB · L1/R1", ctlStart: "MENU ☰ / OPTIONS",
     ctlMenuNav: "Navigate menus", ctlMenuOk: "Confirm", ctlMenuBack: "Back (menus)", ctlMenuTabs: "Tabs / maps",
     gpHintBase: "<b>A</b> CONFIRM   <b>B</b> BACK   <b>D-PAD/STICK</b> NAVIGATE",
@@ -3256,7 +3579,12 @@ const I18N = {
     gpClose: "CLOSE", gpRandomMap: "RANDOM MAP", gpSide: "SIDE", gpSettings: "SETTINGS", gpFullscreen: "FULLSCREEN",
     gpRetry: "TRY AGAIN", gpMenu: "MENU", gpChange: "CHANGE",
     gpVibLabel: "CONTROLLER VIBRATION", gpDeadLabel: "STICK DEADZONE", gpDisconnected: "CONTROLLER DISCONNECTED – GAME PAUSED",
-    ctlQuick: "Previous weapon", ctlMenuRandom: "Random map", ctlMenuSide: "Side (Deathmatch)", ctlMenuChange: "Change option"
+    ctlQuick: "Previous weapon", ctlMenuRandom: "Random map", ctlMenuSide: "Side (Deathmatch)", ctlMenuChange: "Change option", ctlInUse: "IN USE", pitchSensLabel: "VERTICAL SENSITIVITY (CAMERA)", invertYLabel: "INVERT VERTICAL AXIS (LOOK)",
+    ctlLookH: "Turn (left/right)", ctlLookV: "Look (up/down)", ctlCamCenter: "Center camera", ctlUse: "Use (doors/lights)",
+    ctlKbLookH: "MOUSE ↔ / ← →", ctlKbLookV: "MOUSE ↕ / PGUP PGDN", ctlKbCenter: "C / HOME",
+    ctlTouchLookH: "DRAG ↔ ON THE RIGHT", ctlTouchLookV: "DRAG ↕ ON THE RIGHT", ctlTouchCenter: "DOUBLE-TAP ON THE RIGHT",
+    ctlTouchReload: "RELOAD BUTTON", ctlTouchSwap: "SWAP BUTTON", ctlTouchUse: "USE BUTTON", ctlTouchPause: "PAUSE BUTTON",
+    ctlGpLookH: "RIGHT STICK ↔", ctlGpLookV: "RIGHT STICK ↕", ctlGpCenter: "R3 / CLICK RIGHT STICK"
   }
 };
 
@@ -3373,7 +3701,7 @@ let ctf = null;   // { flags: { T:{...}, CT:{...} } } — null fora do modo CTF
 let fnaf = null;   // estado do modo FNAF Doom — null fora dele
 function isGunBots(){ return currentGameMode === 'gungame' && gunGameFoe === 'bots'; }
 // Gun Game contra bots reaproveita toda a base de equipes (bots T/CT, spawn, respawn).
-function isTeamMode(){ return currentGameMode === 'deathmatch' || currentGameMode === 'ctf' || currentGameMode === 'hostage' || isGunBots(); }
+function isTeamMode(){ return currentGameMode === 'deathmatch' || currentGameMode === 'ctf' || currentGameMode === 'hostage' || currentGameMode === 'soccer' || isGunBots(); }
 let mouseSensitivity = 1.0;
 let countdownActive = false;
 let countdownTimer = 10;
@@ -3464,10 +3792,25 @@ const TEST_AUDIO_BANDS = (function(){
         mus('MÚSICA DO MENU', 'MENU MUSIC', MUSICA_MENU_URL, true),
         mus('ABERTURA DO MODO ZUMBI', 'ZOMBIE MODE INTRO', ZOMBIE_START_URL, false),
         mus('AMBIENTE FNAF', 'FNAF AMBIENCE', FNAF_AMBIENT_URL, true)
-      ] }
+      ] },
+    { id: 'aud7', floor: 0, ceil: 4, rgb: '120,255,120',
+      pt: 'ÁUDIO · FUTEBOL (CHUTES / APITOS / TORCIDA)', en: 'AUDIO · SOCCER (KICKS / WHISTLES / CROWD)',
+      items: [].concat(
+        nums(SOC_KICK_URLS, 'CHUTE', 'KICK'),
+        [ clip('APITO · INÍCIO', 'WHISTLE · START', SOC_WHISTLE_URLS.start),
+          clip('APITO · FIM', 'WHISTLE · END', SOC_WHISTLE_URLS.end),
+          clip('TORCIDA · GOL', 'CROWD · GOAL', SOC_REACT_URLS.goal),
+          clip('TORCIDA · QUASE GOL', 'CROWD · NEAR MISS', SOC_REACT_URLS.miss),
+          mus('TORCIDA DE FUNDO (LOOP)', 'CROWD AMBIENCE (LOOP)', SOC_CROWD_URL, true),
+          synth('CHUTE (sintetizado)', 'KICK (synth)', () => SFX.socKick(1, true)) ]) },
+    { id: 'aud8', floor: 5, ceil: 3, rgb: '90,200,255',
+      pt: 'ÁUDIO · ÁGUA (MERGULHO / ÁGUA RASA / NADO)', en: 'AUDIO · WATER (SPLASH / SHALLOW / SWIM)',
+      items: [].concat(nums(WATER_JUMP_URLS, 'ENTRAR/SAIR DA ÁGUA', 'WATER ENTER/EXIT'), nums(WATER_RUN_URLS, 'CORRENDO NA ÁGUA', 'RUNNING IN WATER'), nums(WATER_SWIM_URLS, 'NADO', 'SWIM')) }
   ];
 })();
-const TEST_W = 56, TEST_H = 44 + 4 * TEST_AUDIO_BANDS.length;
+const TEST_W = 56, TEST_SOC_Y0 = 44 + 4 * TEST_AUDIO_BANDS.length, TEST_H = TEST_SOC_Y0 + 41;
+// Clubes do Brasileirão: 12 alvos parados com a skin de cada time + escudo flutuando em cima (faixa y = TEST_SOC_Y0 + 15..18)
+const TEST_CLUB_SPOTS = SOC_CLUBS.map((c, i) => ({ k: c.k, n: c.n, x: 3.6 + i * 4.3, y: TEST_SOC_Y0 + 16.5 }));
 const TEST_ZONES = [
   { id: 'tex',   pt: 'TEXTURAS · PISOS / TETOS / PAREDES / PORTAS / JANELAS', en: 'TEXTURES · FLOORS / CEILINGS / WALLS / DOORS / WINDOWS', x0: 1,  y0: 1,  x1: 54, y1: 12, tp: { x: 3.5,  y: 11.5, a: 0 } },
   { id: 'hub',   pt: 'CORREDOR CENTRAL (SPAWN)', en: 'CENTRAL HALL (SPAWN)', x0: 1,  y0: 14, x1: 54, y1: 16, tp: { x: 28.5, y: 15.5, a: -Math.PI / 2 } },
@@ -3477,6 +3820,11 @@ const TEST_ZONES = [
   { id: 'inter', pt: 'INTERAÇÕES · PORTAS / LUZES / BANDEIRAS / RESGATE', en: 'INTERACTIONS · DOORS / LIGHTS / FLAGS / RESCUE', x0: 39, y0: 31, x1: 54, y1: 42, tp: { x: 40.5, y: 33.5, a: 0 } }
 ];
 TEST_AUDIO_BANDS.forEach((b, k) => TEST_ZONES.push({ id: b.id, pt: b.pt, en: b.en, x0: 1, y0: 44 + 4 * k, x1: 54, y1: 46 + 4 * k, tp: { x: 3.5, y: 45.5 + 4 * k, a: 0 } }));
+TEST_ZONES.push(
+  { id: 'soc',   pt: 'FUTEBOL · CAMPO / GOLS / BOLA (F = CHUTAR) / PATROCINADORES', en: 'SOCCER · PITCH / GOALS / BALL (F = KICK) / SPONSORS', x0: 1, y0: TEST_SOC_Y0, x1: 54, y1: TEST_SOC_Y0 + 13, tp: { x: 12.5, y: TEST_SOC_Y0 + 7.5, a: 0 } },
+  { id: 'clubs', pt: 'FUTEBOL · CLUBES / ESCUDOS / SKINS DOS BOTS', en: 'SOCCER · CLUBS / SHIELDS / BOT SKINS', x0: 1, y0: TEST_SOC_Y0 + 15, x1: 54, y1: TEST_SOC_Y0 + 18, tp: { x: 28.5, y: TEST_SOC_Y0 + 15.6, a: Math.PI / 2 } },
+  { id: 'water', pt: 'ÁGUA · PISCINA ESTILO DE_BRIDGE / LAGOA RASA / PISCINA GRADUAL', en: 'WATER · DE_BRIDGE-STYLE POOL / SHALLOW LAGOON / GRADUAL POOL', x0: 1, y0: TEST_SOC_Y0 + 20, x1: 54, y1: TEST_SOC_Y0 + 39, tp: { x: 28.5, y: TEST_SOC_Y0 + 20.6, a: Math.PI / 2 } }
+);
 function buildTestMapData() {
   const W = TEST_W, H = TEST_H, N = W * H;
   const grid = [], heights = [];
@@ -3499,7 +3847,7 @@ function buildTestMapData() {
 
   // ---------- TEXTURAS (y 1..12) ----------
   for (let x = 1; x <= 54; x++) setC(x, 1, x, 12, Math.min(5, Math.floor((x - 1) / 9)));   // 6 tetos em faixas
-  for (let i = 0; i < 12; i++) setF(2 + 4 * i, 2, 5 + 4 * i, 4, i);                         // 12 pisos em tapetes de 4x3
+  for (let i = 0; i < 13; i++) setF(2 + 4 * i, 2, 5 + 4 * i, 4, i);                         // 13 pisos (o último é a água) em tapetes de 4x3
   for (let i = 0; i < 11; i++) solid(3 + 4 * i, 6, 4 + 4 * i, 7, i);                        // 11 paredes em blocos 2x2
   for (let x = 3; x <= 52; x++) { solid(x, 10, x, 10, 4); wall[I(x, 10)] = (x >= 4 && ((x - 3) % 7) === 4) ? 4 : 7; }
   for (let i = 0; i < 6; i++) {
@@ -3554,11 +3902,43 @@ function buildTestMapData() {
   TEST_AUDIO_BANDS.forEach((b, k) => {
     const y0 = 44 + 4 * k;
     setF(1, y0, 54, y0 + 2, b.floor); setC(1, y0, 54, y0 + 2, b.ceil);
-    if (k < TEST_AUDIO_BANDS.length - 1) { solid(1, y0 + 3, 54, y0 + 3, 6); open(28, y0 + 3, 29, y0 + 3); }
+    solid(1, y0 + 3, 54, y0 + 3, 6); open(28, y0 + 3, 29, y0 + 3);   // o último divisor leva ao campo de futebol
     props.push({ kind: 'btn', btnFor: 'audio', x: 2.5, y: y0 + 0.5, audio: { stop: true, rgb: '255,60,60' } });
     b.items.forEach((it, i) => props.push({ kind: 'btn', btnFor: 'audio', x: 4.5 + 2 * i, y: y0 + 0.5, audio: Object.assign({ rgb: b.rgb }, it) }));
   });
-  return { w: W, h: H, grid, heights, layout: { floor, wall, ceil, door, win, props, lights } };
+  // ---------- FUTEBOL (campo igual ao do modo Futebol: gramado listrado, gols com rede, bola e patrocinadores) ----------
+  const Y0 = TEST_SOC_Y0, PY0 = Y0, PY1 = Y0 + 14, sx0 = 3, sx1 = W - 3, scy = (PY0 + PY1) / 2, gy0 = scy - 3, gy1 = scy + 3;
+  setF(1, PY0, W - 2, PY1 - 1, 1); setC(1, PY0, W - 2, PY1 - 1, 4);
+  rect(sx0, PY0, sx1 - 1, PY1 - 1, (x, y) => { floor[I(x, y)] = (Math.floor((x - sx0) / 3) % 2) ? 1 : 0; });   // faixas de corte da grama
+  for (let y = PY0; y < PY1; y++) { if (y >= gy0 && y < gy1) continue; solid(1, y, 2, y, 7); solid(W - 3, y, W - 2, y, 7); }   // laterais, exceto a boca dos gols
+  solid(1, PY1, W - 2, PY1, 5); open(28, PY1, 29, PY1);
+  for (let x = 1; x <= W - 2; x++) wall[I(x, PY0 - 1)] = 5;
+  const adN = 10;   // patrocinadores = portas 6..15
+  for (let x = sx0; x < sx1; x++) { if (x === 28 || x === 29) continue; door[I(x, PY0 - 1)] = 6 + (x % adN); door[I(x, PY1)] = 6 + ((x + 5) % adN); }
+  for (let y = PY0; y < PY1; y++) { if (y >= gy0 && y < gy1) continue; door[I(sx0 - 1, y)] = 6 + ((y + 3) % adN); door[I(sx1, y)] = 6 + ((y + 7) % adN); }
+  // faixa dos clubes
+  setF(1, PY1 + 1, W - 2, PY1 + 4, 0); setC(1, PY1 + 1, W - 2, PY1 + 4, 4);
+  solid(1, PY1 + 5, W - 2, PY1 + 5, 6); open(28, PY1 + 5, 29, PY1 + 5);
+  // ---------- ÁGUA ----------
+  const WY0 = PY1 + 6, WY1 = WY0 + 19;
+  setF(1, WY0, W - 2, WY1, 5); setC(1, WY0, W - 2, WY1, 4);
+  const poolA = { x0: 4, y0: WY0 + 2, x1: 25, y1: WY0 + 15 }, poolB = { x0: 30, y0: WY0 + 2, x1: 51, y1: WY0 + 15 };
+  rect(poolA.x0, poolA.y0, poolA.x1, poolA.y1, (x, y) => {   // piscina funda (bordas -1, meio -2, centro -3) cruzada por uma ponte no nível 0
+    const bridge = (y === WY0 + 8 || y === WY0 + 9), e = Math.min(x - poolA.x0, poolA.x1 - x);
+    heights[y][x] = bridge ? 0 : (e === 0 ? -1 : (e === 1 ? -2 : -3)); floor[I(x, y)] = bridge ? 7 : 9;
+  });
+  rect(poolB.x0, poolB.y0, poolB.x1, poolB.y1, (x, y) => {   // lagoa rasa (-1) com um buraco fundo no meio
+    const deep = x >= 40 && x <= 41 && y >= WY0 + 8 && y <= WY0 + 9, mid = x >= 38 && x <= 43 && y >= WY0 + 6 && y <= WY0 + 11;
+    heights[y][x] = deep ? -3 : (mid ? -2 : -1); floor[I(x, y)] = 6;
+  });
+  rect(4, WY0 + 17, 51, WY0 + 19, (x, y) => { heights[y][x] = -1 - Math.min(5, Math.floor((x - 4) / 4)); floor[I(x, y)] = 4; });   // piscina com rampa: 1 nível a cada 4 tiles (-1 até -6)
+  const water = { base: false, zones: [
+    { x0: 4, y0: WY0 + 17, x1: 51, y1: WY0 + 19, surf: -0.5, shallowRun: true },   // piscina gradual: rasa (sons de correr) até funda (nado)
+    { x0: poolA.x0, y0: poolA.y0, x1: poolA.x1, y1: poolA.y1, surf: -0.5, shallowRun: false },   // como o DE_BRIDGE: sem som de correr na água rasa
+    { x0: poolB.x0, y0: poolB.y0, x1: poolB.x1, y1: poolB.y1, surf: -0.5, shallowRun: true }     // lagoa rasa: sons de correr na água
+  ] };
+  const soccer = { x0: sx0, x1: sx1, cy: scy, gy0, gy1, lineL: sx0, lineR: sx1, pitchY0: PY0, pitchY1: PY1 };
+  return { w: W, h: H, grid, heights, layout: { floor, wall, ceil, door, win, props, lights }, soccer, water };
 }
 const TEST_MAP_DATA = buildTestMapData();
 
@@ -3672,6 +4052,86 @@ function heightAt(x, y) {
   const row = HEIGHTS[iy];
   if (!row || row[ix] === undefined) return 0;
   return row[ix];
+}
+
+// ===== SISTEMA DE ÁGUA =====
+// ldef.water = { surf: -0.5, shallowRun: false, base: true, zones: [{x0,y0,x1,y1,surf,shallowRun}] }
+//  · surf = nível da superfície (em níveis de piso). Todo tile aberto com piso ABAIXO disso vira água; profundidade = surf - piso.
+//  · Profundidade < WATER_DEEP_LEVELS = rasa (anda no fundo, sons de "correr na água" só se shallowRun = true).
+//  · Profundidade >= WATER_DEEP_LEVELS = funda: o jogador flutua na superfície (balança), nada mais devagar e a tela ganha um sombreado azul semitransparente.
+//  · Visual: o tile é desenhado na altura da superfície, com a textura da água animada e semitransparente sobre o leito.
+const WATER_DEEP_LEVELS = 0.9;
+const WATER_FLOAT_DROP = 0.22;   // o olho fica 0,28 acima da superfície quando boiando
+let waterDepth = null, waterSurfMap = null, waterRunMap = null, waterClock = 0, waterShadeEl = null;
+function waterReset(){
+  WATER.state = 0; WATER.shallowRun = false; WATER.mix = 0; WATER.off = 0; WATER.applied = 0; WATER.lastBase = null; WATER.lastTotal = 0; WATER.initDone = false;
+  if(!waterShadeEl) waterShadeEl = document.getElementById('waterShade');
+  if(waterShadeEl) waterShadeEl.style.opacity = '0';
+}
+function buildWaterMap(ldef){
+  waterDepth = waterSurfMap = waterRunMap = null; WATER.on = false; waterReset(); try { geo.src = null; } catch(e) {}
+  const cfg = ldef.water, hs = ldef.heights;
+  if(!cfg || !hs) return;
+  const W = ldef.w, H = ldef.h, dep = new Float32Array(W * H), srf = new Float32Array(W * H), run = new Uint8Array(W * H);
+  let any = false;
+  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+    if(ldef.grid[y][x] !== 0) continue;
+    let p = cfg.zones ? cfg.zones.find(z => x >= z.x0 && x <= z.x1 && y >= z.y0 && y <= z.y1) : null;
+    if(!p && cfg.base === false) continue;
+    p = p || cfg;
+    const surf = p.surf !== undefined ? p.surf : -0.5, d = surf - hs[y][x];
+    if(d > 0.01){ const i = y * W + x; dep[i] = d; srf[i] = surf; run[i] = p.shallowRun ? 1 : 0; any = true; }
+  }
+  if(!any) return;
+  waterDepth = dep; waterSurfMap = srf; waterRunMap = run; WATER.on = true;
+}
+function waterAt(x, y){
+  if(!waterDepth) return 0;
+  const ix = Math.floor(x), iy = Math.floor(y);
+  return (ix < 0 || iy < 0 || ix >= MAP_W || iy >= MAP_H) ? 0 : waterDepth[iy * MAP_W + ix];
+}
+function waterSpeedMul(){ return WATER.state === 2 ? 0.72 : (WATER.state === 1 ? 0.9 : 1); }
+// altura do piso para bots: em água funda eles também boiam
+function waterFloorZ(x, y){
+  const bed = heightAt(x, y) * HEIGHT_UNIT;
+  if(!waterDepth) return bed;
+  const d = waterAt(x, y);
+  if(d < WATER_DEEP_LEVELS) return bed;
+  return Math.max(bed, waterSurfMap[Math.floor(y) * MAP_W + Math.floor(x)] * HEIGHT_UNIT - 0.32);
+}
+// chamado após updateStepAnim: calcula o deslocamento (WATER.off) que faz a câmera boiar e atualiza sons + sombreado
+function waterStep(dt){
+  if(!WATER.on) return;
+  const ix = Math.floor(player.x), iy = Math.floor(player.y);
+  const i = (ix >= 0 && iy >= 0 && ix < MAP_W && iy < MAP_H) ? iy * MAP_W + ix : -1;
+  const d = i >= 0 ? waterDepth[i] : 0, prev = WATER.state, st = d > 0 ? (d >= WATER_DEEP_LEVELS ? 2 : 1) : 0;
+  WATER.state = st; WATER.shallowRun = d > 0 && waterRunMap[i] === 1;
+  if(d > 0){ WATER.surfZ = waterSurfMap[i] * HEIGHT_UNIT; WATER.fl = WATER.surfZ - WATER_FLOAT_DROP; }
+  if(WATER.initDone && (prev > 0) !== (st > 0)){   // entrou / saiu da água
+    const n = performance.now();
+    if(n - WATER.lastSplash > 250){ WATER.lastSplash = n; SFX.waterJump(); }
+  }
+  WATER.initDone = true;
+  const base = player.z;
+  if(WATER.lastBase !== null && Math.abs(base - WATER.lastBase) > 0.25 && (st === 2 || WATER.mix > 0.02)){
+    // queda (degrau enorme): mantém a câmera onde estava e deixa ela "afundar" até a superfície
+    const den = WATER.fl - base;
+    if(Math.abs(den) > 0.03) WATER.mix = Math.max(-1, Math.min(4, (WATER.lastTotal - base) / den));
+  }
+  WATER.lastBase = base;
+  const want = st === 2 ? 1 : 0;
+  WATER.mix += (want - WATER.mix) * Math.min(1, dt * (st === 2 ? 5 : 7));
+  if(Math.abs(want - WATER.mix) < 0.002) WATER.mix = want;
+  WATER.bob += dt;
+  const m = Math.max(0, Math.min(1, WATER.mix));
+  const bob = (Math.sin(WATER.bob * 2.1) * 0.014 + (player.moving ? Math.sin(WATER.bob * 5.5) * 0.007 : 0)) * m;
+  const total = base + (WATER.fl + bob - base) * WATER.mix;
+  WATER.off = total - base; WATER.lastTotal = total;
+  if(!waterShadeEl) waterShadeEl = document.getElementById('waterShade');
+  if(waterShadeEl){
+    waterShadeEl.style.opacity = (m * 0.95).toFixed(3);
+    waterShadeEl.style.setProperty('--wy', (Math.sin(WATER.bob * 2.1) * 7).toFixed(1) + 'px');
+  }
 }
 
 function generateFlatHeights(w, h) {
@@ -4030,7 +4490,9 @@ const DM_EXTRA_LEVELS = [
     keyName: "lvl37", dmOnly: true, w: 30, h: 20, spawn: { x: 2.5, y: 9.5, angle: 0 },
     dmZones: { T: {x0:1,y0:8,x1:3,y1:11}, CT: {x0:26,y0:8,x1:28,y1:11} },
     grid: dmSymGrid(30, 20, [[6,5,7,6],[5,8,5,9]], true),
-    heights: dmFlatH(30, 20, (x, y) => (x >= 11 && x <= 18 && ![3,4,9,10,15,16].includes(y)) ? -1 : 0)
+    // rio: margens rasas (-1), meio fundo (-2) e centro profundo (-3); as pontes ficam no nível 0
+    heights: dmFlatH(30, 20, (x, y) => (x >= 11 && x <= 18 && ![3,4,9,10,15,16].includes(y)) ? ({ 11: -1, 12: -2, 17: -2, 18: -1 }[x] || -3) : 0),
+    water: { surf: -0.5, shallowRun: false }
   }
 ];
 
@@ -5496,6 +5958,8 @@ const LEVEL_DEFINITIONS = [
     isTestMap: true,
     grid: TEST_MAP_DATA.grid,
     heights: TEST_MAP_DATA.heights,
+    soccer: TEST_MAP_DATA.soccer,
+    water: TEST_MAP_DATA.water,
     testLayout: TEST_MAP_DATA.layout
   }
 ];
@@ -5907,6 +6371,31 @@ LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, { // 74 — FNAF_PIZZE
 });
 LEVEL_THEMES[LEVEL_DEFINITIONS.length - 2] = STYLES.FNAF;
 
+// ===== MAPA EXCLUSIVO DO MODO FUTEBOL: Estádio =====
+// Gramado 38x24 com gols de 6 tiles (alcovas de 2 tiles de profundidade nas duas pontas). Só aparece no modo Futebol.
+const SOC_ROWS = (function(){
+  const W = 44, H = 26, rows = [];
+  for (let y = 0; y < H; y++) {
+    let r = '';
+    for (let x = 0; x < W; x++) {
+      let wall = (x === 0 || x === W - 1 || y === 0 || y === H - 1);
+      if (!wall && !(y >= 10 && y <= 15) && (x === 1 || x === 2 || x === W - 3 || x === W - 2)) wall = true;
+      r += wall ? '#' : '.';
+    }
+    rows.push(r);
+  }
+  return rows;
+})();
+LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, { // 75 — ESTADIO_FUTEBOL (modo Futebol)
+  keyName: "lvl75", soccerOnly: true, noCeiling: true, w: 44, h: 26,
+  spawn: { x: 12.5, y: 13.5, angle: 0 },
+  dmZones: { CT: { x0: 4, y0: 3, x1: 20, y1: 22 }, T: { x0: 24, y0: 3, x1: 40, y1: 22 } },
+  grid: dmParseGrid(SOC_ROWS),
+  heights: dmFlatH(44, 26, () => 0),
+  soccer: { x0: 3, x1: 41, cy: 13, gy0: 10, gy1: 16, lineL: 3, lineR: 41 }
+});
+LEVEL_THEMES[LEVEL_DEFINITIONS.length - 2] = STYLES.SOCCER;
+
 // Mapas ao ar livre: sem teto, só a skybox. Os demais (escritórios, prisões, hotel, galpões...) mantêm o teto.
 [0, 1, 3, 4, 6, 7, 14, 15, 38, 39, 40, 41, 42, 43, 45, 46, 47, 48, 57, 59, 60, 61, 62, 63, 64, 65, 66, 67, 70, 71, 72, 73]
   .forEach(i => { if (LEVEL_DEFINITIONS[i]) LEVEL_DEFINITIONS[i].noCeiling = true; });
@@ -5950,6 +6439,7 @@ let HEIGHTS = generateFlatHeights(16, 16);
 const LEVEL_DIFFICULTY = [2, 3, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 4, 3, 3, 4, 3, 2, 2, 3, 3, 3, 3, 3, 3, 2, 3, 4, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 4, 4, 3, 3, 3, 2, 3, 2, 3, 4, 3, 3, 3, 4, 3, 4, 4, 2, 3, 3, 3, 4, 3, 3, 3, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 1];
 
 LEVEL_DIFFICULTY.splice(LEVEL_DIFFICULTY.length - 1, 0, 4);   // dificuldade do mapa FNAF_PIZZERIA
+LEVEL_DIFFICULTY.splice(LEVEL_DIFFICULTY.length - 1, 0, 2);   // dificuldade do ESTADIO_FUTEBOL
 
 function renderLevelPreview(idx) {
   const ldef = LEVEL_DEFINITIONS[idx];
@@ -5990,7 +6480,7 @@ function renderLevelPreview(idx) {
         if (lvl > 1) cctx.fillStyle = '#5f9c3a';
         else if (lvl > 0) cctx.fillStyle = '#3f6c28';
         else if (lvl < 0) cctx.fillStyle = '#1f2f55';
-        else cctx.fillStyle = '#2a1c08';
+        else cctx.fillStyle = ldef.soccerOnly ? (((x >> 1) & 1) ? '#2f7d2a' : '#3b8f33') : '#2a1c08';
       }
       cctx.fillRect(offX + x * cell, offY + y * cell, Math.ceil(cell), Math.ceil(cell));
     }
@@ -6052,6 +6542,7 @@ function loadLevel(idx){
   MAP_W = ldef.w;
   MAP_H = ldef.h;
   HEIGHTS = ldef.heights || generateFlatHeights(ldef.w, ldef.h);
+  buildWaterMap(ldef);
   levelNoCeiling = !!ldef.noCeiling || !!debugOptions.noCeiling;
   testProps = []; testLightsOn = true;
   if (ldef.isTestMap && ldef.testLayout) {
@@ -6060,6 +6551,7 @@ function loadLevel(idx){
     testProps.forEach(p => { if (p.kind === 'btn' && p.doorId) p.door = testProps.find(q => q.kind === 'door' && q.id === p.doorId); });
   }
   buildTileTextures(currentLevelIndex, ldef);
+  if (ldef.soccerOnly) socPaintPitch(ldef);
   { const _th = getLevelTheme(currentLevelIndex, ldef);
     currentSky = (typeof ldef.sky === 'number') ? ldef.sky : _th.s[Math.floor(Math.random() * _th.s.length)]; }
   if (debugOptions.sky >= 0) currentSky = debugOptions.sky;
@@ -6068,7 +6560,7 @@ function loadLevel(idx){
   player.y = ldef.spawn.y;
   player.angle = ldef.spawn.angle;
   player.z = heightAt(player.x, player.y) * HEIGHT_UNIT;
-  player.targetZ = player.z;
+  player.targetZ = player.z; camPitch = 0; socJump.z = 0; socJump.v = 0; socJump.applied = 0;
 
   currentWave = 1;
   enemiesKilledInWave = 0;
@@ -6082,6 +6574,7 @@ function loadLevel(idx){
   ctf = null; player.hasFlag = false; ctfUpdateHud();
   hr = null; hrUpdateHud();
   fnafReset();
+  SFX.socCrowdStop(0); soc = null; socJump.z = 0; socJump.v = 0; socHideUi();
   document.getElementById('damageFlash').style.opacity = '0';
   waveEnemiesTotal = 2;
 
@@ -6106,12 +6599,16 @@ function loadLevel(idx){
       player.unlockedWeapons = { pistol2: true };
       switchWeapon('pistol2');
     } else {
+      if (currentGameMode === 'soccer') {
+        socInit(ldef);   // Futebol: bola, gols, bots de clube e só a Desert Eagle
+      } else {
       // Deathmatch: SEM pickups. Só o loadout escolhido no menu.
       dmPlacePlayerStart();
       dmApplyLoadout();
       dmInit();
       if (currentGameMode === 'ctf') ctfInit();
       else if (currentGameMode === 'hostage') hrInit();
+      }
     }
   } else if (currentGameMode === 'fnaf' && ldef.fnaf) {
     fnafInit(ldef);
@@ -6127,6 +6624,7 @@ function loadLevel(idx){
   if (ldef.isTestMap) {
     setupTestMapPickups();
     setupTestMapStaticEnemies();
+    socTestInit(ldef);
   }
 
   initWeaponUI();
@@ -6147,6 +6645,7 @@ function startMatchAudio() {
   SFX.stopModeOver();
   SFX.releaseEnd();
   if (currentGameMode === 'waves' && !test) { SFX.zombieStart(); return; }
+  if (currentGameMode === 'soccer' && !test) { SFX.stopMusic(); SFX.socCrowdStart(); return; }   // Futebol: só a torcida de fundo
   if (fnaf && !test) { SFX.stopMusic(); SFX.fnafAmbient(); return; }   // FNAF Doom: sem música nem anúncios; só o ambiente da pizzaria
   SFX.playMusic(dmMusicWanted());
   if (!test) SFX.modeStart();
@@ -6268,6 +6767,12 @@ function updateHUDModeLabel() {
       scoreIco.dataset.k = k;
       scoreIco.innerHTML = k === 'kill' ? '<img src="' + DM_HUD_ICONS.kill + '" alt="">' : '<svg class="cs-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8l-6.3 3.7 1.6-7.2L2 9.6 9 9z"/></svg>';
     }
+  }
+  if (currentGameMode === 'soccer' && soc) {
+    const sh = socClubOf(soc.home), sa = socClubOf(soc.away);
+    lvlLbl.textContent = (currentLang === 'en' ? "MATCH" : "PARTIDA");
+    lvlVal.innerHTML = '<img class="dm-team-ico" src="' + sh.shield + '" alt="">' + dmScoreCT + ' x ' + dmScoreT + '<img class="dm-team-ico" src="' + sa.shield + '" alt="">';
+    return;
   }
   if (fnaf) {
     lvlLbl.textContent = (currentLang === 'en' ? "NIGHT · POWER" : "NOITE · ENERGIA");
@@ -6483,6 +6988,8 @@ function setupTestMapStaticEnemies() {
   for (let i = 0; i < 8; i++) add(22.8 + i * 1.7, 26.0, { hostageTex: i, testLabel: { pt: 'REFÉM #' + (i + 1), en: 'HOSTAGE #' + (i + 1) } });
   // fileira 4: zumbis (2 tipos)
   for (let i = 0; i < 12; i++) add(22.6 + i * 1.15, 28.8, { type: i % 2, testLabel: { pt: 'ZUMBI · TIPO ' + (i % 2), en: 'ZOMBIE · TYPE ' + (i % 2) } });
+  // faixa FUTEBOL · CLUBES: um alvo com a skin de cada clube do Brasileirão (o escudo flutua em cima)
+  TEST_CLUB_SPOTS.forEach(c => add(c.x, c.y, { socClub: c.k, team: 'T', ally: false, health: 80, maxHealth: 80, testLabel: { pt: 'CLUBE · ' + c.n, en: 'CLUB · ' + c.n } }));
   // fileiras 5 e 6: bots T e CT
   for (let i = 0; i < 8; i++) add(22.8 + i * 1.7, 31.5, { team: 'T',  ally: false, health: 80, maxHealth: 80, testLabel: { pt: 'BOT · T',  en: 'BOT · T' } });
   for (let i = 0; i < 8; i++) add(22.8 + i * 1.7, 34.0, { team: 'CT', ally: false, health: 80, maxHealth: 80, testLabel: { pt: 'BOT · CT', en: 'BOT · CT' } });
@@ -6513,7 +7020,7 @@ function startScoreTracker() {
 function startCountdown(){
   if(countdownInterval) clearInterval(countdownInterval);
   countdownActive = true;
-  countdownTimer = 10;
+  countdownTimer = (currentGameMode === 'soccer') ? 5 : 10;
   const cdEl = document.getElementById('countdownOverlay');
   cdEl.style.display = 'block';
   cdEl.textContent = countdownTimer;
@@ -6558,7 +7065,7 @@ function testSkinEntry(k){
 }
 
 const TEX_NAMES = {
-  floor: ['GRAMA 03', 'GRAMA 04', 'METAL 07', 'PISO 02', 'PISO 07', 'PISO 19', 'PISO 11', 'MADEIRA 06', 'MADEIRA 25', 'TERRA 09', 'TERRA 10', 'TERRA 12'],
+  floor: ['GRAMA 03', 'GRAMA 04', 'METAL 07', 'PISO 02', 'PISO 07', 'PISO 19', 'PISO 11', 'MADEIRA 06', 'MADEIRA 25', 'TERRA 09', 'TERRA 10', 'TERRA 12', 'ÁGUA'],
   wall:  ['TIJOLO 08', 'TIJOLO 02', 'TIJOLO 24', 'TIJOLO 21', 'METAL 01', 'METAL 02', 'METAL 16', 'AZULEJO 12', 'MADEIRA 03', 'TIJOLO 15', 'TIJOLO 12'],
   ceil:  ['MADEIRA 18', 'METAL 10', 'METAL 17', 'CONCRETO CINZA 02', 'CONCRETO BRANCO 01', 'CONCRETO BRANCO 04'],
   sky:   ['DIA 1', 'DIA 2', 'DIA 3', 'DIA 4', 'NOITE 1', 'NOITE 2', 'PÔR DO SOL 1', 'PÔR DO SOL 2'],
@@ -6748,6 +7255,7 @@ function updateTestHud(now){
     if(ix >= 0 && iy >= 0 && ix < MAP_W && iy < MAP_H){
       const ti = iy * MAP_W + ix;
       lines.push('X ' + player.x.toFixed(1) + '  Y ' + player.y.toFixed(1) + '  ' + (en ? 'LEVEL ' : 'NÍVEL ') + HEIGHTS[iy][ix]);
+      if(waterDepth && waterDepth[ti] > 0) lines.push((en ? 'WATER DEPTH ' : 'PROFUNDIDADE DA ÁGUA ') + waterDepth[ti].toFixed(1));
       lines.push((en ? 'FLOOR ' : 'PISO ') + floorTileMap[ti] + ' · ' + (TEX_NAMES.floor[floorTileMap[ti]] || '?'));
       if(levelNoCeiling) lines.push((en ? 'SKY ' : 'CÉU ') + currentSky + ' · ' + (TEX_NAMES.sky[currentSky] || '?'));
       else lines.push((en ? 'CEILING ' : 'TETO ') + ceilTileMap[ti] + ' · ' + (TEX_NAMES.ceil[ceilTileMap[ti]] || '?'));
@@ -7018,6 +7526,7 @@ function dmInit(){
 }
 
 function dmCheckWin(){
+  if(currentGameMode === 'soccer') return;   // Futebol: vitória decidida pelo relógio/gols
   if(gameOver || NET.mode === 'client') return;
   let tgtCT = DM_TARGET, tgtT = DM_TARGET;
   if(currentGameMode === 'ctf'){ tgtCT = tgtT = CTF_TARGET; }
@@ -7044,6 +7553,7 @@ function dmCheckWin(){
 function dmOnKill(victim, killerTeam, byPlayer){
   victim.alive = false;
   victim.respawnAt = performance.now() + DM_BOT_RESPAWN_MS;
+  if(currentGameMode === 'soccer'){ victim.respawnAt = performance.now() + SOC_BOT_RESPAWN_MS; if(byPlayer) dmPlayerKills++; return; }   // Futebol: abate não pontua
   if(currentGameMode === 'gungame'){ if(byPlayer) dmPlayerKills++; return; }   // Gun Game: sem placar de equipes
   if(currentGameMode === 'hostage'){
     hrDropFollowers(victim);                 // quem morre escoltando refém o abandona
@@ -7070,6 +7580,7 @@ function dmKillPlayer(){
   if(currentGameMode === 'hostage'){ hrDropFollowers(player); if(dmPlayerTeam === 'CT') dmScoreT++; }
   else if(currentGameMode === 'ctf') ctfDropFlag(player);
   else if(currentGameMode === 'gungame'){ /* morrer não rebaixa a arma, só renasce */ }
+  else if(currentGameMode === 'soccer'){ /* Futebol: morrer não pontua */ }
   else if(dmPlayerTeam === 'CT') dmScoreT++; else dmScoreCT++;   // ponto para a equipe adversária
   dmPlayerRespawnAt = performance.now() + DM_PLAYER_RESPAWN_MS;
   fireHeld = false;
@@ -7091,14 +7602,14 @@ function dmDamagePlayer(amount){
 }
 
 function dmRespawnPlayer(){
-  const pos = dmPickSpawn(dmPlayerTeam, false, currentGameMode === 'ctf' || currentGameMode === 'hostage');   // CTF: renasce na própria base
+  const pos = dmPickSpawn(dmPlayerTeam, false, currentGameMode === 'ctf' || currentGameMode === 'hostage' || currentGameMode === 'soccer');   // CTF: renasce na própria base
   if(pos){ player.x = pos.x; player.y = pos.y; }
-  player.angle = Math.random() * Math.PI * 2;
+  player.angle = currentGameMode === 'soccer' ? 0 : Math.random() * Math.PI * 2;
   player.z = player.targetZ = heightAt(player.x, player.y) * HEIGHT_UNIT;
   player.health = player.maxHealth;
   dmPlayerDead = false;
   NET.lastRespawn = performance.now();
-  if(currentGameMode === 'gungame') gunGameEquip(gunGameWeaponIdx); else dmApplyLoadout();
+  if(currentGameMode === 'gungame') gunGameEquip(gunGameWeaponIdx); else if(currentGameMode === 'soccer') socApplyLoadout(); else dmApplyLoadout();
   document.getElementById('damageFlash').style.opacity = '0';
   document.getElementById('countdownOverlay').style.display = 'none';
   updateHUD();
@@ -7149,7 +7660,7 @@ function dmPathAngle(b, gx, gy){
 }
 
 function dmBotThink(b, dt, now){
-  const tz = heightAt(b.x, b.y) * HEIGHT_UNIT;
+  const tz = waterFloorZ(b.x, b.y);
   b.z = (b.z || 0) + (tz - (b.z || 0)) * Math.min(1, dt * 8);
 
   // alvo = oponente mais próximo (T também enxerga o jogador; CT só enxerga T)
@@ -7261,6 +7772,7 @@ function updateDeathmatch(dt, now){
   }
 
   if(NET.mode === 'client') return;   // cliente online: bots/regras rodam só no host
+  if(currentGameMode === 'soccer'){ socUpdate(dt, now); return; }
   if(countdownActive) return;
   if(currentGameMode === 'ctf') updateCTF(dt, now);
   if(currentGameMode === 'hostage') updateHostage(dt, now);
@@ -7274,6 +7786,836 @@ function updateDeathmatch(dt, now){
     }
     dmBotThink(b, dt, now);
   });
+}
+
+
+// ============ MODO FUTEBOL (BRASILEIRÃO) ============
+// 4x4: você + 3 bots contra 4 bots, todos armados só com a Desert Eagle (id 'pistol').
+// Reaproveita a base de equipes do Deathmatch (bots em `enemies`, respawn, tiro, dano). Lado 'CT' = seu time
+// (ataca a direita), lado 'T' = adversário (ataca a esquerda). Abates NÃO pontuam: só gols.
+// Partida de SOC_MATCH_SECONDS (exibida como 90'); empatou = gol de ouro.
+const SOC_BALL_R = 0.17;          // raio da bola (colisão com paredes)
+const SOC_CONTACT_R = 0.42;       // distância de contato jogador x bola
+const SOC_FRICTION = 0.8;         // atrito de rolagem (1/s)
+const SOC_KICK_SPEED = 13.5;      // velocidade do chute
+const SOC_SHOT_SPEED = 11;        // velocidade da bola atingida por um tiro
+const SOC_KICK_RANGE = 1.25;      // alcance do chute
+const SOC_KICK_CD_MS = 420;
+const SOC_MATCH_SECONDS = 240;
+const SOC_GOAL_PAUSE = 3.4;
+const SOC_KICKOFF_PAUSE = 1.3;
+const SOC_BOT_RESPAWN_MS = 4000;
+
+function socClubOf(k){ return SOC_CLUBS.find(c => c.k === k) || SOC_CLUBS[0]; }
+function socResolveClubs(){
+  const valid = k => SOC_CLUBS.some(c => c.k === k);
+  const rnd = ex => { const pool = SOC_CLUBS.filter(c => c.k !== ex); return pool[Math.floor(Math.random() * pool.length)].k; };
+  let home = socPick.home, away = socPick.away;
+  if(!valid(home)) home = 'random';
+  if(!valid(away)) away = 'random';
+  if(home === 'random') home = rnd(away === 'random' ? null : away);   // sorteio respeita a escolha do outro lado
+  if(away === 'random' || away === home) away = rnd(home);
+  socMatch.home = home; socMatch.away = away;
+}
+
+// Gramado listrado, arquibancada e fundo dos gols (sobrescreve as texturas sorteadas do mapa).
+function socPaintPitch(ldef){
+  const W = ldef.w, H = ldef.h, g = ldef.grid, d = ldef.soccer;
+  for(let y = 0; y < H; y++){
+    for(let x = 0; x < W; x++){
+      const i = y * W + x;
+      if(g[y][x] === 0){
+        const alcove = x < d.x0 || x >= d.x1;
+        floorTileMap[i] = alcove ? 1 : ((Math.floor((x - d.x0) / 3) % 2) ? 1 : 0);   // faixas de corte da grama
+      } else {
+        wallTileMap[i] = (y === 0 || y === H - 1) ? 5 : 7;   // laterais: metal · fundos/gols: azulejo
+      }
+    }
+  }
+  // Patrocinadores: faixas nas paredes (não ocupam a parede inteira). Índices 6..15 de doorSets.
+  const AD0 = DOOR_AD_FROM, N = 10;
+  for(let x = d.x0; x < d.x1; x++){ doorTileMap[x] = AD0 + (x % N); doorTileMap[(H - 1) * W + x] = AD0 + ((x + 5) % N); }
+  for(let y = 1; y < H - 1; y++){
+    if(y >= d.gy0 && y < d.gy1) continue;   // não na boca do gol
+    doorTileMap[y * W + (d.x0 - 1)] = AD0 + ((y + 3) % N); doorTileMap[y * W + d.x1] = AD0 + ((y + 7) % N);
+  }
+}
+
+function socApplyLoadout(){
+  player.isReloading = false;
+  player.unlockedWeapons = { pistol: true };
+  resetAmmoToDefaults();
+  const cfg = WEAPON_CONFIG.pistol;
+  player.ammo.pistol = cfg.defaultAmmo;
+  player.reserveMags.pistol = cfg.maxMags || cfg.startMags;
+  initWeaponUI();
+  switchWeapon('pistol');
+}
+
+function socInit(ldef){
+  const d = ldef.soccer, L = d.x1 - d.x0, W = ldef.w;
+  soc = {
+    d, L, home: socMatch.home, away: socMatch.away,
+    ball: { x: (d.x0 + d.x1) / 2, y: d.cy, z: 0, vx: 0, vy: 0, vz: 0, spin: 0, lastTouch: null },
+    clock: 0, golden: false, phase: 'pre', phaseT: 0, finishAfterGoal: false,
+    chaser: { CT: null, T: null }, chaseAt: 0, gk: { CT: null, T: null },
+    lastKickAt: 0, kicks: 0, playerGoals: 0, stillT: 0,
+    posts: [{ x: d.lineL, y: d.gy0 }, { x: d.lineL, y: d.gy1 }, { x: d.lineR, y: d.gy0 }, { x: d.lineR, y: d.gy1 }],
+    ppx: player.x, ppy: player.y, pvx: 0, pvy: 0,
+    hudKey: '', boardKey: '', boardCv: null, netCv: null,
+    props: [
+      { kind: 'socgoal',  x: 1.7,     y: d.cy, side: 'L' },
+      { kind: 'socgoal',  x: W - 1.7, y: d.cy, side: 'R' },
+      { kind: 'socboard', x: 1.7,     y: d.cy },
+      { kind: 'socboard', x: W - 1.7, y: d.cy }
+    ]
+  };
+  enemies = []; pickups = [];
+  let id = 1;
+  const mk = (team, role, hx, hy) => {
+    const b = dmMakeBot(team, id++);
+    b.socClub = team === 'CT' ? soc.home : soc.away;
+    b.role = role;
+    b.maxHealth = b.health = 100;
+    b.speed = (team === 'CT' ? 2.55 : 2.45) + Math.random() * 0.15;
+    if(role === 'gk') b.speed *= 1.2;
+    b.dmg = 30; b.dmgPlayer = 14; b.range = 10;
+    b.fireRate = 1500 + Math.random() * 900; b.accuracy = 0.5;
+    b.hx = hx; b.hy = hy; b.vx = 0; b.vy = 0; b.lastKick = 0; b.plan = null; b.planUntil = 0;
+    enemies.push(b);
+    return b;
+  };
+  const m = x => d.x0 + d.x1 - x;   // espelha para o lado adversário
+  soc.gk.CT = mk('CT', 'gk',  d.x0 + 1.0,        d.cy);
+  mk('CT', 'def', d.x0 + 0.20 * L, d.cy + 3.6);
+  mk('CT', 'att', d.x0 + 0.40 * L, d.cy - 3.2);
+  soc.gk.T  = mk('T',  'gk',  m(d.x0 + 1.0),     d.cy);
+  mk('T',  'def', m(d.x0 + 0.20 * L), d.cy - 3.6);
+  mk('T',  'mid', m(d.x0 + 0.32 * L), d.cy + 3.4);
+  mk('T',  'att', m(d.x0 + 0.40 * L), d.cy + 0.4);
+  socApplyLoadout();
+  socResetPositions();
+  socUpdateHud(true);
+}
+
+function socResetPositions(){
+  const d = soc.d, b = soc.ball;
+  b.x = (d.x0 + d.x1) / 2; b.y = d.cy; b.z = 0; b.vx = b.vy = b.vz = 0; b.lastTouch = null;
+  enemies.forEach(e => {
+    const j = e.role === 'gk' ? 0 : 0.5;
+    e.x = e.hx + (Math.random() - 0.5) * j; e.y = e.hy + (Math.random() - 0.5) * j;
+    e.z = 0; e.alive = true; e.health = e.maxHealth; e.respawnAt = 0; e.vx = e.vy = 0; e.plan = null;
+  });
+  if(!dmPlayerDead){
+    player.x = d.x0 + 0.28 * soc.L; player.y = d.cy; player.angle = 0;
+    player.z = player.targetZ = 0;
+    player.health = player.maxHealth;
+    const cfg = WEAPON_CONFIG.pistol;
+    player.ammo.pistol = cfg.defaultAmmo; player.reserveMags.pistol = cfg.maxMags || cfg.startMags;
+    updateHUD();
+  }
+  soc.ppx = player.x; soc.ppy = player.y; soc.pvx = soc.pvy = 0; soc.stillT = 0;
+  socJump.z = 0; socJump.v = 0;
+}
+
+// ---------- ações do jogador ----------
+function socPlayerKick(){
+  if(!soc || gameOver || dmPlayerDead || countdownActive || soc.phase !== 'play' || settingsModal.style.display === 'flex') return;
+  if(soc.test && !socTestInPitch()) return;
+  const now = performance.now();
+  if(now - soc.lastKickAt < SOC_KICK_CD_MS) return;
+  soc.lastKickAt = now;
+  const vm = document.getElementById('viewmodel');   // a arma "abaixa" enquanto você chuta
+  if(vm){ vm.classList.remove('anim-shoot', 'anim-switch'); void vm.offsetWidth; vm.classList.add('anim-switch'); }
+  const b = soc.ball, dx = b.x - player.x, dy = b.y - player.y, dist = Math.hypot(dx, dy);
+  if(dist > SOC_KICK_RANGE){ SFX.socKick(0.35, true); return; }
+  let da = Math.atan2(dy, dx) - player.angle;
+  while(da > Math.PI) da -= 2 * Math.PI; while(da < -Math.PI) da += 2 * Math.PI;
+  if(dist > 0.55 && Math.abs(da) > 1.2){ SFX.socKick(0.35, true); return; }   // bola fora do cone à frente
+  const air = socJump.z > 0.08;                                          // chute no ar = cabeceio/voleio mais forte
+  const pw = SOC_KICK_SPEED * (air ? 1.1 : 1) * (0.8 + 0.2 * (1 - dist / SOC_KICK_RANGE));
+  b.vx = Math.cos(player.angle) * pw; b.vy = Math.sin(player.angle) * pw;
+  b.vz = air ? 2.4 : 1.1; b.z = Math.max(b.z, 0.02);
+  b.lastTouch = player; soc.kicks++;
+  SFX.socKick(1); gpRumble(0.5, 0.4, 90);
+}
+function socPlayerJump(){   // pulo: vale em todos os modos (inclusive multiplayer, a altura z já é sincronizada)
+  if(!started || gameOver || dmPlayerDead || countdownActive || settingsModal.style.display === 'flex') return;
+  if(socJump.z > 0.001) return;
+  socJump.v = 2.2;
+  SFX.footstep();
+}
+function socStepJump(dt){
+  if(socJump.z > 0 || socJump.v > 0){
+    socJump.v -= 9 * dt; socJump.z += socJump.v * dt;
+    if(socJump.z <= 0){ socJump.z = 0; socJump.v = 0; }
+  }
+}
+// tiro da Deagle que acerta a bola empurra ela
+function socBulletHitBall(ang, range){
+  if(!soc || soc.phase !== 'play') return;
+  const b = soc.ball, dx = b.x - player.x, dy = b.y - player.y, dist = Math.hypot(dx, dy);
+  if(dist > range || dist < 0.3) return;
+  let da = Math.atan2(dy, dx) - ang;
+  while(da > Math.PI) da -= 2 * Math.PI; while(da < -Math.PI) da += 2 * Math.PI;
+  if(Math.abs(da) <= Math.atan2(0.3, dist) && hasLineOfSight(player.x, player.y, b.x, b.y)){
+    b.vx = Math.cos(ang) * SOC_SHOT_SPEED; b.vy = Math.sin(ang) * SOC_SHOT_SPEED; b.vz = 0.6;
+    b.lastTouch = player;
+  }
+}
+
+// ---------- física da bola ----------
+function socMoveBall(dt){
+  const b = soc.ball, d = soc.d;
+  const sp = Math.hypot(b.vx, b.vy);
+  const n = Math.max(1, Math.ceil(sp * dt / 0.18)), h = dt / n;
+  for(let i = 0; i < n; i++){
+    const sx = b.vx >= 0 ? 1 : -1, sy = b.vy >= 0 ? 1 : -1;
+    const nx = b.x + b.vx * h;
+    if(isWall(nx + sx * SOC_BALL_R, b.y)) b.vx = -b.vx * 0.62; else b.x = nx;
+    const ny = b.y + b.vy * h;
+    if(isWall(b.x, ny + sy * SOC_BALL_R)) b.vy = -b.vy * 0.62; else b.y = ny;
+  }
+  soc.posts.forEach(p => {   // bola bate nas traves
+    const dx = b.x - p.x, dy = b.y - p.y, dd = Math.hypot(dx, dy), R = 0.07 + SOC_BALL_R;
+    if(dd < R && dd > 1e-4){
+      const nx = dx / dd, ny = dy / dd; b.x = p.x + nx * R; b.y = p.y + ny * R;
+      const vn = b.vx * nx + b.vy * ny;
+      if(vn < 0){ b.vx -= 1.7 * vn * nx; b.vy -= 1.7 * vn * ny; }
+    }
+  });
+  const f = Math.exp(-SOC_FRICTION * dt);
+  b.vx *= f; b.vy *= f;
+  if(Math.hypot(b.vx, b.vy) < 0.06){ b.vx = 0; b.vy = 0; }
+  b.spin += Math.hypot(b.vx, b.vy) * dt / SOC_BALL_R * (b.vx >= 0 ? 1 : -1);
+  if(b.z > 0 || b.vz !== 0){
+    b.vz -= 9 * dt; b.z += b.vz * dt;
+    if(b.z <= 0){ b.z = 0; b.vz = (b.vz < -1.2) ? -b.vz * 0.45 : 0; }
+  }
+  if(isWall(b.x, b.y)){ b.x = (d.x0 + d.x1) / 2; b.y = d.cy; b.vx = b.vy = 0; }
+  if(soc.phase === 'play' && b.y > d.gy0 + 0.05 && b.y < d.gy1 - 0.05){
+    if(b.x < d.lineL - 0.12) socGoal('T');
+    else if(b.x > d.lineR + 0.12) socGoal('CT');
+  }
+}
+
+// ---------- MAPA DE TESTES: campinho de futebol (mesma física/gols/bola do modo Futebol, sem partida) ----------
+function socTestInPitch(){ return !!(soc && soc.test && player.y >= soc.pitchY0 && player.y < soc.pitchY1); }
+function socTestInit(ldef){
+  const d = ldef.soccer; if(!d) return;
+  dmScoreCT = 0; dmScoreT = 0;
+  const W = ldef.w;
+  soc = {
+    test: true, d, L: d.x1 - d.x0, home: 'flamengo', away: 'vasco', pitchY0: d.pitchY0, pitchY1: d.pitchY1,
+    ball: { x: (d.x0 + d.x1) / 2, y: d.cy, z: 0, vx: 0, vy: 0, vz: 0, spin: 0, lastTouch: null },
+    clock: 0, golden: false, phase: 'play', phaseT: 0, finishAfterGoal: false, chaser: { CT: null, T: null }, gk: { CT: null, T: null },
+    lastKickAt: 0, kicks: 0, playerGoals: 0, stillT: 0, inPitch: false,
+    posts: [{ x: d.lineL, y: d.gy0 }, { x: d.lineL, y: d.gy1 }, { x: d.lineR, y: d.gy0 }, { x: d.lineR, y: d.gy1 }],
+    ppx: player.x, ppy: player.y, pvx: 0, pvy: 0, hudKey: '', boardKey: '', boardCv: null, netCv: null,
+    props: [
+      { kind: 'socgoal', x: 1.7, y: d.cy, side: 'L' }, { kind: 'socgoal', x: W - 1.7, y: d.cy, side: 'R' },
+      { kind: 'socboard', x: 1.7, y: d.cy }, { kind: 'socboard', x: W - 1.7, y: d.cy }
+    ].concat(TEST_CLUB_SPOTS.map(c => ({ kind: 'socshield', x: c.x, y: c.y, club: c.k })))
+  };
+}
+function socTestResetBall(){
+  const b = soc.ball, d = soc.d;
+  b.x = (d.x0 + d.x1) / 2; b.y = d.cy; b.z = 0; b.vx = b.vy = b.vz = 0; b.lastTouch = null;
+}
+function socTestUpdate(dt, now){
+  if(!soc || !soc.test || gameOver) return;
+  socSyncTouch();
+  const inP = socTestInPitch();
+  if(inP !== soc.inPitch){   // entrou / saiu do gramado: liga e desliga a torcida
+    soc.inPitch = inP;
+    if(inP){ SFX.socCrowdStart(); SFX.socCrowdSet(0.55); SFX.socWhistle('start'); }
+    else { SFX.socCrowdStop(0); const el = document.getElementById('socHud'); if(el) el.style.display = 'none'; socHideGoal(); }
+  }
+  if(dt > 0){ soc.pvx = (player.x - soc.ppx) / dt; soc.pvy = (player.y - soc.ppy) / dt; }
+  soc.ppx = player.x; soc.ppy = player.y;
+  soc.clock = (soc.clock + dt) % SOC_MATCH_SECONDS;
+  const b = soc.ball;
+  if(soc.phase === 'goal'){
+    soc.phaseT -= dt; socMoveBall(dt);
+    if(soc.phaseT <= 0){ socHideGoal(); socTestResetBall(); soc.phase = 'play'; SFX.socWhistle('start'); }
+  } else {
+    if(!dmPlayerDead && inP) socCollideBall(player, soc.pvx, soc.pvy, false);
+    enemies.forEach(e => { if(e.alive && Math.abs(e.y - b.y) < 2 && Math.abs(e.x - b.x) < 2) socCollideBall(e, 0, 0, false); });
+    socMoveBall(dt);
+    if(b.y < soc.pitchY0 || b.y > soc.pitchY1 || b.x < 1.2 || b.x > MAP_W - 1.2) socTestResetBall();   // saiu do gramado
+  }
+  if(inP) socUpdateHud();
+}
+function socDrawShield(o){
+  const E = socShieldImgs[o.club]; if(!E || !E.loaded) return;
+  const r = (E.img.naturalHeight || 1) / (E.img.naturalWidth || 1);
+  socDrawBig(o, E.img, 0.7, 0.7 * r, 1.25, 1);
+}
+
+// contato jogador/bot x bola: conduz (drible), amortece e desvia
+function socCollideBall(ent, vx, vy, isGk){
+  const b = soc.ball, d = soc.d;
+  if(b.z > 0.55) return;   // bola alta passa por cima
+  const dx = b.x - ent.x, dy = b.y - ent.y, dd = Math.hypot(dx, dy);
+  if(dd >= SOC_CONTACT_R) return;
+  let nx, ny;
+  if(dd < 1e-4){ nx = Math.cos(ent.angle || 0); ny = Math.sin(ent.angle || 0); } else { nx = dx / dd; ny = dy / dd; }
+  const ox = b.x, oy = b.y;
+  b.x = ent.x + nx * SOC_CONTACT_R; b.y = ent.y + ny * SOC_CONTACT_R;
+  if(isWall(b.x, b.y)){   // encostada na parede: escapa pela lateral
+    b.x = ox; b.y = oy;
+    const tx = -ny, ty = nx, s = (tx * ((d.x0 + d.x1) / 2 - b.x) + ty * (d.cy - b.y)) >= 0 ? 1 : -1;
+    b.vx += tx * s * 2.5; b.vy += ty * s * 2.5;
+    return;
+  }
+  const sp = Math.hypot(vx, vy), push = Math.max(0, vx * nx + vy * ny);
+  let bn = b.vx * nx + b.vy * ny;
+  if(bn < 0){ b.vx -= 1.35 * bn * nx; b.vy -= 1.35 * bn * ny; bn = b.vx * nx + b.vy * ny; }   // quica (restituição 0,35)
+  const want = push * 1.08 + (sp > 0.4 ? 0.5 : 0);
+  if(bn < want){ b.vx += (want - bn) * nx; b.vy += (want - bn) * ny; }
+  b.lastTouch = ent;
+  if(isGk){   // goleiro: toda defesa vira um chutão para o campo
+    const now = performance.now();
+    if(!ent.lastClear || now - ent.lastClear > 600){
+      ent.lastClear = now;
+      const a = (ent.team === 'CT' ? 0 : Math.PI) + (Math.random() - 0.5) * 1.2;
+      b.vx = Math.cos(a) * 8.5; b.vy = Math.sin(a) * 8.5; b.vz = 1.3;
+      SFX.socKick(Math.max(0.2, 1 - Math.hypot(ent.x - player.x, ent.y - player.y) / 16));
+    }
+  }
+}
+
+// ---------- IA dos bots ----------
+function socPickChasers(){
+  const ball = soc.ball;
+  ['CT', 'T'].forEach(side => {
+    let best = null, bd = Infinity;
+    enemies.forEach(e => {
+      if(!e.alive || e.team !== side || e.role === 'gk') return;
+      const dd = Math.hypot(e.x - ball.x, e.y - ball.y);
+      if(dd < bd){ bd = dd; best = e; }
+    });
+    if(side === 'CT' && !dmPlayerDead && Math.hypot(player.x - ball.x, player.y - ball.y) < bd - 1.0) best = null;   // você está mais perto: aliados só apoiam
+    soc.chaser[side] = best;
+  });
+}
+
+function socMakePlan(b){
+  const d = soc.d, ball = soc.ball, side = b.team, sgn = side === 'CT' ? 1 : -1;
+  const goalX = side === 'CT' ? d.x1 : d.x0;
+  const dGoal = Math.hypot(goalX - ball.x, d.cy - ball.y);
+  if(dGoal < 15){   // perto do gol: chuta no canto oposto ao goleiro
+    const gk = soc.gk[side === 'CT' ? 'T' : 'CT'];
+    const away = (gk && gk.alive && gk.y > d.cy) ? -1 : 1;
+    return { mode: 'shoot', x: goalX, y: d.cy + away * (1.0 + Math.random() * 1.6) };
+  }
+  let best = null, bs = -Infinity;
+  enemies.forEach(m => {
+    if(m === b || !m.alive || m.team !== side || m.role === 'gk') return;
+    const ahead = (m.x - ball.x) * sgn, dist = Math.hypot(m.x - ball.x, m.y - ball.y);
+    if(ahead < 3 || dist < 4 || dist > 16 || !hasLineOfSight(ball.x, ball.y, m.x, m.y)) return;
+    const sc = ahead - dist * 0.2;
+    if(sc > bs){ bs = sc; best = m; }
+  });
+  if(best && Math.random() < 0.5) return { mode: 'pass', x: best.x + sgn * 1.5, y: best.y };
+  return { mode: 'dribble', x: goalX, y: d.cy + (Math.random() - 0.5) * 4 };
+}
+
+function socBotMove(b, tx, ty, spd, dt){
+  const d = soc.d, H = MAP_H;
+  tx = Math.max(d.x0 + 0.8, Math.min(d.x1 - 0.8, tx)); ty = Math.max(1.6, Math.min(H - 1.6, ty));
+  const dx = tx - b.x, dy = ty - b.y, dist = Math.hypot(dx, dy);
+  let mx = 0, my = 0;
+  if(dist > 0.12){ const k = Math.min(1, dist / 0.7); mx = dx / dist * k; my = dy / dist * k; }
+  enemies.forEach(o => {   // separação: bots não se empilham
+    if(o === b || !o.alive) return;
+    const ox = b.x - o.x, oy = b.y - o.y, od = Math.hypot(ox, oy);
+    if(od > 0 && od < 0.75){ mx += ox / od * (0.75 - od) * 1.6; my += oy / od * (0.75 - od) * 1.6; }
+  });
+  const ml = Math.hypot(mx, my), x0 = b.x, y0 = b.y;
+  if(ml > 0.01) dmBotStep(b, Math.atan2(my, mx), spd * Math.min(1, ml), dt);
+  b.vx = dt > 0 ? (b.x - x0) / dt : 0; b.vy = dt > 0 ? (b.y - y0) / dt : 0;
+  b.angle = Math.atan2(soc.ball.y - b.y, soc.ball.x - b.x);
+  b.stepAcc = (b.stepAcc || 0) + Math.hypot(b.x - x0, b.y - y0);
+  if(b.stepAcc >= 0.9){ b.stepAcc = 0; SFX.botFootstep(Math.hypot(b.x - player.x, b.y - player.y)); }
+}
+
+function socBotKick(b, ang){
+  const ball = soc.ball, p = 9.5 + Math.random() * 4;
+  ball.vx = Math.cos(ang) * p; ball.vy = Math.sin(ang) * p; ball.vz = 0.9 + Math.random() * 0.8;
+  ball.lastTouch = b;
+  SFX.socKick(Math.max(0.15, 1 - Math.hypot(b.x - player.x, b.y - player.y) / 16));
+}
+
+// todos têm Deagle: atiram no oponente visível mais próximo
+function socBotShoot(b, now){
+  if(now - b.lastShot < b.fireRate) return;
+  let tgt = null, td = 9, isPlayer = false;
+  enemies.forEach(o => {
+    if(!o.alive || o.team === b.team) return;
+    const dd = Math.hypot(o.x - b.x, o.y - b.y);
+    if(dd < td && hasLineOfSight(b.x, b.y, o.x, o.y)){ tgt = o; td = dd; isPlayer = false; }
+  });
+  if(b.team === 'T' && !dmPlayerDead){
+    const dd = Math.hypot(player.x - b.x, player.y - b.y);
+    if(dd < td && hasLineOfSight(b.x, b.y, player.x, player.y)){ tgt = player; td = dd; isPlayer = true; }
+  }
+  if(!tgt || Math.random() > 0.6) return;
+  b.lastShot = now;
+  SFX.botShoot('pistol', Math.hypot(b.x - player.x, b.y - player.y));
+  if(Math.random() < Math.max(0.12, b.accuracy - td * 0.04)){
+    if(isPlayer) dmDamagePlayer(b.dmgPlayer);
+    else { tgt.health -= b.dmg; if(tgt.health <= 0) dmOnKill(tgt, b.team, false); }
+  }
+}
+
+function socBotThink(b, dt, now){
+  const d = soc.d, ball = soc.ball, side = b.team, sgn = side === 'CT' ? 1 : -1;
+  const ownGoalX = side === 'CT' ? d.x0 : d.x1;
+  const dBall = Math.hypot(ball.x - b.x, ball.y - b.y);
+  let tx = b.hx, ty = b.hy, kickDir = null;
+  if(b.role === 'gk'){
+    const gx = ownGoalX + sgn * 1.0, bs = Math.hypot(ball.vx, ball.vy);
+    let gy = d.cy + (ball.y - d.cy) * 0.55;
+    if(bs > 3 && ball.vx * sgn < 0){   // bola vindo para o gol: antecipa o ponto de chegada
+      const t = (gx - ball.x) / ball.vx;
+      if(t > 0 && t < 1.6) gy = ball.y + ball.vy * t;
+    }
+    gy = Math.max(d.gy0 + 0.9, Math.min(d.gy1 - 0.9, gy));
+    tx = gx; ty = gy;
+    if(Math.abs(ball.x - gx) < 4.5 && ball.y > d.gy0 - 1.2 && ball.y < d.gy1 + 1.2 && bs < 4.5){ tx = ball.x; ty = ball.y; }   // bola parada na área: sai para pegar
+  } else if(soc.chaser[side] === b || dBall < 2.0){
+    if(now > b.planUntil){ b.plan = socMakePlan(b); b.planUntil = now + 600; }
+    const pl = b.plan, ax = pl.x - ball.x, ay = pl.y - ball.y, al = Math.hypot(ax, ay) || 1, ux = ax / al, uy = ay / al;
+    const bx = ball.x - b.x, by = ball.y - b.y, bl = Math.hypot(bx, by) || 1;
+    const align = (bx * ux + by * uy) / bl;   // 1 = bot atrás da bola em relação ao alvo
+    if(dBall > 1.0 && align < 0.3){
+      const px = ball.x - ux * 0.7, py = ball.y - uy * 0.7;
+      if(isWall(px, py)){ tx = ball.x; ty = ball.y; } else { tx = px; ty = py; }
+    } else { tx = ball.x; ty = ball.y; }
+    if(dBall < 0.95 && now - b.lastKick > 700 && align > 0.4){
+      const pressed = enemies.some(o => o.alive && o.team !== side && Math.hypot(o.x - b.x, o.y - b.y) < 1.7) ||
+                      (side === 'T' && !dmPlayerDead && Math.hypot(player.x - b.x, player.y - b.y) < 1.7);
+      if(pl.mode !== 'dribble' || pressed){ b.lastKick = now; kickDir = Math.atan2(uy, ux) + (Math.random() - 0.5) * 0.22; }
+    }
+  } else {
+    const k = b.role === 'def' ? 0.30 : (b.role === 'mid' ? 0.5 : 0.65);
+    tx = b.hx + (ball.x - b.hx) * k; ty = b.hy + (ball.y - b.hy) * k;
+  }
+  socBotMove(b, tx, ty, b.speed, dt);
+  if(kickDir !== null) socBotKick(b, kickDir);
+  socBotShoot(b, now);
+}
+
+function socRespawnBot(b){
+  b.x = b.hx + (Math.random() - 0.5) * 0.8; b.y = b.hy + (Math.random() - 0.5) * 0.8;
+  b.alive = true; b.health = b.maxHealth; b.respawnAt = 0; b.vx = b.vy = 0; b.plan = null;
+}
+
+// ---------- fases da partida ----------
+function socUpdate(dt, now){
+  if(!soc || gameOver) return;
+  socSyncTouch();
+  { // torcida: começa baixa, sobe nos primeiros segundos e abaixa devagar no fim da partida
+    const p = soc.clock / SOC_MATCH_SECONDS;
+    const fin = soc.golden ? 0.45 : (p > 0.85 ? 1 - Math.min(1, (p - 0.85) / 0.15) * 0.55 : 1);
+    SFX.socCrowdSet((0.3 + 0.7 * Math.min(1, soc.clock / 25)) * fin);
+  }
+  if(soc.phase === 'pre'){   // aguarda a contagem inicial
+    if(countdownActive){ socUpdateHud(); return; }
+    soc.phase = 'play'; SFX.socWhistle('start');
+    flashMsg(currentLang === 'en' ? 'KICK OFF!' : 'COMEÇA O JOGO!');
+  }
+  if(dt > 0){ soc.pvx = (player.x - soc.ppx) / dt; soc.pvy = (player.y - soc.ppy) / dt; }
+  soc.ppx = player.x; soc.ppy = player.y;
+
+  if(soc.phase === 'goal'){
+    soc.phaseT -= dt;
+    socMoveBall(dt);
+    if(soc.phaseT <= 0){
+      if(soc.finishAfterGoal){ socFinish(); return; }
+      socHideGoal(); socResetPositions();
+      soc.phase = 'kick'; soc.phaseT = SOC_KICKOFF_PAUSE;
+    }
+    socUpdateHud(); return;
+  }
+  if(soc.phase === 'kick'){
+    soc.phaseT -= dt;
+    if(soc.phaseT <= 0){ soc.phase = 'play'; countdownActive = false; SFX.socWhistle('start'); }
+    socUpdateHud(); return;
+  }
+
+  soc.clock += dt;
+  if(soc.clock >= SOC_MATCH_SECONDS && !soc.golden){
+    if(dmScoreCT !== dmScoreT){ socFinish(); return; }
+    soc.golden = true; SFX.socWhistle('end');
+    flashMsg(currentLang === 'en' ? 'GOLDEN GOAL!' : 'GOL DE OURO!');
+  }
+  if(!debugOptions.pauseEnemies){
+    if(now >= soc.chaseAt){ soc.chaseAt = now + 200; socPickChasers(); }
+    enemies.forEach(b => {
+      if(!b.alive){ if(b.respawnAt && now >= b.respawnAt) socRespawnBot(b); return; }
+      socBotThink(b, dt, now);
+    });
+  }
+  if(!dmPlayerDead) socCollideBall(player, soc.pvx, soc.pvy, false);
+  enemies.forEach(e => { if(e.alive) socCollideBall(e, e.vx, e.vy, e.role === 'gk'); });
+  socMoveBall(dt);
+  if(soc.phase === 'play'){   // "quase gol": bola vindo forte para o gol que não entra (defendida, desviada, pra fora) → reação da torcida
+    const bb = soc.ball, dd = soc.d, half = (dd.gy1 - dd.gy0) / 2 + 1.2;
+    let side = null;
+    if(bb.vx < -3 && bb.x > dd.lineL && bb.x - dd.lineL < 7 && Math.abs(bb.y - dd.cy) < half) side = 'L';
+    else if(bb.vx > 3 && bb.x < dd.lineR && dd.lineR - bb.x < 7 && Math.abs(bb.y - dd.cy) < half) side = 'R';
+    if(side) soc.threat = { side, t: now };
+    else if(soc.threat){
+      const th = soc.threat, toward = th.side === 'L' ? -bb.vx : bb.vx;
+      if(now - th.t > 2500) soc.threat = null;
+      else if(toward < 1.2 && now - th.t > 120){
+        if(now - (soc.lastMissAt || 0) > 6000){ SFX.socReact('miss'); soc.lastMissAt = now; }
+        soc.threat = null;
+      }
+    }
+  }
+  // bola parada colada na parede por muito tempo: dá um empurrão para o meio
+  const b = soc.ball;
+  if(b.vx === 0 && b.vy === 0 && (isWall(b.x - 0.8, b.y) || isWall(b.x + 0.8, b.y) || isWall(b.x, b.y - 0.8) || isWall(b.x, b.y + 0.8))) soc.stillT += dt; else soc.stillT = 0;
+  if(soc.stillT > 6){ soc.stillT = 0; b.vx = ((soc.d.x0 + soc.d.x1) / 2 - b.x) * 0.6; b.vy = (soc.d.cy - b.y) * 0.6; }
+  socUpdateHud();
+}
+
+function socGoal(side){   // side = lado que MARCOU
+  if(soc && soc.test){   // mapa de testes: marca, comemora e a bola volta ao centro (sem fim de partida)
+    if(soc.phase !== 'play') return;
+    if(side === 'CT') dmScoreCT++; else dmScoreT++;
+    const lt = soc.ball.lastTouch, ltTeam = lt === player ? 'CT' : (lt && lt.team);
+    soc.phase = 'goal'; soc.phaseT = 2.6; soc.threat = null;
+    SFX.socGoal(); socShowGoal(side, !!ltTeam && ltTeam !== side); socUpdateHud(true);
+    return;
+  }
+  if(!soc || soc.phase !== 'play' || gameOver) return;
+  if(side === 'CT') dmScoreCT++; else dmScoreT++;
+  const lt = soc.ball.lastTouch, ltTeam = lt === player ? 'CT' : (lt && lt.team);
+  const own = !!ltTeam && ltTeam !== side;
+  if(lt === player && side === 'CT'){ soc.playerGoals++; score += 50; updateHUD(); }
+  soc.threat = null;
+  soc.phase = 'goal'; soc.phaseT = SOC_GOAL_PAUSE; countdownActive = true; fireHeld = false;
+  soc.finishAfterGoal = soc.golden || (soc.clock >= SOC_MATCH_SECONDS && dmScoreCT !== dmScoreT);
+  SFX.socGoal(); gpRumble(0.9, 0.9, 500);
+  socShowGoal(side, own);
+  updateHUDModeLabel(); socUpdateHud(true);
+}
+
+function socFinish(){
+  if(gameOver) return;
+  gameOver = true; countdownActive = false;
+  socHideUi();
+  SFX.socWhistle('end'); SFX.socCrowdStop(5);   // apito final e torcida abaixando devagar
+  SFX.stopMusic();
+  const en = currentLang === 'en', homeWon = dmScoreCT > dmScoreT;
+  SFX.teamWin(homeWon ? 'CT' : 'T');
+  document.getElementById('damageFlash').style.opacity = '0';
+  document.getElementById('countdownOverlay').style.display = 'none';
+  const h = socClubOf(soc.home), a = socClubOf(soc.away);
+  const ov = document.getElementById('gameOverOverlay');
+  ov.style.display = 'flex';
+  ov.querySelector('h1').textContent = homeWon ? (en ? 'VICTORY!' : 'VITÓRIA!') : (en ? 'DEFEAT' : 'DERROTA');
+  document.getElementById('finalScore').textContent =
+    h.n + ' ' + dmScoreCT + ' x ' + dmScoreT + ' ' + a.n + '  |  ' + (en ? 'YOUR GOALS: ' : 'SEUS GOLS: ') + soc.playerGoals +
+    '  ' + (en ? 'KILLS: ' : 'ABATES: ') + dmPlayerKills + '  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths;
+  if(document.pointerLockElement) document.exitPointerLock();
+}
+
+// ---------- HUD ----------
+function socMinuteLabel(){
+  if(soc.golden) return currentLang === 'en' ? '90+ GOLDEN GOAL' : '90+ GOL DE OURO';
+  return Math.min(90, Math.floor(soc.clock / SOC_MATCH_SECONDS * 90)) + "'";
+}
+function socUpdateHud(force){
+  const el = document.getElementById('socHud');
+  if(!el || !soc) return;
+  if(el.style.display !== 'flex') el.style.display = 'flex';
+  const key = dmScoreCT + '|' + dmScoreT + '|' + socMinuteLabel() + '|' + soc.home + soc.away;
+  if(!force && key === soc.hudKey) return;
+  soc.hudKey = key;
+  const h = socClubOf(soc.home), a = socClubOf(soc.away);
+  el.innerHTML = '<div class="soc-board"><img src="' + h.shield + '" alt="' + h.s + '"><span class="soc-score">' + dmScoreCT +
+    '</span><span class="soc-x">×</span><span class="soc-score">' + dmScoreT + '</span><img src="' + a.shield + '" alt="' + a.s +
+    '"></div><div class="soc-clock' + (soc.golden ? ' golden' : '') + '">' + socMinuteLabel() + '</div>';
+}
+function socShowGoal(side, own){
+  const el = document.getElementById('socGoal');
+  if(!el) return;
+  const en = currentLang === 'en', c = socClubOf(side === 'CT' ? soc.home : soc.away);
+  const h = socClubOf(soc.home), a = socClubOf(soc.away);
+  el.innerHTML = '<img src="' + c.shield + '" alt=""><div class="g-txt">' + (own ? (en ? 'OWN GOAL!' : 'GOL CONTRA!') : (en ? 'GOOOAL!' : 'GOOOOL!')) +
+    '</div><div class="g-sub">' + h.n + ' ' + dmScoreCT + ' x ' + dmScoreT + ' ' + a.n + '</div>';
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  flashMsg((own ? (en ? 'OWN GOAL — ' : 'GOL CONTRA — ') : (en ? 'GOAL — ' : 'GOL — ')) + c.n);
+}
+function socHideGoal(){ const el = document.getElementById('socGoal'); if(el) el.classList.remove('on'); }
+function socHideUi(){
+  document.body.classList.remove('soc-ui');
+  ['socHud', 'kickBtn', 'jumpBtn'].forEach(id => { const e = document.getElementById(id); if(e) e.style.display = 'none'; });
+  socHideGoal();
+}
+function socSyncTouch(){
+  const live = started && !gameOver;
+  document.body.classList.toggle('soc-ui', !!soc && live);
+  [['kickBtn', !!soc && live], ['jumpBtn', live]].forEach(([id, on]) => { const e = document.getElementById(id), v = on ? 'flex' : 'none'; if(e && e.style.display !== v) e.style.display = v; });
+}
+
+// ---------- menu: escolha de clube ----------
+function buildSocGrids(){
+  const hg = document.getElementById('socHomeGrid'), ag = document.getElementById('socAwayGrid');
+  if(!hg || !ag) return;
+  hg.innerHTML = ''; ag.innerHTML = '';
+  const chip = (grid, slot, val, html) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'club-chip'; b.dataset.val = val; b.dataset.slot = slot; b.innerHTML = html;
+    b.addEventListener('click', () => {
+      SFX.menuSelect();
+      socPick[slot] = val;
+      refreshSocGrids();
+    });
+    grid.appendChild(b);
+  };
+  const rndTxt = currentLang === 'en' ? 'RANDOM' : 'ALEATÓRIO';
+  chip(hg, 'home', 'random', '<span class="chip-dice">🎲</span><span>' + rndTxt + '</span>');
+  SOC_CLUBS.forEach(c => chip(hg, 'home', c.k, '<img src="' + c.shield + '" alt=""><span>' + c.n + '</span>'));
+  chip(ag, 'away', 'random', '<span class="chip-dice">🎲</span><span>' + (currentLang === 'en' ? 'RANDOM' : 'ALEATÓRIO') + '</span>');
+  SOC_CLUBS.forEach(c => chip(ag, 'away', c.k, '<img src="' + c.shield + '" alt=""><span>' + c.n + '</span>'));
+  refreshSocGrids();
+}
+function refreshSocGrids(){
+  // bloqueio simétrico: o clube escolhido de um lado fica indisponível no outro (🎲 nunca bloqueia)
+  document.querySelectorAll('#socHomeGrid .club-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.val === socPick.home);
+    c.classList.toggle('disabled', c.dataset.val !== 'random' && c.dataset.val === socPick.away);
+  });
+  document.querySelectorAll('#socAwayGrid .club-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.val === socPick.away);
+    c.classList.toggle('disabled', c.dataset.val !== 'random' && c.dataset.val === socPick.home);
+  });
+}
+
+// ---------- desenho (bola, rede, traves, placar do estádio) ----------
+function drawSocBall(ball, sx, horizon, size, dist, zShift){
+  const fog = Math.max(0.55, 1 - dist / 32);
+  horizon = horizon + (zShift || 0);
+  const bottom = horizon + size * 0.5;
+  const diam = Math.max(3, size * 0.42), lift = ball.z * size;
+  drawGroundShadow(sx, bottom - 1, diam * 0.5 * (1 - Math.min(0.6, ball.z)), fog);
+  ctx.save();
+  ctx.globalAlpha = fog;
+  ctx.translate(sx, bottom - lift - diam / 2);
+  ctx.rotate(ball.spin);
+  if(socBallImg.loaded) ctx.drawImage(socBallImg.img, -diam / 2, -diam / 2, diam, diam);
+  else { ctx.beginPath(); ctx.arc(0, 0, diam / 2, 0, Math.PI * 2); ctx.fillStyle = '#f4f4f4'; ctx.fill(); ctx.strokeStyle = '#222'; ctx.stroke(); }
+  ctx.restore();
+}
+
+// projeção em perspectiva (mesma matemática das paredes): x,y no mapa, z = altura acima do piso
+function socProj(x, y, z){
+  const w = SCREEN_W, h = SCREEN_H, horizon = horizonY();
+  const a = player.angle, ca = Math.cos(a), sa = Math.sin(a), dx = x - player.x, dy = y - player.y;
+  const perp = dx * ca + dy * sa;
+  if(perp < 0.3) return null;
+  const lat = -dx * sa + dy * ca, fx = w / (2 * Math.tan(HALF_FOV));
+  return { sx: w / 2 + lat / perp * fx, sy: horizon + (0.5 + player.z - z) * h / perp, perp, fx };
+}
+// imagem grande ancorada no chão (ou elevada por `lift`), recortada coluna a coluna pelas paredes à frente
+function socDrawBig(o, src, ww, wh, lift, alpha){
+  if(!src) return;
+  const p = socProj(o.x, o.y, 0);
+  if(!p) return;
+  const w = SCREEN_W, dw = ww * p.fx / p.perp, dh = wh * SCREEN_H / p.perp;
+  const x0 = p.sx - dw / 2, x1 = p.sx + dw / 2;
+  if(x1 < 0 || x0 > w || dh < 1.5) return;
+  const bottom = p.sy - lift * SCREEN_H / p.perp, top = bottom - dh;
+  const sw = src.width || src.naturalWidth, sh = src.height || src.naturalHeight;
+  if(!sw || !sh) return;
+  const c0 = Math.max(0, Math.floor(x0)), c1 = Math.min(w - 1, Math.ceil(x1) - 1);
+  ctx.save(); ctx.globalAlpha = alpha;
+  let rs = -1;
+  const flush = cEnd => {
+    if(rs < 0) return;
+    const a0 = Math.max(0, (rs - x0) / dw * sw), a1 = Math.min(sw, (cEnd + 1 - x0) / dw * sw);
+    if(a1 > a0) ctx.drawImage(src, a0, 0, a1 - a0, sh, rs, top, cEnd + 1 - rs, dh);
+    rs = -1;
+  };
+  for(let c = c0; c <= c1; c++){
+    if(spriteColVisible(c, p.perp, top, bottom)){ if(rs < 0) rs = c; } else flush(c - 1);
+  }
+  flush(c1);
+  ctx.restore();
+}
+// ----- gols renderizados como paredes: planos verticais texturizados, desenhados coluna a coluna
+// com a mesma projeção, oclusão (zbuffer), sombra lateral (0,62) e névoa das paredes do jogo.
+function socGoalPlanes(side, d, W){
+  const L = side === 'L', lx = L ? d.lineL : d.lineR, bx = L ? 1.3 : W - 1.3;
+  const T = 0.07, GH = 1.0, BH = 0.12, y0 = d.gy0, y1 = d.gy1, P = [];
+  const pl = (ax, ay, bx2, by2, z0, z1, tex, rep) => P.push({ ax, ay, bx: bx2, by: by2, z0, z1, tex, rep });
+  [y0, y1].forEach(py => {   // traves (caixas de 4 faces)
+    pl(lx - T, py - T, lx - T, py + T, 0, GH, 'post', 0); pl(lx + T, py - T, lx + T, py + T, 0, GH, 'post', 0);
+    pl(lx - T, py - T, lx + T, py - T, 0, GH, 'post', 0); pl(lx - T, py + T, lx + T, py + T, 0, GH, 'post', 0);
+  });
+  pl(lx - T, y0, lx - T, y1, GH - BH, GH, 'post', 6); pl(lx + T, y0, lx + T, y1, GH - BH, GH, 'post', 6);   // travessão
+  pl(bx, y0 + T, bx, y1 - T, 0, GH, 'net', 6);                    // fundo da rede
+  pl(lx, y0 + T, bx, y0 + T, 0, GH, 'net', 2); pl(lx, y1 - T, bx, y1 - T, 0, GH, 'net', 2);   // laterais da rede
+  return P;
+}
+// versão reduzida (máx. 256px) da textura, criada uma única vez: drawImage de colunas de 1px e o pattern ficam bem mais baratos
+function socSmallTex(E){
+  if(E.small !== undefined) return E.small;
+  E.small = null;
+  try {
+    const iw = E.img.naturalWidth, ih = E.img.naturalHeight; if(!iw || !ih) { E.small = undefined; return null; }
+    const k = Math.min(1, 256 / Math.max(iw, ih)), cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(iw * k)); cv.height = Math.max(1, Math.round(ih * k));
+    cv.getContext('2d').drawImage(E.img, 0, 0, cv.width, cv.height);
+    E.small = cv;
+  } catch(e) { E.small = null; }
+  return E.small;
+}
+function socDrawPlane(p){
+  const E = p.tex === 'net' ? socNetImg : socPostImg;
+  if(!E.loaded) return;
+  const w = SCREEN_W, h = SCREEN_H, horizon = horizonY(), eyeZ = 0.5 + player.z;
+  const a = player.angle, dX = Math.cos(a), dY = Math.sin(a), tf = Math.tan(HALF_FOV), pX = -dY * tf, pY = dX * tf;
+  const ex = p.bx - p.ax, ey = p.by - p.ay, len = Math.hypot(ex, ey);
+  const im = socSmallTex(E) || E.img, sw = im.naturalWidth || im.width, sh = im.naturalHeight || im.height;
+  if(!sw || !sh) return;
+  const sideShade = p.ay === p.by ? 0.62 : 1.0, net = p.tex === 'net';
+  ctx.save();
+  // colunas vizinhas com a mesma fatia da textura e mesma altura viram um único drawImage
+  let rc = -1, rsx = 0, rt = 0, rb = 0, rsh = 1, rn = 0;
+  const flush = () => {
+    if(rc < 0) return;
+    if(net){ ctx.globalAlpha = Math.min(1, rsh * 1.1); ctx.drawImage(im, rsx, 0, 1, sh, rc, rt, rn, rb - rt); }
+    else {
+      ctx.globalAlpha = 1; ctx.drawImage(im, rsx, 0, 1, sh, rc, rt, rn, rb - rt);
+      if(rsh < 0.99){ ctx.globalAlpha = 1 - rsh; ctx.fillStyle = '#000'; ctx.fillRect(rc, rt, rn, rb - rt); }
+    }
+    rc = -1;
+  };
+  const apx = p.ax - player.x, apy = p.ay - player.y;
+  for(let c = 0; c < w; c++){
+    const camX = 2 * c / w - 1, rx = dX + pX * camX, ry = dY + pY * camX;
+    const den = rx * ey - ry * ex;
+    if(Math.abs(den) < 1e-9){ flush(); continue; }
+    const s = (apx * ey - apy * ex) / den, t = (apx * ry - apy * rx) / den;
+    if(s < 0.3 || t < 0 || t > 1 || s > 40){ flush(); continue; }
+    const unit = h / s, yBot = horizon + (eyeZ - p.z0) * unit, yTop = horizon + (eyeZ - p.z1) * unit;
+    if(!spriteColVisible(c, s - 0.03, yTop, yBot)){ flush(); continue; }
+    const u = p.rep ? ((t * p.rep) % 1) : t;   // rep = repetições da textura ao longo do plano
+    const sx = Math.min(sw - 1, Math.floor(u * sw));
+    const shade = Math.max(0.15, 1 - s / (12 * fogScale)) * sideShade;
+    if(rc >= 0 && sx === rsx && Math.abs(yTop - rt) < 1 && Math.abs(yBot - rb) < 1 && Math.abs(shade - rsh) < 0.04){ rn++; continue; }
+    flush(); rc = c; rsx = sx; rt = yTop; rb = yBot; rsh = shade; rn = 1;
+  }
+  flush();
+  ctx.restore();
+}
+// plano horizontal (piso/teto da rede): uma linha de tela por vez, textura repetida em perspectiva
+function socDrawHPlane(xa, xb, ya, yb, z){
+  const E = socNetImg;
+  if(!E.loaded || !E.img.naturalWidth) return;
+  const tex = socSmallTex(E) || E.img;
+  if(soc.netPat === undefined){ try { soc.netPat = ctx.createPattern(tex, 'repeat'); } catch(e) { soc.netPat = null; } }
+  const pat = soc.netPat;
+  if(!pat || !pat.setTransform || typeof DOMMatrix === 'undefined') return;
+  const w = SCREEN_W, h = SCREEN_H, horizon = horizonY(), dz = 0.5 + player.z - z;
+  if(Math.abs(dz) < 0.02) return;
+  const a = player.angle, dx = Math.cos(a), dy = Math.sin(a), tf = Math.tan(HALF_FOV), pvx = -dy, pvy = dx;
+  let smin = Infinity, smax = -Infinity;
+  [[xa, ya], [xa, yb], [xb, ya], [xb, yb]].forEach(([x, y]) => { const s = (x - player.x) * dx + (y - player.y) * dy; smin = Math.min(smin, s); smax = Math.max(smax, s); });
+  if(smax < 0.4) return;
+  smin = Math.max(smin, 0.3);
+  const rA = horizon + dz * h / smin, rB = horizon + dz * h / smax;
+  const r0 = Math.max(0, Math.floor(Math.min(rA, rB))), r1 = Math.min(h - 1, Math.ceil(Math.max(rA, rB)));
+  const sw = tex.naturalWidth || tex.width, sh = tex.naturalHeight || tex.height, mtx = new DOMMatrix();
+  ctx.save();
+  for(let r = r0; r <= r1; r++){
+    const den = r + 0.5 - horizon, s = dz * h / den;
+    if(!(s > 0.3) || s > 40) continue;
+    const ds = dz * h / (den + 1) - s;
+    if(!ds) continue;
+    const a0x = player.x + s * dx, a0y = player.y + s * dy, bxv = s * tf * pvx, byv = s * tf * pvy;
+    let lo = -1, hi = 1, ok = true;
+    [[a0x, bxv, xa, xb], [a0y, byv, ya, yb]].forEach(([A0, B, mn, mx]) => {
+      if(Math.abs(B) < 1e-9){ if(A0 < mn || A0 > mx) ok = false; }
+      else { const t1 = (mn - A0) / B, t2 = (mx - A0) / B; lo = Math.max(lo, Math.min(t1, t2)); hi = Math.min(hi, Math.max(t1, t2)); }
+    });
+    if(!ok || lo >= hi) continue;
+    const cS = Math.max(0, Math.ceil((lo + 1) * w / 2 - 0.5)), cE = Math.min(w - 1, Math.floor((hi + 1) * w / 2 - 0.5));
+    if(cE < cS) continue;
+    const ox = a0x + bxv * (1 / w - 1), oy = a0y + byv * (1 / w - 1), kx = 2 * bxv / w, ky = 2 * byv / w, k2 = kx * kx + ky * ky;
+    if(k2 < 1e-12) continue;
+    mtx.a = kx / (sw * k2); mtx.b = dx / (sw * ds); mtx.c = ky / (sh * k2); mtx.d = dy / (sh * ds); mtx.e = -(ox * kx + oy * ky) / k2; mtx.f = r - (ox * dx + oy * dy) / ds;
+    pat.setTransform(mtx);
+    ctx.fillStyle = pat;
+    ctx.globalAlpha = Math.min(1, Math.max(0.15, 1 - s / (12 * fogScale)));
+    let rs = -1;
+    for(let c = cS; c <= cE + 1; c++){
+      const vis = c <= cE && spriteColVisible(c, s - 0.03, r, r + 1);
+      if(vis){ if(rs < 0) rs = c; } else if(rs >= 0){ ctx.fillRect(rs, r, c - rs, 1); rs = -1; }
+    }
+  }
+  ctx.restore();
+}
+function socDrawGoal(o){
+  if(!o.planes) o.planes = socGoalPlanes(o.side, soc.d, MAP_W);
+  { // descarta o gol quando está atrás do jogador ou longe demais
+    const gx = o.side === 'L' ? soc.d.lineL : soc.d.lineR, gy = (soc.d.gy0 + soc.d.gy1) / 2, vx = gx - player.x, vy = gy - player.y, dist = Math.hypot(vx, vy);
+    if(dist > 40) return;
+    if(dist > 5 && vx * Math.cos(player.angle) + vy * Math.sin(player.angle) < 0) return;
+  }
+  { const d = soc.d, W = MAP_W, L = o.side === 'L', lx = L ? d.lineL : d.lineR, bx = L ? 1.3 : W - 1.3;
+    const xa = Math.min(lx, bx), xb = Math.max(lx, bx);
+    socDrawHPlane(xa, xb, d.gy0 + 0.07, d.gy1 - 0.07, 1.0);     // rede no teto do gol
+  }
+  const q = o.planes.map(p => ({ p, d: Math.hypot((p.ax + p.bx) / 2 - player.x, (p.ay + p.by) / 2 - player.y) }));
+  q.sort((u, v) => v.d - u.d);   // de trás para frente
+  q.forEach(e => socDrawPlane(e.p));
+}
+function socBoardCanvas(){
+  const h = socClubOf(soc.home), a = socClubOf(soc.away), eh = socShieldImgs[h.k], ea = socShieldImgs[a.k];
+  const key = dmScoreCT + '|' + dmScoreT + '|' + socMinuteLabel() + '|' + (eh.loaded ? 1 : 0) + (ea.loaded ? 1 : 0);
+  if(soc.boardCv && soc.boardKey === key) return soc.boardCv;
+  let cv = soc.boardCv;
+  if(!cv){ cv = soc.boardCv = document.createElement('canvas'); cv.width = 320; cv.height = 112; }
+  const c = cv.getContext('2d'), font = 'Trebuchet MS, Verdana, sans-serif';
+  c.clearRect(0, 0, 320, 112);
+  c.fillStyle = 'rgba(6,12,26,0.94)'; c.fillRect(0, 0, 320, 112);
+  c.strokeStyle = '#e8b93a'; c.lineWidth = 4; c.strokeRect(2, 2, 316, 108);
+  const shield = (e, x) => { if(!e.loaded) return; const r = e.img.naturalWidth / (e.img.naturalHeight || 1), hh = 64, ww = Math.min(80, hh * r); c.drawImage(e.img, x - ww / 2, 8, ww, hh); };
+  shield(eh, 50); shield(ea, 270);
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = '#fff'; c.font = 'bold 62px ' + font;
+  c.fillText(String(dmScoreCT), 118, 42); c.fillText(String(dmScoreT), 202, 42);
+  c.fillStyle = '#e8b93a'; c.font = 'bold 40px ' + font; c.fillText('×', 160, 42);
+  c.font = 'bold 22px ' + font; c.fillText(socMinuteLabel(), 160, 92);
+  soc.boardKey = key;
+  return cv;
+}
+function socDrawBoard(o){ socDrawBig(o, socBoardCanvas(), 4.2, 1.47, 1.45, 1); }
+
+// bola e gols no radar
+function socDrawMinimap(px, py, scale){
+  const W = mmCanvas.width, Hh = mmCanvas.height, d = soc.d;
+  const clampPt = (x, y) => {
+    let fx = (x - px + 5) * scale, fy = (y - py + 5) * scale;
+    const out = fx < 4 || fy < 4 || fx > W - 4 || fy > Hh - 4;
+    return { x: Math.max(5, Math.min(W - 5, fx)), y: Math.max(5, Math.min(Hh - 5, fy)), out };
+  };
+  [['L', d.lineL, '#3aa0ff'], ['R', d.lineR, '#ff4a3a']].forEach(([k, x, col]) => {
+    const g = clampPt(x, d.cy);
+    mmCtx.fillStyle = col; mmCtx.globalAlpha = g.out ? 0.8 : 1;
+    mmCtx.fillRect(g.x - 3, g.y - 5, 6, 10); mmCtx.globalAlpha = 1;
+  });
+  const b = clampPt(soc.ball.x, soc.ball.y);
+  mmCtx.fillStyle = '#fff'; mmCtx.strokeStyle = '#000'; mmCtx.lineWidth = 1.5;
+  mmCtx.beginPath(); mmCtx.arc(b.x, b.y, b.out ? 3.5 : 4.5, 0, Math.PI * 2); mmCtx.fill(); mmCtx.stroke();
 }
 
 
@@ -8392,7 +9734,22 @@ const keys = {};
 let usingTouch = false;
 let usingKeyboardMouse = false;
 let pointerLocked = false;
-let mouseDX = 0;
+let mouseDX = 0, mouseDY = 0, lookDY = 0, gpLook = 0;
+// Câmera livre (estilo Counter-Strike): olhar para cima/baixo. camPitch = deslocamento do horizonte em fração da altura da tela.
+let camPitch = 0;
+const CAM_PITCH_MAX = 0.42;
+function horizonY(){ return Math.floor(SCREEN_H / 2) + Math.round(camPitch * SCREEN_H); }
+function addCamPitch(d){ camPitch = Math.max(-CAM_PITCH_MAX, Math.min(CAM_PITCH_MAX, camPitch + d)); }
+// Ajustes da câmera vertical (valem para mouse, toque e controle) + centralização suave.
+let invertY = false, pitchSens = 1.0, camRecenter = false;
+function lookPitch(d){ if(!d) return; camRecenter = false; addCamPitch(d); }   // entrada do jogador cancela a centralização
+function recenterCam(){ camRecenter = true; }
+function stepCamRecenter(dt){
+  if(!camRecenter) return;
+  const st = 2.4 * dt;
+  if(Math.abs(camPitch) <= st){ camPitch = 0; camRecenter = false; }
+  else camPitch -= Math.sign(camPitch) * st;
+}
 let joyVec = {x:0,y:0};
 let lookDX = 0;
 
@@ -8413,6 +9770,9 @@ window.addEventListener('keydown', e => {
     applyControlScheme(); 
   }
   if(k === 'r') reloadWeapon();
+  if((k === 'c' || k === 'home') && started && !gameOver && settingsModal.style.display !== 'flex') recenterCam();
+  if(k === 'pageup' || k === 'pagedown') e.preventDefault();
+  if(started && !gameOver && settingsModal.style.display !== 'flex'){ if(soc && k === 'f') socPlayerKick(); if(k === ' '){ socPlayerJump(); e.preventDefault(); } }
   if(k === 'e'){ if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }
   if(k === 'escape') {
     if(document.pointerLockElement) document.exitPointerLock();
@@ -8432,20 +9792,21 @@ window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
 // ignora os primeiros eventos após travar o mouse/voltar o foco e limita o giro por quadro.
 let mouseSkip = 0;
 const MOUSE_SPIKE_PX = 300;      // um único evento acima disso é glitch, não movimento real
-function resetLookInput(){ mouseDX = 0; lookDX = 0; mouseSkip = 3; }
+function resetLookInput(){ mouseDX = 0; lookDX = 0; mouseDY = 0; lookDY = 0; mouseSkip = 3; }
 window.addEventListener('blur', resetLookInput);
 document.addEventListener('visibilitychange', resetLookInput);
 window.addEventListener('mousemove', e=>{
   if(!pointerLocked) return;
   if(mouseSkip > 0){ mouseSkip--; return; }
   const mx = e.movementX || 0;
-  if(Math.abs(mx) > MOUSE_SPIKE_PX) return;
-  mouseDX += mx;
+  const my = e.movementY || 0;
+  if(Math.abs(mx) > MOUSE_SPIKE_PX || Math.abs(my) > MOUSE_SPIKE_PX) return;
+  mouseDX += mx; mouseDY += my;
 });
 window.addEventListener('mousedown', e=>{
   if(started && !gameOver && document.pointerLockElement===document.getElementById('screen')){
     fireHeld = true; tryFire();
-  } else if(started && !gameOver && !e.target.closest('#weaponIconBar') && !e.target.closest('#menuBtn') && !e.target.closest('#touchLayer') && !e.target.closest('.overlay-screen')){
+  } else if(started && !gameOver && !e.target.closest('#weaponIconBar') && !e.target.closest('#menuBtn') && !e.target.closest('#touchLayer') && !e.target.closest('#chatWrap') && !e.target.closest('#chatBtn') && !e.target.closest('.overlay-screen')){
     requestPointerLockSafe();
   }
 });
@@ -8467,6 +9828,11 @@ let fireHeld = false;
 
 function applyControlScheme(){
   document.getElementById('touchLayer').style.display = usingTouch ? 'block':'none';
+  updateControlsActive();
+}
+function updateControlsActive(){
+  const cur = usingKeyboardMouse ? 'colKb' : usingTouch ? 'colTouch' : (usingGamepad && gamepadIndex !== null) ? 'colGp' : 'colKb';
+  ['colKb','colTouch','colGp'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('active', id === cur); });
 }
 
 // =========================================================
@@ -8611,7 +9977,7 @@ function pollGamepad(){
 
     gpVec.x = applyDeadzone(gp.axes[0] || 0);
     gpVec.y = applyDeadzone(gp.axes[1] || 0);
-    gpTurn = applyDeadzone(gp.axes[2] || 0);
+    gpTurn = applyDeadzone(gp.axes[2] || 0); gpLook = applyDeadzone(gp.axes[3] || 0);
 
     const rt = gp.buttons[7];
     gpFireHeld = rt ? (rt.value > 0.2 || rt.pressed) : btn(7);
@@ -8620,18 +9986,20 @@ function pollGamepad(){
     gpTriggerWasHeld = gpFireHeld;
 
     if(btn(2) && !prev(2)) reloadWeapon();       // X / Square
-    if(btn(0) && !prev(0)){ if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }      // A / Cross: troca a arma da mão pela do chão
+    if(btn(0) && !prev(0)){ if(soc && !soc.test) socPlayerJump(); else if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }
+    if(btn(1) && !prev(1)){ if(soc && (!soc.test || socTestInPitch())) socPlayerKick(); else socPlayerJump(); }   // B / ○: chutar (Futebol) ou pular (demais modos)      // A / Cross: troca a arma da mão pela do chão
     if(btn(3) && !prev(3)){                       // Y / Triangle: troca rápida p/ a arma anterior
       if(lastWeaponId && lastWeaponId !== player.weapon && player.unlockedWeapons[lastWeaponId]){
         SFX.menuSelect(); switchWeapon(lastWeaponId);
       }
     }
+    if(btn(11) && !prev(11)) recenterCam();       // R3 (clique do analógico direito): centraliza a câmera
     if(btn(5) && !prev(5)) cycleWeapon(1);        // RB / R1
     if(btn(4) && !prev(4)) cycleWeapon(-1);       // LB / L1
     if(btn(15) && !prev(15)) cycleWeapon(1);      // D-pad right
     if(btn(14) && !prev(14)) cycleWeapon(-1);     // D-pad left
   } else {
-    gpVec.x = 0; gpVec.y = 0; gpTurn = 0;
+    gpVec.x = 0; gpVec.y = 0; gpTurn = 0; gpLook = 0;
   }
 
   gpPrevButtons = gp.buttons.map(b => b.pressed);
@@ -8938,6 +10306,7 @@ const reloadBtn = document.getElementById('reloadBtn');
 
 let joyTouchId = null, joyOrigin = {x:0,y:0};
 let lookTouchId = null, lookLast = {x:0,y:0};
+let lookTapStart = 0, lookTravel = 0, lastLookTap = 0;   // duplo toque na área direita = centralizar câmera
 
 // Pointer Events unify touch, mouse and pen under a single API, so the same
 // on-screen controls work correctly on phones, tablets, and touch-laptops
@@ -8977,6 +10346,7 @@ lookZone.addEventListener('pointerdown', e=>{
   if(lookTouchId !== null) return;
   usingTouch = true; usingKeyboardMouse=false; usingGamepad=false; applyControlScheme();
   lookTouchId = e.pointerId;
+  lookTapStart = performance.now(); lookTravel = 0;
   lookLast = {x:e.clientX,y:e.clientY};
   try{ lookZone.setPointerCapture(e.pointerId); }catch(err){}
   e.preventDefault();
@@ -8984,13 +10354,21 @@ lookZone.addEventListener('pointerdown', e=>{
 
 lookZone.addEventListener('pointermove', e=>{
   if(e.pointerId !== lookTouchId) return;
-  lookDX += (e.clientX-lookLast.x);
+  lookTravel += Math.hypot(e.clientX-lookLast.x, e.clientY-lookLast.y);
+  lookDX += (e.clientX-lookLast.x); lookDY += (e.clientY-lookLast.y);
   lookLast = {x:e.clientX,y:e.clientY};
   e.preventDefault();
 },{passive:false});
 
 function lookEnd(e){
-  if(e.pointerId === lookTouchId) lookTouchId=null;
+  if(e.pointerId !== lookTouchId) return;
+  if(e.type === 'pointerup' && lookTravel < 12){          // foi um toque (sem arrastar)
+    const now = performance.now();
+    if(now - lookTapStart < 250){
+      if(now - lastLookTap < 350){ recenterCam(); lastLookTap = 0; } else lastLookTap = now;
+    }
+  }
+  lookTouchId = null;
 }
 lookZone.addEventListener('pointerup', lookEnd);
 lookZone.addEventListener('pointercancel', lookEnd);
@@ -9023,6 +10401,14 @@ document.getElementById('useBtn').addEventListener('pointerdown', e=>{
   if(!fnafTryUse()) testTryUse();
   e.preventDefault(); e.stopPropagation();
 },{passive:false});
+
+['kickBtn', 'jumpBtn'].forEach(id => {   // botões touch do modo Futebol
+  document.getElementById(id).addEventListener('pointerdown', e=>{
+    usingTouch = true; usingKeyboardMouse=false; usingGamepad=false; applyControlScheme();
+    if(id === 'kickBtn') socPlayerKick(); else socPlayerJump();
+    e.preventDefault(); e.stopPropagation();
+  },{passive:false});
+});
 
 const mainMenu = document.getElementById('mainMenu');
 const levelSelectModal = document.getElementById('levelSelectModal');
@@ -9061,6 +10447,7 @@ function openSettingsMenu() {
   }
   settingsModal.style.display = 'flex';
   refreshGamepadStatusUI();
+  updateControlsActive();
 }
 
 function resumeGame() {
@@ -9186,7 +10573,10 @@ document.getElementById('playSelectedLevelBtn').addEventListener('click', ()=>{
   let selectedLvl = parseInt(document.getElementById('mainLevelSelect').value);
   currentGameMode = document.getElementById('gameModeSelect').value;
   gunGameFoe = document.getElementById('gunFoeSelect').value;
-  if (isTeamMode()) {
+  if (currentGameMode === 'soccer') {
+    dmPlayerTeam = 'CT';
+    socResolveClubs();
+  } else if (isTeamMode()) {
     const t = document.getElementById('dmTeamSelect').value;
     dmPlayerTeam = (t === 'RANDOM') ? (Math.random() < 0.5 ? 'CT' : 'T') : t;
     dmResolveLoadout();
@@ -9245,6 +10635,21 @@ sensRange.addEventListener('input', (e)=>{
   mouseSensitivity = parseFloat(e.target.value);
   sensVal.textContent = mouseSensitivity.toFixed(1);
 });
+// Câmera vertical: sensibilidade e inversão (salvas no aparelho)
+const pitchSensRange = document.getElementById('pitchSensRange');
+const optInvertY = document.getElementById('optInvertY');
+function saveCamPrefs(){ try{ localStorage.setItem('dz_cam', JSON.stringify({invertY, pitchSens})); }catch(err){} }
+try{
+  const sv = JSON.parse(localStorage.getItem('dz_cam') || 'null');
+  if(sv){ invertY = !!sv.invertY; pitchSens = Math.max(0.3, Math.min(2.0, parseFloat(sv.pitchSens) || 1)); }
+}catch(err){}
+pitchSensRange.value = pitchSens; document.getElementById('pitchSensVal').textContent = pitchSens.toFixed(1); optInvertY.checked = invertY;
+pitchSensRange.addEventListener('input', e=>{
+  pitchSens = parseFloat(e.target.value);
+  document.getElementById('pitchSensVal').textContent = pitchSens.toFixed(1);
+  saveCamPrefs();
+});
+optInvertY.addEventListener('change', e=>{ invertY = e.target.checked; saveCamPrefs(); });
 document.getElementById('gpVibration').addEventListener('change', e=>{
   gpVibration = e.target.checked;
   if(gpVibration) gpRumble(0.6, 0.6, 150);   // teste rápido ao ligar
@@ -9324,10 +10729,10 @@ function dbgTeleportZone(id){
   if(!z) return;
   SFX.menuAccept();
   player.x = z.tp.x; player.y = z.tp.y; player.angle = z.tp.a;
-  player.z = heightAt(player.x, player.y) * HEIGHT_UNIT; player.targetZ = player.z;
+  player.z = heightAt(player.x, player.y) * HEIGHT_UNIT; player.targetZ = player.z; waterReset();
   dbgCloseToGame();
 }
-[['dbgTpTex', 'tex'], ['dbgTpHub', 'hub'], ['dbgTpElev', 'elev'], ['dbgTpSkins', 'skins'], ['dbgTpPick', 'pick'], ['dbgTpInter', 'inter'], ['dbgTpAudio', 'aud0']]
+[['dbgTpTex', 'tex'], ['dbgTpHub', 'hub'], ['dbgTpElev', 'elev'], ['dbgTpSkins', 'skins'], ['dbgTpPick', 'pick'], ['dbgTpInter', 'inter'], ['dbgTpAudio', 'aud0'], ['dbgTpSoc', 'soc'], ['dbgTpWater', 'water']]
   .forEach(([btnId, zone]) => document.getElementById(btnId).addEventListener('click', () => dbgTeleportZone(zone)));
 
 function dbgSpawnTarget(kind){
@@ -9414,6 +10819,31 @@ document.getElementById('applySettingsBtn').addEventListener('click', ()=>{
   }
 });
 
+// ===== RESTAURAR CONFIGURAÇÕES PARA O PADRÃO (geral, áudio e controles; o DEBUG não é mexido) =====
+document.getElementById('resetSettingsBtn').addEventListener('click', ()=>{
+  SFX.menuAccept();
+  // sliders: voltam ao valor original do HTML e disparam o mesmo evento de quando o jogador mexe
+  ['sensRange','fovRange','pitchSensRange','gpDeadRange','sfxVolumeRange','musicVolumeRange'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.value = el.defaultValue;
+    el.dispatchEvent(new Event('input', {bubbles:true}));
+  });
+  // caixas de marcar (a vibração é ajustada direto, para não vibrar o controle ao restaurar)
+  ['optShowMinimap','optViewBob','optShowFps','optInvertY'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.checked = el.defaultChecked;
+    el.dispatchEvent(new Event('change', {bubbles:true}));
+  });
+  const gpv = document.getElementById('gpVibration');
+  gpv.checked = gpv.defaultChecked; gpVibration = gpv.checked;
+  // botões de opção: qualidade NORMAL e idioma PORTUGUÊS
+  [['renderQualitySeg','1'],['langSeg','pt']].forEach(([segId,val])=>{
+    const b = document.querySelector('#'+segId+' .seg-btn[data-val="'+val+'"]');
+    if(b && !b.classList.contains('active')) b.click();
+  });
+  uiToast(I18N[currentLang].resetSettingsDone, 'ok');
+});
+
 // ===== MENUS REMASTERIZADOS (100% dentro do jogo, sem select/alert nativos) =====
 const uiToastEl = document.getElementById('uiToast');
 let uiToastTimer = null;
@@ -9447,7 +10877,7 @@ const carCount = document.getElementById('carCount');
 // A lista de mapas depende do modo: o Deathmatch só mostra os mapas exclusivos dele
 // e os outros modos escondem esses mapas.
 let visibleMaps = [];
-const lastMapByKind = { normal: 0, dm: null, hr: null, fnaf: null };
+const lastMapByKind = { normal: 0, dm: null, hr: null, fnaf: null, soccer: null };
 let mapRandom = false;      // true = sorteia o mapa (dentre os do modo) ao iniciar
 let lastRandomMap = -1;
 function isGunBotsSelected(){ return document.getElementById('gameModeSelect').value === 'gungame' && document.getElementById('gunFoeSelect').value === 'bots'; }
@@ -9455,10 +10885,10 @@ function isGunBotsSelected(){ return document.getElementById('gameModeSelect').v
 function isNoSideModeSelected(){ const m = document.getElementById('gameModeSelect').value; return m === 'waves' || m === 'fnaf' || (m === 'gungame' && document.getElementById('gunFoeSelect').value === 'zombies'); }
 function isDmModeSelected(){ const m = document.getElementById('gameModeSelect').value; return m === 'deathmatch' || m === 'ctf' || m === 'hostage' || isGunBotsSelected(); }  // modos de equipe usam os mapas/opções do Deathmatch
 // Cada modo tem sua própria lista de mapas: normais (Zombie Survival/Gun Game), DM (Deathmatch/CTF) e HR (Hostage Rescue).
-function levelKind(d){ return d && d.fnafOnly ? 'fnaf' : (d && d.hrOnly ? 'hr' : (d && d.dmOnly ? 'dm' : 'normal')); }
+function levelKind(d){ return d && d.soccerOnly ? 'soccer' : d && d.fnafOnly ? 'fnaf' : (d && d.hrOnly ? 'hr' : (d && d.dmOnly ? 'dm' : 'normal')); }
 function mapKind(){
   const m = document.getElementById('gameModeSelect').value;
-  return m === 'fnaf' ? 'fnaf' : m === 'hostage' ? 'hr' : ((m === 'deathmatch' || m === 'ctf' || isGunBotsSelected()) ? 'dm' : 'normal');
+  return m === 'soccer' ? 'soccer' : m === 'fnaf' ? 'fnaf' : m === 'hostage' ? 'hr' : ((m === 'deathmatch' || m === 'ctf' || isGunBotsSelected()) ? 'dm' : 'normal');
 }
 function computeVisibleMaps(){
   const kind = mapKind();
@@ -9523,6 +10953,7 @@ function refreshMapsForMode(){
   document.getElementById('dmOptions').style.display = (dm || (NET.lobby && !noSide)) ? 'block' : 'none';
   document.getElementById('dmTeamGroup').style.display = (NET.lobby && noSide) ? 'none' : '';   // sala online: sem seletor de lado nos modos cooperativos
   document.getElementById('dmLoadoutGroups').style.display = (dm && !isGun) ? 'block' : 'none';   // Gun Game: só o lado, sem escolher armas
+  document.getElementById('socOptions').style.display = document.getElementById('gameModeSelect').value === 'soccer' ? 'block' : 'none';
 }
 function setMapRandom(on){
   if(NET.lobby && NET.mode === 'client') return;
@@ -9591,6 +11022,7 @@ buildDmWeaponGrid('dmSecondaryGrid', DM_SECONDARY_WEAPONS, 'secondary');
 bindSegmented('dmTeamSeg', document.getElementById('dmTeamSelect'));
 bindSegmented('modeSeg', document.getElementById('gameModeSelect'), () => refreshMapsForMode());
 bindSegmented('gunFoeSeg', document.getElementById('gunFoeSelect'), () => refreshMapsForMode());
+buildSocGrids();
 refreshMapsForMode();
 
 // Grade de armas do menu debug
@@ -9728,6 +11160,7 @@ function ensureGeo(){
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x;
     fl[i] = lv(x, y) * HEIGHT_UNIT;
+    if (waterDepth && waterDepth[i] > 0) fl[i] = waterSurfMap[i] * HEIGHT_UNIT;   // água: o piso visível é a superfície
     let m3 = 0, m1 = 0;
     for (let dy = -GEO_CEIL_RADIUS; dy <= GEO_CEIL_RADIUS; dy++) {
       const yy = y + dy; if (yy < 0 || yy >= H) continue;
@@ -9756,20 +11189,21 @@ function spriteColVisible(c, dist, rowTop, rowBot){
   while (k > 0 && clipD[base + k] > dist) k--;
   return rowBot > clipLo[base + k] + 1 && rowTop < clipHi[base + k];
 }
-let rowInvTab = null, rowInvH = 0;
+let rowInvTab = null, rowInvH = 0, rowInvHz = 0, skyHz = 0;
 
 function castAndDraw(){
   const w = SCREEN_W, h = SCREEN_H;
   ensureGeo();
+  waterClock = performance.now() / 1000;
   const FZ = geo.floorZ, CZ = geo.ceilZ, TZ = geo.topZ;
   zbuffer = new Array(w);
   if (!clipN || clipW !== w) {
     clipW = w; clipD = new Float32Array(w * CLIP_MAX);
     clipLo = new Int16Array(w * CLIP_MAX); clipHi = new Int16Array(w * CLIP_MAX); clipN = new Uint8Array(w);
   }
-  const horizon = Math.floor(h / 2);
-  if (rowInvH !== h) {
-    rowInvH = h; rowInvTab = new Float32Array(h);
+  const horizon = horizonY();
+  if (rowInvH !== h || rowInvHz !== horizon) {
+    rowInvH = h; rowInvHz = horizon; rowInvTab = new Float32Array(h);
     for (let y = 0; y < h; y++) rowInvTab[y] = 1 / (y + 0.5 - horizon);
   }
   const rowInv = rowInvTab;
@@ -9793,7 +11227,8 @@ function castAndDraw(){
       const tf = Math.tan(HALF_FOV);
       for (let x = 0; x < w; x++) skyColAng[x] = Math.atan(((2 * x / w) - 1) * tf);
     }
-    if (skyRowV.length !== h) {
+    if (skyRowV.length !== h || skyHz !== horizon) {
+      skyHz = horizon;
       skyRowV = new Array(h);
       for (let y = 0; y < h; y++) {
         const elev = Math.atan((horizon - y) / h) * SKY_V_SCALE;
@@ -9816,6 +11251,7 @@ function castAndDraw(){
     const lampSet = (levelHasLights && !isFloor && !topSurf && lightFixMap[ti] && lightMips) ? lightMips : null;
     const tx0 = ti % MAP_W, ty0 = (ti / MAP_W) | 0;
     const mul = topSurf ? 0.85 : 1;
+    const wd = (isFloor && !topSurf && waterDepth) ? waterDepth[ti] : 0;
     for (let r = r0; r < r1; r++) {
       const d = k * rowInv[r];
       let fog = lit ? Math.max(0.5, 1 - d / 18) : Math.max(0.1, 1 - d / (10 * fogScale));
@@ -9829,6 +11265,18 @@ function castAndDraw(){
       let R, G, Bc;
       if (tex) { R = tex[texIdx] * fog; G = tex[texIdx + 1] * fog; Bc = tex[texIdx + 2] * fog; }
       else { R = G = Bc = (isFloor ? 30 : 15) * fog; }
+      if (wd > 0) {   // água: textura animada semitransparente sobre o leito (mais funda = mais opaca)
+        const wm = texMips.floor[WATER_TEX_IDX], wt = wm ? wm[mipL] : null;
+        if (wt) {
+          const wx = player.x + rdx * d, wy = player.y + rdy * d;
+          let wu = wx * 0.5 + waterClock * 0.035 + Math.sin(wy * 2.6 + waterClock * 1.3) * 0.012;
+          let wv = wy * 0.5 - waterClock * 0.022 + Math.sin(wx * 2.2 + waterClock * 1.1) * 0.012;
+          wu -= Math.floor(wu); wv -= Math.floor(wv);
+          const wi = (msz * ((wv * msz) | 0) + ((wu * msz) | 0)) * 4, a = Math.min(0.86, 0.38 + 0.2 * wd);
+          const gl = 1 + Math.sin(wx * 5 + wy * 4 + waterClock * 2.2) * 0.05;
+          R = (R * 0.55 * (1 - a) + wt[wi] * fog * a) * gl; G = (G * 0.7 * (1 - a) + wt[wi + 1] * fog * a) * gl; Bc = (Bc * 0.9 * (1 - a) + wt[wi + 2] * fog * a) * gl;
+        }
+      }
       if (lampSet) {
         const lamp = lampSet[mipL];
         if (lamp) {
@@ -9929,7 +11377,8 @@ function castAndDraw(){
     // Porta: janela central do tile com a largura proporcional da imagem
     let doorX = -1;
     if (dTex) {
-      const u = texX / TEX_SIZE;
+      let u = texX / TEX_SIZE;
+      if (dIdx >= DOOR_AD_FROM) u = 1 - u;   // anúncios: a textura de parede vem espelhada, desfaz
       if (Math.abs(u - 0.5) < dTex.frac / 2) {
         doorX = Math.min(TEX_SIZE - 1, Math.floor(((u - 0.5) / dTex.frac + 0.5) * TEX_SIZE));
       }
@@ -10086,6 +11535,7 @@ function drawSprites(horizon){
   enemies.forEach(en=>{ if(en.health>-999) sprites.push({x:en.x,y:en.y,obj:en,kind:'enemy'}); });
   pickups.forEach(p=>{ if(!p.taken) sprites.push({x:p.x,y:p.y,obj:p,kind:'pickup'}); });
   if(ctf){ ['T','CT'].forEach(t=>{ const f = ctf.flags[t]; if(f.state !== 'carried') sprites.push({x:f.x,y:f.y,obj:f,kind:'flag'}); }); }
+  if(soc){ sprites.push({x:soc.ball.x,y:soc.ball.y,obj:soc.ball,kind:'socball'}); soc.props.forEach(p=>sprites.push({x:p.x,y:p.y,obj:p,kind:p.kind})); }
 
   if(fnaf){ fnaf.buttons.forEach(b=>{ sprites.push({x:b.x,y:b.y,obj:b,kind:'fnafbtn'}); }); }
 
@@ -10101,6 +11551,9 @@ function drawSprites(horizon){
   sprites.sort((a,b)=>b.dist-a.dist);
 
   sprites.forEach(s=>{
+    if(s.kind==='socgoal'){ socDrawGoal(s.obj); return; }
+    if(s.kind==='socboard'){ socDrawBoard(s.obj); return; }
+    if(s.kind==='socshield'){ socDrawShield(s.obj); return; }
     const dx = s.x-player.x, dy=s.y-player.y;
     let ang = Math.atan2(dy,dx) - player.angle;
     while(ang>Math.PI) ang-=2*Math.PI;
@@ -10130,6 +11583,7 @@ function drawSprites(horizon){
     else if(s.kind==='flag'){ drawFlagSprite(s.obj, screenX, horizon, size, dist, zShift); }
     else if(s.kind==='hostage'){ drawHostageSprite(s.obj, screenX, horizon, size, dist, zShift); }
     else if(s.kind==='beacon'){ drawRescueBeacon(screenX, horizon, size, dist, zShift); }
+    else if(s.kind==='socball'){ drawSocBall(s.obj, screenX, horizon, size, dist, zShift); }
     else if(s.kind==='fnafbtn'){ drawFnafButton(s.obj, screenX, horizon, size, dist, zShift); }
     else if(s.kind==='testbtn'){ drawTestButton(s.obj, screenX, horizon, size, dist, zShift); }
     else { drawPickupSprite(s.obj, screenX, horizon, size, dist, zShift); }
@@ -10164,7 +11618,7 @@ function drawEnemySprite(en, sx, horizon, size, dist, zShift){
   
   const hostEntry = en.hostageTex !== undefined ? hostageImgs[en.hostageTex] : null;   // refém-alvo do mapa de testes
   const skinEntry = en.testSkin ? testSkinEntry(en.testSkin) : null;   // skins do mapa de testes (mp / dm / fnaf)
-  const humanEntry = hostEntry || skinEntry || ((en.remote || en.human) ? netSkinEntry(en) : null) || (en.team ? dmImgs[en.team] : null) || (en.fnaf ? fnafImgs[en.fnaf] : null);
+  const humanEntry = hostEntry || skinEntry || ((en.remote || en.human) ? netSkinEntry(en) : null) || (en.socClub ? socBotImgs[en.socClub] : null) || (en.team ? dmImgs[en.team] : null) || (en.fnaf ? fnafImgs[en.fnaf] : null);
   const human = !!humanEntry;
   const spImg = human ? humanEntry.img : zombImg;
   const spOk  = human ? humanEntry.loaded : zombImgLoaded;
@@ -10363,10 +11817,11 @@ function drawMinimap(){
         else if(lvl > 0) col = '#4a7a2a';
         else if(lvl < 0) col = '#1a2a4a';
         else col = '#333';
+        if(waterDepth && waterDepth[my * MAP_W + mx] > 0) col = '#2a78b4';
       }
       else if(t>0){
         const ti = my * MAP_W + mx;
-        col = windowTileMap[ti] ? '#4aa8c8' : (doorTileMap[ti] >= 0 ? '#8a5a2a' : '#666');
+        col = windowTileMap[ti] ? '#4aa8c8' : (doorTileMap[ti] >= 0 && doorTileMap[ti] < DOOR_AD_FROM ? '#8a5a2a' : '#666');
       }
       mmCtx.fillStyle=col;
       mmCtx.fillRect((x+5)*scale,(y+5)*scale,scale,scale);
@@ -10416,6 +11871,8 @@ function drawMinimap(){
       mmCtx.globalAlpha = 1;
     });
   }
+
+  if(soc) socDrawMinimap(px, py, scale);
 
   if(hr){
     const rz = hrRescueRect();
@@ -10557,20 +12014,25 @@ function updatePlayer(dt){
     if(keys['d']) strafe += 1;
     if(keys['w']||keys['arrowup']) moveF += 1;
     if(keys['s']||keys['arrowdown']) moveF -= 1;
-    if(pointerLocked && settingsModal.style.display !== 'flex'){ turn += Math.max(-0.6, Math.min(0.6, mouseDX * 0.0028 * mouseSensitivity)); mouseDX=0; }
+    if(keys['pageup'])   lookPitch( 0.9*dt*pitchSens);   // olhar para cima
+    if(keys['pagedown']) lookPitch(-0.9*dt*pitchSens);   // olhar para baixo
+    if(pointerLocked && settingsModal.style.display !== 'flex'){ turn += Math.max(-0.6, Math.min(0.6, mouseDX * 0.0028 * mouseSensitivity)); mouseDX=0; lookPitch(-Math.max(-60, Math.min(60, mouseDY)) * 0.0011 * mouseSensitivity * pitchSens * (invertY ? -1 : 1)); mouseDY=0; }
   }
   if(usingTouch && settingsModal.style.display !== 'flex'){
     moveF += -joyVec.y;
     strafe += joyVec.x;
     turn += Math.max(-0.6, Math.min(0.6, lookDX * 0.0045 * mouseSensitivity)); lookDX=0;
+    lookPitch(-Math.max(-60, Math.min(60, lookDY)) * 0.0016 * mouseSensitivity * pitchSens * (invertY ? -1 : 1)); lookDY=0;
   }
   if(usingGamepad && settingsModal.style.display !== 'flex'){
     moveF += -gpVec.y;
     strafe += gpVec.x;
     turn += gpTurn * player.turnSpeed * 1.5 * dt * mouseSensitivity;
+    lookPitch(-gpLook * 0.9 * dt * mouseSensitivity * pitchSens * (invertY ? -1 : 1));
   }
   turn = Math.max(-0.9, Math.min(0.9, turn));   // trava de segurança: nenhum quadro gira mais que ~50°
   player.angle += turn;
+  stepCamRecenter(dt);
 
   // Contagem inicial: o jogador fica parado (só pode olhar em volta) até o timer acabar.
   if(countdownActive){ moveF = 0; strafe = 0; }
@@ -10583,8 +12045,8 @@ function updatePlayer(dt){
     const dirX = Math.cos(player.angle), dirY = Math.sin(player.angle);
     const perpX = Math.cos(player.angle+Math.PI/2), perpY = Math.sin(player.angle+Math.PI/2);
     const wMove = WEAPON_CONFIG[player.weapon].moveMul || 1;
-    let vx = (dirX*nfF + perpX*nfS) * player.speed*debugOptions.speed*wMove*dt;
-    let vy = (dirY*nfF + perpY*nfS) * player.speed*debugOptions.speed*wMove*dt;
+    let vx = (dirX*nfF + perpX*nfS) * player.speed*debugOptions.speed*wMove*waterSpeedMul()*dt;
+    let vy = (dirY*nfF + perpY*nfS) * player.speed*debugOptions.speed*wMove*waterSpeedMul()*dt;
     
     if(canMove(player.x + vx, player.y)){
       player.x += vx;
@@ -10605,7 +12067,13 @@ function updatePlayer(dt){
   // Sistema de elevação: interpola suavemente a altura do jogador até a altura
   // do tile em que ele está parado (efeito de subir escadas / descer declives).
   player.targetZ = heightAt(player.x, player.y) * HEIGHT_UNIT;
+  if(socJump.applied){ player.z -= socJump.applied; socJump.applied = 0; }
+  if(WATER.applied){ player.z -= WATER.applied; WATER.applied = 0; }
   updateStepAnim(dt);
+  waterStep(dt);
+  socStepJump(dt); player.z += socJump.z; socJump.applied = socJump.z;
+  if(WATER.off){ player.z += WATER.off; WATER.applied = WATER.off; }
+  if(usingTouch) socSyncTouch();
 
   pickups.forEach(p=>{
     if(p.taken) return;
@@ -10753,6 +12221,7 @@ function tryFire(){
   for(let i = 0; i < wConfig.spreadCount; i++){
     const spreadRad = (Math.random() - 0.5) * (wConfig.spreadDeg * Math.PI / 180);
     const fireAngle = player.angle + spreadRad;
+    if(soc && (currentGameMode === 'soccer' || soc.test)) socBulletHitBall(fireAngle, wConfig.range);
     
     let closestEnemy = null;
     let closestDist = wConfig.range;
@@ -10769,7 +12238,10 @@ function tryFire(){
         while(enAngle < -Math.PI) enAngle += 2 * Math.PI;
 
         const hitThreshold = Math.atan2(0.4, dist);
-        if(Math.abs(enAngle) <= hitThreshold && hasLineOfSight(player.x, player.y, en.x, en.y)){
+        // mira vertical: a mira (centro da tela) precisa passar pelo corpo do alvo, considerando a inclinação da câmera e o pulo
+        const vSize = SCREEN_H / Math.max(dist, 0.3), vZ = (player.z - (en.z !== undefined ? en.z : heightAt(en.x, en.y) * HEIGHT_UNIT)) * vSize;
+        const vBot = SCREEN_H / 2 + Math.round(camPitch * SCREEN_H) + vSize * 0.5 + vZ + vSize * 0.08, vTop = vBot - vSize * 1.3;
+        if(Math.abs(enAngle) <= hitThreshold && SCREEN_H / 2 >= vTop && SCREEN_H / 2 <= vBot && hasLineOfSight(player.x, player.y, en.x, en.y)){
           if(dist < closestDist){
             closestDist = dist;
             closestEnemy = en;
@@ -10891,7 +12363,7 @@ function gameStep(now){
   const menuOpen = settingsModal.style.display === 'flex';
 
   // jogo parado (menu, fim de jogo, jogador morto): não deixa o movimento do mouse/toque acumular
-  if(!(started && !gameOver && !menuOpen) || dmPlayerDead){ mouseDX = 0; lookDX = 0; }
+  if(!(started && !gameOver && !menuOpen) || dmPlayerDead){ mouseDX = 0; lookDX = 0; mouseDY = 0; lookDY = 0; }
 
   if(started && !gameOver && !menuOpen){
     if(!dmPlayerDead) updatePlayer(dt);
@@ -10905,6 +12377,7 @@ function gameStep(now){
     if(NET.mode !== 'client') updateEnemies(dt, now);
     if(NET.mode !== 'client') updateTestMapDummies(now);
     updateDeathmatch(dt, now);
+    if(soc && soc.test) socTestUpdate(dt, now);
     if(NET.mode === 'client') netClientTick(dt);
     if(NET.mode) netCoopTick(now);
     if(NET.mode !== 'client') updateFnaf(dt, now);
@@ -10914,6 +12387,7 @@ function gameStep(now){
     drawMinimap();
   } else {
     if(swapCandidate) updateSwapPrompt();   // pausa / fim de jogo: esconde o aviso de troca
+    if(soc && (!started || gameOver)) socHideUi();
     fnafHideUse();
     testHudHide();
   }
@@ -11368,6 +12842,7 @@ function netHostStart(){
   if(!NET.lobby || NET.mode !== 'host' || NET.started) return;
   if(!netPeers.length){ uiToast(netT('Ninguém entrou na sala ainda', 'Nobody joined yet'), 'err'); return; }
   const gm = document.getElementById('gameModeSelect').value, foe = document.getElementById('gunFoeSelect').value;
+  if(gm === 'soccer'){ uiToast(netT('Futebol ainda não está disponível online', 'Soccer is not available online yet'), 'err'); return; }
   const force = gm === 'gungame' && foe === 'bots';
   let lvl = parseInt(mapSelect.value);
   if(visibleMaps.length && !visibleMaps.includes(lvl)) lvl = visibleMaps[0];
@@ -11404,9 +12879,88 @@ function netHostStart(){
   netTimers.push(setInterval(netCoopHostCheck, 400));
 }
 
+// ===== CHAT DE TEXTO (multiplayer) =====
+// Convidado -> host: { t:'chat', m }. O host limpa o texto, descobre quem mandou e reenvia a todos:
+// { t:'chat', i: número do jogador, m }. Assim ninguém consegue falsificar o nome de outro jogador.
+const CHAT_MAX_LEN = 100, CHAT_MAX_LINES = 6, CHAT_SHOW_MS = 8000, CHAT_COOLDOWN_MS = 700;
+const CHAT_COLORS = ['#9fe3ff', '#ffd54a', '#7dff8a', '#ff9a6b'];
+let chatOpen = false, chatLastSent = 0;
+function chatClean(m){ return String(m == null ? '' : m).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX_LEN); }
+function chatMyNumber(){ return NET.mode === 'host' ? 1 : (NET.me || 1) + 1; }
+function chatAdd(i, text){
+  text = chatClean(text); if(!text) return;
+  i = Math.max(1, Math.min(NET_MAX_GUESTS + 1, (+i) | 0 || 1));
+  const log = document.getElementById('chatLog'); if(!log) return;
+  const line = document.createElement('div'); line.className = 'chat-line';
+  const nm = document.createElement('b'); nm.textContent = netT('JOGADOR ', 'PLAYER ') + i + ':'; nm.style.color = CHAT_COLORS[(i - 1) % CHAT_COLORS.length];
+  line.appendChild(nm); line.appendChild(document.createTextNode(text));   // textContent: nunca interpreta HTML
+  log.appendChild(line);
+  while(log.children.length > CHAT_MAX_LINES) log.removeChild(log.firstChild);
+  setTimeout(() => { line.classList.add('old'); setTimeout(() => { if(line.parentNode) line.parentNode.removeChild(line); }, 900); }, CHAT_SHOW_MS);
+  if(typeof SFX !== 'undefined' && SFX.menuSelect && i !== chatMyNumber()) SFX.menuSelect();
+}
+function chatHostReceive(p, m){
+  const now = performance.now();
+  if(now - (p.lastChat || 0) < CHAT_COOLDOWN_MS) return;   // anti-spam
+  const text = chatClean(m); if(!text) return;
+  p.lastChat = now;
+  const i = netPeers.indexOf(p) + 2;
+  netBroadcast({ t: 'chat', i, m: text });
+  chatAdd(i, text);
+}
+function chatInGame(){ return !!(NET.mode && NET.started && started && !gameOver); }
+function chatOpenInput(){
+  if(!chatInGame() || chatOpen || settingsModal.style.display === 'flex') return;
+  chatOpen = true;
+  Object.keys(keys).forEach(k => { keys[k] = false; }); fireHeld = false;   // solta as teclas para o personagem não andar sozinho
+  if(document.pointerLockElement) document.exitPointerLock();
+  document.getElementById('chatWrap').classList.add('open');
+  const inp = document.getElementById('chatInput'); inp.value = ''; inp.focus();
+}
+function chatCloseInput(){
+  if(!chatOpen) return;
+  chatOpen = false;
+  document.getElementById('chatWrap').classList.remove('open');
+  const inp = document.getElementById('chatInput'); inp.blur(); inp.value = '';
+  if(!usingTouch && chatInGame() && settingsModal.style.display !== 'flex') requestPointerLockSafe();
+}
+function chatSubmit(){
+  const inp = document.getElementById('chatInput'), text = chatClean(inp.value);
+  if(text && performance.now() - chatLastSent >= CHAT_COOLDOWN_MS){
+    chatLastSent = performance.now();
+    if(NET.mode === 'host'){ chatAdd(1, text); netBroadcast({ t: 'chat', i: 1, m: text }); }
+    else if(NET.mode === 'client') netSend({ t: 'chat', m: text });
+  }
+  chatCloseInput();
+}
+(function chatInit(){
+  const inp = document.getElementById('chatInput');
+  inp.addEventListener('keydown', e => {
+    e.stopPropagation();   // as teclas digitadas não chegam aos atalhos do jogo
+    if(e.key === 'Enter'){ e.preventDefault(); chatSubmit(); }
+    else if(e.key === 'Escape'){ e.preventDefault(); chatCloseInput(); }
+  });
+  inp.addEventListener('keyup', e => e.stopPropagation());
+  document.getElementById('chatSend').addEventListener('click', chatSubmit);
+  document.getElementById('chatBtn').addEventListener('click', () => { if(chatOpen) chatCloseInput(); else chatOpenInput(); });
+  window.addEventListener('keydown', e => {   // Enter abre o chat durante a partida online
+    if(e.key !== 'Enter' || e.repeat || chatOpen || (e.target && e.target.tagName === 'INPUT')) return;
+    if(!chatInGame() || settingsModal.style.display === 'flex') return;
+    e.preventDefault(); chatOpenInput();
+  });
+  document.addEventListener('pointerlockchange', () => { if(document.pointerLockElement && chatOpen){ chatOpen = false; document.getElementById('chatWrap').classList.remove('open'); document.getElementById('chatInput').blur(); } });
+  setInterval(() => {   // mostra o botão / caixa só numa partida online
+    const on = chatInGame();
+    document.getElementById('chatBtn').style.display = on ? 'block' : 'none';
+    document.getElementById('chatWrap').style.display = on ? 'flex' : 'none';
+    if(!on){ if(chatOpen) chatCloseInput(); document.getElementById('chatLog').textContent = ''; }
+  }, 300);
+})();
+
 function netHostOnData(p, d){
   if(!d) return;
   if(d.t === 'pref'){ p.pref.team = (d.team === 'CT' || d.team === 'T') ? d.team : 'RANDOM'; return; }
+  if(d.t === 'chat'){ chatHostReceive(p, d.m); return; }
   const b = p.ent;
   if(!b || !NET.started) return;
   const now = performance.now();
@@ -11557,6 +13111,7 @@ function netClientOnData(d){
   else if(d.t === 'over') netOnOver(d);
   else if(d.t === 'sfx') netOnSfx(d);
   else if(d.t === 'shot') netPlayShot(netLookup(d.id), d.w);
+  else if(d.t === 'chat') chatAdd(d.i, d.m);
 }
 function netClientStart(d){
   if(NET.started || NET.mode !== 'client' || !NET.lobby) return;   // ignora 'start' fora da sala / duplicado
