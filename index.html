@@ -3182,6 +3182,7 @@ Object.values(mpImgs).forEach(entry => {
   entry.img.src = entry.url;
 });
 function netSkinEntry(en){
+  if(currentGameMode === 'soccer') return null;   // Futebol: a skin é a do clube do time (socBotImgs)
   const e = isTeamMode() ? mpImgs[en.team] : (en.mpSkin ? mpImgs['G' + en.mpSkin] : null);
   return (e && e.loaded) ? e : null;
 }
@@ -7605,6 +7606,7 @@ function dmRespawnPlayer(){
   const pos = dmPickSpawn(dmPlayerTeam, false, currentGameMode === 'ctf' || currentGameMode === 'hostage' || currentGameMode === 'soccer');   // CTF: renasce na própria base
   if(pos){ player.x = pos.x; player.y = pos.y; }
   player.angle = currentGameMode === 'soccer' ? 0 : Math.random() * Math.PI * 2;
+  if(NET.mode && currentGameMode === 'soccer' && soc){ const sp = socSpawnFor(dmPlayerTeam, NET.socSlot || 0); player.x = sp.x; player.y = sp.y; player.angle = sp.a; }   // online: renasce no próprio lado
   player.z = player.targetZ = heightAt(player.x, player.y) * HEIGHT_UNIT;
   player.health = player.maxHealth;
   dmPlayerDead = false;
@@ -7771,7 +7773,7 @@ function updateDeathmatch(dt, now){
     else { cd.style.display = 'block'; cd.textContent = left; }
   }
 
-  if(NET.mode === 'client') return;   // cliente online: bots/regras rodam só no host
+  if(NET.mode === 'client'){ if(currentGameMode === 'soccer' && soc) socClientTick(dt, now); return; }   // cliente online: bots/regras rodam só no host
   if(currentGameMode === 'soccer'){ socUpdate(dt, now); return; }
   if(countdownActive) return;
   if(currentGameMode === 'ctf') updateCTF(dt, now);
@@ -7858,7 +7860,7 @@ function socInit(ldef){
     d, L, home: socMatch.home, away: socMatch.away,
     ball: { x: (d.x0 + d.x1) / 2, y: d.cy, z: 0, vx: 0, vy: 0, vz: 0, spin: 0, lastTouch: null },
     clock: 0, golden: false, phase: 'pre', phaseT: 0, finishAfterGoal: false,
-    chaser: { CT: null, T: null }, chaseAt: 0, gk: { CT: null, T: null },
+    chaser: { CT: null, T: null }, chaseAt: 0, gk: { CT: null, T: null }, resetN: 0,
     lastKickAt: 0, kicks: 0, playerGoals: 0, stillT: 0,
     posts: [{ x: d.lineL, y: d.gy0 }, { x: d.lineL, y: d.gy1 }, { x: d.lineR, y: d.gy0 }, { x: d.lineR, y: d.gy1 }],
     ppx: player.x, ppy: player.y, pvx: 0, pvy: 0,
@@ -7872,50 +7874,119 @@ function socInit(ldef){
   };
   enemies = []; pickups = [];
   let id = 1;
-  const mk = (team, role, hx, hy) => {
-    const b = dmMakeBot(team, id++);
-    b.socClub = team === 'CT' ? soc.home : soc.away;
-    b.role = role;
-    b.maxHealth = b.health = 100;
-    b.speed = (team === 'CT' ? 2.55 : 2.45) + Math.random() * 0.15;
-    if(role === 'gk') b.speed *= 1.2;
-    b.dmg = 30; b.dmgPlayer = 14; b.range = 10;
-    b.fireRate = 1500 + Math.random() * 900; b.accuracy = 0.5;
-    b.hx = hx; b.hy = hy; b.vx = 0; b.vy = 0; b.lastKick = 0; b.plan = null; b.planUntil = 0;
-    enemies.push(b);
-    return b;
-  };
-  const m = x => d.x0 + d.x1 - x;   // espelha para o lado adversário
-  soc.gk.CT = mk('CT', 'gk',  d.x0 + 1.0,        d.cy);
-  mk('CT', 'def', d.x0 + 0.20 * L, d.cy + 3.6);
-  mk('CT', 'att', d.x0 + 0.40 * L, d.cy - 3.2);
-  soc.gk.T  = mk('T',  'gk',  m(d.x0 + 1.0),     d.cy);
-  mk('T',  'def', m(d.x0 + 0.20 * L), d.cy - 3.6);
-  mk('T',  'mid', m(d.x0 + 0.32 * L), d.cy + 3.4);
-  mk('T',  'att', m(d.x0 + 0.40 * L), d.cy + 0.4);
+  const mk = (team, role, hx, hy) => socMakeBot(team, role, hx, hy, id++);
+  if(NET.mode !== 'client'){   // cliente online: jogadores e bots vêm do snapshot do host
+    // 4x4: humanos ocupam vagas; o resto do time é completado com bots (sempre com goleiro)
+    const nHum = (NET.mode === 'host' && NET.started) ? netHumanCounts() : { CT: 1, T: 0 };
+    ['CT', 'T'].forEach(team => {
+      const nBots = Math.max(0, 4 - nHum[team]);
+      SOC_ROLES[team].slice(0, nBots).forEach(role => {
+        const pos = socRolePos(team, role);
+        const b = mk(team, role, pos.x, pos.y);
+        if(role === 'gk') soc.gk[team] = b;
+      });
+    });
+    if(NET.mode === 'host' && NET.started) socAddRemotes();   // jogadores humanos online
+  }
   socApplyLoadout();
   socResetPositions();
   socUpdateHud(true);
 }
 
+// ---------- Futebol online: papéis, spawns, jogadores remotos, chutes ----------
+const SOC_ROLES = { CT: ['gk', 'def', 'att', 'mid'], T: ['gk', 'def', 'mid', 'att'] };
+const SOC_ROLE_X = { def: 0.20, mid: 0.32, att: 0.40 };
+const SOC_ROLE_Y = { CT: { def: 3.6, att: -3.2, mid: 3.4 }, T: { def: -3.6, mid: 3.4, att: 0.4 } };
+function socRolePos(team, role){
+  const d = soc.d, L = soc.L, m = x => d.x0 + d.x1 - x;
+  let x, y = d.cy;
+  if(role === 'gk') x = d.x0 + 1.0; else { x = d.x0 + SOC_ROLE_X[role] * L; y = d.cy + SOC_ROLE_Y[team][role]; }
+  return { x: team === 'CT' ? x : m(x), y };
+}
+function socMakeBot(team, role, hx, hy, id){
+  const b = dmMakeBot(team, id);
+  b.socClub = team === 'CT' ? soc.home : soc.away;
+  b.role = role;
+  b.maxHealth = b.health = 100;
+  b.speed = (team === 'CT' ? 2.55 : 2.45) + Math.random() * 0.15;
+  if(role === 'gk') b.speed *= 1.2;
+  b.dmg = 30; b.dmgPlayer = 14; b.range = 10;
+  b.fireRate = 1500 + Math.random() * 900; b.accuracy = 0.5;
+  b.hx = hx; b.hy = hy; b.vx = 0; b.vy = 0; b.lastKick = 0; b.plan = null; b.planUntil = 0;
+  enemies.push(b);
+  return b;
+}
+// posição de saída de um jogador humano: CT ataca a direita (nasce à esquerda), T ataca a esquerda (nasce à direita)
+function socSpawnFor(team, slot){
+  const d = soc.d, L = soc.L, offs = [0, -2.4, 2.4, 4.8];
+  const y = d.cy + (offs[(slot | 0) % 4] || 0);
+  return team === 'T' ? { x: d.x1 - 0.28 * L, y, a: Math.PI } : { x: d.x0 + 0.28 * L, y, a: 0 };
+}
+function socPlaceMe(){
+  const sp = socSpawnFor(dmPlayerTeam, NET.mode ? (NET.socSlot || 0) : 0);
+  player.x = sp.x; player.y = sp.y; player.angle = sp.a;
+  player.z = player.targetZ = 0;
+  player.health = player.maxHealth;
+  const cfg = WEAPON_CONFIG.pistol;
+  player.ammo.pistol = cfg.defaultAmmo; player.reserveMags.pistol = cfg.maxMags || cfg.startMags;
+  soc.ppx = player.x; soc.ppy = player.y; soc.pvx = soc.pvy = 0;
+  socJump.z = 0; socJump.v = 0;
+  updateHUD();
+}
+// host: cada convidado vira uma entidade remota do time que recebeu, com a skin do clube
+function socAddRemotes(){
+  netPeers.forEach(p => {
+    const b = dmMakeBot(p.team, p.id);
+    b.remote = true; b.peer = p; b.mpSkin = 0; b.wasDead = false; b.isStatic = true; b.maxHealth = 100; b.health = 100;
+    b.socClub = p.team === 'CT' ? soc.home : soc.away;
+    const sp = socSpawnFor(p.team, p.socSlot || 0);
+    b.hx = sp.x; b.hy = sp.y; b.x = sp.x; b.y = sp.y; b.z = 0; b.angle = sp.a; b.vx = 0; b.vy = 0; b.alive = true;
+    p.ent = b; enemies.push(b);
+  });
+}
+// host: convidado saiu no meio da partida -> um bot assume a vaga
+function socReplaceWithBot(old){
+  const team = old.team, used = {};
+  enemies.forEach(e => { if(e.team === team && !e.remote && e.role) used[e.role] = true; });
+  const role = ['gk', 'def', 'att', 'mid'].find(r => !used[r]) || 'def';
+  const pos = socRolePos(team, role);
+  soc.repl = (soc.repl || 0) + 1;
+  const b = socMakeBot(team, role, pos.x, pos.y, 500 + soc.repl);
+  b.x = pos.x; b.y = pos.y; b.z = 0;
+  if(role === 'gk') soc.gk[team] = b;
+}
+// som de chute para os convidados (posição do chute define o volume)
+function socNetKick(x, y, except){
+  if(NET.mode !== 'host' || !NET.started) return;
+  netPeers.forEach(q => { if(q !== except) netSendTo(q, { t: 'sk', x: netF(x), y: netF(y) }); });
+}
+// chute de qualquer jogador (local ou remoto). tol = tolerância extra para convidados (latência)
+function socKickBy(ent, ang, air, tol){
+  const b = soc.ball, dx = b.x - ent.x, dy = b.y - ent.y, dist = Math.hypot(dx, dy);
+  if(dist > SOC_KICK_RANGE + tol) return false;
+  let da = Math.atan2(dy, dx) - ang;
+  while(da > Math.PI) da -= 2 * Math.PI; while(da < -Math.PI) da += 2 * Math.PI;
+  if(dist > 0.55 && Math.abs(da) > 1.2 + tol * 0.5) return false;   // bola fora do cone à frente
+  const pw = SOC_KICK_SPEED * (air ? 1.1 : 1) * (0.8 + 0.2 * Math.max(0, 1 - dist / SOC_KICK_RANGE));
+  b.vx = Math.cos(ang) * pw; b.vy = Math.sin(ang) * pw;
+  b.vz = air ? 2.4 : 1.1; b.z = Math.max(b.z, 0.02);
+  b.lastTouch = ent; soc.kicks++;
+  return true;
+}
+
 function socResetPositions(){
   const d = soc.d, b = soc.ball;
+  soc.resetN = (soc.resetN || 0) + 1;
   b.x = (d.x0 + d.x1) / 2; b.y = d.cy; b.z = 0; b.vx = b.vy = b.vz = 0; b.lastTouch = null;
   enemies.forEach(e => {
-    const j = e.role === 'gk' ? 0 : 0.5;
+    const j = (e.role === 'gk' || e.remote) ? 0 : 0.5;
     e.x = e.hx + (Math.random() - 0.5) * j; e.y = e.hy + (Math.random() - 0.5) * j;
-    e.z = 0; e.alive = true; e.health = e.maxHealth; e.respawnAt = 0; e.vx = e.vy = 0; e.plan = null;
+    e.z = 0; e.alive = true; e.health = e.maxHealth; e.respawnAt = 0; e.vx = e.vy = 0; e.plan = null; e.wasDead = false;
   });
-  if(!dmPlayerDead){
-    player.x = d.x0 + 0.28 * soc.L; player.y = d.cy; player.angle = 0;
-    player.z = player.targetZ = 0;
-    player.health = player.maxHealth;
-    const cfg = WEAPON_CONFIG.pistol;
-    player.ammo.pistol = cfg.defaultAmmo; player.reserveMags.pistol = cfg.maxMags || cfg.startMags;
-    updateHUD();
-  }
+  if(!dmPlayerDead) socPlaceMe();
   soc.ppx = player.x; soc.ppy = player.y; soc.pvx = soc.pvy = 0; soc.stillT = 0;
   socJump.z = 0; socJump.v = 0;
+  if(NET.mode === 'host' && NET.started) netBroadcast({ t: 'socr', n: soc.resetN });   // convidados voltam às posições de saída
 }
 
 // ---------- ações do jogador ----------
@@ -7927,17 +7998,16 @@ function socPlayerKick(){
   soc.lastKickAt = now;
   const vm = document.getElementById('viewmodel');   // a arma "abaixa" enquanto você chuta
   if(vm){ vm.classList.remove('anim-shoot', 'anim-switch'); void vm.offsetWidth; vm.classList.add('anim-switch'); }
-  const b = soc.ball, dx = b.x - player.x, dy = b.y - player.y, dist = Math.hypot(dx, dy);
-  if(dist > SOC_KICK_RANGE){ SFX.socKick(0.35, true); return; }
-  let da = Math.atan2(dy, dx) - player.angle;
-  while(da > Math.PI) da -= 2 * Math.PI; while(da < -Math.PI) da += 2 * Math.PI;
-  if(dist > 0.55 && Math.abs(da) > 1.2){ SFX.socKick(0.35, true); return; }   // bola fora do cone à frente
   const air = socJump.z > 0.08;                                          // chute no ar = cabeceio/voleio mais forte
-  const pw = SOC_KICK_SPEED * (air ? 1.1 : 1) * (0.8 + 0.2 * (1 - dist / SOC_KICK_RANGE));
-  b.vx = Math.cos(player.angle) * pw; b.vy = Math.sin(player.angle) * pw;
-  b.vz = air ? 2.4 : 1.1; b.z = Math.max(b.z, 0.02);
-  b.lastTouch = player; soc.kicks++;
+  if(NET.mode === 'client'){   // convidado: o host decide se a bola foi atingida
+    const b = soc.ball;
+    if(Math.hypot(b.x - player.x, b.y - player.y) <= SOC_KICK_RANGE + 0.3){ SFX.socKick(1); gpRumble(0.5, 0.4, 90); } else SFX.socKick(0.35, true);
+    netSend({ t: 'kick', g: netF(player.angle), a: air ? 1 : 0 });
+    return;
+  }
+  if(!socKickBy(player, player.angle, air, 0)){ SFX.socKick(0.35, true); return; }
   SFX.socKick(1); gpRumble(0.5, 0.4, 90);
+  socNetKick(player.x, player.y);
 }
 function socPlayerJump(){   // pulo: vale em todos os modos (inclusive multiplayer, a altura z já é sincronizada)
   if(!started || gameOver || dmPlayerDead || countdownActive || settingsModal.style.display === 'flex') return;
@@ -7951,16 +8021,18 @@ function socStepJump(dt){
     if(socJump.z <= 0){ socJump.z = 0; socJump.v = 0; }
   }
 }
-// tiro da Deagle que acerta a bola empurra ela
-function socBulletHitBall(ang, range){
+// tiro da Deagle que acerta a bola empurra ela (ent = quem atirou; convidados mandam o tiro ao host)
+function socBulletHitBall(ang, range, ent){
   if(!soc || soc.phase !== 'play') return;
-  const b = soc.ball, dx = b.x - player.x, dy = b.y - player.y, dist = Math.hypot(dx, dy);
+  ent = ent || player;
+  if(NET.mode === 'client' && ent === player){ netSend({ t: 'sball', g: netF(ang), r: range }); return; }
+  const b = soc.ball, dx = b.x - ent.x, dy = b.y - ent.y, dist = Math.hypot(dx, dy);
   if(dist > range || dist < 0.3) return;
   let da = Math.atan2(dy, dx) - ang;
   while(da > Math.PI) da -= 2 * Math.PI; while(da < -Math.PI) da += 2 * Math.PI;
-  if(Math.abs(da) <= Math.atan2(0.3, dist) && hasLineOfSight(player.x, player.y, b.x, b.y)){
+  if(Math.abs(da) <= Math.atan2(0.3, dist) && hasLineOfSight(ent.x, ent.y, b.x, b.y)){
     b.vx = Math.cos(ang) * SOC_SHOT_SPEED; b.vy = Math.sin(ang) * SOC_SHOT_SPEED; b.vz = 0.6;
-    b.lastTouch = player;
+    b.lastTouch = ent;
   }
 }
 
@@ -8081,6 +8153,7 @@ function socCollideBall(ent, vx, vy, isGk){
       const a = (ent.team === 'CT' ? 0 : Math.PI) + (Math.random() - 0.5) * 1.2;
       b.vx = Math.cos(a) * 8.5; b.vy = Math.sin(a) * 8.5; b.vz = 1.3;
       SFX.socKick(Math.max(0.2, 1 - Math.hypot(ent.x - player.x, ent.y - player.y) / 16));
+      socNetKick(ent.x, ent.y);
     }
   }
 }
@@ -8091,11 +8164,14 @@ function socPickChasers(){
   ['CT', 'T'].forEach(side => {
     let best = null, bd = Infinity;
     enemies.forEach(e => {
-      if(!e.alive || e.team !== side || e.role === 'gk') return;
+      if(!e.alive || e.team !== side || e.role === 'gk' || e.remote) return;
       const dd = Math.hypot(e.x - ball.x, e.y - ball.y);
       if(dd < bd){ bd = dd; best = e; }
     });
-    if(side === 'CT' && !dmPlayerDead && Math.hypot(player.x - ball.x, player.y - ball.y) < bd - 1.0) best = null;   // você está mais perto: aliados só apoiam
+    let hd = Infinity;   // algum humano do time está mais perto da bola: bots aliados só apoiam
+    if(side === 'CT' && !dmPlayerDead) hd = Math.hypot(player.x - ball.x, player.y - ball.y);
+    enemies.forEach(e => { if(e.remote && e.alive && e.team === side) hd = Math.min(hd, Math.hypot(e.x - ball.x, e.y - ball.y)); });
+    if(hd < bd - 1.0) best = null;
     soc.chaser[side] = best;
   });
 }
@@ -8145,6 +8221,7 @@ function socBotKick(b, ang){
   ball.vx = Math.cos(ang) * p; ball.vy = Math.sin(ang) * p; ball.vz = 0.9 + Math.random() * 0.8;
   ball.lastTouch = b;
   SFX.socKick(Math.max(0.15, 1 - Math.hypot(b.x - player.x, b.y - player.y) / 16));
+  socNetKick(b.x, b.y);
 }
 
 // todos têm Deagle: atiram no oponente visível mais próximo
@@ -8165,7 +8242,7 @@ function socBotShoot(b, now){
   SFX.botShoot('pistol', Math.hypot(b.x - player.x, b.y - player.y));
   if(Math.random() < Math.max(0.12, b.accuracy - td * 0.04)){
     if(isPlayer) dmDamagePlayer(b.dmgPlayer);
-    else { tgt.health -= b.dmg; if(tgt.health <= 0) dmOnKill(tgt, b.team, false); }
+    else { tgt.health -= tgt.remote ? b.dmgPlayer : b.dmg; if(tgt.health <= 0) dmOnKill(tgt, b.team, false); }
   }
 }
 
@@ -8254,6 +8331,7 @@ function socUpdate(dt, now){
   if(!debugOptions.pauseEnemies){
     if(now >= soc.chaseAt){ soc.chaseAt = now + 200; socPickChasers(); }
     enemies.forEach(b => {
+      if(b.remote) return;   // jogador humano online: movido pela rede, sem IA
       if(!b.alive){ if(b.respawnAt && now >= b.respawnAt) socRespawnBot(b); return; }
       socBotThink(b, dt, now);
     });
@@ -8301,6 +8379,7 @@ function socGoal(side){   // side = lado que MARCOU
   soc.phase = 'goal'; soc.phaseT = SOC_GOAL_PAUSE; countdownActive = true; fireHeld = false;
   soc.finishAfterGoal = soc.golden || (soc.clock >= SOC_MATCH_SECONDS && dmScoreCT !== dmScoreT);
   SFX.socGoal(); gpRumble(0.9, 0.9, 500);
+  if(NET.mode === 'host' && NET.started) netBroadcast({ t: 'sg', s: side, own: own ? 1 : 0, by: lt ? (lt === player ? 0 : (lt.id !== undefined ? lt.id : null)) : null, c: dmScoreCT, r: dmScoreT });
   socShowGoal(side, own);
   updateHUDModeLabel(); socUpdateHud(true);
 }
@@ -8311,18 +8390,70 @@ function socFinish(){
   socHideUi();
   SFX.socWhistle('end'); SFX.socCrowdStop(5);   // apito final e torcida abaixando devagar
   SFX.stopMusic();
-  const en = currentLang === 'en', homeWon = dmScoreCT > dmScoreT;
+  const en = currentLang === 'en', homeWon = dmScoreCT > dmScoreT, won = (dmPlayerTeam === 'T') ? !homeWon : homeWon;   // vitória é relativa ao time do jogador
+  if(NET.mode === 'host' && NET.started) netBroadcast({ t: 'sover', c: dmScoreCT, r: dmScoreT });
   SFX.teamWin(homeWon ? 'CT' : 'T');
   document.getElementById('damageFlash').style.opacity = '0';
   document.getElementById('countdownOverlay').style.display = 'none';
   const h = socClubOf(soc.home), a = socClubOf(soc.away);
   const ov = document.getElementById('gameOverOverlay');
   ov.style.display = 'flex';
-  ov.querySelector('h1').textContent = homeWon ? (en ? 'VICTORY!' : 'VITÓRIA!') : (en ? 'DEFEAT' : 'DERROTA');
+  ov.querySelector('h1').textContent = won ? (en ? 'VICTORY!' : 'VITÓRIA!') : (en ? 'DEFEAT' : 'DERROTA');
   document.getElementById('finalScore').textContent =
     h.n + ' ' + dmScoreCT + ' x ' + dmScoreT + ' ' + a.n + '  |  ' + (en ? 'YOUR GOALS: ' : 'SEUS GOLS: ') + soc.playerGoals +
     '  ' + (en ? 'KILLS: ' : 'ABATES: ') + dmPlayerKills + '  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths;
   if(document.pointerLockElement) document.exitPointerLock();
+}
+
+// ---------- Futebol online: lado do convidado ----------
+function netApplySoc(d){
+  const b = soc.ball, sb = d.sb, en = currentLang === 'en';
+  if(!b.sx || Math.hypot(b.x - sb[0], b.y - sb[1]) > 3){ b.x = sb[0]; b.y = sb[1]; b.z = sb[2]; }   // saltos grandes (saída de bola): sem interpolar
+  b.sx = 1; b.tx = sb[0]; b.ty = sb[1]; b.tz = sb[2]; b.vx = sb[3]; b.vy = sb[4]; b.vz = sb[5];
+  soc.clock = d.sk || 0;
+  if(d.sg && !soc.golden){ soc.golden = true; SFX.socWhistle('end'); flashMsg(en ? 'GOLDEN GOAL!' : 'GOL DE OURO!'); }
+  const ph = d.sp;
+  if(ph && ph !== soc.phase){
+    const prev = soc.phase; soc.phase = ph;
+    if(ph === 'play'){
+      countdownActive = false;
+      if(countdownInterval) clearInterval(countdownInterval);
+      document.getElementById('countdownOverlay').style.display = 'none';
+      SFX.socWhistle('start');
+      if(prev === 'pre') flashMsg(en ? 'KICK OFF!' : 'COMEÇA O JOGO!');
+    } else if(ph === 'goal' || ph === 'kick'){
+      countdownActive = true;
+      if(ph === 'kick') socHideGoal();
+    }
+  }
+}
+function socNetGoal(d){
+  if(!soc || gameOver || currentGameMode !== 'soccer' || NET.mode !== 'client') return;
+  dmScoreCT = d.c; dmScoreT = d.r;
+  if(d.by === netMyId && !d.own){ soc.playerGoals++; score += 50; updateHUD(); }
+  soc.threat = null; soc.phase = 'goal'; countdownActive = true; fireHeld = false;
+  SFX.socGoal(); gpRumble(0.9, 0.9, 500);
+  socShowGoal(d.s, !!d.own);
+  updateHUDModeLabel(); socUpdateHud(true);
+}
+function socClientTick(dt, now){
+  if(!soc || gameOver) return;
+  socSyncTouch();
+  { // torcida (mesma curva do host)
+    const p = soc.clock / SOC_MATCH_SECONDS;
+    const fin = soc.golden ? 0.45 : (p > 0.85 ? 1 - Math.min(1, (p - 0.85) / 0.15) * 0.55 : 1);
+    SFX.socCrowdSet((0.3 + 0.7 * Math.min(1, soc.clock / 25)) * fin);
+  }
+  const b = soc.ball;
+  if(b.sx){   // bola: extrapola pela velocidade e suaviza até a posição do host
+    const f = Math.exp(-SOC_FRICTION * dt);
+    b.vx *= f; b.vy *= f;
+    b.tx += b.vx * dt; b.ty += b.vy * dt;
+    const k = Math.min(1, dt * 14);
+    b.x += (b.tx - b.x) * k; b.y += (b.ty - b.y) * k; b.z += (b.tz - b.z) * k;
+    b.spin += Math.hypot(b.vx, b.vy) * dt / SOC_BALL_R * (b.vx >= 0 ? 1 : -1);
+  }
+  socUpdateHud();
 }
 
 // ---------- HUD ----------
@@ -8373,6 +8504,16 @@ function buildSocGrids(){
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'club-chip'; b.dataset.val = val; b.dataset.slot = slot; b.innerHTML = html;
     b.addEventListener('click', () => {
+      if(NET.lobby){   // sala online: host escolhe o time da casa, convidados escolhem o visitante (um clube nunca nos dois lados)
+        const other = slot === 'home' ? socPick.away : socPick.home;
+        if(val !== 'random' && val === other) return;
+        if(NET.mode === 'client'){
+          if(slot !== 'away') return;
+          SFX.menuSelect(); socPick.away = val; refreshSocGrids(); netSend({ t: 'sclub', k: val });
+          return;
+        }
+        if(slot !== 'home') return;
+      }
       SFX.menuSelect();
       socPick[slot] = val;
       refreshSocGrids();
@@ -10881,8 +11022,8 @@ const lastMapByKind = { normal: 0, dm: null, hr: null, fnaf: null, soccer: null 
 let mapRandom = false;      // true = sorteia o mapa (dentre os do modo) ao iniciar
 let lastRandomMap = -1;
 function isGunBotsSelected(){ return document.getElementById('gameModeSelect').value === 'gungame' && document.getElementById('gunFoeSelect').value === 'bots'; }
-// Modos cooperativos (sem CT/T): Zombie Survival, Gun Game contra zumbis e FNAF Doom — não têm escolha de lado.
-function isNoSideModeSelected(){ const m = document.getElementById('gameModeSelect').value; return m === 'waves' || m === 'fnaf' || (m === 'gungame' && document.getElementById('gunFoeSelect').value === 'zombies'); }
+// Modos sem escolha de lado (CT/T): Zombie Survival, Gun Game contra zumbis, FNAF Doom e Futebol (o time é atribuído na sala).
+function isNoSideModeSelected(){ const m = document.getElementById('gameModeSelect').value; return m === 'waves' || m === 'fnaf' || m === 'soccer' || (m === 'gungame' && document.getElementById('gunFoeSelect').value === 'zombies'); }
 function isDmModeSelected(){ const m = document.getElementById('gameModeSelect').value; return m === 'deathmatch' || m === 'ctf' || m === 'hostage' || isGunBotsSelected(); }  // modos de equipe usam os mapas/opções do Deathmatch
 // Cada modo tem sua própria lista de mapas: normais (Zombie Survival/Gun Game), DM (Deathmatch/CTF) e HR (Hostage Rescue).
 function levelKind(d){ return d && d.soccerOnly ? 'soccer' : d && d.fnafOnly ? 'fnaf' : (d && d.hrOnly ? 'hr' : (d && d.dmOnly ? 'dm' : 'normal')); }
@@ -10954,6 +11095,8 @@ function refreshMapsForMode(){
   document.getElementById('dmTeamGroup').style.display = (NET.lobby && noSide) ? 'none' : '';   // sala online: sem seletor de lado nos modos cooperativos
   document.getElementById('dmLoadoutGroups').style.display = (dm && !isGun) ? 'block' : 'none';   // Gun Game: só o lado, sem escolher armas
   document.getElementById('socOptions').style.display = document.getElementById('gameModeSelect').value === 'soccer' ? 'block' : 'none';
+  { const hl = document.querySelector('#socOptions [data-i18n="socHomeLabel"]'), al = document.querySelector('#socOptions [data-i18n="socAwayLabel"]');
+    if(hl && al){ const L = I18N[currentLang]; hl.textContent = NET.lobby ? netT('TIME DA CASA (ANFITRIÃO ESCOLHE):', 'HOME TEAM (HOST PICKS):') : L.socHomeLabel; al.textContent = NET.lobby ? netT('TIME VISITANTE (CONVIDADOS ESCOLHEM):', 'AWAY TEAM (GUESTS PICK):') : L.socAwayLabel; } }
 }
 function setMapRandom(on){
   if(NET.lobby && NET.mode === 'client') return;
@@ -12659,7 +12802,7 @@ function netLeave(){
   try { if(netConn) netConn.close(); } catch(e) {}
   try { if(netPeer) netPeer.destroy(); } catch(e) {}
   netConn = null; netPeer = null;
-  NET.mode = null; NET.started = false; NET.lobby = false; NET.forceSide = false; NET.si = 0;
+  NET.mode = null; NET.started = false; NET.lobby = false; NET.forceSide = false; NET.si = 0; NET.socSlot = 0;
   if(was){
     netSetLobbyUI(false);
     refreshMapsForMode();
@@ -12712,7 +12855,7 @@ function netRenderPlayers(list, me){
 }
 function netCfg(){
   const gm = document.getElementById('gameModeSelect').value, foe = document.getElementById('gunFoeSelect').value;
-  return { mode: gm, foe, map: parseInt(mapSelect.value), rand: mapRandom, force: gm === 'gungame' && foe === 'bots', ht: document.getElementById('dmTeamSelect').value };
+  return { mode: gm, foe, map: parseInt(mapSelect.value), rand: mapRandom, force: gm === 'gungame' && foe === 'bots', ht: document.getElementById('dmTeamSelect').value, sh: socPick.home, sa: socPick.away };
 }
 function netPlayerList(){
   const L = [{ n: 'HOST', t: document.getElementById('dmTeamSelect').value, h: 1 }];
@@ -12734,6 +12877,7 @@ function netApplyCfg(cfg){
   gmSel.value = cfg.mode; foeSel.value = cfg.foe;
   document.querySelectorAll('#modeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === cfg.mode));
   document.querySelectorAll('#gunFoeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === cfg.foe));
+  if(cfg.sh){ socPick.home = cfg.sh; socPick.away = cfg.sa || 'random'; refreshSocGrids(); }   // clubes escolhidos pelo host (só exibição)
   refreshMapsForMode();
   if(visibleMaps.includes(cfg.map)) mapSelect.value = String(cfg.map);
   renderLevelPreview(parseInt(mapSelect.value));
@@ -12796,6 +12940,7 @@ function netHostAccept(conn){
       if(hr) hrDropFollowers(p.ent);
       p.ent.alive = false;
       const k = enemies.indexOf(p.ent); if(k >= 0) enemies.splice(k, 1);
+      if(NET.started && currentGameMode === 'soccer' && soc) socReplaceWithBot(p.ent);   // Futebol: um bot assume a vaga
     }
     if(!NET.started) netRefreshHostLobby();
     else { uiToast(netT('Um jogador saiu da partida', 'A player left the match'), 'err'); netCoopHostCheck(); }
@@ -12836,13 +12981,16 @@ function netBeginMatch(map, mode, foe, team, order, si){
     if(!isTeamMode()){ const pos = netSpawnPos(player, NET.si); player.x = pos.x; player.y = pos.y; }
   }
   startMatchAudio();
+  if(currentGameMode === 'soccer' && soc){   // mostra o time (clube) que o jogador recebeu
+    const myClub = socClubOf(dmPlayerTeam === 'T' ? soc.away : soc.home);
+    setTimeout(() => { if(started && !gameOver && soc) flashMsg(netT('SEU TIME: ', 'YOUR TEAM: ') + myClub.n); }, 1200);
+  }
   if(!usingTouch) requestPointerLockSafe();
 }
 function netHostStart(){
   if(!NET.lobby || NET.mode !== 'host' || NET.started) return;
   if(!netPeers.length){ uiToast(netT('Ninguém entrou na sala ainda', 'Nobody joined yet'), 'err'); return; }
   const gm = document.getElementById('gameModeSelect').value, foe = document.getElementById('gunFoeSelect').value;
-  if(gm === 'soccer'){ uiToast(netT('Futebol ainda não está disponível online', 'Soccer is not available online yet'), 'err'); return; }
   const force = gm === 'gungame' && foe === 'bots';
   let lvl = parseInt(mapSelect.value);
   if(visibleMaps.length && !visibleMaps.includes(lvl)) lvl = visibleMaps[0];
@@ -12851,16 +12999,17 @@ function netHostStart(){
     lvl = pool[Math.floor(Math.random() * pool.length)];
     lastRandomMap = lvl;
   }
-  const teamMode = gm === 'deathmatch' || gm === 'ctf' || gm === 'hostage' || (gm === 'gungame' && foe === 'bots');
+  const teamMode = gm === 'deathmatch' || gm === 'ctf' || gm === 'hostage' || gm === 'soccer' || (gm === 'gungame' && foe === 'bots');
   const ht0 = teamMode ? document.getElementById('dmTeamSelect').value : 'RANDOM';
-  const hostTeam = ht0 === 'RANDOM' ? (Math.random() < 0.5 ? 'CT' : 'T') : ht0;
+  const hostTeam = gm === 'soccer' ? 'CT' : (ht0 === 'RANDOM' ? (Math.random() < 0.5 ? 'CT' : 'T') : ht0);   // Futebol: o host joga pelo time da casa
   const cnt = { CT: 0, T: 0 }; cnt[hostTeam]++;
   netPeers.forEach((p, i) => {
     let t = p.pref.team;
-    if(!teamMode) t = Math.random() < 0.5 ? 'CT' : 'T';   // modos sem lado: skin aleatória
+    if(gm === 'soccer') t = cnt.CT < cnt.T ? 'CT' : (cnt.T < cnt.CT ? 'T' : (Math.random() < 0.5 ? 'CT' : 'T'));   // Futebol: o convidado recebe automaticamente o time com menos humanos
+    else if(!teamMode) t = Math.random() < 0.5 ? 'CT' : 'T';   // modos sem lado: skin aleatória
     else if(t !== 'CT' && t !== 'T') t = force ? hostTeam : (cnt.CT <= cnt.T ? 'CT' : 'T');   // aleatório: Gun Game vs bots fica no lado do host; demais equilibram
     // lado escolhido pelo convidado (CT/T) é sempre respeitado
-    p.team = t; cnt[t]++; p.id = 1001 + i; p.idx = i + 1;
+    p.team = t; cnt[t]++; p.id = 1001 + i; p.idx = i + 1; p.socSlot = cnt[t] - 1;
   });
   // skins dos modos cooperativos: sorteio sem repetir, conforme o número de jogadores (host + convidados)
   NET.hostSkin = 0; netPeers.forEach(p => { p.skin = 0; });
@@ -12870,11 +13019,12 @@ function netHostStart(){
     NET.hostSkin = pool.pop();
     netPeers.forEach(p => { p.skin = pool.pop() || 0; });
   }
+  if(gm === 'soccer'){ socResolveClubs(); NET.socSlot = 0; }   // clubes sorteados uma vez e enviados a todos
   NET.started = true; NET.lobby = false;
   netTimers.forEach(clearInterval); netTimers = [];
   netBeginMatch(lvl, gm, foe, hostTeam, null, 0);
   const order = GUN_GAME_ORDER.slice();
-  netPeers.forEach(p => netSendTo(p, { t: 'start', map: lvl, mode: gm, foe, team: p.team, id: p.id, si: p.idx, order }));
+  netPeers.forEach(p => netSendTo(p, { t: 'start', map: lvl, mode: gm, foe, team: p.team, id: p.id, si: p.idx, order, sc: gm === 'soccer' ? { h: socMatch.home, a: socMatch.away } : null, sl: p.socSlot || 0 }));
   netTimers.push(setInterval(netHostSnapshot, 66));
   netTimers.push(setInterval(netCoopHostCheck, 400));
 }
@@ -12959,6 +13109,12 @@ function chatSubmit(){
 
 function netHostOnData(p, d){
   if(!d) return;
+  if(d.t === 'sclub'){
+    if(NET.lobby && !NET.started && document.getElementById('gameModeSelect').value === 'soccer' && (d.k === 'random' || SOC_CLUBS.some(c => c.k === d.k)) && (d.k === 'random' || d.k !== socPick.home)){
+      socPick.away = d.k; refreshSocGrids(); netRefreshHostLobby();
+    }
+    return;
+  }
   if(d.t === 'pref'){ p.pref.team = (d.team === 'CT' || d.team === 'T') ? d.team : 'RANDOM'; return; }
   if(d.t === 'chat'){ chatHostReceive(p, d.m); return; }
   const b = p.ent;
@@ -12966,7 +13122,12 @@ function netHostOnData(p, d){
   const now = performance.now();
   if(d.t === 'st'){
     if(isTeamMode()){
-      if(b.alive){ b.x = d.x; b.y = d.y; b.z = d.z; b.angle = d.g; }
+      const sk = currentGameMode === 'soccer' && soc && !soc.test;
+      if(sk && d.q !== soc.resetN) return;   // pacote anterior ao último reinício de posições (gol): ignora
+      if(b.alive){
+        if(sk){ const k = Math.min(0.3, Math.max(0.03, (now - (b.lastSt || now - 50)) / 1000)); b.vx = (d.x - b.x) / k; b.vy = (d.y - b.y) / k; b.lastSt = now; }   // velocidade para conduzir a bola
+        b.x = d.x; b.y = d.y; b.z = d.z; b.angle = d.g;
+      }
       else if(d.a && now >= b.respawnAt){ b.alive = true; b.health = b.maxHealth; b.wasDead = false; b.x = d.x; b.y = d.y; b.z = d.z; }
     } else {
       b.alive = !!d.a; b.x = d.x; b.y = d.y; b.z = d.z; b.angle = d.g; b.health = d.h;
@@ -12978,6 +13139,13 @@ function netHostOnData(p, d){
     netPeers.forEach(q => { if(q !== p) netSendTo(q, { t: 'shot', id: p.id, w }); });
   } else if(d.t === 'hit'){
     netHostOnHit(p, d);
+  } else if(d.t === 'kick'){   // Futebol: chute do convidado (o host decide o resultado)
+    if(currentGameMode === 'soccer' && soc && !soc.test && soc.phase === 'play' && b.alive && now - (b.lastKickAt || 0) >= SOC_KICK_CD_MS * 0.8){
+      b.lastKickAt = now;
+      if(socKickBy(b, +d.g || 0, !!d.a, 0.7)){ SFX.socKick(Math.max(0.2, 1 - Math.hypot(b.x - player.x, b.y - player.y) / 16)); socNetKick(b.x, b.y, p); }
+    }
+  } else if(d.t === 'sball'){   // Futebol: tiro do convidado que acerta a bola
+    if(currentGameMode === 'soccer' && soc && !soc.test && b.alive) socBulletHitBall(+d.g || 0, Math.min(40, +d.r || 0), b);
   } else if(d.t === 'dead'){
     if(!isTeamMode()){ b.alive = false; b.health = 0; netCoopHostCheck(); }
   } else if(d.t === 'pk'){
@@ -13053,6 +13221,7 @@ function netHostSnapshot(){
   });
   const d = { t: 'snap', e, c: dmScoreCT, r: dmScoreT, go: (gameOver && team) ? 1 : 0 };
   if(currentGameMode === 'waves') d.w = currentWave;
+  if(currentGameMode === 'soccer' && soc){ const bl = soc.ball; d.sb = [netF(bl.x), netF(bl.y), netF(bl.z), netF(bl.vx), netF(bl.vy), netF(bl.vz)]; d.sp = soc.phase; d.sk = +soc.clock.toFixed(1); d.sg = soc.golden ? 1 : 0; }
   if(!team) d.p = pickups.map(k => [netF(k.x), netF(k.y), k.type, k.taken ? 1 : 0, k.weaponId || '', k.amount || 0]);
   if(ctf) d.cf = ['T', 'CT'].map(t => {
     const f = ctf.flags[t], c = f.carrier;
@@ -13112,16 +13281,22 @@ function netClientOnData(d){
   else if(d.t === 'sfx') netOnSfx(d);
   else if(d.t === 'shot') netPlayShot(netLookup(d.id), d.w);
   else if(d.t === 'chat') chatAdd(d.i, d.m);
+  else if(d.t === 'socr'){ if(NET.started && soc && currentGameMode === 'soccer'){ soc.resetN = d.n; if(dmPlayerDead) dmRespawnPlayer(); else socPlaceMe(); } }   // reinício de posições após o gol
+  else if(d.t === 'sg') socNetGoal(d);
+  else if(d.t === 'sk'){ if(soc && started && !gameOver) SFX.socKick(Math.max(0.15, 1 - Math.hypot(d.x - player.x, d.y - player.y) / 16)); }
+  else if(d.t === 'sover'){ if(soc && !gameOver){ dmScoreCT = d.c; dmScoreT = d.r; socFinish(); } }
 }
 function netClientStart(d){
   if(NET.started || NET.mode !== 'client' || !NET.lobby) return;   // ignora 'start' fora da sala / duplicado
   NET.started = true; NET.lobby = false; netMyId = d.id; netEntMap = {}; netPrev = null; netPkTaken = {};
   netTimers.forEach(clearInterval); netTimers = [];
+  if(d.sc){ socMatch.home = d.sc.h; socMatch.away = d.sc.a; }
+  NET.socSlot = d.sl || 0;
   try { netBeginMatch(d.map, d.mode, d.foe, d.team, d.order, d.si); }
   catch(err){ console.error(err); netForceMenu(netT('Falha ao iniciar a partida', 'Failed to start the match')); return; }
   netTimers.push(setInterval(() => {
     if(!netConn || !netConn.open || !started) return;
-    netSend({ t: 'st', x: netF(player.x), y: netF(player.y), z: netF(player.z), g: netF(player.angle), a: dmPlayerDead ? 0 : 1, h: Math.max(0, player.health | 0) });
+    netSend({ t: 'st', x: netF(player.x), y: netF(player.y), z: netF(player.z), g: netF(player.angle), a: dmPlayerDead ? 0 : 1, h: Math.max(0, player.health | 0), q: soc ? soc.resetN : 0 });
   }, 50));
 }
 // ---------- tiros dos outros jogadores (som 3D por distância) ----------
@@ -13208,6 +13383,7 @@ function netApplySnap(d){
     o.alive = !!a.a; o.health = a.h; o.hasFlag = !!a.fl;
     o.type = a.ty || 0;
     o.human = !!a.r; o.mpSkin = a.k || 0;
+    if(soc && currentGameMode === 'soccer') o.socClub = a.m === 'CT' ? soc.home : soc.away;   // skin = clube do time
     if(a.f){ o.fnaf = a.f; o.scale = a.s; }
     seen[id] = 1;
   });
@@ -13225,6 +13401,7 @@ function netApplySnap(d){
     if(d.w > currentWave) flashMsg('WAVE ' + d.w + '!');
     currentWave = d.w; updateHUDModeLabel();
   }
+  if(d.sb && soc && currentGameMode === 'soccer') netApplySoc(d);
   if(d.cf && ctf) netApplyCtf(d.cf, prevScore, now);
   if(d.hs && hr) netApplyHostages(d.hs);
   if(d.fn && fnaf) netApplyFnaf(d.fn);
@@ -13315,7 +13492,7 @@ function netClientTick(dt){
     '.net-pl{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;margin-top:4px;background:rgba(0,0,0,.35);border:1px solid var(--cs-line);border-radius:2px;font-size:12px;letter-spacing:1px;color:var(--cs-txt)}' +
     '.net-pl.me{border-color:var(--cs-y);color:#fff}' +
     '.net-tag{font-weight:700;color:var(--cs-dim)} .net-tag.CT{color:#3aa0ff} .net-tag.T{color:#ff4a3a}' +
-    '#levelSelectModal.net-guest #modeSeg,#levelSelectModal.net-guest #gunFoeSeg,#levelSelectModal.net-guest #mapCarousel,#levelSelectModal.net-guest #carDots,#levelSelectModal.net-guest #mapRandomBtn{pointer-events:none;opacity:.6}' +
+    '#levelSelectModal.net-guest #modeSeg,#levelSelectModal.net-guest #gunFoeSeg,#levelSelectModal.net-guest #mapCarousel,#levelSelectModal.net-guest #carDots,#levelSelectModal.net-guest #mapRandomBtn,#levelSelectModal.net-guest #socHomeGrid,#levelSelectModal.net-lobby:not(.net-guest) #socAwayGrid{pointer-events:none;opacity:.6}' +
     '#levelSelectModal.net-side-lock #dmTeamSeg{pointer-events:none;opacity:.6}';
   document.head.appendChild(st);
 
