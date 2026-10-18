@@ -2991,7 +2991,8 @@ const TEX_FLOOR_URLS = [
   'https://i.postimg.cc/t7Qsddq4/Dirt-09-512x512.png',    // 9 terra 09
   'https://i.postimg.cc/nMbXKKFr/Dirt-10-512x512.png',    // 10 terra 10
   'https://i.postimg.cc/4nkYvvfh/Dirt-12-512x512.png',    // 11 terra 12
-  'https://i.postimg.cc/GpJjf5gV/AGUA.jpg'       // 12 água
+  'https://i.postimg.cc/GpJjf5gV/AGUA.jpg',      // 12 água
+  'https://i.postimg.cc/8CmcKyR2/ROADTEXTURE.png'   // 13 asfalto (Underpass)
 ];
 const TEX_WALL_URLS = [
   'https://i.postimg.cc/q7jCfCLx/Bricks-08-512x512.png',  // 0 tijolo 08
@@ -3005,7 +3006,8 @@ const TEX_WALL_URLS = [
   'https://i.postimg.cc/vHF7tfSB/Wood-03-512x512.png',    // 8 madeira 03
   'https://i.postimg.cc/26yLC89z/Bricks-15-512x512.png',  // 9 tijolo 15
   'https://i.postimg.cc/W3zqsbWH/Bricks-12-512x512.png',  // 10 tijolo 12
-  'https://i.postimg.cc/Jzb7dD1N/Mat-Cloth-Canvas-06-512x512.png'   // 11 pano (cortina da Pirate Cove, FNAF)
+  'https://i.postimg.cc/Jzb7dD1N/Mat-Cloth-Canvas-06-512x512.png',  // 11 pano (cortina da Pirate Cove, FNAF)
+  'https://i.postimg.cc/h45m2xyv/Mat-Concrete-Gray-02-512x512.png'  // 12 concreto cinza (colunas do Underpass)
 ];
 const WALL_CLOTH_IDX = 11;
 const TEX_CEIL_URLS = [
@@ -3072,6 +3074,18 @@ loadTexSet('floor', TEX_FLOOR_URLS);
 loadTexSet('wall', TEX_WALL_URLS);
 loadTexSet('ceil', TEX_CEIL_URLS);
 loadTexSet('roof', TEX_ROOF_URLS);
+
+// Grade metálica (cerca) do Underpass: textura com transparência, desenhada com alpha por cima do que está atrás dela
+// (a visão e as balas atravessam, como nas janelas). Sem normalização de brilho para não "estourar" os vazios.
+const FENCE_URL = 'https://i.postimg.cc/wBXRKxpy/METALFENCE1.png';
+let fenceMips = null;
+(function(){
+  const done = AssetLoader.track(), img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => { try { fenceMips = buildMips(img, null); } catch(e) {} done(); };
+  img.onerror = done;
+  img.src = FENCE_URL;
+})();
 
 // Luminária de teto (textura de fonte de luz). Se a imagem falhar, desenha uma luminária simples no lugar.
 let lightMips = null;
@@ -3158,19 +3172,46 @@ function railBlocksStep(cx, cy, nx, ny){
 function placeRails(ldef){
   const W = ldef.w, H = ldef.h, g = ldef.grid, hs = ldef.heights;
   railTileMap = new Uint8Array(W * H); railDirMap = new Uint8Array(W * H);
-  const mark = (x, y, t, d) => { if (g[y] && (g[y][x] === 0 || g[y][x] === 2)) { g[y][x] = 2; railTileMap[y * W + x] = t; railDirMap[y * W + x] = d; } };
+  // UMA textura de rail por mapa (0 = Rail1, 1 = Rail2), a mesma em todos os trechos. Para fixar a de um mapa: ldef.railTex = 0 ou 1.
+  const tex = (ldef.railTex === 0 || ldef.railTex === 1) ? ldef.railTex : (currentLevelIndex & 1);
+  const marked = [];
+  const mark = (x, y, t, d) => { if (g[y] && (g[y][x] === 0 || g[y][x] === 2)) { g[y][x] = 2; railTileMap[y * W + x] = t; railDirMap[y * W + x] = d; marked.push(y * W + x); } };
   if (ldef.isTestMap) {
-    for (let x = 24; x <= 32; x++) mark(x, 18, x & 1, 1);   // fileira de demonstração perto do spawn
+    for (let x = 24; x <= 32; x++) mark(x, 18, tex, 1);   // fileira de demonstração perto do spawn
   }
   if (!hs || ldef.noRails) return;
-  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-    if (g[y][x] !== 0 || (SLP_AX && SLP_AX[y * W + x])) continue;
-    if ((x * 7 + y * 13) % 4 === 0) continue;   // deixa vãos
-    for (let d = 0; d < 4; d++) {
-      const nx = x + RAIL_DX[d], ny = y + RAIL_DY[d];
-      if (g[ny][nx] === 0 && !(SLP_AX && SLP_AX[ny * W + nx]) && hs[y][x] - hs[ny][nx] >= 2) { mark(x, y, (x + y) & 1, d); break; }
+  const build = gaps => {
+    marked.forEach(i => { const x = i % W, y = (i / W) | 0; g[y][x] = 0; railDirMap[i] = 0; railTileMap[i] = 0; });
+    marked.length = 0;
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      if (g[y][x] !== 0 || (SLP_AX && SLP_AX[y * W + x])) continue;
+      if (gaps && (x * 7 + y * 13) % 4 === 0) continue;   // vãos (só se o rail contínuo isolar partes do mapa)
+      for (let d = 0; d < 4; d++) {
+        const nx = x + RAIL_DX[d], ny = y + RAIL_DY[d];
+        if (g[ny][nx] === 0 && !(SLP_AX && SLP_AX[ny * W + nx]) && hs[y][x] - hs[ny][nx] >= 2) { mark(x, y, tex, d); break; }
+      }
     }
-  }
+  };
+  // quantas regiões andáveis separadas existem com os rails atuais (rail contínuo não pode isolar áreas que antes se ligavam)
+  const regions = () => {
+    const seen = new Uint8Array(W * H); let n = 0;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (g[y][x] === 1 || seen[y * W + x]) continue;
+      n++; const st = [[x, y]]; seen[y * W + x] = 1;
+      while (st.length) {
+        const [cx, cy] = st.pop();
+        for (let d = 0; d < 4; d++) {
+          const nx = cx + RAIL_DX[d], ny = cy + RAIL_DY[d];
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H || g[ny][nx] === 1 || seen[ny * W + nx] || railBlocksStep(cx, cy, nx, ny)) continue;
+          seen[ny * W + nx] = 1; st.push([nx, ny]);
+        }
+      }
+    }
+    return n;
+  };
+  build(true); const withGaps = regions();
+  build(false);
+  if (regions() > withGaps) build(true);   // rail contínuo isolaria áreas: mantém os vãos neste mapa
 }
 
 // ===== PORTAS =====
@@ -3237,6 +3278,10 @@ const STYLES = {
   METRO:      { fo: [5, 4, 3],   fi: [4, 2],  w: [7, 5, 3, 10], c: [3, 4], lt: [5, 1],   s: [0, 6],             d: [4, 3],    doorP: 0.06, winP: 0.04, r: [7, 6] },
   FNAF:       { fo: [4, 3],      fi: [4, 3],  w: [7, 1, 8],     c: [3],    lt: null,     s: [4],                d: [],        doorP: 0,    winP: 0,    r: [0] }
 };
+// FOREST (seção INTERNA, não aparece no menu): base para mapas de floresta. Para criar um novo mapa de floresta, basta pôr o número dele
+// em MAP_CATEGORY.FOREST: ele recebe sozinho chão de grama/terra, paredes de madeira/tijolo, teto de madeira, uma das skyboxes de dia já existentes
+// e o horizonte de mata fechada (HZ_CFG.FOREST), que é o desenho de fundo transparente por cima da skybox. Os valores abaixo podem ser ajustados para todos os mapas Forest de uma vez.
+STYLES.FOREST = { fo: [0, 1, 10, 9], fi: [7, 8], w: [8, 1, 9], c: [0, 3], lt: null, s: [0, 1, 2, 3], d: [0, 2], doorP: 0.04, winP: 0.04, r: [0, 2, 3] };
 Object.keys(STYLES).forEach(k => { STYLES[k].cat = k; });
 // nomes antigos continuam existindo como apelidos (nada no jogo depende deles, mas evita quebrar código antigo)
 STYLES.JUNGLE = STYLES.CASTLE = STYLES.PARK; STYLES.OFFICE = STYLES.DESERT = STYLES.URBAN; STYLES.LAB = STYLES.PRISON = STYLES.ARENA = STYLES.INDUSTRIAL;
@@ -3245,11 +3290,12 @@ const TEST_STYLE = { fo: [3], fi: [3], w: [7], c: [1], lt: null, s: [0], d: [], 
 const LEVEL_THEMES = {};
 // Qual categoria cada mapa usa (índice em LEVEL_DEFINITIONS). 74 (FNAF) e 75 (Futebol) têm estilo próprio.
 const MAP_CATEGORY = {
-  PARK:       [2, 4, 10, 11, 12, 13, 16, 24, 33, 35, 37, 42, 46, 55, 63, 64, 65, 76, 77, 80, 81, 82],
+  PARK:       [2, 4, 10, 11, 12, 13, 16, 24, 33, 35, 37, 42, 46, 55, 63, 64, 65, 76, 77, 80, 81],
   INDUSTRIAL: [0, 5, 6, 17, 22, 26, 27, 30, 34, 36, 45, 47, 50, 52, 54, 66, 67, 72, 73],
   URBAN:      [1, 3, 7, 8, 14, 15, 18, 20, 23, 28, 29, 38, 39, 40, 41, 43, 44, 48, 49, 51, 57, 58, 59, 60, 61, 62, 68, 69, 70, 71, 78, 79],
   HOUSE:      [21, 31, 53, 56],
-  METRO:      [9, 19, 25, 32]
+  METRO:      [9, 19, 25, 32],
+  FOREST:     [82]            // CS_DOWNHILL (a montanha). Novos mapas de floresta entram aqui.
 };
 // Variações de textura DENTRO da mesma categoria (mapas de deserto: chão de terra e paredes de barro/tijolo)
 const STYLE_TWEAKS = {
@@ -3284,6 +3330,9 @@ let lightFixMap = new Uint8Array(1), lightLvlMap = new Uint8Array(1), levelHasLi
 //  · ceilOnMap[ti]= 1: o tile tem teto (interior); 0: céu aberto (exterior). Interior e exterior convivem no mesmo mapa.
 //  · ROOFS        = telhados vistos de fora (plano, duas águas "gable" ou quatro águas "hip"), desenhados por cima das construções.
 let thinMap = null, ceilOnMap = null, roofMap = null, ROOFS = [], ROOF_MAXZ = 0;
+// Underpass: lateral dos viadutos = faixa da laje + mureta (barreira) de meia parede. Só visual; null nos outros mapas.
+//   slab = espessura da laje vista de fora · rail = altura da mureta (0.5 = meia parede) · tex = textura (a mesma das colunas)
+let underBarrier = null;
 const THIN_HALF = 0.12;
 const THIN_RECTS_CACHE = [];
 function thinRects(m){
@@ -3410,7 +3459,7 @@ function texHash(a, b, seed) {
 }
 function isWindowTile(ix, iy) {
   if (ix < 0 || iy < 0 || ix >= MAP_W || iy >= MAP_H) return false;
-  return windowTileMap[iy * MAP_W + ix] === 1;
+  return windowTileMap[iy * MAP_W + ix] >= 1;   // 1 = janela, 2 = grade metálica (Underpass)
 }
 // Monta, para o mapa atual, qual textura cada tile usa e onde ficam portas e janelas
 // (tudo determinístico: o mesmo mapa sempre tem as mesmas texturas, portas e janelas).
@@ -3420,7 +3469,7 @@ function buildTileTextures(idx, ldef) {
   floorTileMap = new Uint8Array(n); wallTileMap = new Uint8Array(n); ceilTileMap = new Uint8Array(n);
   doorTileMap = new Int8Array(n).fill(-1); windowTileMap = new Uint8Array(n);
   lightFixMap = new Uint8Array(n); lightLvlMap = new Uint8Array(n); levelHasLights = false;
-  thinMap = null; ceilOnMap = null; roofMap = null; ROOFS = []; ROOF_MAXZ = 0;
+  thinMap = null; ceilOnMap = null; roofMap = null; ROOFS = []; ROOF_MAXZ = 0; underBarrier = null;
   const outdoor = !!ldef.noCeiling;
   const fl = outdoor ? th.fo : th.fi;
   const solid = (x, y) => x < 0 || y < 0 || x >= W || y >= H || g[y][x] === 1;
@@ -3510,6 +3559,7 @@ function buildTileTextures(idx, ldef) {
   if (ldef.isTestMap) { applyTestMapLayout(ldef); return; }
   if (ldef.layout) { applyCustomLayout(ldef); return; }
   autoThin(ldef);
+  if (ldef.underpass) { applyUnderpass(ldef); return; }
   if (ldef.indoorOn) applyIndoorLayer(ldef, th, idx);   // mapas mistos feitos em ASCII: teto só nas construções + telhados
   if (!th.doorP && !th.winP) return;
   const wall = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g[y][x] === 1;
@@ -3585,6 +3635,36 @@ function autoThin(ldef){
     t[y * W + x] = m; any = true;
   }
   if (any) thinMap = t;
+}
+
+// Underpass: piso de asfalto em tudo, muro externo de tijolos, grade metálica (vazada) no perímetro da arena,
+// colunas de concreto, e teto só nos dois viadutos (ceilOn); o resto é céu aberto. Luminárias sob os viadutos.
+function applyUnderpass(ldef) {
+  const U = ldef.underpass, W = ldef.w, H = ldef.h, g = ldef.grid;
+  floorTileMap.fill(U.floor); ceilTileMap.fill(U.ceil);
+  ceilOnMap = U.ceilOn;
+  underBarrier = { slab: 0.15, rail: 0.5, tex: U.pillar };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    if (g[y][x] !== 1) continue;
+    if (x === 0 || y === 0 || x === W - 1 || y === H - 1) wallTileMap[i] = U.brick;
+    else if (U.fence[i]) { wallTileMap[i] = U.fenceWall; windowTileMap[i] = 2; }
+    else wallTileMap[i] = U.pillar;
+  }
+  const open = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g[y][x] === 0;
+  const R = 5, str = 0.9;
+  U.lamps.forEach(([fx, fy]) => {
+    if (!open(fx, fy)) return;
+    lightFixMap[fy * W + fx] = 1;
+    for (let y = fy - R; y <= fy + R; y++) for (let x = fx - R; x <= fx + R; x++) {
+      if (!open(x, y) || !U.ceilOn[y * W + x]) continue;   // a luz fica só sob os viadutos
+      const d = Math.hypot(x - fx, y - fy);
+      if (d > R) continue;
+      const i = y * W + x, v = Math.pow(1 - d / R, 1.4) * str * 255;
+      lightLvlMap[i] = Math.min(255, lightLvlMap[i] + v);
+    }
+  });
+  levelHasLights = U.lamps.length > 0;
 }
 
 // Mapa de testes: cada tile recebe exatamente a textura definida em testLayout (nada de sorteio).
@@ -3684,6 +3764,7 @@ const HZ_CFG = {
   INDUSTRIAL: { ground: [92, 90, 84],  L: [{ w: { ware: 3, chim: 1, silo: 1, mid: 0.5 }, gap: [0, 14] }, { w: { ware: 4, silo: 0.8, chim: 0.5, tree: 1 }, gap: [2, 16] }, { w: { ware: 2, tree: 2, house: 0.5 }, gap: [6, 36] }] },
   SOCCER:     { ground: [74, 104, 56], L: [{ w: { mid: 4, tower: 1.2, tree: 1 }, gap: [0, 8] }, { w: { mid: 2, house: 2, tree: 3 }, gap: [0, 12] }, { w: { tree: 4, house: 1 }, gap: [0, 30] }] }
 };
+HZ_CFG.FOREST = { ground: [34, 62, 36], L: [{ w: { tree: 1 }, gap: [-12, 0] }, { w: { tree: 1 }, gap: [-12, 2] }, { w: { tree: 1 }, gap: [-8, 6] }] };
 function hzRng(seed) {
   let a = seed >>> 0;
   return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -4099,7 +4180,7 @@ const I18N = {
     lvl30: "SHIPMENT", lvl31: "ESTATE", lvl32: "UNDERPASS", lvl33: "DE_CHATEAU", lvl34: "CS_BIOHAZARD", lvl35: "DE_ANUBIS", lvl36: "WASTELAND", lvl37: "DE_BRIDGE", lvl38: "DE_DUST2", lvl39: "DE_DUST2", lvl40: "DE_INFERNO", lvl41: "DE_MIRAGE", lvl42: "DE_AZTEC", lvl43: "CS_ITALY", lvl44: "CS_OFFICE", lvl45: "DE_CACHE", lvl46: "DE_CBBLE", lvl47: "DE_NUKE", lvl48: "DE_OVERPASS",
     lvl30Desc: "Pátio de contêineres: paredes finas compridas formam corredores. Cuidado com o centro aberto.",
     lvl31Desc: "Mansão com salão central de seis portas, jardim com piscina rasa para vadear e flancos abertos.",
-    lvl32Desc: "Estação subterrânea: plataformas elevadas com colunas nas laterais e trilhos rebaixados no meio. Descer é fácil, subir custa um degrau.",
+    lvl32Desc: "Passagem sob viadutos: chão de asfalto cercado por grades metálicas e um muro de tijolos, dois viadutos sobre as colunas centrais e céu aberto nas laterais e no centro. Descer é fácil, subir custa um degrau.",
     lvl33Desc: "Château: muralhas internas, torre central em degraus e jardins rebaixados com rampas nas laterais.",
     lvl34Desc: "Laboratório com câmaras de contenção, corredor longo e sala central. Combate em curta e média distância.",
     lvl35Desc: "Templo escalonado com pátio de pilares e uma pirâmide de dois níveis no centro. Disputa pelo alto.",
@@ -4242,7 +4323,7 @@ const I18N = {
     lvl30: "SHIPMENT", lvl31: "ESTATE", lvl32: "UNDERPASS", lvl33: "DE_CHATEAU", lvl34: "CS_BIOHAZARD", lvl35: "DE_ANUBIS", lvl36: "WASTELAND", lvl37: "DE_BRIDGE", lvl38: "DE_DUST2", lvl39: "DE_DUST2", lvl40: "DE_INFERNO", lvl41: "DE_MIRAGE", lvl42: "DE_AZTEC", lvl43: "CS_ITALY", lvl44: "CS_OFFICE", lvl45: "DE_CACHE", lvl46: "DE_CBBLE", lvl47: "DE_NUKE", lvl48: "DE_OVERPASS",
     lvl30Desc: "Container yard: long thin walls form lanes. Watch out for the open centre.",
     lvl31Desc: "Mansion with a six-door central hall, a garden with a shallow pool to wade through and open flanks.",
-    lvl32Desc: "Underground station: raised platforms with columns on the sides and sunken tracks in the middle. Dropping down is easy, climbing back costs a step.",
+    lvl32Desc: "Underpass beneath two viaducts: asphalt ground fenced by metal grids and a brick outer wall, with open sky on the sides and in the middle. Dropping down is easy, climbing back costs a step.",
     lvl33Desc: "Chateau: inner walls, a stepped central tower and sunken gardens with ramps on the sides.",
     lvl34Desc: "Laboratory with containment chambers, a long corridor and a central room. Short and medium range combat.",
     lvl35Desc: "Stepped temple with a pillared courtyard and a two-level pyramid in the middle. Fight for the high ground.",
@@ -7792,6 +7873,46 @@ const NM_ASCII_MAPS = [
     ld.style = d.st;
   });
 })();
+
+// ===== UNDERPASS (lvl32): grade metálica, asfalto, muro de tijolos externo e dois viadutos =====
+// A arena original (36x16) ganha uma faixa externa de asfalto (2 tiles) atrás da grade e, no fim dela, um muro de tijolos.
+// Tudo é deslocado por M; as zonas T/CT e o spawn acompanham. Viadutos = teto sobre as fileiras de colunas centrais
+// (y 4-6 e y 9-11 do mapa original); o céu aparece nas plataformas laterais (y 1-3 e 12-14) e na faixa do meio (y 7-8).
+(function underpassRebuild(){
+  const ld = LEVEL_DEFINITIONS.find(l => l && l.keyName === 'lvl32'); if (!ld || !ld.grid) return;
+  const M = 3, W0 = ld.w, H0 = ld.h, W = W0 + 2 * M, H = H0 + 2 * M, N = W * H;
+  const g = [], hs = [], outMask = new Uint8Array(N), fence = new Uint8Array(N), ceilOn = new Uint8Array(N);
+  for (let y = 0; y < H; y++) {
+    const gr = [], hr = [];
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x, ox = x - M, oy = y - M;
+      if (x === 0 || y === 0 || x === W - 1 || y === H - 1) { gr.push(1); hr.push(0); }
+      else if (ox >= 0 && oy >= 0 && ox < W0 && oy < H0) {
+        gr.push(ld.grid[oy][ox]); hr.push(ld.heights ? (ld.heights[oy][ox] || 0) : 0);
+        if (ld.grid[oy][ox] === 1 && (ox === 0 || oy === 0 || ox === W0 - 1 || oy === H0 - 1)) fence[i] = 1;
+      } else { gr.push(0); hr.push(0); outMask[i] = 1; }
+    }
+    g.push(gr); hs.push(hr);
+  }
+  // onde uma coluna de concreto encosta no perímetro, o trecho da grade vira concreto (pilar), sem emenda estranha
+  const fence0 = fence.slice();   // máscara original: a troca de uma grade por pilar não pode contaminar as vizinhas
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    const i = y * W + x; if (!fence0[i]) continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (g[ny][nx] === 1 && !fence0[ny * W + nx] && nx > 0 && ny > 0 && nx < W - 1 && ny < H - 1) { fence[i] = 0; break; }
+    }
+  }
+  [[4, 6], [9, 11]].forEach(([a, b]) => { for (let oy = a; oy <= b; oy++) for (let x = 0; x < W; x++) ceilOn[(oy + M) * W + x] = 1; });
+  const sh = z => ({ x0: z.x0 + M, y0: z.y0 + M, x1: z.x1 + M, y1: z.y1 + M });
+  if (ld.dmZones) ld.dmZones = { T: sh(ld.dmZones.T), CT: sh(ld.dmZones.CT) };
+  if (ld.spawn) ld.spawn = { x: ld.spawn.x + M, y: ld.spawn.y + M, angle: ld.spawn.angle };
+  ld.w = W; ld.h = H; ld.grid = g; ld.heights = hs; ld.outMask = outMask;
+  ld.noCeiling = true; ld.indoorOn = null;
+  const lamps = [];
+  [5, 10].forEach(oy => [2, 9, 16, 19, 26, 33].forEach(ox => lamps.push([ox + M, oy + M])));
+  ld.underpass = { floor: 13, ceil: 3, brick: 9, pillar: 12, fenceWall: 5, fence, ceilOn, lamps };
+})();
 applyMapCategories();
 
 function renderLevelPreview(idx) {
@@ -7895,7 +8016,7 @@ function cleanWindows(){
     if(!thinMap[i]) continue;
     const m = thinMap[i] & 15, straight = (m === 5 || m === 10);
     // porta e janela só em trecho RETO de parede fina: na ponta (1 braço), canto ou junção o desenho abria um vão estranho
-    if(windowTileMap[i] && !straight) windowTileMap[i] = 0;
+    if(windowTileMap[i] === 1 && !straight) windowTileMap[i] = 0;
     if(doorTileMap[i] >= 0 && !straight) doorTileMap[i] = -1;
   }
 }
@@ -8437,8 +8558,8 @@ function testSkinEntry(k){
 }
 
 const TEX_NAMES = {
-  floor: ['GRAMA 03', 'GRAMA 04', 'METAL 07', 'PISO 02', 'PISO 07', 'PISO 19', 'PISO 11', 'MADEIRA 06', 'MADEIRA 25', 'TERRA 09', 'TERRA 10', 'TERRA 12', 'ÁGUA'],
-  wall:  ['TIJOLO 08', 'TIJOLO 02', 'TIJOLO 24', 'TIJOLO 21', 'METAL 01', 'METAL 02', 'METAL 16', 'AZULEJO 12', 'MADEIRA 03', 'TIJOLO 15', 'TIJOLO 12'],
+  floor: ['GRAMA 03', 'GRAMA 04', 'METAL 07', 'PISO 02', 'PISO 07', 'PISO 19', 'PISO 11', 'MADEIRA 06', 'MADEIRA 25', 'TERRA 09', 'TERRA 10', 'TERRA 12', 'ÁGUA', 'ASFALTO'],
+  wall:  ['TIJOLO 08', 'TIJOLO 02', 'TIJOLO 24', 'TIJOLO 21', 'METAL 01', 'METAL 02', 'METAL 16', 'AZULEJO 12', 'MADEIRA 03', 'TIJOLO 15', 'TIJOLO 12', 'PANO', 'CONCRETO CINZA 02'],
   ceil:  ['MADEIRA 18', 'METAL 10', 'METAL 17', 'CONCRETO CINZA 02', 'CONCRETO BRANCO 01', 'CONCRETO BRANCO 04'],
   sky:   ['DIA 1', 'DIA 2', 'DIA 3', 'DIA 4', 'NOITE 1', 'NOITE 2', 'PÔR DO SOL 1', 'PÔR DO SOL 2'],
   door:  ['PORTA 11', 'PORTA 1', 'PORTA 2', 'PORTA 5', 'PORTA 6', 'PORTA FNAF']
@@ -8641,7 +8762,7 @@ function updateTestHud(now){
       const wi = w.iy * MAP_W + w.ix;
       let t = (en ? 'WALL ' : 'PAREDE ') + wallTileMap[wi] + ' · ' + (TEX_NAMES.wall[wallTileMap[wi]] || '?');
       if(doorTileMap[wi] >= 0) t += ' + ' + (TEX_NAMES.door[doorTileMap[wi]] || ('PORTA ' + doorTileMap[wi]));
-      if(windowTileMap[wi]) t += ' + ' + (en ? 'WINDOW' : 'JANELA');
+      if(windowTileMap[wi] === 2) t += ' + ' + (en ? 'FENCE' : 'GRADE'); else if(windowTileMap[wi]) t += ' + ' + (en ? 'WINDOW' : 'JANELA');
       if(thinMap && thinMap[wi]) t += ' · ' + (en ? 'THIN WALL' : 'PAREDE FINA');
       lines.push(t);
     }
@@ -8711,9 +8832,10 @@ function boxHitsWall(x, y, r){
 
 function getEmptyTiles(minDistFromPlayer = 0) {
   const emptyTiles = [];
+  const _om = (LEVEL_DEFINITIONS[currentLevelIndex] || {}).outMask;   // faixa externa atrás da grade: nada nasce lá
   for(let y = 0; y < MAP_H; y++){
     for(let x = 0; x < MAP_W; x++){
-      if(MAP[y] && MAP[y][x] === 0){
+      if(MAP[y] && MAP[y][x] === 0 && !(_om && _om[y * MAP_W + x])){
         const posX = x + 0.5;
         const posY = y + 0.5;
         if (waterAt(posX, posY) >= WATER_DEEP_LEVELS) continue;   // itens e inimigos não nascem em água funda
@@ -13036,7 +13158,7 @@ let zbuffer = [];
 const GEO_CEIL_RADIUS = 3;
 let geo = { src: null, w: 0, h: 0, floorZ: null, ceilZ: null, topZ: null };
 function ensureGeo(){
-  if (geo.src === HEIGHTS && geo.w === MAP_W && geo.h === MAP_H) return;
+  if (geo.src === HEIGHTS && geo.w === MAP_W && geo.h === MAP_H && geo.ub === !!underBarrier) return;
   const W = MAP_W, H = MAP_H, n = W * H;
   const fl = new Float32Array(n), ce = new Float32Array(n), tp = new Float32Array(n);
   const lv = (x, y) => { const r = HEIGHTS[y]; return (r && r[x] !== undefined) ? r[x] : 0; };
@@ -13057,7 +13179,9 @@ function ensureGeo(){
     ce[i] = 1 + m3 * HEIGHT_UNIT;     // teto (fases com teto)
     tp[i] = 1 + m1 * HEIGHT_UNIT;     // topo da parede (fases ao ar livre)
   }
-  geo = { src: HEIGHTS, w: W, h: H, floorZ: fl, ceilZ: ce, topZ: tp };
+  // Underpass: sob os viadutos o topo de coluna/grade acompanha o teto (antes ficava até 0,18 abaixo dele e aparecia uma fresta de céu)
+  if (underBarrier && ceilOnMap) for (let i = 0; i < n; i++) if (ceilOnMap[i] === 1) tp[i] = ce[i];
+  geo = { src: HEIGHTS, w: W, h: H, floorZ: fl, ceilZ: ce, topZ: tp, ub: !!underBarrier };
 }
 
 // Registros por coluna: a cada fronteira de tile guarda (distância, primeira/última linha livre).
@@ -13360,7 +13484,10 @@ function castAndDraw(){
         doorX = Math.min(TEX_SIZE - 1, Math.floor(((u - 0.5) / dTex.frac + 0.5) * TEX_SIZE));
       }
     }
-    const inGlassX = windowMode && longFace && wallX > 0.1 && wallX < 0.9 && Math.abs(wallX - 0.5) > 0.025;
+    const fenceTile = windowMode && tIdx >= 0 && windowTileMap[tIdx] === 2;   // grade metálica: textura com transparência
+    const fenceT = (fenceTile && fenceMips) ? fenceMips : null;
+    const fL = fenceT ? mipFor(Math.floor(unit)) : 0, fSz = TEX_SIZE >> fL, fTex = fenceT ? fenceT[fL] : null;
+    const inGlassX = windowMode && !fenceTile && longFace && wallX > 0.1 && wallX < 0.9 && Math.abs(wallX - 0.5) > 0.025;
 
     const sideShade = hside === 1 ? 0.62 : 1.0;
     const wLit = litAny && tIdx >= 0 && litMap[tIdx] === 1;
@@ -13388,6 +13515,17 @@ function castAndDraw(){
       const distFromTop = (r + 0.5) - yTopF;
       if (contactPx > 0 && distFromTop < contactPx * 0.6) shade *= 0.8 + 0.2 * (distFromTop / (contactPx * 0.6));
 
+      if (fenceT) {
+        // a textura da grade é esticada na altura da lâmina (sem repetir) e misturada com o que já foi desenhado atrás
+        const vf = (r + 0.5 - yTopF) / Math.max(1, yBotF - yTopF);
+        const fy = vf <= 0 ? 0 : (vf >= 1 ? TEX_SIZE - 1 : (vf * TEX_SIZE) | 0);
+        const fti = (fSz * (fy >> fL) + (texX >> fL)) * 4, fa = fTex[fti + 3] / 255;
+        if (fa < 0.06) continue;
+        const bo = r * w + col, px = buf32[bo];
+        const pr = px & 255, pg = (px >> 8) & 255, pb = (px >> 16) & 255;
+        buf32[bo] = (255 << 24) | (((pb + (fTex[fti + 2] * shade - pb) * fa) | 0) << 16) | (((pg + (fTex[fti + 1] * shade - pg) * fa) | 0) << 8) | ((pr + (fTex[fti] * shade - pr) * fa) | 0);
+        continue;
+      }
       let rr, g2, b2;
       if (wTex) {
         const ti = (wSz * (texY >> wL) + (texX >> wL)) * 4;
@@ -13534,6 +13672,17 @@ function castAndDraw(){
       const inB = mapX >= 0 && mapY >= 0 && mapX < MAP_W && mapY < MAP_H;
       const tIdx = inB ? mapY * MAP_W + mapX : -1;
       const t = tileAt(mapX, mapY);
+      if (underBarrier && inB && cOn(tIdx) && !cOn(prevTi)) {
+        // lateral do viaduto vista de fora: laje (faixa escura) + mureta de meia parede, com a textura das colunas
+        const cz = CZ[tIdx], zs = cz + underBarrier.slab, zt = zs + underBarrier.rail;
+        const bMips = texMips.wall[underBarrier.tex] || texMips.wall[0];
+        const topRow = B(horizon + (eyeZ - zt) * (h / dB));
+        if (topRow > lo + 1) backdrop(col, lo + 1, Math.min(topRow, hi), dB, rdx, rdy);   // acima da mureta: céu
+        // uma única face contínua (mureta + laje): antes eram duas faces com textura reiniciada, realce e sombra próprios,
+        // o que deixava linhas claras/escuras paralelas e um degrau de brilho ao longo de todo o viaduto
+        const fs = drawFace(col, dB, zt, cz, bMips, prevTi, side, rdx, rdy, 1);
+        if (fs.bB - 1 > lo) lo = fs.bB - 1;
+      }
       if (t === 2 && inB && rlN < 4) {
         const rb = rlN * 9;
         rlBuf[rb] = mapX; rlBuf[rb+1] = mapY; rlBuf[rb+2] = Math.min(sideDX, sideDY);
@@ -13901,7 +14050,7 @@ function drawMinimap(){
       else if(t===2){ col = '#3a6fa8'; }
       else if(t>0){
         const ti = my * MAP_W + mx;
-        col = windowTileMap[ti] ? '#4aa8c8' : (doorTileMap[ti] >= 0 && doorTileMap[ti] < DOOR_AD_FROM ? '#3a5a8a' : '#666');
+        col = windowTileMap[ti] === 2 ? '#8e99a3' : windowTileMap[ti] ? '#4aa8c8' : (doorTileMap[ti] >= 0 && doorTileMap[ti] < DOOR_AD_FROM ? '#3a5a8a' : '#666');
       }
       mmCtx.fillStyle=col;
       mmCtx.fillRect((x+5)*scale,(y+5)*scale,scale,scale);
