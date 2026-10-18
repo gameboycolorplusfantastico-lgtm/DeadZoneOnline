@@ -59,6 +59,12 @@
   }, true);
 })();
 </script>
+<script>
+/* Teclado virtual aberto: as teclas físicas vão para ele antes de qualquer outro atalho do jogo. */
+window.addEventListener('keydown', function(e){
+  if(window.dzVk && window.dzVk.isOpen() && window.dzVk.key(e)){ e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
+</script>
 <title>Dead Zone - REMASTERED</title>
 <style>
   :root{
@@ -1214,7 +1220,8 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
   body.touch-ui #menuBtn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;right:8px;top:7px;font-size:0;letter-spacing:0;color:transparent;border-radius:50%;background-color:rgba(20,60,90,.45);background-image:url('https://i.postimg.cc/YCsNbCxn/HUDMOBILEPAUSE.png');background-repeat:no-repeat;background-position:center;background-size:62%;border:2px solid var(--cs-hud,#9fe3ff);box-shadow:0 0 12px var(--cs-hud-glow,rgba(70,185,255,.55)), inset 0 0 10px rgba(0,0,0,.3);-webkit-tap-highlight-color:transparent;}
   body.touch-ui #menuBtn:active{transform:scale(.94);background-color:rgba(70,185,255,.45);}
   body.touch-ui #menuBtn::before{content:none;}
-  body.touch-ui #chatBtn{right:52px;}
+  body.touch-ui #chatBtn{right:52px;top:7px;width:36px;height:36px;font-size:0;color:transparent;border-radius:50%;background-color:rgba(20,60,90,.45);background-image:url('https://i.postimg.cc/gcNc6XsX/HUDMOBILECHAT.png');background-repeat:no-repeat;background-position:center;background-size:62%;border:2px solid var(--cs-hud,#9fe3ff);box-shadow:0 0 12px var(--cs-hud-glow,rgba(70,185,255,.55)), inset 0 0 10px rgba(0,0,0,.3);}
+  body.touch-ui #chatBtn:active{background-color:rgba(70,185,255,.45);}
   @media (max-width:700px){#shopBtn:not(.icon){right:auto;left:8px;top:48px;padding:6px 10px;font-size:12px;}}
 </style>
 <style id="consoleCss">
@@ -1253,6 +1260,23 @@ html.console #gpHints{ font-size:clamp(14px,2vh,19px); bottom:var(--sy); padding
 html.console #uiToast{ font-size:clamp(14px,2vh,19px); bottom:calc(8% + var(--sy)); }
 html.console .gp-focus{ outline-width:4px !important; }
 </style>
+<style id="hudBtnCss">
+/* Pausa e chat (PC e consoles): sem texto nem emoji, só um botão pressionável. Celular mantém o visual próprio. */
+html body:not(.touch-ui) #menuBtn, html body:not(.touch-ui) #chatBtn{
+  box-sizing:border-box;width:34px;height:26px;min-width:0;padding:0;margin:0;overflow:hidden;
+  font-size:0;line-height:0;letter-spacing:0;color:transparent;text-shadow:none;
+  background:rgba(0,0,0,.35);border:1px solid rgba(159,227,255,.55);border-radius:5px;
+  top:8px;transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;
+}
+html body:not(.touch-ui) #menuBtn{right:8px;}
+html body:not(.touch-ui) #chatBtn{right:48px;}
+html body:not(.touch-ui) #menuBtn:hover, html body:not(.touch-ui) #chatBtn:hover{background:rgba(40,90,120,.55);border-color:var(--cs-hud,#9fe3ff);}
+html body:not(.touch-ui) #menuBtn:active, html body:not(.touch-ui) #chatBtn:active{transform:scale(.94);background:rgba(70,185,255,.45);}
+html.console body:not(.touch-ui) #menuBtn, html.console body:not(.touch-ui) #chatBtn{width:40px;height:30px;top:calc(8px + var(--sy));}
+html.console body:not(.touch-ui) #menuBtn{right:calc(8px + var(--sx));}
+html.console body:not(.touch-ui) #chatBtn{right:calc(52px + var(--sx));}
+html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx));}
+</style>
 </head>
 <body>
 <div id="loadingScreen">
@@ -1269,10 +1293,10 @@ html.console .gp-focus{ outline-width:4px !important; }
     <span class="radar-label">RADAR</span>
     <canvas id="minimap" width="100" height="100"></canvas>
   </div>
-  <button id="menuBtn" data-i18n="pause">PAUSA</button>
+  <button id="menuBtn" type="button" data-i18n="pause" aria-label="Pausa" title="Pausa">PAUSA</button>
   <button id="shopBtn" type="button" style="display:none">LOJA [B]</button>
   <div id="shopModal"><div class="shop-box"><div class="shop-head"><span class="shop-title">LOJA / SHOP</span><span id="shopMoney">$0</span></div><div id="shopTimer"></div><div id="shopMsg"></div><div id="shopList"></div><div id="shopHint"></div><button id="shopCloseBtn" type="button" class="btn">FECHAR / CLOSE</button></div></div>
-  <button id="chatBtn" type="button" aria-label="Chat">💬</button>
+  <button id="chatBtn" type="button" aria-label="Chat" title="Chat">💬</button>
   <div id="chatWrap">
     <div id="chatLog"></div>
     <div id="chatInputRow">
@@ -1708,6 +1732,7 @@ html.console .gp-focus{ outline-width:4px !important; }
           <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys">F</span></div>
           <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys">ESPAÇO</span></div>
           <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys">ESC</span></div>
+          <div class="controls-row"><span data-i18n="ctlChat">Abrir chat (online)</span><span class="controls-keys">ENTER</span></div>
         </div>
         <div class="controls-scheme-col" id="colTouch">
           <div class="controls-scheme-title"><span data-i18n="controlsTouchTitle">TOQUE (MOBILE)</span><span class="ctl-inuse" data-i18n="ctlInUse">EM USO</span></div>
@@ -1743,6 +1768,7 @@ html.console .gp-focus{ outline-width:4px !important; }
           <div class="controls-row"><span data-i18n="ctlShopFast">Pular 5 armas (loja)</span><span class="controls-keys">LB/RB · L1/R1</span></div>
           <div class="controls-row"><span data-i18n="ctlShopClose">Fechar loja</span><span class="controls-keys">B / ○ · Y / △ · START</span></div>
           <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys" data-i18n="ctlStart">START / OPTIONS</span></div>
+          <div class="controls-row"><span data-i18n="ctlChat">Abrir chat (online)</span><span class="controls-keys">D-PAD ↑ / VIEW ⧉</span></div>
           <div class="controls-row"><span data-i18n="ctlMenuNav">Navegar nos menus</span><span class="controls-keys">D-PAD / L-STICK</span></div>
           <div class="controls-row"><span data-i18n="ctlMenuOk">Confirmar</span><span class="controls-keys">A / ✕</span></div>
           <div class="controls-row"><span data-i18n="ctlMenuBack">Voltar (menus)</span><span class="controls-keys">B / ○</span></div>
@@ -4141,7 +4167,7 @@ const I18N = {
     controlsKbTitle: "TECLADO / MOUSE", controlsTouchTitle: "TOQUE (MOBILE)", controlsGamepadTitle: "XBOX SERIES X / PS4 / PS5",
     ctlMove: "Mover", ctlLook: "Mirar / olhar", ctlFire: "Atirar", ctlReload: "Recarregar", ctlWeapons: "Trocar arma", ctlPause: "Pausar", ctlSwap: "Trocar arma do chão",
     ctlMouseLook: "MOUSE", ctlMouseClick: "CLIQUE ESQ.", ctlTouchStick: "ANALÓGICO ESQ.", ctlTouchSwipe: "ARRASTAR NA DIREITA", ctlTouchFire: "BOTÃO TIRO",
-    ctlStickL: "ANALÓGICO ESQ.", ctlStickR: "ANALÓGICO DIR.", ctlRT: "RT / R2", ctlX: "X / □", ctlBumpers: "LB/RB · L1/R1", ctlStart: "MENU ☰ / OPTIONS",
+    ctlChat: "Abrir chat (online)", ctlStickL: "ANALÓGICO ESQ.", ctlStickR: "ANALÓGICO DIR.", ctlRT: "RT / R2", ctlX: "X / □", ctlBumpers: "LB/RB · L1/R1", ctlStart: "MENU ☰ / OPTIONS",
     ctlMenuNav: "Navegar nos menus", ctlMenuOk: "Confirmar", ctlMenuBack: "Voltar (menus)", ctlMenuTabs: "Abas / mapas",
     gpHintBase: "<b>A</b> CONFIRMAR   <b>B</b> VOLTAR   <b>D-PAD/ANALÓGICO</b> NAVEGAR",
     gpHintSettings: "   <b>LB/RB</b> ABAS   <b>START</b> FECHAR",
@@ -4284,7 +4310,7 @@ const I18N = {
     controlsKbTitle: "KEYBOARD / MOUSE", controlsTouchTitle: "TOUCH (MOBILE)", controlsGamepadTitle: "XBOX SERIES X / PS4 / PS5",
     ctlMove: "Move", ctlLook: "Look / aim", ctlFire: "Fire", ctlReload: "Reload", ctlWeapons: "Switch weapon", ctlPause: "Pause", ctlSwap: "Swap with floor weapon",
     ctlMouseLook: "MOUSE", ctlMouseClick: "LEFT CLICK", ctlTouchStick: "LEFT STICK", ctlTouchSwipe: "DRAG ON THE RIGHT", ctlTouchFire: "FIRE BUTTON",
-    ctlStickL: "LEFT STICK", ctlStickR: "RIGHT STICK", ctlRT: "RT / R2", ctlX: "X / □", ctlBumpers: "LB/RB · L1/R1", ctlStart: "MENU ☰ / OPTIONS",
+    ctlChat: "Open chat (online)", ctlStickL: "LEFT STICK", ctlStickR: "RIGHT STICK", ctlRT: "RT / R2", ctlX: "X / □", ctlBumpers: "LB/RB · L1/R1", ctlStart: "MENU ☰ / OPTIONS",
     ctlMenuNav: "Navigate menus", ctlMenuOk: "Confirm", ctlMenuBack: "Back (menus)", ctlMenuTabs: "Tabs / maps",
     gpHintBase: "<b>A</b> CONFIRM   <b>B</b> BACK   <b>D-PAD/STICK</b> NAVIGATE",
     gpHintSettings: "   <b>LB/RB</b> TABS   <b>START</b> CLOSE",
@@ -11623,7 +11649,7 @@ window.addEventListener('mousemove', e=>{
 window.addEventListener('mousedown', e=>{
   if(started && !gameOver && document.pointerLockElement===document.getElementById('screen')){
     fireHeld = true; tryFire();
-  } else if(started && !gameOver && !e.target.closest('#weaponIconBar') && !e.target.closest('#menuBtn') && !e.target.closest('#shopBtn') && !e.target.closest('#shopModal') && !e.target.closest('#touchLayer') && !e.target.closest('#chatWrap') && !e.target.closest('#chatBtn') && !e.target.closest('.overlay-screen')){
+  } else if(started && !gameOver && !e.target.closest('#weaponIconBar') && !e.target.closest('#menuBtn') && !e.target.closest('#shopBtn') && !e.target.closest('#shopModal') && !e.target.closest('#touchLayer') && !e.target.closest('#chatWrap') && !e.target.closest('#chatBtn') && !e.target.closest('#dzVk') && !e.target.closest('.overlay-screen')){
     requestPointerLockSafe();
   }
 });
@@ -11785,20 +11811,40 @@ function pollGamepad(){
   if(gp.buttons.some((b, i) => b.pressed && !gpPrevButtons[i])) SFX.unlock();
 
   // Menus (principal, seleção de partida, configurações/pausa, game over): navegação por controle.
+  // Teclado virtual aberto (consoles): ele recebe o controle; o jogo e os menus ficam parados.
+  if(window.dzVk && window.dzVk.isOpen()){
+    window.dzVk.pad(gp, btn, prev);
+    gpVec.x = 0; gpVec.y = 0; gpTurn = 0; gpLook = 0;
+    fireHeld = false; gpFireHeld = false; gpTriggerWasHeld = false;
+    gpPrevButtons = gp.buttons.map(b => b.pressed);
+    return;
+  }
   const menuRoot = gpUpdateMenuRoot();
   if(menuRoot){
     gpMenuUpdate(gp, menuRoot, btn, prev);
-  } else if(btn(9) && !prev(9)){
+  } else if(btn(9) && !prev(9) && !chatOpen){
     // Start / Options abre a pausa durante o jogo
     if(document.pointerLockElement) document.exitPointerLock();
     openSettingsMenu();
   }
 
   if(shopOpen && !menuOpen){ shopGamepad(btn, prev); gpVec.x = 0; gpVec.y = 0; gpTurn = 0; gpLook = 0; gpPrevButtons = gp.buttons.map(b => b.pressed); return; }
+  if(started && !gameOver && !menuOpen && chatOpen){
+    // digitando no campo do chat (sem teclado virtual): personagem parado; A envia, B fecha
+    gpVec.x = 0; gpVec.y = 0; gpTurn = 0; gpLook = 0;
+    fireHeld = false; gpFireHeld = false; gpTriggerWasHeld = false;
+    if(btn(1) && !prev(1)) chatCloseInput();
+    else if(btn(0) && !prev(0)) chatSubmit();
+    gpPrevButtons = gp.buttons.map(b => b.pressed);
+    return;
+  }
   if(started && !gameOver && !menuOpen){
     usingKeyboardMouse = false;
     usingTouch = false;
     applyControlScheme();
+
+    // D-pad cima ou VIEW / SHARE: abre o chat (partida online)
+    if(((btn(12) && !prev(12)) || (btn(8) && !prev(8))) && typeof chatInGame === 'function' && chatInGame()) chatOpenInput();
 
     gpVec.x = applyDeadzone(gp.axes[0] || 0);
     gpVec.y = applyDeadzone(gp.axes[1] || 0);
@@ -12057,7 +12103,10 @@ function gpMenuUpdate(gp, root, btn, prev){
   // A = confirmar
   if(pressed(0) && gpMenuEl){
     const el = gpMenuEl;
-    if(el.type === 'text') el.focus();
+    if(el.type === 'text'){
+      if(window.dzVk && window.dzVk.wanted()) window.dzVk.forInput(el);   // console: teclado virtual do jogo
+      else el.focus();
+    }
     else if(el.type !== 'range' && !(window.dzTrustedClickRecent && window.dzTrustedClickRecent(el))) el.click();
   }
 
@@ -13520,7 +13569,11 @@ function castAndDraw(){
             if (thH) { baseS = FZ[tIdx]; topZ = cOn(tIdx) ? CZ[tIdx] : TZ[tIdx]; drawSpans(col, tIdx, baseS, CZ[tIdx], dB, thH.t, rdx, rdy, false); endD = thH.t; }
             const r0 = drawSlice(col, mapX, mapY, side, stepX, stepY, rdx, rdy, prevX, prevY, false, baseS, topZ, lo, hi, thH);
             if (r0 < hi) hi = r0;
-            break;
+            // parede fina vista de cima ao ar livre: o raio NÃO termina aqui; segue por cima do topo
+            // (senão as linhas acima da parede ficavam "abertas" e mostravam o céu/panorama de fundo)
+            if (thH && !cOn(prevTi) && !cOn(tIdx) && eyeZ > topZ + 0.002 && lo + 1 < hi) {
+              curTi = tIdx; curF = topZ; curTop = true; d0 = thH.t; endD = thH.t;
+            } else break;
           }
         }
       } else {
@@ -15081,7 +15134,7 @@ function netHostStart(){
 // { t:'chat', i: número do jogador, m }. Assim ninguém consegue falsificar o nome de outro jogador.
 const CHAT_MAX_LEN = 100, CHAT_MAX_LINES = 6, CHAT_SHOW_MS = 8000, CHAT_COOLDOWN_MS = 700;
 const CHAT_COLORS = ['#9fe3ff', '#9fe3ff', '#7dff8a', '#ff9a6b'];
-let chatOpen = false, chatLastSent = 0;
+var chatOpen = false, chatLastSent = 0;
 function chatClean(m){ return String(m == null ? '' : m).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX_LEN); }
 function chatMyNumber(){ return NET.mode === 'host' ? 1 : (NET.me || 1) + 1; }
 function chatAdd(i, text){
@@ -15111,13 +15164,26 @@ function chatOpenInput(){
   chatOpen = true;
   Object.keys(keys).forEach(k => { keys[k] = false; }); fireHeld = false;   // solta as teclas para o personagem não andar sozinho
   if(document.pointerLockElement) document.exitPointerLock();
-  document.getElementById('chatWrap').classList.add('open');
-  const inp = document.getElementById('chatInput'); inp.value = ''; inp.focus();
+  const cw = document.getElementById('chatWrap');
+  cw.classList.add('open');
+  const inp = document.getElementById('chatInput'); inp.value = '';
+  if(window.dzVk && window.dzVk.wanted()){
+    // consoles: o campo nativo não abre o teclado do sistema dentro do jogo -> teclado virtual próprio
+    cw.classList.add('vk');
+    window.dzVk.open({
+      title: netT('CHAT', 'CHAT'), value: '', max: CHAT_MAX_LEN,
+      onOk: t => { inp.value = t; chatSubmit(); },
+      onCancel: () => chatCloseInput()
+    });
+    return;
+  }
+  inp.focus();
 }
 function chatCloseInput(){
   if(!chatOpen) return;
   chatOpen = false;
-  document.getElementById('chatWrap').classList.remove('open');
+  if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close();
+  document.getElementById('chatWrap').classList.remove('open', 'vk');
   const inp = document.getElementById('chatInput'); inp.blur(); inp.value = '';
   if(!usingTouch && chatInGame() && settingsModal.style.display !== 'flex') requestPointerLockSafe();
 }
@@ -15145,13 +15211,220 @@ function chatSubmit(){
     if(!chatInGame() || settingsModal.style.display === 'flex') return;
     e.preventDefault(); chatOpenInput();
   });
-  document.addEventListener('pointerlockchange', () => { if(document.pointerLockElement && chatOpen){ chatOpen = false; document.getElementById('chatWrap').classList.remove('open'); document.getElementById('chatInput').blur(); } });
+  document.addEventListener('pointerlockchange', () => { if(document.pointerLockElement && chatOpen && !(window.dzVk && window.dzVk.isOpen())){ chatOpen = false; document.getElementById('chatWrap').classList.remove('open'); document.getElementById('chatInput').blur(); } });
   setInterval(() => {   // mostra o botão / caixa só numa partida online
     const on = chatInGame();
     document.getElementById('chatBtn').style.display = on ? 'block' : 'none';
     document.getElementById('chatWrap').style.display = on ? 'flex' : 'none';
     if(!on){ if(chatOpen) chatCloseInput(); document.getElementById('chatLog').textContent = ''; }
   }, 300);
+})();
+
+// ===== TECLADO VIRTUAL (consoles) =====
+// Dentro do jogo o Xbox/PlayStation não abre o teclado do sistema por foco programático, então o jogo tem o seu:
+// D-pad/analógico move · A digita · X apaga · Y espaço · RB/LB maiúsc. · START envia · B cancela.
+// Também aceita mouse/toque e teclado físico. Usado no chat e nos campos de texto dos menus (código da sala).
+(function dzVkInit(){
+  const wanted = () => !!window.DZ_CONSOLE || /[?&]vk=1/.test(location.search);
+  const T = (pt, en) => (typeof currentLang !== 'undefined' && currentLang === 'en') ? en : pt;
+  const st = document.createElement('style');
+  st.textContent =
+    "#dzVk{position:fixed;left:50%;bottom:calc(10px + var(--sy,0px));transform:translateX(-50%);width:min(94vw,900px);box-sizing:border-box;z-index:100000;display:none;flex-direction:column;gap:6px;padding:10px 12px 8px;background:rgba(6,14,28,.95);border:1px solid rgba(159,227,255,.65);border-radius:8px;box-shadow:0 0 24px rgba(0,0,0,.7);font-family:'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;color:#e3ebfa;-webkit-user-select:none;user-select:none;outline:none}" +
+    "#dzVkTitle{font-size:clamp(11px,1.8vh,15px);letter-spacing:2px;color:#9fe3ff;font-weight:700}" +
+    "#dzVkText{min-height:clamp(30px,5vh,44px);display:flex;align-items:center;padding:4px 10px;background:rgba(0,0,0,.55);border:1px solid rgba(159,227,255,.5);border-radius:5px;font-size:clamp(16px,2.8vh,26px);color:#fff;overflow:hidden}" +
+    "#dzVkTxt{white-space:pre;overflow:hidden}" +
+    "#dzVkCaret{display:inline-block;width:2px;height:1.1em;margin-left:1px;background:#9fe3ff;animation:dzVkBlink 1s steps(1) infinite}" +
+    "@keyframes dzVkBlink{50%{opacity:0}}" +
+    "#dzVkCount{margin-left:auto;padding-left:10px;font-size:.6em;color:#8fa4cb}" +
+    "#dzVkRows{display:flex;flex-direction:column;gap:5px}" +
+    ".dzVkRow{display:flex;gap:5px}" +
+    ".dzVkKey{flex:1 1 0;min-width:0;height:clamp(34px,6.2vh,56px);display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit;font-size:clamp(14px,2.6vh,24px);font-weight:700;color:#e3ebfa;background:rgba(40,60,90,.75);border:1px solid rgba(159,227,255,.35);border-radius:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}" +
+    ".dzVkKey.wide{flex:5 1 0}.dzVkKey.mid{flex:1.8 1 0}.dzVkKey.act{background:rgba(30,110,70,.85)}.dzVkKey.capson{outline:2px solid #39ff14}" +
+    ".dzVkKey.on{background:#9fe3ff;color:#06101e;border-color:#fff;box-shadow:0 0 10px rgba(159,227,255,.8)}" +
+    "#dzVkHint{font-size:clamp(10px,1.7vh,14px);color:#8fa4cb;text-align:center;line-height:1.9}" +
+    "html.vk-open #gpHints{display:none !important}" +
+    "#chatWrap.vk{bottom:calc(var(--vkh,46vh) + 16px) !important}";
+  document.head.appendChild(st);
+
+  const root = document.createElement('div');
+  root.id = 'dzVk'; root.tabIndex = -1;
+  root.innerHTML = '<div id="dzVkTitle"></div><div id="dzVkText"><span id="dzVkTxt"></span><i id="dzVkCaret"></i><span id="dzVkCount"></span></div><div id="dzVkRows"></div><div id="dzVkHint"></div>';
+  document.body.appendChild(root);
+  const $txt = root.querySelector('#dzVkTxt'), $cnt = root.querySelector('#dzVkCount'), $title = root.querySelector('#dzVkTitle'),
+        $rows = root.querySelector('#dzVkRows'), $hint = root.querySelector('#dzVkHint');
+
+  const LAYOUT = [
+    '1234567890'.split(''),
+    'qwertyuiop'.split(''),
+    'asdfghjklç'.split(''),
+    'zxcvbnm,.!?'.split('')
+  ];
+  const rows = [];
+  LAYOUT.forEach(r => rows.push(r.map(ch => ({ type: 'ch', v: ch }))));
+  rows.push([
+    { type: 'caps', label: '⇧', cls: 'mid' },
+    { type: 'space', label: '␣', cls: 'wide' },
+    { type: 'del', label: '⌫', cls: 'mid' },
+    { type: 'cancel', label: '✕', cls: 'mid' },
+    { type: 'ok', label: 'OK', cls: 'mid act' }
+  ]);
+
+  const S = { open: false, o: null, text: '', upper: false, r: 1, c: 0, skipDir: false, navKey: '', navNext: 0 };
+
+  function vis(){ return rows.map(r => r.filter(k => !k.hidden)); }
+  function curKey(){ const v = vis(); const r = Math.min(S.r, v.length - 1); return v[r][Math.min(S.c, v[r].length - 1)]; }
+  function letter(k){ return (S.upper && k.type === 'ch') ? k.v.toUpperCase() : k.v; }
+
+  rows.forEach(r => {
+    const rowEl = document.createElement('div'); rowEl.className = 'dzVkRow';
+    r.forEach(k => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.tabIndex = -1; b.className = 'dzVkKey' + (k.cls ? ' ' + k.cls : '');
+      b.addEventListener('mousedown', e => e.preventDefault());
+      b.addEventListener('click', () => { if(!S.open) return; const v = vis(); v.forEach((row, ri) => row.forEach((kk, ci) => { if(kk === k){ S.r = ri; S.c = ci; } })); press(k); });
+      k.el = b; rowEl.appendChild(b);
+    });
+    $rows.appendChild(rowEl);
+  });
+
+  function g(k){ return (typeof gpGlyph === 'function') ? gpGlyph(k) : '<b>' + k + '</b>'; }
+  function render(){
+    const max = S.o.max;
+    $txt.textContent = S.text;
+    $cnt.textContent = S.text.length + '/' + max;
+    rows.forEach(r => r.forEach(k => {
+      k.el.style.display = k.hidden ? 'none' : '';
+      if(k.type === 'ch') k.el.textContent = letter(k);
+      else if(k.label) k.el.textContent = k.label;
+      k.el.classList.toggle('capson', k.type === 'caps' && S.upper);
+      k.el.classList.remove('on');
+    }));
+    const ck = curKey(); if(ck) ck.el.classList.add('on');
+  }
+  function type(ch){
+    if(S.text.length >= S.o.max) return;
+    S.text += ch;
+  }
+  function press(k){
+    if(!S.open) return;
+    if(k.type === 'ch'){ type(letter(k)); if(typeof SFX !== 'undefined' && SFX.menuSelect) SFX.menuSelect(); }
+    else if(k.type === 'space'){ type(' '); }
+    else if(k.type === 'del'){ S.text = S.text.slice(0, -1); }
+    else if(k.type === 'caps'){ if(!S.o.upper) S.upper = !S.upper; }
+    else if(k.type === 'ok'){ ok(); return; }
+    else if(k.type === 'cancel'){ cancel(); return; }
+    render();
+  }
+  function ok(){ const cb = S.o.onOk, t = S.text; if(typeof SFX !== 'undefined' && SFX.menuAccept) SFX.menuAccept(); close(); if(cb) cb(t); }
+  function cancel(){ const cb = S.o.onCancel; if(typeof SFX !== 'undefined' && SFX.menuBack) SFX.menuBack(); close(); if(cb) cb(); }
+  function close(){
+    if(!S.open) return;
+    S.open = false; root.style.display = 'none';
+    document.documentElement.classList.remove('vk-open');
+    document.documentElement.style.removeProperty('--vkh');
+    document.getElementById('chatWrap').style.removeProperty('--vkh');
+  }
+  function open(o){
+    if(S.open) return;
+    S.o = Object.assign({ title: '', value: '', max: 60, upper: false }, o);
+    S.text = String(S.o.value || '').slice(0, S.o.max);
+    S.upper = !!S.o.upper;
+    rows.forEach(r => r.forEach(k => { k.hidden = (k.type === 'caps' || k.type === 'space') && !!S.o.upper; }));
+    S.r = 1; S.c = 0; S.skipDir = true; S.navKey = '';
+    S.open = true;
+    $title.textContent = S.o.title || '';
+    $hint.innerHTML = g('A') + ' ' + T('DIGITAR', 'TYPE') + ' ' + g('X') + ' ' + T('APAGAR', 'DELETE') + (S.o.upper ? '' : ' ' + g('Y') + ' ' + T('ESPAÇO', 'SPACE') + ' ' + g('RB') + ' ' + T('MAIÚSC.', 'CAPS')) +
+      ' ' + g('START') + ' ' + T('ENVIAR', 'SEND') + ' ' + g('B') + ' ' + T('CANCELAR', 'CANCEL');
+    // nada fica com foco: o clique nativo do botão A (soltar) não cai em outro botão por engano
+    try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
+    root.style.display = 'flex';
+    document.documentElement.classList.add('vk-open');
+    try{ root.focus({ preventScroll: true }); }catch(e){}
+    render();
+    const h = root.offsetHeight + 'px';
+    document.documentElement.style.setProperty('--vkh', h);
+    document.getElementById('chatWrap').style.setProperty('--vkh', h);
+  }
+  function move(dx, dy){
+    const v = vis(); let r = Math.min(S.r, v.length - 1), c = S.c;
+    if(dy){
+      const len = v[r].length, frac = len > 1 ? c / (len - 1) : 0;
+      r = (r + dy + v.length) % v.length;
+      c = Math.round(frac * (v[r].length - 1));
+    }
+    if(dx){ const len = v[r].length; c = (Math.min(c, len - 1) + dx + len) % len; }
+    S.r = r; S.c = c;
+    if(typeof SFX !== 'undefined' && SFX.menuSelect) SFX.menuSelect();
+    render();
+  }
+  function pad(gp, btn, prev){
+    const pressed = i => btn(i) && !prev(i);
+    const now = performance.now();
+    let dx = 0, dy = 0;
+    if(btn(12)) dy = -1; else if(btn(13)) dy = 1;
+    if(btn(14)) dx = -1; else if(btn(15)) dx = 1;
+    if(!dx && !dy){
+      const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+      if(Math.abs(ax) > 0.6 || Math.abs(ay) > 0.6){ if(Math.abs(ax) > Math.abs(ay)) dx = ax > 0 ? 1 : -1; else dy = ay > 0 ? 1 : -1; }
+    }
+    if(!dx && !dy){ S.skipDir = false; S.navKey = ''; }
+    if(S.skipDir){ dx = 0; dy = 0; }   // direção que ainda estava apertada quando o teclado abriu
+    if(dx || dy){
+      const key = dx + ',' + dy;
+      if(key !== S.navKey || now >= S.navNext){
+        const first = key !== S.navKey;
+        S.navKey = key; S.navNext = now + (first ? 350 : 110);
+        move(dx, dy);
+      }
+    }
+    if(pressed(0)) press(curKey());
+    if(!S.open) return;
+    if(pressed(2)) press(rows[4][2]);                 // X: apagar
+    if(!S.open) return;
+    if(pressed(3) && !S.o.upper) press(rows[4][1]);   // Y: espaço
+    if(pressed(4) || pressed(5)) press(rows[4][0]);   // LB/RB: maiúsculas
+    if(pressed(9)){ ok(); return; }                   // START: enviar
+    if(pressed(1)) cancel();                          // B: cancelar
+  }
+  // teclado físico (se houver um conectado)
+  function key(e){
+    if(!S.open) return false;
+    const k = e.key;
+    if(k === 'Enter') ok();
+    else if(k === 'Escape') cancel();
+    else if(k === 'Backspace'){ S.text = S.text.slice(0, -1); render(); }
+    else if(k && k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && (k !== ' ' || !S.o.upper)){
+      type(S.o.upper ? k.toUpperCase() : k); render();
+    } else return true;   // outras teclas: engole, para não mexer no jogo
+    return true;
+  }
+  // campo de texto de menu (ex.: código da sala)
+  function forInput(inp){
+    if(S.open || !inp) return;
+    const isCode = inp.id === 'netCode';
+    open({
+      title: isCode ? T('CÓDIGO DA SALA', 'ROOM CODE') : (inp.getAttribute('placeholder') || ''),
+      value: inp.value, max: (inp.maxLength > 0 ? inp.maxLength : 60), upper: isCode,
+      onOk: t => {
+        inp.value = isCode ? t.toUpperCase() : t;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        inp.dispatchEvent(new Event('change', { bubbles: true }));
+        // devolve o foco do controle ao menu (depois do clique nativo do botão A)
+        setTimeout(() => {
+          if(typeof gpMenuActive === 'undefined' || !gpMenuActive) return;
+          const nj = isCode && document.getElementById('netJoin');
+          if(nj && gpElVisible(nj)) gpSetFocus(nj, true); else if(gpElVisible(inp)) gpSetFocus(inp, true);
+        }, 450);
+      }
+    });
+  }
+  // clique (mouse, toque ou o A nativo do console) em campo de texto de menu abre o teclado virtual
+  document.addEventListener('click', e => {
+    const t = e.target;
+    if(wanted() && !S.open && t && t.tagName === 'INPUT' && t.type === 'text' && t.id !== 'chatInput') forInput(t);
+  }, true);
+
+  window.dzVk = { wanted, isOpen: () => S.open, open, close, pad, key, forInput };
 })();
 
 function netHostOnData(p, d){
