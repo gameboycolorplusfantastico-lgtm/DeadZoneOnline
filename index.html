@@ -2874,8 +2874,10 @@ const TEX_WALL_URLS = [
   'https://i.postimg.cc/h47bmpMB/Tile-12-512x512.png',    // 7 azulejo 12
   'https://i.postimg.cc/vHF7tfSB/Wood-03-512x512.png',    // 8 madeira 03
   'https://i.postimg.cc/26yLC89z/Bricks-15-512x512.png',  // 9 tijolo 15
-  'https://i.postimg.cc/W3zqsbWH/Bricks-12-512x512.png'   // 10 tijolo 12
+  'https://i.postimg.cc/W3zqsbWH/Bricks-12-512x512.png',  // 10 tijolo 12
+  'https://i.postimg.cc/Jzb7dD1N/Mat-Cloth-Canvas-06-512x512.png'   // 11 pano (cortina da Pirate Cove, FNAF)
 ];
+const WALL_CLOTH_IDX = 11;
 const TEX_CEIL_URLS = [
   'https://i.postimg.cc/CxwjWYg3/Wood-18-512x512.png',    // 0 madeira 18
   'https://i.postimg.cc/W1773z8Z/Metal-10-512x512.png',   // 1 metal 10
@@ -3338,6 +3340,9 @@ function buildTileTextures(idx, ldef) {
   const mirror = (i, j) => { floorTileMap[j] = floorTileMap[i]; wallTileMap[j] = wallTileMap[i]; ceilTileMap[j] = ceilTileMap[i]; };
   if (symH) for (let y = 0; y < H; y++) for (let x = 0; x < (W >> 1); x++) if (g[y][x] === g[y][W - 1 - x]) mirror(y * W + x, y * W + (W - 1 - x));
   if (symV) for (let y = 0; y < (H >> 1); y++) for (let x = 0; x < W; x++) if (g[y][x] === g[H - 1 - y][x]) mirror(y * W + x, (H - 1 - y) * W + x);
+
+  // Cortina da Pirate Cove (FNAF): parede da frente da enseada usa a textura de pano. Vem depois do espelhamento para não replicar no lado oposto.
+  if (ldef.fnaf && ldef.fnaf.curtain) ldef.fnaf.curtain.forEach(([cx, cy]) => { if (cx >= 0 && cy >= 0 && cx < W && cy < H && g[cy][cx] === 1) wallTileMap[cy * W + cx] = WALL_CLOTH_IDX; });
 
   // Luminárias de teto (só mapas COM teto): espaçadas em grade, e a luz iluminada piso/parede por perto.
   if (th.lt && !outdoor && !ldef.isTestMap) {
@@ -6859,6 +6864,7 @@ LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, { // 74 — FNAF_PIZZE
   heights: dmFlatH(44, 33, (x, y) => (x >= 15 && x <= 28 && y >= 2 && y <= 4) ? 1 : 0),   // palco elevado
   fnaf: {
     doors: { W: { x: 18, y: 29 }, E: { x: 25, y: 29 } },
+    curtain: [[7, 8], [8, 8], [7, 9], [8, 9], [7, 12], [8, 12], [7, 13], [8, 13], [7, 14], [8, 14]],   // cortina da Pirate Cove (textura de pano)
     windows: [ { x: 18, y: 28 }, { x: 18, y: 30 }, { x: 25, y: 28 }, { x: 25, y: 30 } ],   // vidro: dá para ver o corredor e atirar através
     buttons: [
       { kind: 'door',  side: 'W', x: 18.63, y: 27.5 }, { kind: 'light', side: 'W', x: 18.63, y: 31.5 },
@@ -14986,6 +14992,74 @@ function netClientTick(dt){
 })();
 
 setLanguage('pt');
+
+// ===== CONFIGURAÇÕES SALVAS NO APARELHO (FOV, qualidade, sensibilidade, volumes, minimapa, idioma etc.) =====
+// Salva sozinho a cada mudança e restaura ao abrir o jogo. O botão de restaurar padrão também é salvo.
+(function(){
+  const KEY = 'dz_settings';
+  const RANGES = ['sensRange','fovRange','pitchSensRange','gpDeadRange','sfxVolumeRange','musicVolumeRange'];
+  const CHECKS = ['optShowMinimap','optViewBob','optShowFps','optInvertY','gpVibration'];
+  const get = id => document.getElementById(id);
+  const activeVal = segId => { const b = document.querySelector('#' + segId + ' .seg-btn.active'); return b ? b.getAttribute('data-val') : null; };
+
+  function save(){
+    try {
+      const o = { range: {}, check: {}, quality: activeVal('renderQualitySeg'), lang: activeVal('langSeg') };
+      RANGES.forEach(id => { const el = get(id); if(el) o.range[id] = el.value; });
+      CHECKS.forEach(id => { const el = get(id); if(el) o.check[id] = el.checked; });
+      localStorage.setItem(KEY, JSON.stringify(o));
+    } catch(err) {}
+  }
+
+  function load(){
+    let o = null;
+    try { o = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(err) {}
+    if(!o) return;
+    // sliders: aplica o valor e dispara o mesmo evento de quando o jogador mexe (atualiza o jogo e o texto ao lado)
+    RANGES.forEach(id => {
+      const el = get(id), v = o.range && o.range[id];
+      if(!el || v == null) return;
+      el.value = v;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    // caixas de marcar (a vibração é ajustada direto, para não vibrar o controle ao abrir o jogo)
+    CHECKS.forEach(id => {
+      const el = get(id), v = o.check && o.check[id];
+      if(!el || typeof v !== 'boolean') return;
+      el.checked = v;
+      if(id === 'gpVibration') gpVibration = v;
+      else el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    // qualidade da renderização
+    if(o.quality){
+      const b = document.querySelector('#renderQualitySeg .seg-btn[data-val="' + o.quality + '"]');
+      if(b){
+        document.querySelectorAll('#renderQualitySeg .seg-btn').forEach(x => x.classList.toggle('active', x === b));
+        RENDER_SCALE = parseFloat(o.quality);
+        resizeCanvas();
+      }
+    }
+    // idioma
+    if(o.lang && (o.lang === 'pt' || o.lang === 'en')){
+      const b = document.querySelector('#langSeg .seg-btn[data-val="' + o.lang + '"]');
+      if(b){
+        document.querySelectorAll('#langSeg .seg-btn').forEach(x => x.classList.toggle('active', x === b));
+        if(langSelect) langSelect.value = o.lang;
+        setLanguage(o.lang);
+      }
+    }
+  }
+
+  load();
+  // salva depois de qualquer mudança nas opções (setTimeout deixa os outros handlers atualizarem o estado primeiro)
+  const later = () => setTimeout(save, 0);
+  document.addEventListener('input', e => { if(e.target && RANGES.indexOf(e.target.id) >= 0) later(); });
+  document.addEventListener('change', e => { if(e.target && CHECKS.indexOf(e.target.id) >= 0) later(); });
+  document.addEventListener('click', e => {
+    if(e.target && e.target.closest && e.target.closest('#renderQualitySeg, #langSeg, #resetSettingsBtn')) later();
+  });
+})();
+
 applyControlScheme();
 checkOrientation();
 requestAnimationFrame(gameLoop);
