@@ -3,6 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<script>
+/* === CONSOLE (Xbox Edge / PlayStation) — detecção e proteção de entrada ===
+   Teste no PC: abra o jogo com ?console=xbox ou ?console=ps */
+(function(){
+  var ua = navigator.userAgent || '', q = (location.search.match(/[?&]console=(\w+)/) || [])[1] || '';
+  var xbox = /Xbox/i.test(ua) || q === 'xbox';
+  var ps = /PlayStation/i.test(ua) || q === 'ps';
+  if(!xbox && !ps) return;
+  var platform = xbox ? 'xbox' : 'ps';
+  window.DZ_CONSOLE = {
+    platform: platform,
+    legacy: (/Xbox One/i.test(ua) && !/Series/i.test(ua)) || /PlayStation 4/i.test(ua)   // Xbox One / PS4: hardware mais fraco
+  };
+  document.documentElement.classList.add('console', platform);
+
+  function padActive(){
+    var g = navigator.getGamepads ? navigator.getGamepads() : [];
+    for(var i = 0; i < g.length; i++){
+      var p = g[i]; if(!p || !p.connected) continue;
+      for(var b = 12; b <= 15; b++) if(p.buttons[b] && p.buttons[b].pressed) return true;
+      if(Math.abs(p.axes[0] || 0) > .5 || Math.abs(p.axes[1] || 0) > .5) return true;
+    }
+    return false;
+  }
+  // Alguns navegadores de console traduzem o controle em teclas (setas, "GamepadA"...).
+  // Elas são engolidas aqui para não duplicar o que a Gamepad API já faz (mover, navegar nos menus).
+  window.dzIsPadKey = function(e){
+    var k = e.key || '', kc = e.keyCode | 0;
+    if(/^Gamepad/i.test(k) || (kc >= 195 && kc <= 214)) return true;
+    if(/^Arrow/.test(k) && padActive()) return true;
+    return false;
+  };
+  ['keydown', 'keyup'].forEach(function(t){
+    window.addEventListener(t, function(e){
+      if(window.dzIsPadKey(e)){ if(t === 'keydown') e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+  });
+
+  // Anti-clique duplo: o botão A pode gerar um clique nativo E o clique do nosso leitor de controle.
+  var lastTrusted = { el: null, t: 0 }, lastScripted = { el: null, t: 0 };
+  window.dzTrustedClickRecent = function(el){
+    return !!(lastTrusted.el && (lastTrusted.el === el || el.contains(lastTrusted.el)) && performance.now() - lastTrusted.t < 300);
+  };
+  window.addEventListener('click', function(e){
+    var now = performance.now();
+    if(e.isTrusted){
+      if(lastScripted.el && (lastScripted.el === e.target || lastScripted.el.contains(e.target)) && now - lastScripted.t < 300){
+        e.stopImmediatePropagation(); e.preventDefault(); return;
+      }
+      lastTrusted = { el: e.target, t: now };
+    } else {
+      lastScripted = { el: e.target, t: now };
+    }
+  }, true);
+})();
+</script>
 <title>Dead Zone - REMASTERED</title>
 <style>
   :root{
@@ -1125,6 +1181,42 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
     100%{opacity:0;transform:scale(1.3) translate(0,0);}
   }
 </style>
+<style id="consoleCss">
+/* ===== MODO CONSOLE (Xbox / PlayStation) — TV a ~3 m: textos maiores, margem de segurança, sem cursor ===== */
+html.console{ --sx:3vw; --sy:3.5vh; }
+html.console.in-game, html.console.in-game *{ cursor:none !important; }
+/* o overlay CRT usa mix-blend-mode (pesado em GPU de console): troca por uma vinheta simples */
+html.console #crtOverlay{
+  mix-blend-mode:normal;opacity:.7;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,.45) 100%);
+}
+html.console #fullscreenBtn{ display:none !important; }   /* o navegador de console já abre em tela cheia */
+
+/* margem de segurança de TV (overscan): nada do HUD encostado na borda */
+html.console #bottombar{ padding-bottom:var(--sy); padding-left:calc(1% + var(--sx)); padding-right:calc(1% + var(--sx)); }
+html.console #weaponIconBar{ top:calc(8px + var(--sy)); left:calc(8px + var(--sx)); }
+html.console #menuBtn{ top:calc(8px + var(--sy)); right:calc(120px + var(--sx)); }
+html.console #chatBtn{ top:calc(8px + var(--sy)); right:calc(88px + var(--sx)); }
+html.console #minimapWrapper{ top:calc(8px + var(--sy)); right:calc(8px + var(--sx)); }
+html.console #ctfHud, html.console #hrHud{ top:calc(62px + var(--sy)); left:calc(8px + var(--sx)); }
+html.console #fnafHud{ top:calc(clamp(90px,17vh,150px) + 24px + var(--sy)); left:calc(8px + var(--sx)); }
+html.console #testHud{ left:calc(8px + var(--sx)); }
+html.console #socHud, html.console #gamepadHudBadge{ top:calc(8px + var(--sy)); }
+html.console #fpsCounter{ top:calc(48px + var(--sy)); right:calc(8px + var(--sx)); }
+html.console #chatWrap{ left:calc(8px + var(--sx)); }
+
+/* legibilidade na TV */
+html.console #mainMenu .btn{ font-size:clamp(16px,2.4vh,22px); padding-top:14px; padding-bottom:14px; }
+html.console .modal-box .btn, html.console #gameOverOverlay .btn{ font-size:clamp(14px,2.1vh,19px); padding:14px 16px; }
+html.console .setting-group label{ font-size:clamp(13px,1.9vh,17px); }
+html.console .seg-btn{ font-size:clamp(13px,1.9vh,17px); padding:13px 8px; }
+html.console .tab-btn{ font-size:clamp(13px,1.9vh,17px); padding:12px 10px; }
+html.console .stat .lbl{ font-size:clamp(10px,1.7vh,14px); }
+html.console .loading-meta{ font-size:clamp(13px,2vh,18px); }
+html.console #gpHints{ font-size:clamp(14px,2vh,19px); bottom:var(--sy); padding:8px 18px; line-height:30px; }
+html.console #uiToast{ font-size:clamp(14px,2vh,19px); bottom:calc(8% + var(--sy)); }
+html.console .gp-focus{ outline-width:4px !important; }
+</style>
 </head>
 <body>
 <div id="loadingScreen">
@@ -1373,6 +1465,12 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
         <option value="73">AS_OILRIG</option>
         <option value="74">FNAF_PIZZERIA</option>
         <option value="75">ESTADIO_FUTEBOL</option>
+        <option value="76">DE_VILLAGE</option>
+        <option value="77">DE_VILLAGE</option>
+        <option value="78">MP_DOCKYARD</option>
+        <option value="79">MP_DOCKYARD</option>
+        <option value="80">CS_MONASTERY</option>
+        <option value="81">CS_MONASTERY</option>
       </select>
     </div>
 
@@ -1633,7 +1731,7 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
             <option value="ump45">UMP45</option>
             <option value="p90">P90</option>
             <option value="galil">Galil ARM</option>
-            <option value="famas">F1</option>
+            <option value="famas">Famas F1</option>
             <option value="sg552">SG 552</option>
             <option value="sg550">SG 550 SR</option>
             <option value="g3sg1">G3SG/1</option>
@@ -2786,10 +2884,20 @@ const TEX_CEIL_URLS = [
   'https://i.postimg.cc/7YJ2d6dm/Mat-Concrete-White-01-512x512.png',  // 4 concreto branco 01
   'https://i.postimg.cc/xTNzhChp/Mat-Concrete-White-04-512x512.png'   // 5 concreto branco 04
 ];
-const texSets = { floor: [], wall: [], ceil: [] };
-const texMips = { floor: [], wall: [], ceil: [] };   // cada textura em 128/64/32/16/8 px (mipmaps)
+const TEX_ROOF_URLS = [
+  'https://i.postimg.cc/C1RCmNgL/Roofs-04-512x512.png',   // 0 telhado Roofs-04
+  'https://i.postimg.cc/LXJkNTp4/Roofs-03-512x512.png',   // 1 telhado Roofs-03
+  'https://i.postimg.cc/tTsd25j4/Roofs-05-512x512.png',   // 2 telhado Roofs-05
+  'https://i.postimg.cc/MTn0dDSQ/Roofs-06-512x512.png',   // 3 telhado Roofs-06
+  'https://i.postimg.cc/FRYbDZ4g/Roofs-08-512x512.png',   // 4 telhado Roofs-08
+  'https://i.postimg.cc/B6j5Mg0F/Roofs-07-512x512.png',   // 5 telhado Roofs-07
+  'https://i.postimg.cc/1tbGTqmj/Roofs-20-512x512.png',   // 6 telhado Roofs-20
+  'https://i.postimg.cc/hjNLwd4n/Roofs-24-512x512.png'   // 7 telhado Roofs-24
+];
+const texSets = { floor: [], wall: [], ceil: [], roof: [] };
+const texMips = { floor: [], wall: [], ceil: [], roof: [] };   // cada textura em 128/64/32/16/8 px (mipmaps)
 const MIP_LEVELS = 5;
-const TEX_TARGET = { floor: 110, wall: 125, ceil: 140 };   // brilho médio alvo: evita texturas "gritando" umas contra as outras
+const TEX_TARGET = { floor: 110, wall: 125, ceil: 140, roof: 125 };   // brilho médio alvo: evita texturas "gritando" umas contra as outras
 function mipFor(px) { return px >= 128 ? 0 : Math.min(MIP_LEVELS - 1, Math.floor(Math.log2(128 / Math.max(px, 1)) + 0.4)); }
 function buildMips(img, target) {
   const iw = img.naturalWidth || img.width;
@@ -2831,6 +2939,7 @@ function loadTexSet(key, urls) {
 loadTexSet('floor', TEX_FLOOR_URLS);
 loadTexSet('wall', TEX_WALL_URLS);
 loadTexSet('ceil', TEX_CEIL_URLS);
+loadTexSet('roof', TEX_ROOF_URLS);
 
 // Luminária de teto (textura de fonte de luz). Se a imagem falhar, desenha uma luminária simples no lugar.
 let lightMips = null;
@@ -2846,8 +2955,91 @@ let lightMips = null;
     } catch(e) {}
     done();
   };
-  img.src = 'https://i.postimg.cc/wj1zL99m/Light-Celling.png';
+  img.src = 'https://i.postimg.cc/xd9wDfDc/Lighttexture.png';
 })();
+
+
+// ===== RAILS (guarda-corpos) =====
+// Tile de valor 2 em MAP: não é parede (não bloqueia o raio nem a bala), mas barra o movimento até
+// o jogador/bot pular por cima. Desenhado como uma textura fina e baixa na face do tile.
+const RAIL_URLS = ['https://i.postimg.cc/mrTvfLfz/Rail1.png', 'https://i.postimg.cc/KYm6SGSM/Rail2.png'];
+const RAIL_OFF = 0.05;                  // o rail fica numa borda do tile, fino (não é bloco)
+const RAIL_DX = [0, 0, -1, 1], RAIL_DY = [-1, 1, 0, 0];   // dir: 0 = borda norte(y-), 1 = sul(y+), 2 = oeste(x-), 3 = leste(x+)
+const RAIL_TEX = RAIL_URLS.map(() => null);   // { w, h, data(RGBA), rh } — proporção original; largura = 1 tile
+const RAIL_HT = [0.22, 0.22];           // altura em mundo de cada textura (= proporção da imagem)
+const RAIL_COL_MAX = 0.30;             // altura máxima de colisão do rail (mundo): garante que o pulo (pico ~0.43) sempre passe
+const RAIL_SINK = 0.06;                 // quanto o rail desce para o chão (fração da altura), além do espaço transparente do pé da imagem
+let railTileMap = new Uint8Array(0);    // 0/1 = qual textura
+let railDirMap = new Uint8Array(0);     // borda do tile onde fica o rail
+RAIL_URLS.forEach((url, i) => {
+  const done = AssetLoader.track();
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    try {
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      const c = document.createElement('canvas'); c.width = iw; c.height = ih;
+      const cx = c.getContext('2d');
+      cx.drawImage(img, 0, 0);
+      const id = cx.getImageData(0, 0, iw, ih).data;
+      let padRows = 0;   // linhas transparentes no pé da imagem (fazem o rail parecer flutuando)
+      for (let y = ih - 1; y > 0; y--) {
+        let solid = false;
+        for (let x = 0; x < iw; x++) if (id[(y * iw + x) * 4 + 3] > 40) { solid = true; break; }
+        if (solid) break;
+        padRows++;
+      }
+      RAIL_TEX[i] = { w: iw, h: ih, data: id, pad: padRows / ih };
+      RAIL_HT[i] = ih / iw;
+    } catch(e) {}
+    done();
+  };
+  img.onerror = () => done();
+  img.src = url;
+});
+function isRail(x, y){ return tileAt(x, y) === 2; }
+function railIdx(ix, iy){ return iy * MAP_W + ix; }
+// Rail cruzando a linha da borda entre (ox,oy) e (nx,ny)? (movimento fino: só a borda bloqueia)
+function railEdgeBlocks(ox, oy, nx, ny){
+  for (let k = 0; k < 2; k++) {
+    const px = Math.floor(k ? ox : nx), py = Math.floor(k ? oy : ny);
+    if (tileAt(px, py) !== 2) continue;
+    const d = railDirMap[railIdx(px, py)];
+    const vert = d < 2;                                  // plano horizontal (varia em y)
+    const c = vert ? py + (d === 0 ? RAIL_OFF : 1 - RAIL_OFF) : px + (d === 2 ? RAIL_OFF : 1 - RAIL_OFF);
+    const so = (vert ? oy : ox) - c, sn = (vert ? ny : nx) - c;
+    if (so * sn < 0 || (Math.abs(sn) < 0.12 && Math.abs(sn) < Math.abs(so))) {
+      const along = vert ? nx : ny, t0 = vert ? px : py;
+      if (along > t0 - 0.12 && along < t0 + 1.12) return true;
+    }
+  }
+  return false;
+}
+// passo entre tiles vizinhos (BFS dos bots): bloqueado se há rail na borda compartilhada
+function railBlocksStep(cx, cy, nx, ny){
+  if (MAP[cy] && MAP[cy][cx] === 2) { const d = railDirMap[railIdx(cx, cy)]; if (cx + RAIL_DX[d] === nx && cy + RAIL_DY[d] === ny) return true; }
+  if (MAP[ny] && MAP[ny][nx] === 2) { const d = railDirMap[railIdx(nx, ny)]; if (nx + RAIL_DX[d] === cx && ny + RAIL_DY[d] === cy) return true; }
+  return false;
+}
+// Coloca rails na borda alta de desníveis (piso vizinho >= 2 níveis abaixo). Idempotente por loadLevel.
+// O tile continua sendo chão (valor 2 só serve de marca); não desconecta nada, pois só a borda é bloqueada.
+function placeRails(ldef){
+  const W = ldef.w, H = ldef.h, g = ldef.grid, hs = ldef.heights;
+  railTileMap = new Uint8Array(W * H); railDirMap = new Uint8Array(W * H);
+  const mark = (x, y, t, d) => { if (g[y] && (g[y][x] === 0 || g[y][x] === 2)) { g[y][x] = 2; railTileMap[y * W + x] = t; railDirMap[y * W + x] = d; } };
+  if (ldef.isTestMap) {
+    for (let x = 24; x <= 32; x++) mark(x, 18, x & 1, 1);   // fileira de demonstração perto do spawn
+  }
+  if (!hs || ldef.noRails) return;
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    if (g[y][x] !== 0 || (SLP_AX && SLP_AX[y * W + x])) continue;
+    if ((x * 7 + y * 13) % 4 === 0) continue;   // deixa vãos
+    for (let d = 0; d < 4; d++) {
+      const nx = x + RAIL_DX[d], ny = y + RAIL_DY[d];
+      if (g[ny][nx] === 0 && !(SLP_AX && SLP_AX[ny * W + nx]) && hs[y][x] - hs[ny][nx] >= 2) { mark(x, y, (x + y) & 1, d); break; }
+    }
+  }
+}
 
 // ===== PORTAS =====
 // Imagens soltas (não se repetem como textura): são desenhadas no centro de um tile de parede,
@@ -2898,41 +3090,52 @@ DOOR_URLS.forEach((url, i) => {
   img.src = url;
 });
 
-// ===== ESTILOS DE MAPA =====
-// Regras de realismo (nada de sorteio por blocos):
-//  fo/fi = piso [principal, corredor estreito, mancha natural]. fo = mapas ao ar livre; fi = mapas com teto
-//          (grama/terra só aparecem ao ar livre; corredores estreitos têm piso próprio).
+// ===== ESTILOS DE MAPA (categorias internas) =====
+// Todo mapa pertence a UMA categoria: PARK, INDUSTRIAL, URBAN, HOUSE ou METRO (FNAF e SOCCER são exclusivos dos seus modos).
+// A categoria decide as texturas automaticamente (veja MAP_CATEGORY mais abaixo e `ldef.style` em cada mapa).
+//  fo/fi = piso [principal, corredor estreito, mancha natural]. fo = mapas/áreas ao ar livre; fi = áreas com teto
 //  w     = parede [muro externo, ...estruturas internas]: cada construção usa UMA textura só.
-//  c     = teto [salas, corredores].   lt = [espaçamento, intensidade] das luminárias (só mapas com teto).
+//  c     = teto [salas, corredores].   lt = [espaçamento, intensidade] das luminárias (só áreas com teto).
+//  r     = telhados (texturas de TEX_ROOF_URLS) usados nas construções vistas de fora.
 const STYLES = {
-  JUNGLE:     { fo: [0, 9, 1],   fi: [9, 10], w: [2, 9, 8],     c: [0],    lt: null,     s: [0, 1, 2, 3, 6],    d: [],        doorP: 0,    winP: 0 },
-  PARK:       { fo: [0, 10, 1],  fi: [7, 8],  w: [1, 9, 8],     c: [3],    lt: null,     s: [0, 1, 2, 3, 6, 7], d: [0, 2],    doorP: 0.05, winP: 0.06 },
-  URBAN:      { fo: [5, 4, 3],   fi: [3, 4],  w: [9, 10, 0, 3], c: [3, 4], lt: [7, 0.7], s: [0, 1, 2, 6, 7, 4], d: [1, 2, 3], doorP: 0.07, winP: 0.09 },
-  OFFICE:     { fo: [5, 4, 3],   fi: [3, 6],  w: [7, 10, 1],    c: [4, 5], lt: [4, 1],   s: [0, 1, 2, 3],       d: [0, 4, 3], doorP: 0.08, winP: 0.10 },
-  HOUSE:      { fo: [7, 8, 3],   fi: [7, 8],  w: [8, 1, 9],     c: [4, 0], lt: [6, 0.7], s: [0, 1, 6, 7],       d: [0, 2, 4], doorP: 0.08, winP: 0.09 },
-  LAB:        { fo: [6, 3, 2],   fi: [6, 3],  w: [7, 5, 4],     c: [5, 4], lt: [4, 1],   s: [4, 5, 0],          d: [4, 3],    doorP: 0.07, winP: 0.08 },
-  INDUSTRIAL: { fo: [5, 2, 9],   fi: [5, 2],  w: [5, 6, 4, 10], c: [1, 3], lt: [6, 0.75], s: [0, 6, 7, 4, 5],   d: [3, 4],    doorP: 0.05, winP: 0.05 },
-  ARENA:      { fo: [5, 4, 2],   fi: [5, 2],  w: [3, 6, 9],     c: [3],    lt: [7, 0.7], s: [0, 1, 4, 5, 6, 7], d: [],        doorP: 0,    winP: 0 },
-  DESERT:     { fo: [9, 10, 11], fi: [4, 3],  w: [1, 2, 10, 9], c: [3],    lt: null,     s: [0, 2, 6, 7],       d: [1, 2],    doorP: 0.06, winP: 0.07 },
-  CASTLE:     { fo: [4, 11, 5],  fi: [4, 5],  w: [2, 3, 10, 9], c: [3, 0], lt: null,     s: [0, 3, 6, 7],       d: [3, 2],    doorP: 0.05, winP: 0.04 },
-  PRISON:     { fo: [5, 2, 9],   fi: [5, 2],  w: [5, 7, 6, 4],  c: [3, 1], lt: [5, 0.8], s: [0, 4, 5],          d: [4, 3],    doorP: 0.07, winP: 0.06 },
-  FNAF:       { fo: [4, 3],      fi: [4, 3],  w: [7, 1, 8],     c: [3],    lt: null,     s: [4],                d: [],        doorP: 0,    winP: 0 }
+  PARK:       { fo: [0, 10, 1],  fi: [7, 8],  w: [1, 9, 8],     c: [3],    lt: null,     s: [0, 1, 2, 3, 6, 7], d: [0, 2],    doorP: 0.05, winP: 0.06, r: [0, 2, 3, 1] },
+  INDUSTRIAL: { fo: [5, 2, 9],   fi: [5, 2],  w: [5, 6, 4, 10], c: [1, 3], lt: [6, 0.75], s: [0, 6, 7, 4, 5],   d: [3, 4],    doorP: 0.05, winP: 0.05, r: [6, 4, 5] },
+  URBAN:      { fo: [5, 4, 3],   fi: [3, 4],  w: [9, 10, 0, 3], c: [3, 4], lt: [7, 0.7], s: [0, 1, 2, 6, 7, 4], d: [1, 2, 3], doorP: 0.07, winP: 0.09, r: [1, 5, 7, 4] },
+  HOUSE:      { fo: [0, 1, 10],  fi: [7, 8],  w: [8, 1, 9],     c: [4, 0], lt: [6, 0.7], s: [0, 1, 6, 7],       d: [0, 2, 4], doorP: 0.08, winP: 0.09, r: [0, 3, 4, 2] },
+  METRO:      { fo: [5, 4, 3],   fi: [4, 2],  w: [7, 5, 3, 10], c: [3, 4], lt: [5, 1],   s: [0, 6],             d: [4, 3],    doorP: 0.06, winP: 0.04, r: [7, 6] },
+  FNAF:       { fo: [4, 3],      fi: [4, 3],  w: [7, 1, 8],     c: [3],    lt: null,     s: [4],                d: [],        doorP: 0,    winP: 0,    r: [0] }
 };
-STYLES.SOCCER = { fo: [0, 1, 0], fi: [0, 1], w: [5, 7, 5], c: [3], lt: null, s: [0, 1, 2, 3], d: [], doorP: 0, winP: 0 };
-const TEST_STYLE = { fo: [3], fi: [3], w: [7], c: [1], lt: null, s: [0], d: [], doorP: 0, winP: 0 };
+Object.keys(STYLES).forEach(k => { STYLES[k].cat = k; });
+// nomes antigos continuam existindo como apelidos (nada no jogo depende deles, mas evita quebrar código antigo)
+STYLES.JUNGLE = STYLES.CASTLE = STYLES.PARK; STYLES.OFFICE = STYLES.DESERT = STYLES.URBAN; STYLES.LAB = STYLES.PRISON = STYLES.ARENA = STYLES.INDUSTRIAL;
+STYLES.SOCCER = { fo: [0, 1, 0], fi: [0, 1], w: [5, 7, 5], c: [3], lt: null, s: [0, 1, 2, 3], d: [], doorP: 0, winP: 0, r: [0], cat: 'SOCCER' };
+const TEST_STYLE = { fo: [3], fi: [3], w: [7], c: [1], lt: null, s: [0], d: [], doorP: 0, winP: 0, r: [0], cat: 'TEST' };
 const LEVEL_THEMES = {};
-function setStyle(idxs, name) { idxs.forEach(i => { LEVEL_THEMES[i] = STYLES[name]; }); }
-setStyle([4, 42, 16],                                   'JUNGLE');       // Aztec, Lake
-setStyle([11, 55, 63, 64, 65],                          'PARK');         // Tuscan, Village, Nuketown
-setStyle([1, 40, 3, 41, 7, 43, 57, 18, 23, 28, 60, 61, 62, 70, 71, 14, 48], 'URBAN');   // cidades
-setStyle([8, 44, 58, 20, 49, 15, 17, 25, 68, 69],       'OFFICE');       // escritórios, banco, torre
-setStyle([53, 31, 56, 21],                              'HOUSE');        // mansão, estate, hotel, militia
-setStyle([34],                                          'LAB');          // Biohazard
-setStyle([0, 45, 5, 6, 47, 9, 19, 22, 26, 30, 32, 50, 52, 72, 73], 'INDUSTRIAL');
-setStyle([12, 37],                                      'ARENA');        // Canals, Bridge
-setStyle([38, 39, 59, 36, 29, 66, 67],                  'DESERT');       // Dust 2, Wasteland, Torn, Rust
-setStyle([2, 46, 13, 10, 35, 24, 33, 51],               'CASTLE');       // castelos e templos
-setStyle([27, 54],                                      'PRISON');
+// Qual categoria cada mapa usa (índice em LEVEL_DEFINITIONS). 74 (FNAF) e 75 (Futebol) têm estilo próprio.
+const MAP_CATEGORY = {
+  PARK:       [2, 4, 10, 11, 12, 13, 16, 24, 33, 35, 37, 42, 46, 55, 63, 64, 65, 76, 77, 80, 81],
+  INDUSTRIAL: [0, 5, 6, 17, 22, 26, 27, 30, 34, 36, 45, 47, 50, 52, 54, 66, 67, 72, 73],
+  URBAN:      [1, 3, 7, 8, 14, 15, 18, 20, 23, 28, 29, 38, 39, 40, 41, 43, 44, 48, 49, 51, 57, 58, 59, 60, 61, 62, 68, 69, 70, 71, 78, 79],
+  HOUSE:      [21, 31, 53, 56],
+  METRO:      [9, 19, 25, 32]
+};
+// Variações de textura DENTRO da mesma categoria (mapas de deserto: chão de terra e paredes de barro/tijolo)
+const STYLE_TWEAKS = {
+  38: { fo: [9, 10, 11], w: [1, 2, 10, 9], c: [3], lt: null, s: [0, 2, 6, 7] },
+  39: 38, 59: 38, 29: 38,
+  66: { fo: [9, 10, 11], w: [5, 6, 10, 2], s: [0, 2, 6, 7] },
+  67: 66, 36: 66
+};
+function applyMapCategories() {
+  Object.keys(MAP_CATEGORY).forEach(cat => MAP_CATEGORY[cat].forEach(i => {
+    const ldef = LEVEL_DEFINITIONS[i]; if (!ldef) return;
+    let tw = STYLE_TWEAKS[i]; if (typeof tw === 'number') tw = STYLE_TWEAKS[tw];
+    LEVEL_THEMES[i] = tw ? Object.assign({}, STYLES[cat], tw, { cat }) : STYLES[cat];
+    ldef.style = cat;
+  }));
+  [[74, 'FNAF'], [75, 'SOCCER']].forEach(([i, k]) => { if (LEVEL_DEFINITIONS[i]) { LEVEL_THEMES[i] = STYLES[k]; LEVEL_DEFINITIONS[i].style = k; } });
+  const t = LEVEL_DEFINITIONS[LEVEL_DEFINITIONS.length - 1]; if (t && t.isTestMap) t.style = 'TEST';
+}
 function getLevelTheme(idx, ldef) {
   if (ldef && ldef.isTestMap) return TEST_STYLE;
   return LEVEL_THEMES[idx] || STYLES.URBAN;
@@ -2941,6 +3144,131 @@ function getLevelTheme(idx, ldef) {
 let floorTileMap = new Uint8Array(1), wallTileMap = new Uint8Array(1), ceilTileMap = new Uint8Array(1);
 let doorTileMap = new Int8Array(1), windowTileMap = new Uint8Array(1);
 let lightFixMap = new Uint8Array(1), lightLvlMap = new Uint8Array(1), levelHasLights = false;   // luminárias de teto e luz projetada
+
+// ===== PAREDES FINAS · TETO POR TILE · TELHADOS =====
+// Mapas com `ldef.layout` (ver nmBuild) usam três recursos novos; os demais mapas continuam exatamente como antes:
+//  · thinMap[ti]  = parede FINA (0,24 de espessura) dentro de um tile sólido (16 + braços N=1 L=2 S=4 O=8). A grade continua 1 (sólido para
+//                   bots/IA); a colisão, o tiro e o desenho usam só a lâmina fina. Paredes de tiles vizinhos se conectam sozinhas.
+//  · ceilOnMap[ti]= 1: o tile tem teto (interior); 0: céu aberto (exterior). Interior e exterior convivem no mesmo mapa.
+//  · ROOFS        = telhados vistos de fora (plano, duas águas "gable" ou quatro águas "hip"), desenhados por cima das construções.
+let thinMap = null, ceilOnMap = null, roofMap = null, ROOFS = [], ROOF_MAXZ = 0;
+const THIN_HALF = 0.12;
+const THIN_RECTS_CACHE = [];
+function thinRects(m){
+  if (THIN_RECTS_CACHE[m]) return THIN_RECTS_CACHE[m];
+  const a = 0.5 - THIN_HALF, b = 0.5 + THIN_HALF, R = [[a, a, b, b]];
+  if (m & 1) R.push([a, 0, b, b]);   // norte (y-)
+  if (m & 2) R.push([a, a, 1, b]);   // leste (x+)
+  if (m & 4) R.push([a, a, b, 1]);   // sul (y+)
+  if (m & 8) R.push([0, a, b, b]);   // oeste (x-)
+  return (THIN_RECTS_CACHE[m] = R);
+}
+function thinInside(m, fx, fy){
+  const R = thinRects(m);
+  for (let i = 0; i < R.length; i++) { const r = R[i]; if (fx >= r[0] && fx <= r[2] && fy >= r[1] && fy <= r[3]) return true; }
+  return false;
+}
+// raio (origem no jogador) contra a lâmina fina do tile (tx,ty): devolve { t, side, wx } ou null. t = distância perpendicular (igual ao DDA).
+function thinRayHit(m, tx, ty, rdx, rdy, tEnter){
+  const ox = player.x - tx, oy = player.y - ty, R = thinRects(m);
+  let best = null;
+  for (let i = 0; i < R.length; i++) {
+    const r = R[i];
+    let t0 = -1e9, t1 = 1e9, sd = 0, ok = true;
+    if (Math.abs(rdx) < 1e-9) { if (ox < r[0] || ox > r[2]) ok = false; }
+    else { let a = (r[0] - ox) / rdx, b = (r[2] - ox) / rdx; if (a > b) { const q = a; a = b; b = q; } if (a > t0) { t0 = a; sd = 0; } if (b < t1) t1 = b; }
+    if (!ok) continue;
+    if (Math.abs(rdy) < 1e-9) { if (oy < r[1] || oy > r[3]) ok = false; }
+    else { let a = (r[1] - oy) / rdy, b = (r[3] - oy) / rdy; if (a > b) { const q = a; a = b; b = q; } if (a > t0) { t0 = a; sd = 1; } if (b < t1) t1 = b; }
+    if (!ok || t0 > t1 || t0 < tEnter - 1e-4) continue;
+    if (!best || t0 < best.t) best = { t: t0, side: sd, wx: 0 };
+  }
+  if (best) { const wx = best.side === 0 ? player.y + best.t * rdy : player.x + best.t * rdx; best.wx = wx - Math.floor(wx); }
+  return best;
+}
+// altura do telhado no ponto (x,y): plano = base; gable = duas águas (cumeeira ao longo de `axis`); hip = quatro águas
+function roofZ(r, x, y){
+  if (r.kind === 'flat') return r.base;
+  const lx = x - r.x0, ly = y - r.y0, Wd = r.x1 + 1 - r.x0, Hd = r.y1 + 1 - r.y0;
+  let d, half;
+  if (r.kind === 'gable') { if (r.axis === 'x') { d = Math.min(ly, Hd - ly); half = Hd / 2; } else { d = Math.min(lx, Wd - lx); half = Wd / 2; } }
+  else { d = Math.min(lx, Wd - lx, ly, Hd - ly); half = Math.min(Wd, Hd) / 2; }
+  return r.base + Math.min(d, half) * r.pitch;
+}
+// sombreamento da água do telhado conforme o lado para onde ela cai (luz vem do sul/leste)
+function roofShade(r, x, y){
+  if (r.kind === 'flat') return 0.92;
+  const lx = x - r.x0, ly = y - r.y0, Wd = r.x1 + 1 - r.x0, Hd = r.y1 + 1 - r.y0;
+  const dn = ly, ds = Hd - ly, dw = lx, de = Wd - lx;
+  if (r.kind === 'gable') { if (r.axis === 'x') return dn < ds ? 0.72 : 1.0; return dw < de ? 0.8 : 0.92; }
+  const m = Math.min(dn, ds, dw, de);
+  return m === dn ? 0.72 : (m === ds ? 1.0 : (m === dw ? 0.8 : 0.92));
+}
+// aplica a camada de um mapa criado por nmBuild (texturas por tile, paredes finas, teto por tile e telhados)
+function applyCustomLayout(ldef){
+  const L = ldef.layout, W = ldef.w, H = ldef.h;
+  floorTileMap.set(L.floor); wallTileMap.set(L.wall); ceilTileMap.set(L.ceil);
+  doorTileMap.set(L.door); windowTileMap.set(L.win);
+  thinMap = L.thin; ceilOnMap = L.ceilOn;
+  ROOFS = (L.roofs || []).map(r => Object.assign({ kind: 'gable', axis: 'x', tex: 0, pitch: 0.55, lv: 0, sc: 1 }, r));
+  roofMap = new Uint8Array(W * H); ROOF_MAXZ = 0;
+  ROOFS.forEach((r, k) => {
+    r.base = 1 + (r.lv || 0) * HEIGHT_UNIT;
+    for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) roofMap[y * W + x] = k + 1;
+    const Wd = r.x1 + 1 - r.x0, Hd = r.y1 + 1 - r.y0;
+    const half = r.kind === 'flat' ? 0 : (r.kind === 'gable' ? (r.axis === 'x' ? Hd : Wd) / 2 : Math.min(Wd, Hd) / 2);
+    ROOF_MAXZ = Math.max(ROOF_MAXZ, r.base + half * r.pitch);
+  });
+  levelHasLights = false;
+}
+// Camada interior/exterior dos mapas em ASCII (ver NM_ASCII_MAPS): `ldef.indoorOn[ti]` = 1 nos tiles com teto.
+// Cada construção (bloco conexo de tiles interiores) que seja um retângulo perfeito ganha telhado de duas águas, quatro águas ou plano.
+function applyIndoorLayer(ldef, th, idx) {
+  const W = ldef.w, H = ldef.h, on = ldef.indoorOn, g = ldef.grid;
+  ceilOnMap = on;
+  const roofs = [], seen = new Uint8Array(W * H), hs = ldef.heights;
+  const inside = ldef.indoorCore;            // 1 = tile livre interior (",") ; 0 = parede / porta / exterior
+  for (let sy = 0; sy < H; sy++) for (let sx = 0; sx < W; sx++) {
+    const si = sy * W + sx;
+    if (seen[si] || !inside[si]) continue;
+    const st = [si]; seen[si] = 1; let x0 = W, y0 = H, x1 = -1, y1 = -1, lv = 0;
+    while (st.length) {
+      const c = st.pop(), cx = c % W, cy = (c / W) | 0;
+      if (cx < x0) x0 = cx; if (cx > x1) x1 = cx; if (cy < y0) y0 = cy; if (cy > y1) y1 = cy;
+      if (hs && hs[cy][cx] > lv) lv = hs[cy][cx];
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2]]) {   // pula 1 tile: atravessa parede interna e porta
+        const nx = cx + dx, ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+        const ni = ny * W + nx;
+        if (seen[ni] || !inside[ni]) continue;
+        if (Math.abs(dx) + Math.abs(dy) === 2) { const mx = cx + dx / 2, my = cy + dy / 2; if (ldef.indoorDoor[my * W + mx] !== 1) continue; }
+        seen[ni] = 1; st.push(ni);
+      }
+    }
+    // retângulo do prédio = bounding box dos tiles interiores + 1 (a parede). Só vira telhado se não houver nenhum tile exterior dentro dele.
+    const rx0 = x0 - 1, ry0 = y0 - 1, rx1 = x1 + 1, ry1 = y1 + 1;
+    let ok = rx0 >= 0 && ry0 >= 0 && rx1 < W && ry1 < H;
+    for (let y = ry0; ok && y <= ry1; y++) for (let x = rx0; x <= rx1; x++) { if (!on[y * W + x]) { ok = false; break; } }
+    if (!ok) continue;
+    const h = texHash(x0, y0, 400 + idx), kinds = ['gable', 'hip', 'flat', 'gable', 'hip'];
+    roofs.push({ x0: rx0, y0: ry0, x1: rx1, y1: ry1, axis: (rx1 - rx0) >= (ry1 - ry0) ? 'x' : 'y', lv,
+      kind: (rx1 - rx0 < 3 || ry1 - ry0 < 3) ? 'flat' : kinds[h % kinds.length],
+      tex: (th.r || [0])[(h >> 3) % (th.r || [0]).length], pitch: (0.45 + 0.05 * (h % 3)) * 0.6 });
+  }
+  installRoofs(ldef, roofs);
+}
+function installRoofs(ldef, list) {
+  const W = ldef.w, H = ldef.h;
+  ROOFS = list.map(r => Object.assign({ kind: 'gable', axis: 'x', tex: 0, pitch: 0.55, lv: 0, sc: 1 }, r));
+  roofMap = new Uint8Array(W * H); ROOF_MAXZ = 0;
+  ROOFS.forEach((r, k) => {
+    r.base = 1 + (r.lv || 0) * HEIGHT_UNIT;
+    for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) roofMap[y * W + x] = k + 1;
+    const Wd = r.x1 + 1 - r.x0, Hd = r.y1 + 1 - r.y0;
+    const half = r.kind === 'flat' ? 0 : (r.kind === 'gable' ? (r.axis === 'x' ? Hd : Wd) / 2 : Math.min(Wd, Hd) / 2);
+    ROOF_MAXZ = Math.max(ROOF_MAXZ, r.base + half * r.pitch);
+  });
+}
 let litMap = new Uint8Array(1);   // tiles iluminados (luz do corredor no modo FNAF Doom)
 let fogScale = 1;                 // 1 = normal; menor = mais escuro (FNAF Doom)
 function texHash(a, b, seed) {
@@ -2960,6 +3288,7 @@ function buildTileTextures(idx, ldef) {
   floorTileMap = new Uint8Array(n); wallTileMap = new Uint8Array(n); ceilTileMap = new Uint8Array(n);
   doorTileMap = new Int8Array(n).fill(-1); windowTileMap = new Uint8Array(n);
   lightFixMap = new Uint8Array(n); lightLvlMap = new Uint8Array(n); levelHasLights = false;
+  thinMap = null; ceilOnMap = null; roofMap = null; ROOFS = []; ROOF_MAXZ = 0;
   const outdoor = !!ldef.noCeiling;
   const fl = outdoor ? th.fo : th.fi;
   const solid = (x, y) => x < 0 || y < 0 || x >= W || y >= H || g[y][x] === 1;
@@ -3044,6 +3373,9 @@ function buildTileTextures(idx, ldef) {
   // Portas e janelas: só em trechos retos e longos de parede (nada de pilares ou colunas soltas),
   // com espaçamento mínimo entre elas para não aparecerem em todas as paredes.
   if (ldef.isTestMap) { applyTestMapLayout(ldef); return; }
+  if (ldef.layout) { applyCustomLayout(ldef); return; }
+  autoThin(ldef);
+  if (ldef.indoorOn) applyIndoorLayer(ldef, th, idx);   // mapas mistos feitos em ASCII: teto só nas construções + telhados
   if (!th.doorP && !th.winP) return;
   const wall = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g[y][x] === 1;
   const open = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g[y][x] === 0;
@@ -3076,6 +3408,49 @@ function buildTileTextures(idx, ldef) {
   }
 }
 
+
+
+// Paredes finas automáticas nos mapas antigos. Toda parede (1 tile, 2x2, blocos grossos, pilares) vira lâmina fina:
+//  · tile "casca" = sólido com algum vizinho livre (8 direções): vira pilar fino + braços até os vizinhos sólidos ligados a ele;
+//  · um braço só existe se o trecho encosta num espaço livre (os trechos internos de uma parede grossa não são desenhados);
+//  · tile totalmente cercado por sólidos (miolo de bloco grosso) fica cheio: é inalcançável, a casca ao redor o isola;
+//  · dois tiles que só se tocam pela diagonal ficam cheios (senão sobraria uma fresta por onde ver/atravessar);
+//  · o muro externo do mapa continua cheio, como antes.
+function autoThin(ldef){
+  if (ldef.soccerOnly || ldef.isTestMap) return;
+  const W = ldef.w, H = ldef.h, g = ldef.grid, t = new Uint8Array(W * H);
+  const fd = new Set();   // portas do FNAF: contam como sólidas aqui (a lâmina da porta fechada já existe e emenda nas janelas)
+  if (ldef.fnaf && ldef.fnaf.doors) Object.keys(ldef.fnaf.doors).forEach(k => { const o = ldef.fnaf.doors[k]; fd.add(o.y * W + o.x); });
+  const inB = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+  const sol = (x, y) => !inB(x, y) || g[y][x] === 1 || fd.has(y * W + x);
+  const opn = (x, y) => !sol(x, y);
+  const border = (x, y) => x === 0 || y === 0 || x === W - 1 || y === H - 1;
+  const shell = (x, y) => {
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && opn(x + dx, y + dy)) return true;
+    return false;
+  };
+  const diagOnly = (x, y) => {   // toca um sólido só pela diagonal (os dois vizinhos em comum são livres)
+    for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) if (sol(x + dx, y + dy) && opn(x + dx, y) && opn(x, y + dy)) return true;
+    return false;
+  };
+  const thinnable = (x, y) => sol(x, y) && inB(x, y) && !border(x, y) && shell(x, y) && !diagOnly(x, y);
+  const interior = (x, y) => inB(x, y) && !border(x, y) && sol(x, y) && !shell(x, y);
+  // o trecho entre (x,y) e o vizinho (x+dx,y+dy) encosta num espaço livre?
+  const exposed = (x, y, dx, dy) => dx === 0
+    ? (opn(x - 1, y) || opn(x + 1, y) || opn(x - 1, y + dy) || opn(x + 1, y + dy))
+    : (opn(x, y - 1) || opn(x, y + 1) || opn(x + dx, y - 1) || opn(x + dx, y + 1));
+  let any = false;
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    if (!sol(x, y) || !thinnable(x, y)) continue;
+    let m = 16;
+    if (sol(x, y - 1) && !interior(x, y - 1) && exposed(x, y, 0, -1)) m |= 1;
+    if (sol(x + 1, y) && !interior(x + 1, y) && exposed(x, y, 1, 0)) m |= 2;
+    if (sol(x, y + 1) && !interior(x, y + 1) && exposed(x, y, 0, 1)) m |= 4;
+    if (sol(x - 1, y) && !interior(x - 1, y) && exposed(x, y, -1, 0)) m |= 8;
+    t[y * W + x] = m; any = true;
+  }
+  if (any) thinMap = t;
+}
 
 // Mapa de testes: cada tile recebe exatamente a textura definida em testLayout (nada de sorteio).
 function applyTestMapLayout(ldef) {
@@ -3340,56 +3715,56 @@ const I18N = {
     lvl1Desc: "Estilo Inferno: Banana curva a oeste, Meio no centro e Apartamentos a leste. Site B ao noroeste, site A ao leste.",
     lvl2Desc: "Estilo Cobblestone: castelo murado ao norte com três portões, salão central e sites A e B por dentro.",
     lvl3Desc: "Estilo Mirage: Rampa do A, Palácio, Selva, Apartamentos do B e Meio aberto com conectores.",
-    lvl4Desc: "Estilo Aztec: um rio rebaixado corta o mapa, com pontes. Sites ao sul, T ao norte.",
-    lvl5Desc: "Estilo Assault: armazém cheio de caixotes, sacadas elevadas dos dois lados e uma sala de escritório no centro.",
+    lvl4Desc: "Estilo Aztec: um rio de verdade corta o mapa (margem rasa, centro fundo para nadar), com pontes. Sites ao sul, T ao norte.",
+    lvl5Desc: "Pátio industrial de contêineres de paredes finas com um armazém central de telhado e quatro entradas.",
     lvl6Desc: "Estilo Nuke: pátio externo com silo, prédio com saguão, site A no andar de cima e site B rebaixado.",
-    lvl7Desc: "Estilo Italy: vila italiana com ruas, praça com fonte, barracas e prédios com portas.",
+    lvl7Desc: "Estilo Italy: vila italiana com ruas, praça com fonte (bacia rasa para vadear), barracas e prédios com portas.",
     lvl8Desc: "Estilo Office: corredores, escritórios com portas e um hall central. Muito combate em curta distância.",
     lvl9Desc: "Estilo Train: pátio ferroviário com vagões em fileiras, prédios nos cantos e passarelas elevadas.",
-    lvl10Desc: "Pirâmide escalonada com plataforma elevada no topo. Domine o centro.",
-    lvl11Desc: "Vale em terraços. Suba ou desça os degraus para ganhar vantagem.",
-    lvl12Desc: "Arena com abismo central e plataformas elevadas nos cantos.",
-    lvl13Desc: "Fosso ao redor de uma muralha interna com 4 portões e torres nos cantos.",
-    lvl14Desc: "Estilo Overpass: canal rebaixado no centro com pontes, Long A a oeste e Banheiros a leste.",
+    lvl10Desc: "Templo em plataforma com casa central de quatro portas, rampas lisas e pilares nos cantos.",
+    lvl11Desc: "Vila toscana: casas de telhado nas pontas e uma fonte rasa no meio para vadear.",
+    lvl12Desc: "Cruz de canais com pontes, margens rasas, centro fundo para nadar e quatro casas nos cantos.",
+    lvl13Desc: "Castelo com fosso raso, quatro pontes de entrada, salão coberto e torre interna.",
+    lvl14Desc: "Estilo Overpass: canal de água no centro (margens rasas, calha funda) com pontes, Long A a oeste e Banheiros a leste.",
     lvl15Desc: "Estilo Vertigo: topo de arranha-céu com sites elevados, plataforma central em degraus e vãos nos cantos.",
-    lvl16Desc: "Ilhas elevadas cercadas por abismo, ligadas por pontes estreitas.",
-    lvl17Desc: "Crista elevada e comprida com linhas de tiro longas e pouca cobertura.",
+    lvl16Desc: "Quatro lagoas rasas com centro fundo, píeres em cruz e casas de telhado nos quatro cantos.",
+    lvl17Desc: "Crista elevada e comprida com rampas lisas, paredes finas e linhas de tiro longas.",
     lvlTestDesc: "Laboratório de testes: todas as texturas (pisos, tetos, paredes, portas, janelas), elevação (escadas, rampa, poço, espiral), skins, pickups, armas, itens de interação, campo de futebol (gols, bola, clubes, patrocinadores) e água (rasa e profunda).",
     lvl18: "DE_RIALTO", lvl19: "CS_BAGGAGE", lvl20: "CS_AGENCY", lvl21: "CS_MILITIA",
-    lvl18Desc: "Praça aberta com barracas e muros baixos. Lados T (oeste) e CT (leste).",
-    lvl19Desc: "Armazém com fileiras de caixotes e corredores largos. Combate de média distância.",
-    lvl20Desc: "Escritórios com salas e portas estreitas ao redor de um corredor central.",
-    lvl21Desc: "Platô elevado no centro com pilares. Quem domina o alto, domina a partida.",
+    lvl18Desc: "Cidade veneziana: canal fundo no meio com duas pontes, casas de telhado com portas e barracas nas praças. T a oeste, CT a leste.",
+    lvl19Desc: "Salão de bagagem do metrô: esteiras de paredes finas formam corredores paralelos, com pilares e salas de apoio. Muito cruzamento de tiro.",
+    lvl20Desc: "Escritório fechado: salas de portas estreitas ao redor de corredores e um saguão central. Combate em curta distância.",
+    lvl21Desc: "Casa de fazenda com quintal: duas casas de telhado com cômodos, muros baixos e caixotes no pátio.",
     lvl22: "SCRAPYARD", lvl23: "CS_BACKALLEY", lvl24: "DE_MONASTERY", lvl25: "TERMINAL",
-    lvl22Desc: "Galpão industrial com blocos de maquinário e salas laterais.",
-    lvl23Desc: "Ruas em cruz entre quarteirões. Esquinas e cruzamentos abertos.",
-    lvl24Desc: "Faixa central elevada em degraus, com pilares nas laterais.",
-    lvl25Desc: "Salão com colunas em grade e corredores largos. Muito cruzamento de tiro.",
+    lvl22Desc: "Ferro-velho: pilhas de sucata de paredes finas, um galpão central com duas portas e becos entre os montes.",
+    lvl23Desc: "Becos em cruz entre quatro prédios de telhado, com entradas pelos dois lados e caixotes nas esquinas.",
+    lvl24Desc: "Abadia sobre um platô baixo: claustro de várias salas, rampas lisas nos quatro lados e jardim aberto em volta.",
+    lvl25Desc: "Saguão de terminal: colunas em grade, balcões de paredes finas e corredores laterais. Muito cruzamento de tiro.",
     lvl26: "DE_AIRSTRIP", lvl27: "DE_PRISON", lvl28: "FAVELA", lvl29: "DE_TORN",
-    lvl26Desc: "Hangar largo com blocos de carga e longas linhas de tiro.",
-    lvl27Desc: "Celas e corredores estreitos. Combate em curta distância e muitas esquinas.",
-    lvl28Desc: "Vila com casas de portas estreitas e ruas abertas entre elas.",
-    lvl29Desc: "Vale com plataformas altas nas laterais e centro baixo. Cuidado ao atravessar.",
+    lvl26Desc: "Pista com dois hangares de telhado, torre de controle no meio e longas linhas de tiro entre eles.",
+    lvl27Desc: "Blocos de celas com portas estreitas, pátio central e corredores de guarda. Combate em curta distância.",
+    lvl28Desc: "Casebres amontoados, vielas estreitas e uma encosta com rampa lisa no meio. Portas apertadas e muitas esquinas.",
+    lvl29Desc: "Ruas em ruínas: prédios abertos, muros quebrados e um desnível no centro com rampas lisas.",
     lvl30: "SHIPMENT", lvl31: "ESTATE", lvl32: "UNDERPASS", lvl33: "DE_CHATEAU", lvl34: "CS_BIOHAZARD", lvl35: "DE_ANUBIS", lvl36: "WASTELAND", lvl37: "DE_BRIDGE", lvl38: "DE_DUST2", lvl39: "DE_DUST2", lvl40: "DE_INFERNO", lvl41: "DE_MIRAGE", lvl42: "DE_AZTEC", lvl43: "CS_ITALY", lvl44: "CS_OFFICE", lvl45: "DE_CACHE", lvl46: "DE_CBBLE", lvl47: "DE_NUKE", lvl48: "DE_OVERPASS",
-    lvl30Desc: "Pátio de contêineres com blocos longos e corredores largos. Muito cruzamento de tiro.",
-    lvl31Desc: "Sala central com 4 portas cercada por um anel aberto. Dá para flanquear por todos os lados.",
-    lvl32Desc: "Plataformas laterais e trilhos rebaixados no meio, com pilares. Descer é fácil, subir custa um degrau.",
-    lvl33Desc: "Pátio com muralha interna de 4 portões e torre central em degraus. Quem sobe, domina.",
-    lvl34Desc: "Salas e corredores ligados por portas largas. Combate em curta e média distância.",
-    lvl35Desc: "Pirâmide central escalonada com pilares ao redor. Disputa pelo alto.",
-    lvl36Desc: "Colunas em grade num salão baixo e largo. Cobertura por todo lado.",
-    lvl37Desc: "Rio profundo no centro cruzado por 3 pontes. Dá para nadar, mas voltar custa tempo.",
+    lvl30Desc: "Pátio de contêineres: paredes finas compridas formam corredores. Cuidado com o centro aberto.",
+    lvl31Desc: "Mansão com salão central de seis portas, jardim com piscina rasa para vadear e flancos abertos.",
+    lvl32Desc: "Estação subterrânea: plataformas elevadas com colunas nas laterais e trilhos rebaixados no meio. Descer é fácil, subir custa um degrau.",
+    lvl33Desc: "Château: muralhas internas, torre central em degraus e lagos rasos nas laterais.",
+    lvl34Desc: "Laboratório com câmaras de contenção, corredor longo e sala central. Combate em curta e média distância.",
+    lvl35Desc: "Templo escalonado com pátio de pilares e uma pirâmide de dois níveis no centro. Disputa pelo alto.",
+    lvl36Desc: "Terreno arrasado: dois barracões de telhado, muros baixos e ferragens espalhadas. Cobertura por todo lado.",
+    lvl37Desc: "Rio fundo no centro cruzado por 3 pontes, com cabanas nas margens. Dá para nadar, mas voltar custa tempo.",
     lvl38Desc: "Réplica do Dust 2: Long A a leste, Meio no centro, Túneis do B a oeste. T ao sul, CT ao norte.",
     lvl39Desc: "Dust 2 para Zombie Survival e Gun Game. Comece no spawn T e explore Long, Meio e Túneis.",
     lvl40Desc: "Estilo Inferno: Banana curva a oeste, Meio no centro e Apartamentos a leste. Site B ao noroeste, site A ao leste. (Deathmatch)",
     lvl41Desc: "Estilo Mirage: Rampa do A, Palácio, Selva, Apartamentos do B e Meio aberto com conectores. (Deathmatch)",
-    lvl42Desc: "Estilo Aztec: um rio rebaixado corta o mapa, com pontes. Sites ao sul, T ao norte. (Deathmatch)",
-    lvl43Desc: "Estilo Italy: vila italiana com ruas, praça com fonte, barracas e prédios com portas. (Deathmatch)",
+    lvl42Desc: "Estilo Aztec: um rio de verdade corta o mapa (margem rasa, centro fundo para nadar), com pontes. Sites ao sul, T ao norte. (Deathmatch)",
+    lvl43Desc: "Estilo Italy: vila italiana com ruas, praça com fonte (bacia rasa para vadear), barracas e prédios com portas. (Deathmatch)",
     lvl44Desc: "Estilo Office: corredores, escritórios com portas e um hall central. Muito combate em curta distância. (Deathmatch)",
     lvl45Desc: "Estilo Cache: site A a oeste, site B a leste e um Meio longo ligando os dois. CT ao norte, T ao sul. (Deathmatch)",
     lvl46Desc: "Estilo Cobblestone: castelo murado ao norte com três portões, salão central e sites A e B por dentro. (Deathmatch)",
     lvl47Desc: "Estilo Nuke: pátio externo com silo, prédio com saguão, site A no andar de cima e site B rebaixado. (Deathmatch)",
-    lvl48Desc: "Estilo Overpass: canal rebaixado no centro com pontes, Long A a oeste e Banheiros a leste. (Deathmatch)",
+    lvl48Desc: "Estilo Overpass: canal de água no centro (margens rasas, calha funda) com pontes, Long A a oeste e Banheiros a leste. (Deathmatch)",
     lvl49: "CS_BANK", lvl49Desc: "Assalto a um banco: os reféns estão no cofre, no centro do prédio. Saguão com pilares e acessos pelos dois lados.",
     lvl50: "CS_WAREHOUSE", lvl50Desc: "Depósito com pilhas de caixotes. Os reféns estão no escritório do fundo; cubra-se entre as pilhas.",
     lvl51: "EMBASSY", lvl51Desc: "Complexo murado com dois portões. O prédio principal guarda os reféns numa sala interna.",
@@ -3415,8 +3790,14 @@ const I18N = {
     lvl71: "CS_HAVANA", lvl71Desc: "Estilo Havana (CS): vila com pátio murado e a sala dos reféns no centro. Entre pelos portões e traga todos à base CT, a oeste.",
     lvl72: "AS_OILRIG", lvl72Desc: "Estilo Oilrig (CS): plataforma de petróleo. Os reféns estão no alojamento central, no convés elevado. Os CT resgatam na doca oeste.",
     lvl73: "AS_OILRIG", lvl73Desc: "Estilo Oilrig (CS): plataforma com módulos nos cantos e alojamento central em convés elevado. T a oeste, CT a leste. (Deathmatch / CTF)",
-    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Pizzaria do Freddy: sobreviva da meia-noite às 6 AM. Feche as portas, use as luzes do corredor e economize energia. Armas e munição escassas.",
+    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Pizzaria do Freddy, agora em salas fechadas (paredes finas): palco com cortinas, Pirate Cove com porta, banheiro, almoxarifados, backstage e cozinha. Sobreviva da meia-noite às 6 AM; feche as portas, use as luzes e economize energia. Armas e munição escassas.",
     lvl75: "ESTADIO_FUTEBOL", lvl75Desc: "Estádio exclusivo do modo Futebol: gramado com dois gols. Chute a bola (F) e faça gols — todos com a Desert Eagle.",
+    lvl76: "DE_VILLAGE", lvl76Desc: "Estilo Counter-Strike: Vila com casas de telhado de duas e quatro águas, paredes finas com janelas em todos os lados, rio com ponte e vau, colina com rampa lisa e escada.",
+    lvl77: "DE_VILLAGE", lvl77Desc: "Estilo Counter-Strike: Vila com casas de telhado de duas e quatro águas, rio com ponte e vau e colina com rampa e escada. T ao norte, CT ao sul. (Deathmatch / CTF)",
+    lvl78: "MP_DOCKYARD", lvl78Desc: "Estilo Call of Duty: Porto de becos estreitos: quarteirões com paredes finas, telhados variados, canal com pontes em arco e passagens por dentro das casas.",
+    lvl79: "MP_DOCKYARD", lvl79Desc: "Estilo Call of Duty: Porto de becos estreitos, canal com pontes em arco e casas atravessáveis. T a oeste, CT a leste. (Deathmatch / CTF)",
+    lvl80: "CS_MONASTERY", lvl80Desc: "Estilo Counter-Strike: Mosteiro no alto de um platô com quatro rampas, corredor interno estreito, casas de telhado e lago ao sudoeste.",
+    lvl81: "CS_MONASTERY", lvl81Desc: "Estilo Counter-Strike: Mosteiro no platô com quatro rampas (uma em escada), telhados e lago. T ao sul, CT ao norte. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
     gunFoeLabel: "CONTRA:", gunFoeZombies: "ZUMBIS", gunFoeBots: "BOTS",
@@ -3474,56 +3855,56 @@ const I18N = {
     lvl1Desc: "Inferno style: curved Banana to the west, Mid in the center, Apartments to the east. B site NW, A site east.",
     lvl2Desc: "Cobblestone style: a walled castle to the north with three gates, a central hall and A/B sites inside.",
     lvl3Desc: "Mirage style: A Ramp, Palace, Jungle, B Apartments and an open Mid with connectors.",
-    lvl4Desc: "Aztec style: a sunken river splits the map, crossed by bridges. Sites to the south, T to the north.",
-    lvl5Desc: "Assault style: a warehouse full of crates, raised balconies on both sides and an office room in the middle.",
+    lvl4Desc: "Aztec style: a real river splits the map (shallow banks, deep middle you can swim in), crossed by bridges. Sites to the south, T to the north.",
+    lvl5Desc: "Industrial container yard of thin walls with a roofed central warehouse and four entrances.",
     lvl6Desc: "Nuke style: outdoor yard with a silo, a building with a lobby, an upper A site and a sunken B site.",
-    lvl7Desc: "Italy style: Italian village with streets, a fountain plaza, market stalls and buildings with doors.",
+    lvl7Desc: "Italy style: Italian village with streets, a fountain plaza (shallow basin you can wade through), market stalls and buildings with doors.",
     lvl8Desc: "Office style: corridors, offices with doors and a central hall. Lots of close-quarters fights.",
     lvl9Desc: "Train style: rail yard with rows of train cars, corner buildings and raised walkways.",
-    lvl10Desc: "Stepped pyramid with an elevated platform on top. Own the center.",
-    lvl11Desc: "Terraced valley. Climb or descend the steps to gain the edge.",
-    lvl12Desc: "Arena with a central abyss and elevated platforms in the corners.",
-    lvl13Desc: "Moat ringing an inner wall with 4 gates and corner towers.",
-    lvl14Desc: "Overpass style: a sunken canal in the middle with bridges, Long A to the west and Bathrooms to the east.",
+    lvl10Desc: "Platform temple with a four-door central house, smooth ramps and pillars in the corners.",
+    lvl11Desc: "Tuscan village: roofed houses at both ends and a shallow fountain in the middle to wade through.",
+    lvl12Desc: "Cross of canals with bridges, shallow banks, a deep centre to swim in and four houses in the corners.",
+    lvl13Desc: "Castle with a shallow moat, four entrance bridges, a covered hall and an inner tower.",
+    lvl14Desc: "Overpass style: a water canal in the middle (shallow banks, deep channel) with bridges, Long A to the west and Bathrooms to the east.",
     lvl15Desc: "Vertigo style: skyscraper rooftop with raised sites, a stepped central platform and drops in the corners.",
-    lvl16Desc: "Elevated islands surrounded by a chasm, linked by narrow bridges.",
-    lvl17Desc: "Long elevated ridge with long sightlines and little cover.",
+    lvl16Desc: "Four shallow ponds with deep centres, crossing piers and roofed houses in the four corners.",
+    lvl17Desc: "Long raised ridge with smooth ramps, thin walls and long sight lines.",
     lvlTestDesc: "Test lab: every texture (floors, ceilings, walls, doors, windows), elevation (stairs, ramp, pit, spiral), skins, pickups, weapons, interactive items, a soccer pitch (goals, ball, clubs, sponsors) and water (shallow and deep).",
     lvl18: "DE_RIALTO", lvl19: "CS_BAGGAGE", lvl20: "CS_AGENCY", lvl21: "CS_MILITIA",
-    lvl18Desc: "Open square with stalls and low walls. T side (west) and CT side (east).",
-    lvl19Desc: "Warehouse with crate rows and wide aisles. Mid-range fights.",
-    lvl20Desc: "Offices with rooms and narrow doors around a central hallway.",
-    lvl21Desc: "Raised plateau in the middle with pillars. Hold the high ground, hold the match.",
+    lvl18Desc: "Venetian town: a deep canal down the middle with two bridges, roofed houses with doors and market stalls. T in the west, CT in the east.",
+    lvl19Desc: "Metro baggage hall: thin-walled conveyor belts make parallel lanes, with pillars and side rooms. Lots of crossfire.",
+    lvl20Desc: "Enclosed office floor: narrow-door rooms around corridors and a central lobby. Close-quarters combat.",
+    lvl21Desc: "Farmhouse with a yard: two roofed houses with rooms, low walls and crates in the yard.",
     lvl22: "SCRAPYARD", lvl23: "CS_BACKALLEY", lvl24: "DE_MONASTERY", lvl25: "TERMINAL",
-    lvl22Desc: "Industrial hall with machinery blocks and side rooms.",
-    lvl23Desc: "Cross-shaped streets between city blocks. Open corners and intersections.",
-    lvl24Desc: "Raised central strip with steps, and pillars on the flanks.",
-    lvl25Desc: "Hall with grid columns and wide aisles. Lots of crossfire.",
+    lvl22Desc: "Scrapyard: thin-walled scrap piles, a central shed with two doors and alleys between the heaps.",
+    lvl23Desc: "Crossing alleys between four roofed buildings, with entrances on both sides and crates at the corners.",
+    lvl24Desc: "Abbey on a low plateau: a cloister of several rooms, smooth ramps on all four sides and an open garden around it.",
+    lvl25Desc: "Terminal concourse: grid of columns, thin-walled counters and side corridors. Lots of crossfire.",
     lvl26: "DE_AIRSTRIP", lvl27: "DE_PRISON", lvl28: "FAVELA", lvl29: "DE_TORN",
-    lvl26Desc: "Wide hangar with cargo blocks and long sightlines.",
-    lvl27Desc: "Cells and narrow corridors. Close-quarters fights and plenty of corners.",
-    lvl28Desc: "Village with narrow-door houses and open streets between them.",
-    lvl29Desc: "Valley with high platforms on the flanks and a low center. Be careful crossing.",
+    lvl26Desc: "Airstrip with two roofed hangars, a control tower in the middle and long sight lines between them.",
+    lvl27Desc: "Cell blocks with narrow doors, a central yard and guard corridors. Close-quarters combat.",
+    lvl28Desc: "Packed shacks, narrow lanes and a hillside with a smooth ramp in the middle. Tight doors and lots of corners.",
+    lvl29Desc: "Ruined streets: open buildings, broken walls and a raised patch in the centre with smooth ramps.",
     lvl30: "SHIPMENT", lvl31: "ESTATE", lvl32: "UNDERPASS", lvl33: "DE_CHATEAU", lvl34: "CS_BIOHAZARD", lvl35: "DE_ANUBIS", lvl36: "WASTELAND", lvl37: "DE_BRIDGE", lvl38: "DE_DUST2", lvl39: "DE_DUST2", lvl40: "DE_INFERNO", lvl41: "DE_MIRAGE", lvl42: "DE_AZTEC", lvl43: "CS_ITALY", lvl44: "CS_OFFICE", lvl45: "DE_CACHE", lvl46: "DE_CBBLE", lvl47: "DE_NUKE", lvl48: "DE_OVERPASS",
-    lvl30Desc: "Container yard with long blocks and wide aisles. Lots of crossfire.",
-    lvl31Desc: "Central room with 4 doors inside an open ring. Flank from every side.",
-    lvl32Desc: "Side platforms and sunken tracks in the middle, with pillars. Dropping is easy, climbing back costs a step.",
-    lvl33Desc: "Courtyard with an inner wall, 4 gates and a stepped central tower. Hold the top, hold the match.",
-    lvl34Desc: "Rooms and corridors linked by wide doorways. Close to mid-range fights.",
-    lvl35Desc: "Stepped central pyramid ringed by pillars. Fight for the high ground.",
-    lvl36Desc: "Grid of columns in a low, wide hall. Cover everywhere.",
-    lvl37Desc: "Deep river in the middle crossed by 3 bridges. You can swim, but getting back takes time.",
+    lvl30Desc: "Container yard: long thin walls form lanes. Watch out for the open centre.",
+    lvl31Desc: "Mansion with a six-door central hall, a garden with a shallow pool to wade through and open flanks.",
+    lvl32Desc: "Underground station: raised platforms with columns on the sides and sunken tracks in the middle. Dropping down is easy, climbing back costs a step.",
+    lvl33Desc: "Chateau: inner walls, a stepped central tower and shallow ponds on the sides.",
+    lvl34Desc: "Laboratory with containment chambers, a long corridor and a central room. Short and medium range combat.",
+    lvl35Desc: "Stepped temple with a pillared courtyard and a two-level pyramid in the middle. Fight for the high ground.",
+    lvl36Desc: "Razed ground: two roofed sheds, low walls and scattered scrap. Cover everywhere.",
+    lvl37Desc: "A deep river in the middle crossed by 3 bridges, with huts on the banks. You can swim, but coming back takes time.",
     lvl38Desc: "Dust 2 replica: Long A to the east, Mid in the center, B Tunnels to the west. T south, CT north.",
     lvl39Desc: "Dust 2 for Zombie Survival and Gun Game. Start at T spawn and explore Long, Mid and Tunnels.",
     lvl40Desc: "Inferno style: curved Banana to the west, Mid in the center, Apartments to the east. B site NW, A site east. (Deathmatch)",
     lvl41Desc: "Mirage style: A Ramp, Palace, Jungle, B Apartments and an open Mid with connectors. (Deathmatch)",
-    lvl42Desc: "Aztec style: a sunken river splits the map, crossed by bridges. Sites to the south, T to the north. (Deathmatch)",
-    lvl43Desc: "Italy style: Italian village with streets, a fountain plaza, market stalls and buildings with doors. (Deathmatch)",
+    lvl42Desc: "Aztec style: a real river splits the map (shallow banks, deep middle you can swim in), crossed by bridges. Sites to the south, T to the north. (Deathmatch)",
+    lvl43Desc: "Italy style: Italian village with streets, a fountain plaza (shallow basin you can wade through), market stalls and buildings with doors. (Deathmatch)",
     lvl44Desc: "Office style: corridors, offices with doors and a central hall. Lots of close-quarters fights. (Deathmatch)",
     lvl45Desc: "Cache style: A site to the west, B site to the east and a long Mid linking both. CT north, T south. (Deathmatch)",
     lvl46Desc: "Cobblestone style: a walled castle to the north with three gates, a central hall and A/B sites inside. (Deathmatch)",
     lvl47Desc: "Nuke style: outdoor yard with a silo, a building with a lobby, an upper A site and a sunken B site. (Deathmatch)",
-    lvl48Desc: "Overpass style: a sunken canal in the middle with bridges, Long A to the west and Bathrooms to the east. (Deathmatch)",
+    lvl48Desc: "Overpass style: a water canal in the middle (shallow banks, deep channel) with bridges, Long A to the west and Bathrooms to the east. (Deathmatch)",
     lvl49: "CS_BANK", lvl49Desc: "Bank heist: the hostages are in the vault at the heart of the building. Pillared lobby, entrances on both sides.",
     lvl50: "CS_WAREHOUSE", lvl50Desc: "Depot with crate stacks. The hostages are in the back office; use the stacks for cover.",
     lvl51: "EMBASSY", lvl51Desc: "Walled compound with two gates. The main building keeps the hostages in an inner room.",
@@ -3549,8 +3930,14 @@ const I18N = {
     lvl71: "CS_HAVANA", lvl71Desc: "Havana style (CS): villa with a walled courtyard and the hostage room in the middle. Go in through the gates and bring them to the CT base in the west.",
     lvl72: "AS_OILRIG", lvl72Desc: "Oilrig style (CS): oil platform. The hostages are in the central quarters on the raised deck. CT rescue at the west dock.",
     lvl73: "AS_OILRIG", lvl73Desc: "Oilrig style (CS): platform with corner modules and central quarters on a raised deck. T in the west, CT in the east. (Deathmatch / CTF)",
-    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Freddy's pizzeria: survive from midnight to 6 AM. Close the doors, use the hall lights and save power. Scarce weapons and ammo.",
+    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Freddy's pizzeria, now in closed rooms (thin walls): curtained stage, Pirate Cove with a door, restroom, supply closets, backstage and kitchen. Survive from midnight to 6 AM; close the doors, use the hall lights and save power. Scarce weapons and ammo.",
     lvl75: "SOCCER_STADIUM", lvl75Desc: "Exclusive Soccer-mode stadium: a pitch with two goals. Kick the ball (F) and score — everyone carries the Desert Eagle.",
+    lvl76: "DE_VILLAGE", lvl76Desc: "Counter-Strike style: Village of gable and hip-roofed houses, thin walls with windows on every side, a river with bridge and ford, a hill with a smooth ramp and stairs.",
+    lvl77: "DE_VILLAGE", lvl77Desc: "Counter-Strike style: Village of gable and hip-roofed houses, river with bridge and ford, a hill with ramp and stairs. T in the north, CT in the south. (Deathmatch / CTF)",
+    lvl78: "MP_DOCKYARD", lvl78Desc: "Call of Duty style: Harbor of narrow alleys: thin-walled blocks, varied roofs, a canal with arched bridges and paths through the houses.",
+    lvl79: "MP_DOCKYARD", lvl79Desc: "Call of Duty style: Narrow-alley harbor, canal with arched bridges and walk-through houses. T in the west, CT in the east. (Deathmatch / CTF)",
+    lvl80: "CS_MONASTERY", lvl80Desc: "Counter-Strike style: Monastery on top of a plateau with four ramps, a narrow inner corridor, roofed houses and a lake in the southwest.",
+    lvl81: "CS_MONASTERY", lvl81Desc: "Counter-Strike style: Monastery on the plateau with four ramps (one is a stair), roofs and a lake. T in the south, CT in the north. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
     gunFoeLabel: "VERSUS:", gunFoeZombies: "ZOMBIES", gunFoeBots: "BOTS",
@@ -3653,7 +4040,7 @@ const WEAPON_CONFIG = {
   ump45: { key: ',', name: 'UMP45', img: 'https://i.postimg.cc/vTxPmQgJ/SMG4.png', dmg: 22, rate: 110, spreadCount: 1, spreadDeg: 2.6, range: 26, auto: true, ammoUse: 1, defaultAmmo: 75, maxAmmo: 75, sizeScale: 0.9, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2000, moveMul: 0.98 },
   p90: { key: '.', name: 'P90', img: 'https://i.postimg.cc/Y0LXSpLH/SMG5.png', dmg: 13, rate: 58, spreadCount: 1, spreadDeg: 3.2, range: 28, auto: true, ammoUse: 1, defaultAmmo: 150, maxAmmo: 150, sizeScale: 0.9, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2300, moveMul: 1.02 },
   galil: { key: '/', name: 'Galil ARM', img: 'https://i.postimg.cc/FRBWmfRd/FUZIL5.png', dmg: 28, rate: 110, spreadCount: 1, spreadDeg: 2.8, range: 44, auto: true, ammoUse: 1, defaultAmmo: 105, maxAmmo: 105, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2500, moveMul: 0.97 },
-  famas: { key: '\\', name: 'F1', img: 'https://i.postimg.cc/mD5XRcDj/FUZIL6.png', dmg: 22, rate: 78, spreadCount: 1, spreadDeg: 2.0, range: 40, auto: true, ammoUse: 1, defaultAmmo: 120, maxAmmo: 120, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2100, moveMul: 1.0 },
+  famas: { key: '\\', name: 'Famas F1', img: 'https://i.postimg.cc/mD5XRcDj/FUZIL6.png', dmg: 22, rate: 78, spreadCount: 1, spreadDeg: 2.0, range: 40, auto: true, ammoUse: 1, defaultAmmo: 120, maxAmmo: 120, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2100, moveMul: 1.0 },
   sg552: { key: '`', name: 'SG 552', img: 'https://i.postimg.cc/d1xHv71B/FUZIL4.png', dmg: 30, rate: 118, spreadCount: 1, spreadDeg: 0.9, range: 62, auto: true, ammoUse: 1, defaultAmmo: 60, maxAmmo: 60, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2400, moveMul: 0.97 },
   sg550: { key: 'x', name: 'SG 550 SR', img: 'https://i.postimg.cc/pr50d252/SNIPER4.png', dmg: 55, rate: 380, spreadCount: 1, spreadDeg: 0.2, range: 85, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 2800, moveMul: 0.92 },
   g3sg1: { key: 'c', name: 'G3SG/1', img: 'https://i.postimg.cc/cCtDJstW/SNIPER3.png', dmg: 65, rate: 450, spreadCount: 1, spreadDeg: 0.0, range: 88, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3000, moveMul: 0.9 }
@@ -3843,6 +4230,14 @@ function buildTestMapData() {
   const setH = (x0, y0, x1, y1, h) => rect(x0, y0, x1, y1, (x, y) => { heights[y][x] = h; });
   const setF = (x0, y0, x1, y1, t) => rect(x0, y0, x1, y1, (x, y) => { floor[I(x, y)] = t; });
   const setC = (x0, y0, x1, y1, t) => rect(x0, y0, x1, y1, (x, y) => { ceil[I(x, y)] = t; });
+  // rampa lisa (steps = 0) ou escada de degraus finos (steps = N por tile). dir = sentido em que o piso SOBE.
+  // HEIGHTS guarda o nível inteiro (arredondado p/ cima) de cada tile: vale para teto, topo de parede e pathfinding.
+  const slopes = [];
+  const slope = (x0, y0, x1, y1, dir, lo, hi, steps) => {
+    slopes.push({ x0, y0, x1, y1, dir, lo, hi, steps: steps || 0 });
+    const horiz = dir[1] === 'x', sgn = dir[0] === '+' ? 1 : -1, L = horiz ? x1 - x0 + 1 : y1 - y0 + 1;
+    rect(x0, y0, x1, y1, (x, y) => { const pos = horiz ? x - x0 : y - y0, k = sgn > 0 ? pos : L - 1 - pos; heights[y][x] = Math.ceil(lo + (hi - lo) * (k + 1) / L - 1e-6); });
+  };
   // muro externo
   rect(0, 0, W - 1, H - 1, (x, y) => { if (grid[y][x] === 1) wall[I(x, y)] = 7; });
 
@@ -3865,8 +4260,20 @@ function buildTestMapData() {
 
   // ---------- ELEVAÇÃO (x 1..19, y 18..42) ----------
   setC(1, 18, 19, 42, 3);
-  [[1, 2, 0], [3, 4, 1], [5, 6, 2], [7, 8, 3], [9, 14, 4], [15, 16, 2], [17, 19, 0]].forEach(([a, b, h]) => setH(a, 19, b, 21, h));   // escada sobe e desce
-  [0, 1, 2, 3, 4, 5, 5, 4, 3, 2, 1].forEach((h, k) => setH(2, 24 + k, 5, 24 + k, h));                                                // rampa de torre (1 nível por tile)
+  // faixa y19..21 (da esquerda p/ direita): escada tradicional sobe (3 tiles x 3 degraus) → patamar → rampa lisa desce → plano → rampa curta e íngreme → patamar
+  slope(3, 19, 5, 21, '+x', 0, 3, 3);       // ESCADA (+x): 0 → 3 níveis, 9 degraus
+  setH(6, 19, 7, 21, 3);                      // patamar
+  slope(8, 19, 13, 21, '-x', 0, 3, 0);      // RAMPA LISA (desce p/ +x): 3 → 0 em 6 tiles
+  slope(16, 19, 17, 21, '+x', 0, 2, 0);     // RAMPA íngreme (+x): 0 → 2 em 2 tiles
+  setH(18, 19, 19, 21, 2);                    // patamar final
+  // torre: rampa lisa sobe ao longo de +y, plataforma, rampa lisa desce
+  slope(2, 24, 5, 28, '+y', 0, 5, 0);       // sobe 5 níveis em 5 tiles
+  setH(2, 29, 5, 30, 5);                      // plataforma da torre
+  slope(2, 31, 5, 35, '-y', 0, 5, 0);       // desce 5 → 0 em 5 tiles
+  // escada em +y (degraus finos) → patamar → rampa lisa em +y
+  slope(6, 24, 7, 26, '+y', 0, 3, 3);       // ESCADA (+y): 0 → 3 níveis
+  setH(6, 27, 7, 28, 3);                      // patamar
+  slope(6, 29, 7, 30, '-y', 0, 3, 0);       // RAMPA LISA (desce p/ +y): 3 → 0 em 2 tiles
   setH(8, 24, 13, 30, -1); setH(9, 25, 12, 29, -2); setH(10, 26, 11, 28, -3);                                                       // poço
   solid(17, 27, 17, 27, 2);                                                                                                         // espiral ao redor de um pilar
   [[16, 27, 1], [16, 26, 2], [17, 26, 3], [18, 26, 4], [18, 27, 5], [18, 28, 4], [17, 28, 3], [16, 28, 2]].forEach(([x, y, h]) => setH(x, y, x, y, h));
@@ -3875,6 +4282,7 @@ function buildTestMapData() {
   setH(2, 37, 9, 41, 1); setH(3, 38, 8, 40, 2); setH(4, 39, 7, 39, 3);                                                              // pirâmide
   setH(10, 37, 10, 41, 2); setH(11, 37, 11, 41, 3); setH(12, 33, 18, 41, 4);                                                        // platô alto (penhasco)
   rect(1, 18, 19, 42, (x, y) => { const h = heights[y][x]; if (h !== 0) floor[I(x, y)] = ({ '-3': 2, '-2': 2, '-1': 9, '1': 6, '2': 7, '3': 8, '4': 4, '5': 5 })[h]; });
+  slopes.forEach(sl => rect(sl.x0, sl.y0, sl.x1, sl.y1, (x, y) => { floor[I(x, y)] = sl.steps ? 7 : 4; }));   // escadas: madeira · rampas: piso 07
 
   // ---------- SKINS E ALVOS (x 21..37) ----------
   setF(21, 18, 37, 42, 5); setC(21, 18, 37, 42, 1);
@@ -3939,7 +4347,7 @@ function buildTestMapData() {
     { x0: poolB.x0, y0: poolB.y0, x1: poolB.x1, y1: poolB.y1, surf: -0.5, shallowRun: true }     // lagoa rasa: sons de correr na água
   ] };
   const soccer = { x0: sx0, x1: sx1, cy: scy, gy0, gy1, lineL: sx0, lineR: sx1, pitchY0: PY0, pitchY1: PY1 };
-  return { w: W, h: H, grid, heights, layout: { floor, wall, ceil, door, win, props, lights }, soccer, water };
+  return { w: W, h: H, grid, heights, slopes, layout: { floor, wall, ceil, door, win, props, lights }, soccer, water };
 }
 const TEST_MAP_DATA = buildTestMapData();
 
@@ -4048,10 +4456,79 @@ function scatterPillars(grid, w, h, count, opts = {}) {
 const HEIGHT_UNIT = 0.18;
 const MAX_CLIMB_LEVELS = 1;
 
+// ===== RAMPAS SUAVES E ESCADAS DE DEGRAUS FINOS =====
+// Por enquanto só o MAPA DE TESTES (debug) define `slopes`; os outros mapas seguem 100% como antes.
+// ldef.slopes = [{ x0,y0,x1,y1, dir:'+x'|'-x'|'+y'|'-y', lo, hi, steps }]
+//   · dir   = direção em que o piso SOBE; lo/hi = nível no pé e no topo da região inteira (em níveis de piso)
+//   · steps = 0 → rampa lisa (piso inclinado contínuo);  N > 0 → escada com N degraus por tile
+// Por tile guardamos: eixo/sentido (1:+x 2:-x 3:+y 4:-y), nível no pé/topo do tile e nº de degraus.
+let SLP_AX = null, SLP_LO = null, SLP_HI = null, SLP_N = null;
+
+// Rampas automáticas nos mapas antigos: toda borda reta (3+ tiles) em que o piso sobe exatamente 1 nível vira rampa lisa de 1 tile
+// (o nível de cada tile continua igual; só o piso deixa de ser degrau seco e passa a ser inclinado).
+function autoSlopes(ldef){
+  if (ldef._slopeAuto || ldef.slopes || ldef.isTestMap || ldef.fnafOnly || ldef.soccerOnly || ldef.layout || !ldef.heights) return;
+  ldef._slopeAuto = true;
+  const W = ldef.w, H = ldef.h, g = ldef.grid, hs = ldef.heights, used = new Uint8Array(W * H), out = [];
+  const ok = (x, y) => x >= 1 && y >= 1 && x < W - 1 && y < H - 1 && g[y][x] !== 1;
+  const hAt = (x, y) => (x >= 0 && y >= 0 && x < W && y < H) ? hs[y][x] : -99;
+  // [ox, oy] = sentido "para baixo" (de onde o piso desce); o piso sobe no sentido contrário
+  [[1, 0, '-x'], [-1, 0, '+x'], [0, 1, '-y'], [0, -1, '+y']].forEach(([ox, oy, dir]) => {
+    const edge = (x, y) => {
+      if (!ok(x, y) || used[y * W + x]) return -1;
+      const h = hAt(x, y);
+      if (h < 1 || !ok(x + ox, y + oy) || hAt(x + ox, y + oy) !== h - 1) return -1;
+      if (!ok(x - ox, y - oy) || hAt(x - ox, y - oy) !== h) return -1;
+      return h;
+    };
+    const px = oy !== 0 ? 1 : 0, py = ox !== 0 ? 1 : 0;   // eixo ao longo da borda
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      const h = edge(x, y); if (h < 0) continue;
+      let L = 1; while (edge(x + px * L, y + py * L) === h) L++;
+      if (L < 3) { x += px * (L - 1); continue; }
+      for (let k = 0; k < L; k++) used[(y + py * k) * W + (x + px * k)] = 1;
+      out.push({ x0: x, y0: y, x1: x + px * (L - 1), y1: y + py * (L - 1), dir, lo: h - 1, hi: h, steps: 0 });
+      x += px * (L - 1);
+    }
+  });
+  if (out.length) ldef.slopes = out;
+}
+let slopeHold = 0, slopeStairId = null;
+function buildSlopes(ldef){
+  SLP_AX = SLP_LO = SLP_HI = SLP_N = null; slopeHold = 0; slopeStairId = null;
+  if(!ldef.slopes || !ldef.slopes.length) return;
+  const n = ldef.w * ldef.h;
+  SLP_AX = new Uint8Array(n); SLP_LO = new Float32Array(n); SLP_HI = new Float32Array(n); SLP_N = new Uint8Array(n);
+  ldef.slopes.forEach(sl => {
+    const horiz = sl.dir[1] === 'x', sgn = sl.dir[0] === '+' ? 1 : -1;
+    const L = horiz ? sl.x1 - sl.x0 + 1 : sl.y1 - sl.y0 + 1;
+    for(let y = sl.y0; y <= sl.y1; y++) for(let x = sl.x0; x <= sl.x1; x++){
+      const pos = horiz ? x - sl.x0 : y - sl.y0, k = sgn > 0 ? pos : L - 1 - pos, i = y * ldef.w + x;
+      SLP_AX[i] = horiz ? (sgn > 0 ? 1 : 2) : (sgn > 0 ? 3 : 4);
+      SLP_LO[i] = sl.lo + (sl.hi - sl.lo) * k / L;
+      SLP_HI[i] = sl.lo + (sl.hi - sl.lo) * (k + 1) / L;
+      SLP_N[i] = sl.steps || 0;
+    }
+  });
+}
+// nível (fracionário) do piso no ponto (px,py) do tile ti — rampa lisa = linear; escada = degrau em que o ponto está
+function slopeLevelAt(ti, px, py){
+  const ax = SLP_AX[ti];
+  let u = ax <= 2 ? px - (ti % MAP_W) : py - ((ti / MAP_W) | 0);
+  if(ax === 2 || ax === 4) u = 1 - u;
+  u = u < 0 ? 0 : (u > 1 ? 1 : u);
+  const lo = SLP_LO[ti], hi = SLP_HI[ti], n = SLP_N[ti];
+  if(n > 0){ const k = Math.min(n - 1, Math.floor(u * n)); return lo + (hi - lo) * (k + 1) / n; }
+  return lo + (hi - lo) * u;
+}
 function heightAt(x, y) {
   const ix = Math.floor(x), iy = Math.floor(y);
   const row = HEIGHTS[iy];
   if (!row || row[ix] === undefined) return 0;
+  if (SLP_AX && ix >= 0 && ix < MAP_W && iy >= 0 && iy < MAP_H) {
+    const i = iy * MAP_W + ix;
+    if (SLP_AX[i]) return slopeLevelAt(i, x, y);
+  }
   return row[ix];
 }
 
@@ -4193,7 +4670,18 @@ function generateAbyssArena(size) {
       if (isBorder) { rowH.push(0); continue; }
 
       const dCenter = Math.max(Math.abs(x - c), Math.abs(y - c));
-      if (dCenter <= 2) { rowH.push(-1); continue; } // abismo central (declive)
+      // DE_CANALS: lagoa central (núcleo fundo -2 cercado por margem rasa -1) ...
+      if (dCenter <= 1) { rowH.push(-2); continue; }
+      if (dCenter <= 2) { rowH.push(-1); continue; }
+      // ... e 4 canais saindo da lagoa rumo às bordas (3 tiles: margens rasas e centro fundo), cada um cruzado
+      // por uma ponte seca (nível 0) de 2 tiles. Sobra uma faixa fina de 1 tile junto à parede.
+      const ax = Math.abs(x - c), ay = Math.abs(y - c), armEnd = Math.floor(size / 2) - 2;
+      const armX = ay <= 1 && ax >= 3 && ax <= armEnd, armY = ax <= 1 && ay >= 3 && ay <= armEnd;
+      if (armX || armY) {
+        const along = armX ? ax : ay, across = armX ? ay : ax;
+        rowH.push((along === 5 || along === 6) ? 0 : (across === 0 ? -2 : -1));
+        continue;
+      }
 
       const nearCornerX = x <= 4 || x >= size - 5;
       const nearCornerY = y <= 4 || y >= size - 5;
@@ -4217,6 +4705,8 @@ function generateAbyssArena(size) {
       { x: 2, y: size - 3, r: 4 }, { x: size - 3, y: size - 3, r: 4 }
     ]
   });
+  // pilar nunca fica dentro d'água (lagoa e canais)
+  for (let y = 1; y < size - 1; y++) for (let x = 1; x < size - 1; x++) if (grid[y][x] === 1 && heights[y][x] < 0) grid[y][x] = 0;
   return { grid, heights, w: size, h: size };
 }
 
@@ -4335,7 +4825,7 @@ function generateArchipelagoLevel(size) {
       } else {
         const bridgeX = (mx >= 4) && (my === 1 || my === 2);
         const bridgeY = (my >= 4) && (mx === 1 || mx === 2);
-        heights[y][x] = (bridgeX || bridgeY) ? 0 : -1;
+        heights[y][x] = (bridgeX || bridgeY) ? 0 : ((mx >= 4 && my >= 4) ? -2 : -1);   // lago raso (-1) com poça funda (-2) em cada cruzamento
       }
     }
   }
@@ -4731,12 +5221,16 @@ function aztecHeights() {
     if (x >= 4 && x <= 7 && y >= 17 && y <= 22) return 0;
     if (x >= 31 && x <= 35 && y >= 17 && y <= 22) return 0;
     if (x >= 16 && x <= 20 && y >= 17 && y <= 22) return 0;
-    if (x >= 2 && x <= 43 && y >= 17 && y <= 22) return -1;
+    if (x >= 2 && x <= 43 && y >= 17 && y <= 22) return (y === 17 || y === 22) ? -1 : -2;   // rio: margens rasas (-1) e leito fundo (-2) no meio
     return 0;
   });
 }
 
 // ===== ITALY (estilo Counter-Strike) — '#' = parede, '.' = chão =====
+// Praça central do Italy: a bacia em volta da fonte é rebaixada em 1 nível e vira água rasa (dá para vadear).
+function italyHeights() {
+  return dmFlatH(44, 36, (x, y) => (ITALY_ROWS[y][x] !== '#' && x >= 19 && x <= 24 && y >= 14 && y <= 19) ? -1 : 0);
+}
 const ITALY_ROWS = [
   "############################################",
   "############################################",
@@ -5103,7 +5597,7 @@ function overpassHeights() {
     if (x >= 36 && x <= 40 && y >= 4 && y <= 8) return 1;
     if (x >= 4 && x <= 16 && y >= 4 && y <= 16) return 1;
     if (x >= 19 && x <= 25 && y >= 24 && y <= 26) return 0;
-    if (x >= 19 && x <= 25 && y >= 18 && y <= 35) return -1;
+    if (x >= 19 && x <= 25 && y >= 18 && y <= 35) return (x === 19 || x === 25) ? -1 : -2;   // canal: margens rasas e calha funda no meio
     return 0;
   });
 }
@@ -5192,7 +5686,8 @@ const LEVEL_DEFINITIONS = [
     keyName: "lvl4", w: 46, h: 42, spawn: { x: 8.5, y: 6.5, angle: -Math.PI/2 },
     waveSpawnRadius: 18,
     grid: dmParseGrid(AZTEC_ROWS),
-    heights: aztecHeights()
+    heights: aztecHeights(),
+    water: { surf: -0.5, shallowRun: true }
   },
   { // 5 — Assault (estilo CS · Zombie Survival / Gun Game)
     keyName: "lvl5", w: 36, h: 36, spawn: { x: 18.5, y: 31.5, angle: -Math.PI/2 },
@@ -5209,7 +5704,9 @@ const LEVEL_DEFINITIONS = [
   { // 7 — Italy (estilo CS · Zombie Survival / Gun Game)
     keyName: "lvl7", w: 44, h: 36, spawn: { x: 36.5, y: 30.5, angle: -Math.PI/2 },
     waveSpawnRadius: 18,
-    grid: dmParseGrid(ITALY_ROWS)
+    grid: dmParseGrid(ITALY_ROWS),
+    heights: italyHeights(),
+    water: { surf: -0.5, shallowRun: true }
   },
   { // 8 — Office (estilo CS · Zombie Survival / Gun Game)
     keyName: "lvl8", w: 40, h: 30, spawn: { x: 4.5, y: 14.5, angle: -Math.PI/2 },
@@ -5232,17 +5729,24 @@ const LEVEL_DEFINITIONS = [
   })(),
   (function(){
     const lvl = generateAbyssArena(19);
-    return { keyName: "lvl12", w: lvl.w, h: lvl.h, spawn: { x: 3.0, y: 3.0, angle: Math.PI/4 }, grid: lvl.grid, heights: lvl.heights };
+    return { keyName: "lvl12", w: lvl.w, h: lvl.h, spawn: { x: 3.0, y: 3.0, angle: Math.PI/4 }, grid: lvl.grid, heights: lvl.heights, water: { surf: -0.5, shallowRun: true } };
   })(),
   (function(){
     const lvl = generateFortressLevel(22);
-    return { keyName: "lvl13", w: lvl.w, h: lvl.h, spawn: { x: 1.5, y: 1.5, angle: Math.PI/4 }, grid: lvl.grid };
+    // fosso de verdade: o anel entre a borda e a muralha é rebaixado 1 nível e vira água rasa; torres e pátio ficam secos
+    const n = lvl.w, hs = generateFlatHeights(n, n);
+    for (let y = 1; y < n - 1; y++) for (let x = 1; x < n - 1; x++) {
+      const inTower = (x <= 3 || x >= n - 4) && (y <= 3 || y >= n - 4);
+      if (lvl.grid[y][x] === 0 && Math.min(x, y, n - 1 - x, n - 1 - y) === 1 && !inTower) hs[y][x] = -1;
+    }
+    return { keyName: "lvl13", w: lvl.w, h: lvl.h, spawn: { x: 1.5, y: 1.5, angle: Math.PI/4 }, grid: lvl.grid, heights: hs, water: { surf: -0.5, shallowRun: true } };
   })(),
   { // 14 — Overpass (estilo CS · Zombie Survival / Gun Game)
     keyName: "lvl14", w: 44, h: 44, spawn: { x: 22.5, y: 38.5, angle: -Math.PI/2 },
     waveSpawnRadius: 18,
     grid: dmParseGrid(OVERPASS_ROWS),
-    heights: overpassHeights()
+    heights: overpassHeights(),
+    water: { surf: -0.5, shallowRun: true }
   },
   { // 15 — Vertigo (estilo CS · Zombie Survival / Gun Game)
     keyName: "lvl15", w: 40, h: 40, spawn: { x: 14.5, y: 34.5, angle: -Math.PI/2 },
@@ -5252,7 +5756,7 @@ const LEVEL_DEFINITIONS = [
   },
   (function(){
     const lvl = generateArchipelagoLevel(24);
-    return { keyName: "lvl16", w: lvl.w, h: lvl.h, spawn: { x: 2.5, y: 2.5, angle: Math.PI/4 }, grid: lvl.grid, heights: lvl.heights };
+    return { keyName: "lvl16", w: lvl.w, h: lvl.h, spawn: { x: 2.5, y: 2.5, angle: Math.PI/4 }, grid: lvl.grid, heights: lvl.heights, water: { surf: -0.5, shallowRun: true } };
   })(),
   (function(){
     const lvl = generateSniperRidgeLevel(26, 13);
@@ -5615,12 +6119,15 @@ const LEVEL_DEFINITIONS = [
     keyName: "lvl42", dmOnly: true, w: 46, h: 42, spawn: { x: 8.5, y: 6.5, angle: -Math.PI/2 },
     dmZones: { T: {x0:4,y0:4,x1:13,y1:9}, CT: {x0:30,y0:26,x1:42,y1:36} },
     grid: dmParseGrid(AZTEC_ROWS),
-    heights: aztecHeights()
+    heights: aztecHeights(),
+    water: { surf: -0.5, shallowRun: true }
   },
   { // 43 — Italy (estilo CS · Deathmatch)
     keyName: "lvl43", dmOnly: true, w: 44, h: 36, spawn: { x: 36.5, y: 30.5, angle: -Math.PI/2 },
     dmZones: { T: {x0:34,y0:30,x1:40,y1:32}, CT: {x0:3,y0:3,x1:8,y1:5} },
-    grid: dmParseGrid(ITALY_ROWS)
+    grid: dmParseGrid(ITALY_ROWS),
+    heights: italyHeights(),
+    water: { surf: -0.5, shallowRun: true }
   },
   { // 44 — Office (estilo CS · Deathmatch)
     keyName: "lvl44", dmOnly: true, w: 40, h: 30, spawn: { x: 4.5, y: 14.5, angle: -Math.PI/2 },
@@ -5649,7 +6156,8 @@ const LEVEL_DEFINITIONS = [
     keyName: "lvl48", dmOnly: true, w: 44, h: 44, spawn: { x: 22.5, y: 38.5, angle: -Math.PI/2 },
     dmZones: { T: {x0:13,y0:37,x1:31,y1:40}, CT: {x0:19,y0:4,x1:25,y1:8} },
     grid: dmParseGrid(OVERPASS_ROWS),
-    heights: overpassHeights()
+    heights: overpassHeights(),
+    water: { surf: -0.5, shallowRun: true }
   },
   { // 49 — HR: BANK (Hostage Rescue)
     keyName: "lvl49", hrOnly: true, w: 40, h: 26, spawn: { x: 34.5, y: 21.5, angle: 0 },
@@ -5939,7 +6447,9 @@ const LEVEL_DEFINITIONS = [
     keyName: "lvl57", hrOnly: true, w: 44, h: 36, spawn: { x: 37.5, y: 16.5, angle: 0 },
     dmZones: { T: {x0:36,y0:14,x1:41,y1:17}, CT: {x0:3,y0:2,x1:8,y1:4} },
     hrZones: { H: {x0:28,y0:9,x1:34,y1:12}, R: {x0:9,y0:2,x1:14,y1:4} },
-    grid: dmParseGrid(ITALY_ROWS)
+    grid: dmParseGrid(ITALY_ROWS),
+    heights: italyHeights(),
+    water: { surf: -0.5, shallowRun: true }
   },
   { // 58 — HR: OFFICE (Hostage Rescue)
     keyName: "lvl58", hrOnly: true, w: 40, h: 30, spawn: { x: 2.5, y: 15.5, angle: 0 },
@@ -5961,6 +6471,7 @@ const LEVEL_DEFINITIONS = [
     heights: TEST_MAP_DATA.heights,
     soccer: TEST_MAP_DATA.soccer,
     water: TEST_MAP_DATA.water,
+    slopes: TEST_MAP_DATA.slopes,
     testLayout: TEST_MAP_DATA.layout
   }
 ];
@@ -6301,34 +6812,36 @@ LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0,
 );
 
 // ===== MAPA EXCLUSIVO DO MODO FNAF DOOM: Freddy Fazbear's Pizza =====
+// Layout FECHADO com paredes finas: cortinas no palco (passagem de 4 tiles), Pirate Cove com porta de 2 tiles, banheiro com porta,
+// mesas finas no salão, almoxarifados nos cantos do corredor e balcões no backstage e na cozinha. Posições de nós, spawns e itens não mudaram.
 // Palco (animatronics), salão, Pirate Cove (Foxy), banheiros, backstage, cozinha, corredores oeste/leste
 // e a sala de segurança com as duas portas. Só aparece na seleção de mapas do modo FNAF Doom.
 const FNAF_ROWS = [
   "############################################",
   "############################################",
+  "############..#..............#..############",
+  "############..#..............#..############",
+  "############..#..............#..############",
+  "############..#..............#..############",
   "############....................############",
-  "############....................############",
-  "############....................############",
-  "############....................############",
-  "############....................############",
-  "##################........##################",
+  "####################....####################",
   "##.....##..........................#......##",
   "##.....##..........................#......##",
-  "##..........#..................#........#.##",
+  "##..........#.####........####.#...#....#.##",
   "##...................##...................##",
-  "##......................................#.##",
+  "#####..##...............................#.##",
   "##.....##..........................#......##",
   "##.....##...#........##........#...#......##",
-  "#########..........................#########",
-  "#########..........................#########",
+  "#########.....#..............#.....#########",
+  "#########.....#..............#.....#########",
   "###############...########...###############",
   "###############...########...###############",
   "###############...########...###############",
   "######........#...########...#........######",
-  "######........#...########...#........######",
+  "######.....####...########...####.....######",
   "######...#........########........#...######",
   "######............########............######",
-  "######...#....#...########...#....#...######",
+  "##########....#...########...#..####..######",
   "######........#...########...#........######",
   "######........#...########...#........######",
   "###############...#......#...###############",
@@ -6347,8 +6860,8 @@ LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, { // 74 — FNAF_PIZZE
     doors: { W: { x: 18, y: 29 }, E: { x: 25, y: 29 } },
     windows: [ { x: 18, y: 28 }, { x: 18, y: 30 }, { x: 25, y: 28 }, { x: 25, y: 30 } ],   // vidro: dá para ver o corredor e atirar através
     buttons: [
-      { kind: 'door',  side: 'W', x: 19.2, y: 27.5 }, { kind: 'light', side: 'W', x: 19.2, y: 31.5 },
-      { kind: 'door',  side: 'E', x: 24.8, y: 27.5 }, { kind: 'light', side: 'E', x: 24.8, y: 31.5 }
+      { kind: 'door',  side: 'W', x: 18.63, y: 27.5 }, { kind: 'light', side: 'W', x: 18.63, y: 31.5 },
+      { kind: 'door',  side: 'E', x: 25.37, y: 27.5 }, { kind: 'light', side: 'E', x: 25.37, y: 31.5 }
     ],
     lit: { W: { x0: 14, y0: 16, x1: 18, y1: 32 }, E: { x0: 25, y0: 16, x1: 29, y1: 32 } },
     nodes: {
@@ -6429,7 +6942,168 @@ for (let i = 18; i <= 37; i++) { if (LEVEL_DEFINITIONS[i]) LEVEL_DEFINITIONS[i].
   scatterPillars(ldef.grid, ldef.w, ldef.h, count, {
     avoidX: ldef.spawn.x, avoidY: ldef.spawn.y, avoidR: 3.5, minGap: 3
   });
+  // pilar solto nunca fica dentro d'água/poço (mapas com lago, fosso etc.)
+  if (ldef.heights) for (let y = 1; y < ldef.h - 1; y++) for (let x = 1; x < ldef.w - 1; x++)
+    if (ldef.grid[y][x] === 1 && ldef.heights[y][x] < 0) ldef.grid[y][x] = 0;
 });
+
+// ===== ESTREITAMENTO DOS MAPAS =====
+// Passada única, determinística (mesma semente = mesmo mapa sempre), aplicada depois que todos os mapas
+// foram montados. Faz dois ajustes na grade:
+//  1) Áreas abertas grandes demais (quadras vazias de 6x6 ou mais) ganham blocos de cobertura (2x2, 3x3, faixas 1x4...),
+//     deixando no máximo ~5 tiles de vão livre em qualquer ponto — os mapas ficam menos largos e com mais cobertura.
+//  2) ALGUNS corredores retos de 3, 4 ou 5 tiles de largura (não todos, e nunca de forma uniforme) ficam mais finos (2 ou 3 tiles).
+// Regras de segurança: nunca mexe perto de spawns/zonas T-CT/zonas de reféns, nunca em degraus/rampas/poços
+// (só em tiles planos no nível >= 0) e só aceita cada mudança se TODO o chão alcançável continuar conectado.
+function narrowRng(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function narrowLevel(ldef, seed) {
+  const W = ldef.w, H = ldef.h, g = ldef.grid, hs = ldef.heights, rnd = narrowRng(seed);
+  const stats = { blocks: 0, corridors: 0 };
+  const prot = new Uint8Array(W * H);
+  const markRect = (x0, y0, x1, y1, m) => {
+    for (let y = Math.max(0, y0 - m); y <= Math.min(H - 1, y1 + m); y++)
+      for (let x = Math.max(0, x0 - m); x <= Math.min(W - 1, x1 + m); x++) prot[y * W + x] = 1;
+  };
+  const sx0 = Math.floor(ldef.spawn.x), sy0 = Math.floor(ldef.spawn.y);
+  markRect(sx0, sy0, sx0, sy0, 3);
+  ['T', 'CT'].forEach(k => { const z = ldef.dmZones && ldef.dmZones[k]; if (z) markRect(z.x0, z.y0, z.x1, z.y1, 2); });
+  ['H', 'R'].forEach(k => { const z = ldef.hrZones && ldef.hrZones[k]; if (z) markRect(z.x0, z.y0, z.x1, z.y1, 2); });
+  const hAt = (x, y) => (hs && hs[y]) ? (hs[y][x] || 0) : 0;
+  // tile só vira parede se for plano (nível >= 0, vizinhos abertos no mesmo nível, longe de água/poços), livre e fora das zonas protegidas
+  const flat = (x, y) => {
+    if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
+    if (g[y][x] !== 0 || prot[y * W + x]) return false;
+    const h0 = hAt(x, y);
+    if (h0 < 0) return false;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+      if (g[y + dy][x + dx] === 0 && hAt(x + dx, y + dy) !== h0) return false;
+    // nada de bloco colado em água/poço (pontes, margens e bordas de declive ficam livres)
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      const xx = x + dx, yy = y + dy;
+      if (xx >= 0 && yy >= 0 && xx < W && yy < H && g[yy][xx] === 0 && hAt(xx, yy) < 0) return false;
+    }
+    return true;
+  };
+  // alcançabilidade a partir do spawn
+  let sx = sx0, sy = sy0;
+  if (!g[sy] || g[sy][sx] !== 0) { outer: for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (g[y][x] === 0) { sx = x; sy = y; break outer; } }
+  const reachMap = () => {
+    const seen = new Uint8Array(W * H), st = [sy * W + sx]; seen[st[0]] = 1; let n = 1;
+    while (st.length) {
+      const i = st.pop(), x = i % W, y = (i - x) / W;
+      const nb = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
+      for (let k = 0; k < 4; k++) {
+        const nx = nb[k][0], ny = nb[k][1];
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H || g[ny][nx] !== 0) continue;
+        const j = ny * W + nx; if (seen[j]) continue; seen[j] = 1; n++; st.push(j);
+      }
+    }
+    return { seen, n };
+  };
+  // tenta transformar uma lista de tiles em parede; desfaz se isolar qualquer pedaço do mapa
+  const tryWall = (tiles) => {
+    const before = reachMap();
+    let lost = 0;
+    tiles.forEach(([x, y]) => { if (before.seen[y * W + x]) lost++; });
+    tiles.forEach(([x, y]) => { g[y][x] = 1; });
+    const after = reachMap();
+    if (after.n !== before.n - lost) { tiles.forEach(([x, y]) => { g[y][x] = 0; }); return false; }
+    return true;
+  };
+
+  // --- 1) blocos de cobertura nas áreas largas demais ---
+  const SHAPES = [[2, 2, 3], [4, 1, 2], [1, 4, 2], [2, 4, 1], [4, 2, 1], [3, 3, 1], [6, 1, 2], [1, 6, 2], [8, 1, 1], [1, 8, 1]];   // as faixas longas (6/8) dividem ruas largas em dois corredores finos
+  const M = 2;
+  const maxBlocks = Math.max(2, Math.ceil(W * H / 30));
+  for (let guard = 0; guard < 500 && stats.blocks < maxBlocks; guard++) {
+    const ps = new Int32Array((W + 1) * (H + 1));
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++)
+      ps[(y + 1) * (W + 1) + x + 1] = (g[y][x] === 0 ? 1 : 0) + ps[y * (W + 1) + x + 1] + ps[(y + 1) * (W + 1) + x] - ps[y * (W + 1) + x];
+    const rectSum = (x0, y0, w, h) => ps[(y0 + h) * (W + 1) + x0 + w] - ps[y0 * (W + 1) + x0 + w] - ps[(y0 + h) * (W + 1) + x0] + ps[y0 * (W + 1) + x0];
+    const order = [];
+    SHAPES.forEach(s => { for (let k = 0; k < s[2]; k++) order.push(s); });
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
+    const tried = new Set(); let done = false;
+    for (const s of order) {
+      const key = s[0] + 'x' + s[1]; if (tried.has(key)) continue; tried.add(key);
+      const bw = s[0], bh = s[1], cands = [];
+      for (let y = M + 1; y + bh + M <= H - 1; y++) for (let x = M + 1; x + bw + M <= W - 1; x++) {
+        if (rectSum(x - M, y - M, bw + 2 * M, bh + 2 * M) !== (bw + 2 * M) * (bh + 2 * M)) continue;
+        let ok = true;
+        for (let yy = y; yy < y + bh && ok; yy++) for (let xx = x; xx < x + bw; xx++) if (!flat(xx, yy)) { ok = false; break; }
+        if (ok) cands.push([x, y]);
+      }
+      for (let tries = 0; tries < 6 && cands.length; tries++) {
+        const pick = cands.splice(Math.floor(rnd() * cands.length), 1)[0];
+        const tiles = [];
+        for (let yy = pick[1]; yy < pick[1] + bh; yy++) for (let xx = pick[0]; xx < pick[0] + bw; xx++) tiles.push([xx, yy]);
+        if (tryWall(tiles)) { stats.blocks++; done = true; break; }
+      }
+      if (done) break;
+    }
+    if (!done) break;
+  }
+
+  // --- 2) alguns corredores de 3-5 tiles ficam mais finos ---
+  const maxCorr = Math.max(2, Math.round(W * H / 260));
+  const taken = [];   // trechos já estreitados (para espaçar)
+  for (const horiz of [true, false]) {
+    const A = horiz ? W : H, B = horiz ? H : W;
+    const open = (a, b) => { const x = horiz ? a : b, y = horiz ? b : a; return x >= 0 && y >= 0 && x < W && y < H && g[y][x] === 0; };
+    const put = (a, b) => horiz ? [a, b] : [b, a];
+    for (const k of [3, 4, 5]) {
+      for (let b0 = 1; b0 + k < B; b0++) {
+        let a = 1;
+        while (a < A - 1) {
+          let a1 = a;
+          const colOk = (aa) => {
+            if (open(aa, b0 - 1)) return false;                       // lado de cima precisa ser parede
+            if (open(aa, b0 + k)) return false;                       // lado de baixo precisa ser parede
+            for (let bb = b0; bb < b0 + k; bb++) if (!open(aa, bb)) return false;
+            return true;
+          };
+          if (!colOk(a)) { a++; continue; }
+          while (a1 + 1 < A - 1 && colOk(a1 + 1)) a1++;
+          const len = a1 - a + 1;
+          if (len >= 7 && stats.corridors < maxCorr && rnd() < 0.6) {
+            const sub = Math.min(len - 2, 4 + Math.floor(rnd() * 4));
+            const s0 = a + 1 + Math.floor(rnd() * (len - 2 - sub + 1));
+            const near = taken.some(t => t.h === horiz && Math.abs(t.b - b0) < 8 && s0 < t.a1 + 6 && s0 + sub > t.a0 - 6);
+            if (!near) {
+              const top = rnd() < 0.5, rows = (k === 5 ? 2 : k - 2), tiles = [];
+              for (let r = 0; r < rows; r++) for (let aa = s0; aa < s0 + sub; aa++) tiles.push(put(aa, top ? b0 + r : b0 + k - 1 - r));
+              if (tiles.every(([x, y]) => flat(x, y)) && tryWall(tiles)) {
+                stats.corridors++; taken.push({ h: horiz, b: b0, a0: s0, a1: s0 + sub - 1 });
+              }
+            }
+          }
+          a = a1 + 2;
+        }
+      }
+    }
+  }
+  return stats;
+}
+function narrowAllLevels() {
+  const done = new Set();
+  LEVEL_DEFINITIONS.forEach((ldef, idx) => {
+    if (!ldef || !ldef.grid || ldef.isTestMap || ldef.fnafOnly || ldef.soccerOnly) return;
+    if (done.has(ldef.grid)) return;
+    done.add(ldef.grid);
+    ldef.narrowStats = narrowLevel(ldef, 7001 + idx * 131);
+  });
+}
+
+narrowAllLevels();
 
 let MAP = [];
 let MAP_W = 16, MAP_H = 16;
@@ -6441,6 +7115,273 @@ const LEVEL_DIFFICULTY = [2, 3, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 4, 3, 3, 4, 3, 2, 
 
 LEVEL_DIFFICULTY.splice(LEVEL_DIFFICULTY.length - 1, 0, 4);   // dificuldade do mapa FNAF_PIZZERIA
 LEVEL_DIFFICULTY.splice(LEVEL_DIFFICULTY.length - 1, 0, 2);   // dificuldade do ESTADIO_FUTEBOL
+
+
+
+// ===== MAPAS MISTOS: paredes finas · corredores estreitos · interior + exterior · telhados · rampas e água =====
+// nmBuild monta o mapa por código. Cada construção (house) tem paredes FINAS que se conectam sozinhas, teto só no interior
+// (ceilOn), janelas em todos os lados e telhado visível por fora (plano / duas águas / quatro águas). Rampas lisas, escadas
+// de degraus finos e água vêm do sistema de terreno novo. Texturas: pisos 0-12, paredes 0-10, tetos 0-5, telhados 0-7.
+function nmBuild(W, H, fn) {
+  const N = W * H, g = [], hs = [];
+  for (let y = 0; y < H; y++) { g.push(new Array(W).fill(0)); hs.push(new Array(W).fill(0)); }
+  const floor = new Uint8Array(N), wall = new Uint8Array(N).fill(9), ceil = new Uint8Array(N).fill(3);
+  const door = new Int8Array(N).fill(-1), win = new Uint8Array(N), thin = new Uint8Array(N), ceilOn = new Uint8Array(N);
+  const roofs = [], slopes = [], zones = [];
+  const I = (x, y) => y * W + x;
+  const rect = (x0, y0, x1, y1, f) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) f(x, y); };
+  const B = {
+    W, H, g, hs,
+    fl: (x0, y0, x1, y1, t) => rect(x0, y0, x1, y1, (x, y) => { floor[I(x, y)] = t; }),
+    cl: (x0, y0, x1, y1, t) => rect(x0, y0, x1, y1, (x, y) => { ceil[I(x, y)] = t; }),
+    h: (x0, y0, x1, y1, v) => rect(x0, y0, x1, y1, (x, y) => { hs[y][x] = v; }),
+    ring: wt => rect(0, 0, W - 1, H - 1, (x, y) => { if (x === 0 || y === 0 || x === W - 1 || y === H - 1) { g[y][x] = 1; wall[I(x, y)] = wt; } }),
+    block: (x0, y0, x1, y1, wt) => rect(x0, y0, x1, y1, (x, y) => { g[y][x] = 1; wall[I(x, y)] = wt; thin[I(x, y)] = 0; }),
+    // parede fina (linha ou retângulo de tiles); indoor = true dá teto aos tiles
+    thin: (x0, y0, x1, y1, wt, indoor) => rect(x0, y0, x1, y1, (x, y) => { g[y][x] = 1; thin[I(x, y)] = 16; wall[I(x, y)] = wt; if (indoor) ceilOn[I(x, y)] = 1; }),
+    gap: (x0, y0, x1, y1) => rect(x0, y0, x1, y1, (x, y) => { g[y][x] = 0; thin[I(x, y)] = 0; win[I(x, y)] = 0; }),
+    win: (x, y) => { if (g[y][x] === 1) win[I(x, y)] = 1; },
+    slope: (x0, y0, x1, y1, dir, lo, hi, steps, ft) => {
+      slopes.push({ x0, y0, x1, y1, dir, lo, hi, steps: steps || 0 });
+      const horiz = dir[1] === 'x', sgn = dir[0] === '+' ? 1 : -1, L = horiz ? x1 - x0 + 1 : y1 - y0 + 1;
+      rect(x0, y0, x1, y1, (x, y) => { const pos = horiz ? x - x0 : y - y0, k = sgn > 0 ? pos : L - 1 - pos; hs[y][x] = Math.ceil(lo + (hi - lo) * (k + 1) / L - 1e-6); floor[I(x, y)] = ft !== undefined ? ft : (steps ? 7 : 4); });
+    },
+    water: (x0, y0, x1, y1, surf, shallowRun) => zones.push({ x0, y0, x1, y1, surf: surf === undefined ? -0.5 : surf, shallowRun: shallowRun !== false }),
+    // construção: perímetro de parede fina, interior com teto, portas (aberturas), janelas a cada 3 tiles e telhado
+    house: (x0, y0, x1, y1, o) => {
+      o = o || {};
+      const wt = o.wall === undefined ? 1 : o.wall, ft = o.floor === undefined ? 7 : o.floor, ct = o.ceil === undefined ? 4 : o.ceil;
+      rect(x0, y0, x1, y1, (x, y) => {
+        const i = I(x, y), edge = x === x0 || x === x1 || y === y0 || y === y1;
+        ceilOn[i] = 1; ceil[i] = ct; floor[i] = ft;
+        if (edge) { g[y][x] = 1; thin[i] = 16; wall[i] = wt; } else { g[y][x] = 0; thin[i] = 0; }
+      });
+      const doors = o.doors || [];
+      doors.forEach(([x, y]) => { g[y][x] = 0; thin[I(x, y)] = 0; });
+      const nearDoor = (x, y) => doors.some(([dx, dy]) => Math.abs(dx - x) + Math.abs(dy - y) <= 1);
+      const wn = (x, y, k) => { if (g[y][x] === 1 && !nearDoor(x, y) && k % 3 === 1) win[I(x, y)] = 1; };
+      for (let x = x0 + 1; x < x1; x++) { wn(x, y0, x - x0); wn(x, y1, x - x0); }
+      for (let y = y0 + 1; y < y1; y++) { wn(x0, y, y - y0); wn(x1, y, y - y0); }
+      if (o.roof) roofs.push(Object.assign({ x0, y0, x1, y1, axis: (x1 - x0) >= (y1 - y0) ? 'x' : 'y', lv: o.lv || 0 }, o.roof, { pitch: (o.roof.pitch || 0.5) * 0.6 }));
+    }
+  };
+  fn(B);
+  // braços das paredes finas: cada tile fino se liga aos vizinhos sólidos (cantos em L, T e + saem sozinhos)
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (thin[I(x, y)] !== 16) continue;
+    let m = 16;
+    if (y > 0 && g[y - 1][x] === 1) m |= 1;
+    if (x < W - 1 && g[y][x + 1] === 1) m |= 2;
+    if (y < H - 1 && g[y + 1][x] === 1) m |= 4;
+    if (x > 0 && g[y][x - 1] === 1) m |= 8;
+    thin[I(x, y)] = m;
+  }
+  return { w: W, h: H, grid: g, heights: hs, slopes, water: zones.length ? { base: false, zones } : null, layout: { floor, wall, ceil, door, win, thin, ceilOn, roofs } };
+}
+
+// ---------- 1) VILA DOS TELHADOS: casas de telhado de duas/quatro águas, rio com ponte e vau, colina com rampa e escada ----------
+function nmVila() {
+  return nmBuild(46, 38, B => {
+    const W = B.W, H = B.H;
+    B.fl(1, 1, W - 2, H - 2, 0);
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if ((x * 5 + y * 11) % 7 === 0) B.fl(x, y, x, y, 1);   // grama variada
+    B.ring(9);
+    B.fl(22, 10, 23, 16, 9); B.fl(22, 20, 23, 36, 9);                                                                  // caminho de terra
+    // rio (y 17..19): bordas rasas (-1), centro fundo (-2), vau raso e ponte de madeira
+    B.h(1, 17, W - 2, 17, -1); B.h(1, 18, W - 2, 18, -2); B.h(1, 19, W - 2, 19, -1); B.fl(1, 17, W - 2, 19, 11);
+    B.h(9, 18, 13, 18, -1); B.fl(9, 17, 13, 19, 9);
+    B.h(22, 17, 23, 19, 0); B.fl(22, 17, 23, 19, 7);
+    B.water(1, 17, W - 2, 19, -0.5, true);
+    // casas ao norte
+    B.house(3, 3, 14, 11, { wall: 1, floor: 7, ceil: 0, roof: { kind: 'hip', tex: 0, pitch: 0.6 }, doors: [[8, 11], [3, 7]] });
+    B.thin(9, 4, 9, 10, 1, true); B.gap(9, 7, 9, 7);
+    B.house(18, 2, 29, 9, { wall: 3, floor: 8, ceil: 4, roof: { kind: 'gable', axis: 'x', tex: 3, pitch: 0.55 }, doors: [[23, 9], [29, 5]] });
+    B.thin(19, 5, 28, 5, 3, true); B.gap(23, 5, 23, 5);
+    B.house(34, 3, 43, 12, { wall: 9, floor: 7, ceil: 0, roof: { kind: 'gable', axis: 'y', tex: 5, pitch: 0.5 }, doors: [[34, 8], [38, 12]] });
+    B.thin(35, 7, 42, 7, 9, true); B.gap(38, 7, 38, 7); B.thin(39, 8, 39, 11, 9, true); B.gap(39, 10, 39, 10);
+    // colina ao sul-oeste: rampa lisa a oeste, escada ao norte, rampa lisa ao sul, plataforma no nível 3
+    B.h(5, 25, 11, 31, 3); B.fl(5, 25, 11, 31, 6);
+    B.slope(2, 26, 4, 30, '+x', 0, 3, 0);
+    B.slope(7, 22, 9, 24, '+y', 0, 3, 3);
+    B.slope(6, 32, 10, 34, '-y', 0, 3, 0);
+    B.block(13, 28, 13, 28, 9); B.block(14, 24, 14, 24, 9); B.block(14, 32, 14, 32, 9);
+    // casa pequena e casa grande a sudeste (corredores internos estreitos)
+    B.house(16, 24, 23, 31, { wall: 2, floor: 8, ceil: 0, roof: { kind: 'gable', axis: 'x', tex: 2, pitch: 0.5 }, doors: [[19, 24], [23, 28]] });
+    B.thin(20, 25, 20, 30, 2, true); B.gap(20, 28, 20, 28);
+    B.house(26, 22, 42, 34, { wall: 0, floor: 3, ceil: 5, roof: { kind: 'hip', tex: 6, pitch: 0.5 }, doors: [[26, 28], [34, 22], [42, 30]] });
+    B.thin(27, 26, 41, 26, 0, true); B.gap(29, 26, 29, 26); B.gap(35, 26, 35, 26); B.gap(40, 26, 40, 26);
+    B.thin(27, 29, 41, 29, 0, true); B.gap(34, 29, 34, 29); B.gap(40, 29, 40, 29);
+    B.thin(32, 23, 32, 25, 0, true); B.thin(38, 23, 38, 25, 0, true);
+    B.thin(31, 30, 31, 33, 0, true); B.thin(37, 30, 37, 33, 0, true);
+    B.gap(31, 32, 31, 32); B.gap(37, 31, 37, 31);
+    // cerca fina ao ar livre no sul
+    B.thin(15, 33, 24, 33, 8, false); B.gap(19, 33, 20, 33);
+  });
+}
+
+// ---------- 2) PORTO DOS BECOS: quarteirões densos, becos de 2 tiles, canal com pontes em arco, telhados variados ----------
+function nmPorto() {
+  return nmBuild(44, 34, B => {
+    const W = B.W, H = B.H;
+    B.fl(1, 1, W - 2, H - 2, 5); B.ring(3);
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if ((x * 3 + y * 5) % 6 === 0) B.fl(x, y, x, y, 4);
+    // canal vertical (x 20..23): bordas -1, centro -2 (fundo)
+    B.h(20, 1, 20, H - 2, -1); B.h(21, 1, 22, H - 2, -2); B.h(23, 1, 23, H - 2, -1); B.fl(20, 1, 23, H - 2, 9);
+    B.water(20, 1, 23, H - 2, -0.5, true);
+    // pontes em arco (sobem 1 nível) nos becos horizontais y=10..11 e y=20..21
+    [[10, 11], [20, 21]].forEach(([ya, yb]) => {
+      B.slope(20, ya, 20, yb, '+x', 0, 1, 0, 7); B.h(21, ya, 22, yb, 1); B.fl(21, ya, 22, yb, 7); B.slope(23, ya, 23, yb, '-x', 0, 1, 0, 7);
+    });
+    // quarteirões: 3 fileiras x (2 + 2) construções, portas viradas para os becos
+    const rows = [[2, 9], [12, 19], [22, 31]], cols = [[2, 9], [12, 18], [25, 31], [34, 41]];
+    let k = 0;
+    rows.forEach(([ya, yb], ri) => cols.forEach(([xa, xb], ci) => {
+      const mx = (xa + xb) >> 1, my = (ya + yb) >> 1, doors = [];
+      doors.push([mx, ri === 2 ? ya : yb]);                       // porta para o beco horizontal
+      doors.push([ci % 2 === 0 ? xb : xa, my]);                   // porta para o beco vertical
+      const kinds = ['gable', 'hip', 'flat', 'gable'];
+      const roof = { kind: kinds[(k + ri) % 4], axis: (xb - xa) >= (yb - ya) ? 'x' : 'y', tex: (k * 3 + ri) % 8, pitch: 0.45 + 0.05 * (k % 3) };
+      B.house(xa, ya, xb, yb, { wall: [0, 1, 2, 3, 9, 10][k % 6], floor: [7, 8, 3, 4][k % 4], ceil: [0, 3, 4, 5][(k + 1) % 4], roof, doors });
+      if (xb - xa >= 6) { B.thin(mx - 1, ya + 1, mx - 1, yb - 1, [0, 1, 2, 3, 9, 10][k % 6], true); B.gap(mx - 1, my, mx - 1, my); }   // divisória fina com passagem
+      k++;
+    }));
+    // caixotes (blocos) nos becos para cobertura
+    [[13, 10], [11, 21], [32, 11], [33, 20], [16, 11], [28, 21], [37, 21]].forEach(([x, y]) => B.block(x, y, x, y, 10));
+  });
+}
+
+// ---------- 3) MOSTEIRO DA COLINA: platô no nível 2 com 4 rampas lisas, mosteiro de telhado com corredor interno estreito, lago ----------
+function nmMosteiro() {
+  return nmBuild(44, 36, B => {
+    const W = B.W, H = B.H;
+    B.fl(1, 1, W - 2, H - 2, 0);
+    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if ((x * 7 + y * 3) % 8 === 0) B.fl(x, y, x, y, 10);
+    B.ring(2);
+    // platô (nível 2) com rampas lisas nos quatro lados; o resto da borda é penhasco
+    B.h(14, 10, 29, 25, 2); B.fl(14, 10, 29, 25, 5);
+    B.slope(10, 16, 13, 19, '+x', 0, 2, 0, 4);
+    B.slope(30, 16, 33, 19, '-x', 0, 2, 0, 4);
+    B.slope(20, 6, 23, 9, '+y', 0, 2, 0, 4);
+    B.slope(20, 26, 23, 29, '-y', 0, 2, 3, 7);          // escada de degraus finos ao sul
+    // mosteiro no platô (piso nível 2): hall central + corredor interno de 2 tiles em volta da câmara
+    B.house(17, 13, 26, 22, { wall: 1, floor: 8, ceil: 0, lv: 2, roof: { kind: 'hip', tex: 7, pitch: 0.6 }, doors: [[21, 13], [22, 13], [21, 22], [22, 22], [17, 17], [17, 18], [26, 17], [26, 18]] });
+    B.thin(20, 16, 23, 19, 1, true); B.gap(21, 16, 22, 16); B.gap(21, 19, 22, 19); B.gap(20, 17, 20, 18); B.gap(23, 17, 23, 18);
+    B.h(17, 13, 26, 22, 2);
+    // lago a sudoeste (rasa nas bordas, funda no meio)
+    B.h(2, 24, 9, 33, -1); B.h(3, 25, 8, 32, -1); B.h(4, 26, 7, 31, -2); B.fl(2, 24, 9, 33, 9);
+    B.water(2, 24, 9, 33, -0.5, true);
+    // construções ao redor
+    B.house(3, 3, 10, 10, { wall: 3, floor: 7, ceil: 4, roof: { kind: 'gable', axis: 'x', tex: 2, pitch: 0.5 }, doors: [[7, 10], [10, 7]] });
+    B.house(34, 3, 41, 10, { wall: 9, floor: 8, ceil: 0, roof: { kind: 'gable', axis: 'y', tex: 4, pitch: 0.55 }, doors: [[37, 10], [34, 7]] });
+    B.house(34, 26, 41, 33, { wall: 2, floor: 3, ceil: 5, roof: { kind: 'hip', tex: 1, pitch: 0.5 }, doors: [[37, 26], [34, 30]] });
+    B.thin(14, 29, 19, 29, 8, false); B.gap(16, 29, 16, 29);                      // cerca fina
+    B.thin(26, 29, 31, 29, 8, false); B.gap(28, 29, 28, 29);
+  });
+}
+
+// registro: cada mapa existe em duas versões (Zombie Survival / Gun Game e Deathmatch / CTF / Gun Game vs bots)
+(function nmRegisterMixed(){
+  const defs = [
+    { fn: nmVila,     key: 76, nameKey: 'DE_VILLAGE',  sky: 1, spawn: { x: 22.5, y: 14.5, angle: Math.PI / 2 }, T: {x0:20,y0:12,x1:25,y1:15}, CT: {x0:20,y0:34,x1:25,y1:36}, diff: 3 },
+    { fn: nmPorto,    key: 78, nameKey: 'MP_DOCKYARD',    sky: 7, spawn: { x: 10.5, y: 10.5, angle: 0 },            T: {x0:2,y0:10,x1:8,y1:11},    CT: {x0:35,y0:10,x1:41,y1:11}, diff: 4 },
+    { fn: nmMosteiro, key: 80, nameKey: 'CS_MONASTERY',sky: 6, spawn: { x: 21.5, y: 32.5, angle: -Math.PI / 2 }, T: {x0:18,y0:31,x1:25,y1:34}, CT: {x0:18,y0:2,x1:25,y1:4},   diff: 3 }
+  ];
+  defs.forEach(d => {
+    [false, true].forEach(isDm => {
+      const m = d.fn();
+      const ldef = { keyName: 'lvl' + (d.key + (isDm ? 1 : 0)), w: m.w, h: m.h, grid: m.grid, heights: m.heights, slopes: m.slopes, water: m.water, layout: m.layout,
+        noCeiling: true, sky: d.sky, spawn: d.spawn };
+      if (isDm) { ldef.dmOnly = true; ldef.dmZones = { T: d.T, CT: d.CT }; }
+      LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, ldef);
+      LEVEL_THEMES[LEVEL_DEFINITIONS.length - 2] = STYLES.PARK;
+      LEVEL_DIFFICULTY.splice(LEVEL_DIFFICULTY.length - 1, 0, d.diff);
+    });
+  });
+})();
+
+
+// ===== MAPAS EM ASCII (estilo Counter-Strike / Call of Duty) — arenas 18–37 refeitas com o terreno novo =====
+// Legenda: # parede (vira lâmina fina) · b caixote/coluna · . chão ao ar livre · , chão INTERIOR (teto + telhado por fora) · d porta/passagem
+//          = água rasa · ~ água funda · `hr` = nível do piso (0-9; rampas lisas nascem sozinhas). Mapas sem "," são totalmente fechados (teto em tudo).
+// Cada mapa tem categoria (st) que escolhe as texturas: PARK, INDUSTRIAL, URBAN, HOUSE ou METRO.
+const NM_ASCII_MAPS = [
+  { i: 18, st: 'URBAN', rows: ["##################################", "#...........#..=~~=..#...........#", "#..#######..#..=~~=..#..#######..#", "#..#,,#,,#.....=~~=.....#,,#,,#..#", "#..#,,#,,#.bb..=~~=..bb.#,,#,,#..#", "#..#,,d,,d..............d,,d,,#..#", "#..#,,#,,#..............#,,#,,#..#", "#..#,,#,,#.....=~~=.....#,,#,,#..#", "#..###d###.....=~~=.....###d###..#", "#..........####=~~=####..........#", "#..........#,,#=~~=#,,#..........#", "#....bb....d,,#=~~=#,,d....bb....#", "#....bb....#,,d=~~=d,,#....bb....#", "#..........#,,#=~~=#,,#..........#", "#..........####=~~=####..........#", "#..###d###.....=~~=.....###d###..#", "#..#,,#,,#.....=~~=.....#,,#,,#..#", "#..#,,#,,#..............#,,#,,#..#", "#..#,,d,,d..............d,,d,,#..#", "#..#,,#,,#.bb..=~~=..bb.#,,#,,#..#", "#..#,,#,,#.....=~~=.....#,,#,,#..#", "#..#######..#..=~~=..#..#######..#", "#...........#..=~~=..#...........#", "##################################"], T: [1,9,2,14], CT: [31,9,32,14] },
+  { i: 19, st: 'METRO', rows: ["################################", "#............#....#............#", "#............#....#............#", "#.b...........b..b...........b.#", "#...########........########...#", "#..............................#", "#...#....b............b....#...#", "#...#......................#...#", "#...#..##################..#...#", "#...#......................#...#", "#..............................#", "#......##################......#", "#...#......................#...#", "#...#....b............b....#...#", "#...#......................#...#", "#...########........########...#", "#.b...........b..b...........b.#", "#............#....#............#", "#............#....#............#", "################################"], T: [1,8,2,11], CT: [29,8,30,11] },
+  { i: 20, st: 'URBAN', rows: ["##############################", "#.....#................#.....#", "#.....#....b......b....#.....#", "#.....#................#.....#", "#.....#..#####..#####..#.....#", "#.....#..#..........#..#.....#", "#........#..........#........#", "#######..#..........#..#######", "#........#..######..#........#", "#........#..######..#........#", "#....b...#..........#...b....#", "#....b..................b....#", "#........#..######..#........#", "#........#..######..#........#", "#######..#..........#..#######", "#........#..........#........#", "#.....#..#..........#..#.....#", "#.....#..#####..#####..#.....#", "#.....#................#.....#", "#.....#....b......b....#.....#", "#.....#................#.....#", "##############################"], T: [1,9,3,12], CT: [26,9,28,12] },
+  { i: 21, st: 'HOUSE', rows: ["################################", "#..............................#", "#..............................#", "#...#########..bb..#########...#", "#...#,,,#,,,#......#,,,#,,,#...#", "#...#,,,#,,,#......#,,,#,,,#...#", "#...#,,,d,,,#.#..#.#,,,d,,,#...#", "#...#,,,#,,,d.#..#.d,,,#,,,#...#", "#...#,,,,,,,#.#..#.#,,,,,,,#...#", "#...#,,,,,,,#.#..#.#,,,,,,,#...#", "#...#,,,,,,,#......#,,,,,,,#...#", "#..b####d####.b..b.####d####b..#", "#..b..........b..b..........b..#", "#..............................#", "#...####d####.#..#.####d####...#", "#...#,,,,,,,#.#..#.#,,,,,,,#...#", "#...#,,,,,,,#.#..#.#,,,,,,,#...#", "#...#,,##d###.#..#.###d##,,#...#", "#...#,,,,,,,d......d,,,,,,,#...#", "#...#,,,,,,,#......#,,,,,,,#...#", "#...#,,,,,,,#..bb..#,,,,,,,#...#", "#...#########......#########...#", "#..............................#", "################################"], T: [1,9,2,14], CT: [29,9,30,14] },
+  { i: 22, st: 'INDUSTRIAL', rows: ["##################################", "#................................#", "#........b..............b........#", "#..........#..b....b..#..........#", "#...#####..#..........#..#####...#", "#...#####..#..........#..#####...#", "#..........#..........#..........#", "#..........#..........#..........#", "###..........########..........###", "#............#,,##,,#............#", "#..b...b.....d,,##,,d.....b...b..#", "#..b...b.....#,,dd,,#.....b...b..#", "#............#,,##,,#............#", "###..........########..........###", "#..........#..........#..........#", "#..........#..........#..........#", "#...#####..#..........#..#####...#", "#...#####..#..........#..#####...#", "#..........#..b....b..#..........#", "#........b..............b........#", "#................................#", "##################################"], T: [1,9,2,12], CT: [31,9,32,12] },
+  { i: 23, st: 'URBAN', rows: ["##############################", "#............................#", "#.#######..########..#######.#", "#.#,,,,,#..#,,##,,#..#,,,,,#.#", "#.#,,,,,#..#,,##,,#..#,,,,,#.#", "#.#,,,,,d..d,,##,,d..d,,,,,#.#", "#.#,,,,,#..#,,##,,#..#,,,,,#.#", "#.#,,,,,#..#,,##,,#..#,,,,,#.#", "#.###d###..###dd###..###d###.#", "#............................#", "#........b..........b........#", "####..b.....b....b.....b..####", "####...b....b....b....b...####", "#........b..........b........#", "#............................#", "#.###d###..###dd###..###d###.#", "#.#,,,,,#..#,,##,,#..#,,,,,#.#", "#.#,,,,,#..#,,##,,#..#,,,,,#.#", "#.#,,,,,d..d,,##,,d..d,,,,,#.#", "#.#,,,,,#..#,,##,,#..#,,,,,#.#", "#.#,,,,,#..#,,##,,#..#,,,,,#.#", "#.#######..########..#######.#", "#............................#", "##############################"], T: [1,9,1,10], CT: [28,9,28,10] },
+  { i: 24, st: 'PARK', rows: ["################################", "#..............................#", "#..............................#", "#..............................#", "#...b......................b...#", "#..............................#", "#..............................#", "#.b......##############......b.#", "#........#,,#,,##,,#,,#........#", "####.....#,,#,,##,,#,,#.....####", "#........#,,#,,##,,#,,#........#", "#.....b..d,,d,,dd,,d,,d..b.....#", "#.....b..d,,d,,dd,,d,,d..b.....#", "#........#,,#,,##,,#,,#........#", "####.....#,,#,,##,,#,,#.....####", "#........#,,#,,##,,#,,#........#", "#.b......##############......b.#", "#..............................#", "#..............................#", "#...b......................b...#", "#..............................#", "#..............................#", "#..............................#", "################################"], hr: ["00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000111111111111111100000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000"], T: [1,10,2,13], CT: [29,10,30,13] },
+  { i: 25, st: 'METRO', rows: ["################################", "#..............##..............#", "#..............##..............#", "#..............##..............#", "#....#...#...#.##.#...#...#....#", "#..............##..............#", "#.##...b...b........b...b...##.#", "#..............................#", "#....#...#...#....#...#...#....#", "#..............................#", "#..............................#", "#....#...#...#....#...#...#....#", "#..............................#", "#.##...b...b........b...b...##.#", "#..............##..............#", "#....#...#...#.##.#...#...#....#", "#..............##..............#", "#..............##..............#", "#..............##..............#", "################################"], T: [1,8,2,11], CT: [29,8,30,11] },
+  { i: 26, st: 'INDUSTRIAL', rows: ["####################################", "#..................................#", "#..................................#", "#...#######..b........b..#######...#", "#...#,,,,,#..............#,,,,,#...#", "#...#,,,,,#..............#,,,,,#...#", "#...#,,,,,d.b..........b.d,,,,,#...#", "###.#,,,,,#..............#,,,,,#.###", "#...###d###..............###d###...#", "#.............########.............#", "#..b..........d,,##,,d..........b..#", "#..b..........#,,dd,,#..........b..#", "#.............########.............#", "#..................................#", "###.###d###..............###d###.###", "#...#,,,,,#.b..........b.#,,,,,#...#", "#...#,,,,,d..............d,,,,,#...#", "#...#,,,,,#..............#,,,,,#...#", "#...#,,,,,#..b........b..#,,,,,#...#", "#...#######..............#######...#", "#..................................#", "####################################"], T: [1,8,2,13], CT: [33,8,34,13] },
+  { i: 27, st: 'INDUSTRIAL', rows: ["##############################", "#............................#", "#............................#", "######......b....b......######", "#....#...#..........#...#....#", "#....d...#..........#...d....#", "#........#..........#........#", "#....#...#..........#...#....#", "######...#..........#...######", "#........#..........#........#", "#............................#", "#......b...###..###...b......#", "#......b...###..###...b......#", "#............................#", "#........#..........#........#", "######...#..........#...######", "#....#...#..........#...#....#", "#....d...#..........#...d....#", "#........#..........#........#", "#....#...#..........#...#....#", "######......b....b......######", "#............................#", "#............................#", "##############################"], T: [1,10,3,13], CT: [26,10,28,13] },
+  { i: 28, st: 'URBAN', rows: ["################################", "#..............................#", "#..#####................#####..#", "#..#,,,#.......bb.......#,,,#..#", "#..#,,,#.#####....#####.#,,,#..#", "#..#,,,#.#,,,#....#,,,#.#,,,#..#", "#..#,,,#.#,,,#....#,,,#.#,,,#..#", "#..##d##.d,,,d....d,,,d.##d##..#", "#........#,,,#....#,,,#........#", "#........#####....#####........#", "#..............................#", "#.b.....b..............b.....b.#", "#.b.....b..............b.....b.#", "#..............................#", "#........##d##....##d##........#", "#..##d##.#,,,#....#,,,#.##d##..#", "#..#,,,#.d,,,#....#,,,d.#,,,#..#", "#..#,,,#.#,,,#....#,,,#.#,,,#..#", "#..#,,,#.#,,,#....#,,,#.#,,,#..#", "#..#,,,#.#####....#####.#,,,#..#", "#..#,,,#.......bb.......#,,,#..#", "#..#####................#####..#", "#..............................#", "################################"], hr: ["00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000001111111111110000000000", "00000000001111111111110000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000"], T: [1,9,1,14], CT: [30,9,30,14] },
+  { i: 29, st: 'URBAN', rows: ["##############################", "#............................#", "#............................#", "#..######..#......#..######..#", "#..#,,,,#..#......#..#,,,,#..#", "#..#,,,,#..#.b..b.#..#,,,,#..#", "#..#,,,,d............d,,,,#..#", "#..#,,,,#............#,,,,#..#", "#..##d###............###d##..#", "#............................#", "#..b......................b..#", "#..b......................b..#", "#............................#", "#..####................####..#", "#............................#", "#..##d###.b........b.###d##..#", "#..#,,,,#.b........b.#,,,,#..#", "#..#,,,,d....b..b....d,,,,#..#", "#..#,,,,#............#,,,,#..#", "#..######............######..#", "#............................#", "##############################"], hr: ["000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000011111111110000000000", "000000000011111111110000000000", "000000000011111111110000000000", "000000000011111111110000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000"], T: [1,9,2,12], CT: [27,9,28,12] },
+  { i: 30, out: 1, st: 'INDUSTRIAL', rows: ["##############################", "#............................#", "#............................#", "#.b.######..........######.b.#", "#............................#", "#............................#", "#.......######..######.......#", "#...#....................#...#", "#...#....................#...#", "#...#...###.b....b.###...#...#", "#...#...###.b....b.###...#...#", "#...#....................#...#", "#...#....................#...#", "#.......######..######.......#", "#............................#", "#............................#", "#.b.######..........######.b.#", "#............................#", "#............................#", "##############################"], T: [1,8,2,11], CT: [27,8,28,11] },
+  { i: 31, st: 'HOUSE', rows: ["################################", "#..............................#", "#..............................#", "#.....b..................b.....#", "#.b..........................b.#", "#.......###d########d###.......#", "#.......#,,#,,,##,,,#,,#.......#", "#.......#,,#,,,##,,,#,,#.......#", "#.......#,,#,,,##,,,#,,#.......#", "#..===..#,,d,,,##,,,d,,#..===..#", "#..===..#,,#,,,##,,,#,,#..===..#", "#..===..#,,#,,,##,,,#,,#..===..#", "#..===..d,,,,,,dd,,,,,,d..===..#", "#..===..d,,,,,,dd,,,,,,d..===..#", "#..===..#,,#,,,##,,,#,,#..===..#", "#..===..#,,#,,,##,,,#,,#..===..#", "#..===..#,,d,,,##,,,d,,#..===..#", "#.......#,,#,,,##,,,#,,#.......#", "#.......#,,#,,,##,,,#,,#.......#", "#.......#,,#,,,##,,,#,,#.......#", "#.......###d########d###.......#", "#.b..........................b.#", "#.....b..................b.....#", "#..............................#", "#..............................#", "################################"], T: [1,11,1,14], CT: [30,11,30,14] },
+  { i: 32, st: 'METRO', rows: ["####################################", "#..#.....#.....#....#.....#.....#..#", "#..#.....#.....#....#.....#.....#..#", "#..................................#", "#..................................#", "#.....#.....#..........#.....#.....#", "#.....#.....#..........#.....#.....#", "#..................................#", "#..................................#", "#.....#.....#..........#.....#.....#", "#.....#.....#..........#.....#.....#", "#..................................#", "#..................................#", "#..#.....#.....#....#.....#.....#..#", "#..#.....#.....#....#.....#.....#..#", "####################################"], hr: ["000000000000000000000000000000000000", "011111111111111111111111111111111110", "011111111111111111111111111111111110", "011111111111111111111111111111111110", "000000000000000000000000000000000000", "000000000000000000000000000000000000", "000000000000000000000000000000000000", "000000000000000000000000000000000000", "000000000000000000000000000000000000", "000000000000000000000000000000000000", "000000000000000000000000000000000000", "000000000000000000000000000000000000", "011111111111111111111111111111111110", "011111111111111111111111111111111110", "011111111111111111111111111111111110", "000000000000000000000000000000000000"], T: [1,6,2,9], CT: [33,6,34,9] },
+  { i: 33, st: 'PARK', rows: ["################################", "#..............................#", "#..............................#", "#..............................#", "#...b......................b...#", "#..............................#", "#.....#####..........#####.....#", "#.........#..........#.........#", "#.........#..........#.........#", "#....==...############...==....#", "#....==...##,,,##,,,##...==....#", "#....==....#,,,##,,,#....==....#", "#..b.==b...d,,,dd,,,d...b==.b..#", "#..b.==b...d,,,dd,,,d...b==.b..#", "#....==....#,,,##,,,#....==....#", "#....==...##,,,##,,,##...==....#", "#....==...############...==....#", "#.........#..........#.........#", "#.........#..........#.........#", "#.....#####..........#####.....#", "#..............................#", "#...b......................b...#", "#..............................#", "#..............................#", "#..............................#", "################################"], hr: ["00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000011100111000000000000", "00000000000011100111000000000000", "00000000000011100111000000000000", "00000000000011100111000000000000", "00000000000011100111000000000000", "00000000000011100111000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000", "00000000000000000000000000000000"], T: [1,11,2,14], CT: [29,11,30,14] },
+  { i: 34, st: 'INDUSTRIAL', rows: ["################################", "#.....#..................#.....#", "#.....#..................#.....#", "#.....#..................#.....#", "#.....d..................d.....#", "#.....#..##d##....##d##..#.....#", "#.....#..................#.....#", "#..............................#", "##d##....#...b....b...#....##d##", "#........#............#........#", "#........#............#........#", "#........#............#........#", "#........#............#........#", "##d##....#...b....b...#....##d##", "#..............................#", "#.....#..................#.....#", "#.....#..##d##....##d##..#.....#", "#.....d..................d.....#", "#.....#..................#.....#", "#.....#..................#.....#", "#.....#..................#.....#", "################################"], T: [1,9,2,12], CT: [29,9,30,12] },
+  { i: 35, out: 1, st: 'PARK', rows: ["##############################", "#............................#", "#............................#", "#..........b......b..........#", "#...#...#............#...#...#", "#...#...#............#...#...#", "#............................#", "#............................#", "#............................#", "#..b......................b..#", "#............................#", "#............................#", "#.....b................b.....#", "#.....b................b.....#", "#............................#", "#............................#", "#..b......................b..#", "#............................#", "#............................#", "#............................#", "#...#...#............#...#...#", "#...#...#............#...#...#", "#..........b......b..........#", "#............................#", "#............................#", "##############################"], hr: ["000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000001111111111111100000000", "000000001111111111111100000000", "000000001122222222221100000000", "000000001122222222221100000000", "000000001122222222221100000000", "000000001122222222221100000000", "000000001122222222221100000000", "000000001122222222221100000000", "000000001111111111111100000000", "000000001111111111111100000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000", "000000000000000000000000000000"], T: [1,11,2,14], CT: [27,11,28,14] },
+  { i: 36, st: 'INDUSTRIAL', rows: ["################################", "#..............................#", "#..............................#", "#...#####.....b..b.....#####...#", "#...#,,,#..............#,,,#...#", "#...#,,,d..b........b..d,,,#...#", "#...#,,,#..............#,,,#...#", "#...##d##..............##d##...#", "#..........###....###..........#", "#..b........................b..#", "#..b........................b..#", "#..........###....###..........#", "#...##d##..............##d##...#", "#...#,,,#..............#,,,#...#", "#...#,,,d..b........b..d,,,#...#", "#...#,,,#..............#,,,#...#", "#...#####.....b..b.....#####...#", "#..............................#", "#..............................#", "################################"], T: [1,8,2,11], CT: [29,8,30,11] },
+  { i: 37, st: 'PARK', rows: ["################################", "#...........=~~~~~~=...........#", "#..######...=~~~~~~=...######..#", "#..#,,,,#..............#,,,,#..#", "#..#,,,,#..............#,,,,#..#", "#..#,,,,d...=~~~~~~=...d,,,,#..#", "#..#,,,,#.b.=~~~~~~=.b.#,,,,#..#", "#..##d###...=~~~~~~=...###d##..#", "#...........=~~~~~~=...........#", "#..............................#", "#.b.......b..........b.......b.#", "#.b.......b..........b.......b.#", "#..............................#", "#...........=~~~~~~=...........#", "#..##d###...=~~~~~~=...###d##..#", "#..#,,,,#.b.=~~~~~~=.b.#,,,,#..#", "#..#,,,,d...=~~~~~~=...d,,,,#..#", "#..#,,,,#..............#,,,,#..#", "#..#,,,,#..............#,,,,#..#", "#..######...=~~~~~~=...######..#", "#...........=~~~~~~=...........#", "################################"], T: [1,8,1,13], CT: [30,8,30,13] },
+  { i: 5, out: 1, st: 'INDUSTRIAL', rows: ["####################################", "#..................................#", "#..................................#", "#..................................#", "#...######................######...#", "#..................................#", "#.............b......b.............#", "#..................................#", "#...#...#####..........#####...#...#", "#...#..........................#...#", "#...#..........................#...#", "#...#..........................#...#", "#...#...#..................#...#...#", "#...#...#..######dd######..#...#...#", "#.......#..#,,,,,,,,,,,,#..#.......#", "#.......#..#,,,,,,,,,,,,#..#.......#", "#..........#,,,,,,,,,,,,#..........#", "#.b........d,,,,,,,,,,,,d........b.#", "#.b........d,,###dd###,,d........b.#", "#..........#,,,,,,,,,,,,#..........#", "#.......#..#,,,,,,,,,,,,#..#.......#", "#.......#..#,,,,,,,,,,,,#..#.......#", "#...#...#..######dd######..#...#...#", "#...#...#..................#...#...#", "#...#..........................#...#", "#...#..........................#...#", "#...#..........................#...#", "#...#...#####..........#####...#...#", "#..................................#", "#.............b......b.............#", "#..................................#", "#...######................######...#", "#..................................#", "#..................................#", "#..................................#", "####################################"], sp: [18,32] },
+  { i: 10, st: 'PARK', rows: ["#################", "#...............#", "#.....b...b.....#", "#..b.........b..#", "#...............#", "#...............#", "#.....##d##.....#", "#.....#,,,#.....#", "#.b...d,,,d...b.#", "#.....#,,,#.....#", "#.....##d##.....#", "#...............#", "#...............#", "#..b.........b..#", "#.....b...b.....#", "#...............#", "#################"], hr: ["00000000000000000", "00000000000000000", "00000000000000000", "00000000000000000", "00000000000000000", "00000111111100000", "00000111111100000", "00000111111100000", "00000111111100000", "00000111111100000", "00000111111100000", "00000111111100000", "00000000000000000", "00000000000000000", "00000000000000000", "00000000000000000", "00000000000000000"], sp: [8,15] },
+  { i: 11, st: 'PARK', rows: ["########################", "#......................#", "#.#####.b......b.#####.#", "#.#,,,#..........#,,,#.#", "#.#,,,d...====...d,,,#.#", "#.##d##..b====b..##d##.#", "#........b====b........#", "#.##d##...====...##d##.#", "#.#,,,d..........d,,,#.#", "#.#,,,#.b......b.#,,,#.#", "#.#####..........#####.#", "########################"], sp: [1,5] },
+  { i: 12, st: 'PARK', rows: ["###################", "#.......=~=.......#", "#.####..=~=..####.#", "#.#,,#.......#,,#.#", "#.#,,d.......d,,#.#", "#.##d#..=~=..#d##.#", "#......b=~=b......#", "#.....b.=~=.b.....#", "#==..=========..==#", "#~~..~~~~~~~~~..~~#", "#==..=========..==#", "#.....b.=~=.b.....#", "#......b=~=b......#", "#.##d#..=~=..#d##.#", "#.#,,d.......d,,#.#", "#.#,,#.......#,,#.#", "#.####..=~=..####.#", "#.......=~=.......#", "###################"], sp: [7,7] },
+  { i: 13, st: 'PARK', rows: ["######################", "#....................#", "#.....b........b.....#", "#..======....======..#", "#..======....======..#", "#..==............==..#", "#.b==.####dd####.==b.#", "#..==.#,,,,,,,,#.==..#", "#..==.#,,,,,,,,#.==..#", "#.....#,,#d##,,#.....#", "#.....d,,#,,#,,d.....#", "#.....d,,#,,#,,d.....#", "#.....#,,##d#,,#.....#", "#..==.#,,,,,,,,#.==..#", "#..==.#,,,,,,,,#.==..#", "#.b==.####dd####.==b.#", "#..==............==..#", "#..======....======..#", "#..======....======..#", "#.....b........b.....#", "#....................#", "######################"], sp: [1,10] },
+  { i: 16, st: 'PARK', rows: ["########################", "#......................#", "#.####............####.#", "#.#,,#..b......b..#,,#.#", "#.#,,d............d,,#.#", "#.##d#............#d##.#", "#.....====....====.....#", "#.....=~~~....~~~=.....#", "#..b..=~~~....~~~=..b..#", "#.....=~~~b..b~~~=.....#", "#......................#", "#......................#", "#......................#", "#......................#", "#.....=~~~b..b~~~=.....#", "#..b..=~~~....~~~=..b..#", "#.....=~~~....~~~=.....#", "#.....====....====.....#", "#.##d#............#d##.#", "#.#,,d............d,,#.#", "#.#,,#..b......b..#,,#.#", "#.####............####.#", "#......................#", "########################"], sp: [1,11] },
+  { i: 17, out: 1, st: 'INDUSTRIAL', rows: ["##########################", "#........................#", "#........................#", "#.#.......b....b.......#.#", "#.#....................#.#", "#........................#", "#....b..............b....#", "#........................#", "#.#....................#.#", "#.#.......b....b.......#.#", "#........................#", "#........................#", "##########################"], hr: ["00000000000000000000000000", "00000000000000000000000000", "00001111111111111111110000", "00001111111111111111110000", "00001112222222222221110000", "00001112222222222221110000", "00001112222222222221110000", "00001112222222222221110000", "00001112222222222221110000", "00001111111111111111110000", "00001111111111111111110000", "00000000000000000000000000", "00000000000000000000000000"], sp: [1,6] }
+];
+
+(function nmAsciiRegister(){
+  NM_ASCII_MAPS.forEach(d => {
+    const ld = LEVEL_DEFINITIONS[d.i]; if (!ld) return;
+    const H = d.rows.length, W = d.rows[0].length, N = W * H;
+    const g = [], hs = [], core = new Uint8Array(N), door = new Uint8Array(N), on = new Uint8Array(N);
+    let anyH = false, anyW = false, anyIn = false;
+    for (let y = 0; y < H; y++) {
+      const gr = [], hr = [];
+      for (let x = 0; x < W; x++) {
+        const c = d.rows[y][x], i = y * W + x;
+        gr.push((c === '#' || c === 'b') ? 1 : 0);
+        let h = d.hr ? (d.hr[y].charCodeAt(x) - 48) : 0;
+        if (c === '=') { h = -1; anyW = true; } else if (c === '~') { h = -2; anyW = true; }
+        if (h) anyH = true;
+        hr.push(h);
+        if (c === ',') { core[i] = 1; on[i] = 1; anyIn = true; } else if (c === 'd') door[i] = 1;
+      }
+      g.push(gr); hs.push(hr);
+    }
+    if (anyIn) {   // porta e paredes coladas no interior também têm teto
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const i = y * W + x;
+        if (door[i]) { on[i] = 1; continue; }
+        if (g[y][x] !== 1) continue;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = y + dy;
+          if (nx >= 0 && ny >= 0 && nx < W && ny < H && (core[ny * W + nx] || door[ny * W + nx])) on[i] = 1;
+        }
+      }
+    }
+    ld.w = W; ld.h = H; ld.grid = g;
+    if (anyH || anyW) ld.heights = hs; else delete ld.heights;
+    ld.water = anyW ? { surf: -0.5, shallowRun: true } : null;
+    delete ld.slopes; delete ld._slopeAuto; delete ld.layout; delete ld.sky; delete ld.narrowStats; delete ld.fnaf;
+    ld.noCeiling = anyIn || !!d.out;   // `out`: mapa ao ar livre sem nenhuma construção coberta
+    ld.indoorOn = anyIn ? on : null; ld.indoorCore = core; ld.indoorDoor = door;
+    const z = (a) => ({ x0: a[0], y0: a[1], x1: a[2], y1: a[3] });
+    if (d.T) {
+      ld.dmZones = { T: z(d.T), CT: z(d.CT) };
+      ld.spawn = { x: Math.floor((d.T[0] + d.T[2]) / 2) + 0.5, y: Math.floor((d.T[1] + d.T[3]) / 2) + 0.5, angle: 0 };
+      ld.dmOnly = true; ld.ctfHidden = false;   // agora têm bases T/CT: entram no Capture the Flag
+    } else {
+      ld.spawn = { x: d.sp[0] + 0.5, y: d.sp[1] + 0.5, angle: 0 };   // mapa "normal": só o ponto de início
+    }
+    ld.style = d.st;
+  });
+})();
+applyMapCategories();
 
 function renderLevelPreview(idx) {
   const ldef = LEVEL_DEFINITIONS[idx];
@@ -6536,6 +7477,17 @@ let testLightsOn = true;     // interruptor de luz do mapa de testes
 let gameOver = false;
 let started = false;
 
+// Porta/janela decorativa só em trecho RETO de parede fina (nada nas pontas, cantos e junções).
+function cleanWindows(){
+  if(!thinMap) return;
+  for(let i = 0; i < windowTileMap.length; i++){
+    if(!thinMap[i]) continue;
+    const m = thinMap[i] & 15, straight = (m === 5 || m === 10);
+    // porta e janela só em trecho RETO de parede fina: na ponta (1 braço), canto ou junção o desenho abria um vão estranho
+    if(windowTileMap[i] && !straight) windowTileMap[i] = 0;
+    if(doorTileMap[i] >= 0 && !straight) doorTileMap[i] = -1;
+  }
+}
 function loadLevel(idx){
   currentLevelIndex = idx;
   const ldef = LEVEL_DEFINITIONS[currentLevelIndex] || LEVEL_DEFINITIONS[0];
@@ -6543,6 +7495,8 @@ function loadLevel(idx){
   MAP_W = ldef.w;
   MAP_H = ldef.h;
   HEIGHTS = ldef.heights || generateFlatHeights(ldef.w, ldef.h);
+  autoSlopes(ldef);
+  buildSlopes(ldef);
   buildWaterMap(ldef);
   levelNoCeiling = !!ldef.noCeiling || !!debugOptions.noCeiling;
   testProps = []; testLightsOn = true;
@@ -6551,7 +7505,9 @@ function loadLevel(idx){
     testProps.forEach(p => { if (p.kind === 'door') { p.closed = true; p.wall0 = 6; ldef.grid[p.y][p.x] = 1; } });
     testProps.forEach(p => { if (p.kind === 'btn' && p.doorId) p.door = testProps.find(q => q.kind === 'door' && q.id === p.doorId); });
   }
+  placeRails(ldef);
   buildTileTextures(currentLevelIndex, ldef);
+  cleanWindows();
   if (ldef.soccerOnly) socPaintPitch(ldef);
   { const _th = getLevelTheme(currentLevelIndex, ldef);
     currentSky = (typeof ldef.sky === 'number') ? ldef.sky : _th.s[Math.floor(Math.random() * _th.s.length)]; }
@@ -6932,7 +7888,7 @@ function setupTestMapPickups() {
   // Zona INTERAÇÕES: um pickup de vida atrás de cada porta
   [42.5, 47.5, 52.5].forEach(x => { fx('health', 100, x, 38.0); fx('ammo', 5, x, 40.5); });
   // Zona ELEVAÇÃO: pickups em cima da plataforma, da torre, do platô e no fundo do poço
-  fx('health', 50, 11.5, 20.5); fx('ammo', 5, 3.5, 29.5); fx('health', 100, 15.5, 37.0); fx('ammo', 2, 10.5, 27.5);
+  fx('health', 50, 6.5, 20.5); fx('ammo', 5, 3.5, 29.5); fx('health', 100, 15.5, 37.0); fx('ammo', 2, 10.5, 27.5);
   fx('health', 50, 17.5, 22.5);
 }
 
@@ -6949,7 +7905,7 @@ function isTestMapNow(){
 function testMapFreeSpot(x, y, placed){
   const free = (px, py) => {
     const r = 0.3;
-    if(isWall(px + r, py + r) || isWall(px - r, py + r) || isWall(px + r, py - r) || isWall(px - r, py - r)) return false;
+    if(boxHitsWall(px, py, r)) return false;
     return placed.every(o => Math.hypot(o.x - px, o.y - py) >= 0.8);
   };
   if(free(x, y)) return { x, y };
@@ -7255,11 +8211,15 @@ function updateTestHud(now){
     const ix = Math.floor(player.x), iy = Math.floor(player.y);
     if(ix >= 0 && iy >= 0 && ix < MAP_W && iy < MAP_H){
       const ti = iy * MAP_W + ix;
-      lines.push('X ' + player.x.toFixed(1) + '  Y ' + player.y.toFixed(1) + '  ' + (en ? 'LEVEL ' : 'NÍVEL ') + HEIGHTS[iy][ix]);
+      lines.push('X ' + player.x.toFixed(1) + '  Y ' + player.y.toFixed(1) + '  ' + (en ? 'LEVEL ' : 'NÍVEL ') + (SLP_AX && SLP_AX[ti] ? heightAt(player.x, player.y).toFixed(2) + (SLP_N[ti] > 0 ? (en ? ' (STAIRS)' : ' (ESCADA)') : (en ? ' (RAMP)' : ' (RAMPA)')) : HEIGHTS[iy][ix]));
       if(waterDepth && waterDepth[ti] > 0) lines.push((en ? 'WATER DEPTH ' : 'PROFUNDIDADE DA ÁGUA ') + waterDepth[ti].toFixed(1));
       lines.push((en ? 'FLOOR ' : 'PISO ') + floorTileMap[ti] + ' · ' + (TEX_NAMES.floor[floorTileMap[ti]] || '?'));
-      if(levelNoCeiling) lines.push((en ? 'SKY ' : 'CÉU ') + currentSky + ' · ' + (TEX_NAMES.sky[currentSky] || '?'));
+      const roofed = ceilOnMap ? ceilOnMap[ti] === 1 : !levelNoCeiling;
+      if(!roofed) lines.push((en ? 'SKY ' : 'CÉU ') + currentSky + ' · ' + (TEX_NAMES.sky[currentSky] || '?'));
       else lines.push((en ? 'CEILING ' : 'TETO ') + ceilTileMap[ti] + ' · ' + (TEX_NAMES.ceil[ceilTileMap[ti]] || '?'));
+      const ld = LEVEL_DEFINITIONS[currentLevelIndex], rk = roofMap ? roofMap[ti] : 0;
+      lines.push((en ? 'MAP STYLE ' : 'ESTILO DO MAPA ') + ((ld && ld.style) || '?') + ' · ' + (roofed ? (en ? 'INDOOR' : 'INTERIOR') : (en ? 'OUTDOOR' : 'EXTERIOR'))
+        + (rk ? ' · ' + (en ? 'ROOF ' : 'TELHADO ') + ROOFS[rk - 1].kind.toUpperCase() + ' #' + ROOFS[rk - 1].tex : ''));
     }
     const w = wallInFront();
     if(w){
@@ -7267,6 +8227,7 @@ function updateTestHud(now){
       let t = (en ? 'WALL ' : 'PAREDE ') + wallTileMap[wi] + ' · ' + (TEX_NAMES.wall[wallTileMap[wi]] || '?');
       if(doorTileMap[wi] >= 0) t += ' + ' + (TEX_NAMES.door[doorTileMap[wi]] || ('PORTA ' + doorTileMap[wi]));
       if(windowTileMap[wi]) t += ' + ' + (en ? 'WINDOW' : 'JANELA');
+      if(thinMap && thinMap[wi]) t += ' · ' + (en ? 'THIN WALL' : 'PAREDE FINA');
       lines.push(t);
     }
     const tg = targetInFront();
@@ -7306,7 +8267,31 @@ function tileAt(x,y){
 }
 
 function isWall(x,y){
-  return tileAt(x,y) === 1;
+  if (tileAt(x,y) !== 1) return false;
+  if (!thinMap) return true;
+  const ix = Math.floor(x), iy = Math.floor(y), m = thinMap[iy * MAP_W + ix];
+  return m ? thinInside(m, x - ix, y - iy) : true;   // parede fina: a hitbox é a própria lâmina desenhada
+}
+
+// Colisão por CAIXA (AABB) centrada em (x,y) com meia-largura r. Testar só os 4 cantos deixava o corpo atravessar paredes
+// finas (a lâmina tem 0,24 e a caixa do jogador 0,40: os cantos caíam um de cada lado). Aqui a caixa inteira é comparada
+// com cada retângulo da lâmina, então frente, lados e pontas da parede bloqueiam.
+function boxHitsWall(x, y, r){
+  const x0 = Math.floor(x - r), x1 = Math.floor(x + r), y0 = Math.floor(y - r), y1 = Math.floor(y + r);
+  for (let ty = y0; ty <= y1; ty++) {
+    for (let tx = x0; tx <= x1; tx++) {
+      if (tx < 0 || ty < 0 || tx >= MAP_W || ty >= MAP_H) return true;
+      if (tileAt(tx, ty) !== 1) continue;
+      const m = thinMap ? thinMap[ty * MAP_W + tx] : 0;
+      if (!m) return true;   // tile sólido inteiro (ou fora do mapa)
+      const R = thinRects(m);
+      for (let i = 0; i < R.length; i++) {
+        const q = R[i];
+        if (x + r > tx + q[0] && x - r < tx + q[2] && y + r > ty + q[1] && y - r < ty + q[3]) return true;
+      }
+    }
+  }
+  return false;
 }
 
 function getEmptyTiles(minDistFromPlayer = 0) {
@@ -7316,6 +8301,7 @@ function getEmptyTiles(minDistFromPlayer = 0) {
       if(MAP[y] && MAP[y][x] === 0){
         const posX = x + 0.5;
         const posY = y + 0.5;
+        if (waterAt(posX, posY) >= WATER_DEEP_LEVELS) continue;   // itens e inimigos não nascem em água funda
         const dist = Math.hypot(posX - player.x, posY - player.y);
         if (dist >= minDistFromPlayer) {
           emptyTiles.push({x: posX, y: posY});
@@ -7621,8 +8607,9 @@ function dmRespawnPlayer(){
 function dmBotStep(b, ang, spd, dt){
   const sx = Math.cos(ang) * spd * dt, sy = Math.sin(ang) * spd * dt;
   let moved = false;
-  if(canEnemyMove(b.x + sx, b.y, b.x, b.y)){ b.x += sx; moved = true; }
-  if(canEnemyMove(b.x, b.y + sy, b.x, b.y)){ b.y += sy; moved = true; }
+  if(canEnemyMove(b.x + sx, b.y, b.x, b.y, b)){ b.x += sx; moved = true; }
+  if(canEnemyMove(b.x, b.y + sy, b.x, b.y, b)){ b.y += sy; moved = true; }
+  if(b.hops && botRailHop(b, sx, sy)) moved = true;   // rail na frente (mesmo deslizando no outro eixo): pula por cima
   return moved;
 }
 
@@ -7649,7 +8636,7 @@ function dmPathAngle(b, gx, gy){
       if(nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
       const ni = ny * W + nx;
       if(prev[ni] !== -1) continue;
-      if(isWall(nx + 0.5, ny + 0.5)) continue;
+      if(isWall(nx + 0.5, ny + 0.5) || (!b.hops && railBlocksStep(cx, cy, nx, ny))) continue;   // bots que pulam atravessam rails
       if(heightAt(nx + 0.5, ny + 0.5) - heightAt(cx + 0.5, cy + 0.5) > MAX_CLIMB_LEVELS) continue;
       prev[ni] = c;
       q.push(ni);
@@ -7662,8 +8649,8 @@ function dmPathAngle(b, gx, gy){
 }
 
 function dmBotThink(b, dt, now){
-  const tz = waterFloorZ(b.x, b.y);
-  b.z = (b.z || 0) + (tz - (b.z || 0)) * Math.min(1, dt * 8);
+  b.hops = true;   // bots pulam rails quando o caminho passa por eles
+  entGravity(b, dt, waterFloorZ(b.x, b.y));
 
   // alvo = oponente mais próximo (T também enxerga o jogador; CT só enxerga T)
   // Prefere o oponente mais próximo que dá para ENXERGAR; se nenhum estiver visível,
@@ -8012,13 +8999,58 @@ function socPlayerKick(){
 function socPlayerJump(){   // pulo: vale em todos os modos (inclusive multiplayer, a altura z já é sincronizada)
   if(!started || gameOver || dmPlayerDead || countdownActive || settingsModal.style.display === 'flex') return;
   if(socJump.z > 0.001) return;
-  socJump.v = 2.2;
+  socJump.v = 2.8;
   SFX.footstep();
+}
+// ===== FÍSICA DE QUEDA / POUSO =====
+const GRAVITY = 9, FALL_SAFE_V = 3.3, FALL_DMG_K = 28;
+function playerLand(impact){
+  if(impact < 0.6) return;
+  try{ SFX.footstep(); }catch(e){}
+  const dip = Math.min(0.14, 0.025 * impact);
+  stepAnim.from = player.z - dip; stepAnim.to = player.targetZ; stepAnim.t = 0; stepAnim.init = true;
+  stairBoost = Math.max(stairBoost, Math.min(1, impact / 4));
+  if(impact > FALL_SAFE_V) playerFallHurt(Math.round((impact - FALL_SAFE_V) * FALL_DMG_K));
+}
+function playerFallHurt(dmg){
+  if(dmg <= 0 || WATER.state > 0 || currentGameMode === 'fnaf' || gameOver || dmPlayerDead || debugOptions.godMode) return;
+  if(NET.mode === 'client' && isTeamMode && isTeamMode()) return;   // o host controla a vida em modos de equipe
+  if(currentGameMode !== 'waves'){ dmDamagePlayer(dmg); return; }
+  player.health -= dmg;
+  triggerDamageFlash(); SFX.hurt(); gpRumble(0.6, 0.7, 180); updateHUD();
+  if(player.health <= 0){
+    player.health = 0;
+    if(NET.mode && NET.started){ netCoopDie(); return; }
+    gameOver = true; SFX.stopMusic(); SFX.gameOverJingle();
+    document.getElementById('gameOverOverlay').style.display = 'flex';
+    document.getElementById('gameOverOverlay').querySelector('h1').textContent = I18N[currentLang].youDied;
+    document.getElementById('finalScore').textContent = "PONTUAÇÃO: " + score;
+    if(document.pointerLockElement) document.exitPointerLock();
+  }
 }
 function socStepJump(dt){
   if(socJump.z > 0 || socJump.v > 0){
-    socJump.v -= 9 * dt; socJump.z += socJump.v * dt;
-    if(socJump.z <= 0){ socJump.z = 0; socJump.v = 0; }
+    socJump.v -= GRAVITY * dt; socJump.z += socJump.v * dt;
+    if(socJump.z <= 0){
+      const imp = -socJump.v;
+      socJump.z = 0; socJump.v = 0;
+      if(WATER.state > 0) { if(imp > 1) SFX.footstep(); } else playerLand(imp);
+    }
+  }
+}
+// gravidade para bots/inimigos: queda livre quando o piso some, degrau suave quando sobe
+function entGravity(e, dt, fz){
+  if(e.z === undefined) e.z = fz;
+  if(e.vz === undefined) e.vz = 0;
+  if(e.vz > 0 || e.z - fz > HEIGHT_UNIT * 1.2 || e.vz < 0 && e.z > fz){   // vz > 0: pulo (ex.: bot sobre rail)
+    e.vz -= GRAVITY * dt; e.z += e.vz * dt;
+    if(e.z <= fz){
+      const imp = -e.vz; e.z = fz; e.vz = 0;
+      if(imp > FALL_SAFE_V && e.health > 1) e.health = Math.max(1, e.health - Math.round((imp - FALL_SAFE_V) * FALL_DMG_K));
+    }
+  } else {
+    e.vz = 0;
+    e.z += (fz - e.z) * Math.min(1, dt * 8);
   }
 }
 // tiro da Deagle que acerta a bola empurra ela (ent = quem atirou; convidados mandam o tiro ao host)
@@ -9015,7 +10047,7 @@ function updateHostage(dt, now){
     // qualquer CT que encostar num refém parado passa a escoltá-lo
     if(h.state === 'idle'){
       for(const e of ents){
-        if(e.team === 'CT' && Math.hypot(e.ent.x - h.x, e.ent.y - h.y) < HR_PICK_R){
+        if(e.team === 'CT' && Math.hypot(e.ent.x - h.x, e.ent.y - h.y) < HR_PICK_R && hasLineOfSight(e.ent.x, e.ent.y, h.x, h.y)){
           h.state = 'following'; h.leader = e.ent; h.pathAt = 0;
           SFX.hostageCT();
           if(e.isPlayer){ ctfMsg('VOCÊ PEGOU UM REFÉM! LEVE-O À BASE CT', 'YOU GOT A HOSTAGE! TAKE IT TO THE CT BASE'); SFX.pickupWeapon(); }
@@ -9305,7 +10337,7 @@ function fnafApplyLights(){
 // Linha de visão da IA: o vidro das janelas conta como parede (os animatronics não atravessam nem te "enxergam"
 // pelo vidro para atacar), embora o jogador veja e atire através dele.
 function fnafAiLOS(x1, y1, x2, y2){
-  const dx = x2 - x1, dy = y2 - y1, steps = Math.ceil(Math.hypot(dx, dy) * 5);
+  const dx = x2 - x1, dy = y2 - y1, steps = Math.ceil(Math.hypot(dx, dy) * (thinMap ? 14 : 5));
   for(let i = 1; i <= steps; i++){
     if(isWall(x1 + dx * i / steps, y1 + dy * i / steps)) return false;
   }
@@ -9392,7 +10424,7 @@ function fnafAnimLogic(a, dt){
   }
 
   // contato = dano (e susto)
-  if(dist < 1.0 && a.cd <= 0 && a.state !== 'hide' && a.state !== 'cove'){
+  if(dist < 1.0 && a.cd <= 0 && a.state !== 'hide' && a.state !== 'cove' && fnafAiLOS(T.x, T.y, en.x, en.y)){
     fnafHurtPlayer(a, T);
     a.cd = 1.3; a.stagger = 0.45;
     return;
@@ -9771,7 +10803,11 @@ function drawFnafButton(b, sx, horizon, size, dist, zShift){
   const fog = Math.max(0.4, 1 - dist / (12 * fogScale));
   horizon = horizon + (zShift || 0);
   const bottom = horizon + size * 0.5;
-  const w = size * 0.26;
+  // overlay colado na parede: encolhe na horizontal conforme o ângulo de visão (como um decalque) e some se você estiver atrás da parede
+  const nrm = b.side === 'W' ? 1 : -1, bdx = b.x - player.x, bdy = b.y - player.y, bd = Math.hypot(bdx, bdy) || 1;
+  const facing = -(bdx * nrm) / bd;
+  if(facing <= 0.04) return;
+  const w = size * 0.26 * Math.max(0.12, facing);
   const cy = bottom - size * 0.48;
   const isDoor = b.kind === 'door';
   const on = isDoor ? fnaf.doors[b.side].closed : fnaf.lights[b.side];
@@ -9895,6 +10931,7 @@ let joyVec = {x:0,y:0};
 let lookDX = 0;
 
 function detectTouchDefault(){
+  if(window.DZ_CONSOLE) return false;   // console: nunca mostra os controles de toque
   return ('ontouchstart' in window) || navigator.maxTouchPoints>0;
 }
 usingTouch = detectTouchDefault();
@@ -9995,6 +11032,12 @@ let gpPadLabel = '';
 let gpLastScan = 0;
 let lastWeaponId = null;     // arma anterior (botão Y = troca rápida)
 
+// Curva de resposta do analógico de mira (só no console): movimentos pequenos = mira precisa,
+// analógico no fim do curso = giro rápido. Mouse/toque não são afetados.
+function gpAimCurve(v){
+  if(!window.DZ_CONSOLE || !v) return v;
+  return (v < 0 ? -1 : 1) * Math.pow(Math.abs(v), 1.5);
+}
 function applyDeadzone(v){
   if (Math.abs(v) < GP_DEADZONE) return 0;
   const sign = v < 0 ? -1 : 1;
@@ -10031,7 +11074,7 @@ function gpAdopt(pad){
   gpPrevButtons = [];
   const id = (pad.id || '').toLowerCase();
   const isXbox = /xbox|045e|microsoft/.test(id);
-  gpIsPS = !isXbox && /054c|dualsense|dualshock|playstation|wireless controller/.test(id);
+  gpIsPS = !isXbox && (/054c|dualsense|dualshock|playstation|wireless controller/.test(id) || (!!window.DZ_CONSOLE && window.DZ_CONSOLE.platform === 'ps'));
   gpPadLabel = gpIsPS ? 'PLAYSTATION' : (isXbox ? 'XBOX' : '');
   refreshGamepadStatusUI();
   showGamepadHudBadge(((I18N[currentLang] && I18N[currentLang].gamepadConnected) || 'CONTROLE CONECTADO') + (gpPadLabel ? ' · ' + gpPadLabel : ''));
@@ -10118,7 +11161,7 @@ function pollGamepad(){
 
     gpVec.x = applyDeadzone(gp.axes[0] || 0);
     gpVec.y = applyDeadzone(gp.axes[1] || 0);
-    gpTurn = applyDeadzone(gp.axes[2] || 0); gpLook = applyDeadzone(gp.axes[3] || 0);
+    gpTurn = gpAimCurve(applyDeadzone(gp.axes[2] || 0)); gpLook = gpAimCurve(applyDeadzone(gp.axes[3] || 0));
 
     const rt = gp.buttons[7];
     gpFireHeld = rt ? (rt.value > 0.2 || rt.pressed) : btn(7);
@@ -10204,7 +11247,7 @@ function gpHintsHtml(rootId){
   const L = [];
   L.push(it(['DPAD'], d.gpNav), it(['A'], d.gpConfirm));
   if(rootId === 'mainMenu'){
-    L.push(it(['START'], d.gpPlay), it(['X'], d.gpSettings), it(['Y'], d.gpFullscreen));
+    L.push(it(['START'], d.gpPlay), it(['X'], d.gpSettings)); if(!window.DZ_CONSOLE) L.push(it(['Y'], d.gpFullscreen));
   } else if(rootId === 'levelSelectModal'){
     L.push(it(['B'], d.gpBack), it(['LB','RB'], d.gpMap), it(['LT','RT'], d.gpMode), it(['Y'], d.gpRandomMap));
     if(typeof isDmModeSelected === 'function' && isDmModeSelected()) L.push(it(['X'], d.gpSide));
@@ -10373,14 +11416,14 @@ function gpMenuUpdate(gp, root, btn, prev){
   if(pressed(0) && gpMenuEl){
     const el = gpMenuEl;
     if(el.type === 'text') el.focus();
-    else if(el.type !== 'range') el.click();
+    else if(el.type !== 'range' && !(window.dzTrustedClickRecent && window.dzTrustedClickRecent(el))) el.click();
   }
 
   // B = voltar
   if(pressed(1)){
     if(root.id === 'settingsModal') gpClickId('closeSettingsBtn');
     else if(root.id === 'levelSelectModal') gpClickId('closeLevelSelectBtn');
-    else if(root.id === 'gameOverOverlay') gpClickId('backToMenuBtn');
+    else if(root.id === 'gameOverOverlay') gpClickId(NET.mode ? 'restartBtn' : 'backToMenuBtn');
     else if(root.id === 'netPanel') gpClickId('netClose');
   }
 
@@ -10676,6 +11719,7 @@ function restoreTouchIfNeeded() {
 }
 
 document.getElementById('backToMenuFromSettingsBtn').addEventListener('click', ()=>{
+  if(NET.mode && NET.started){ SFX.menuBack(); netBackToLobby(); return; }   // online: volta para a sala, não sai dela
   SFX.menuBack();
   netLeave();
   SFX.stopMusic();
@@ -10754,6 +11798,7 @@ dbgTestLevelBtn.addEventListener('click', ()=>{
 });
 
 document.getElementById('backToMenuBtn').addEventListener('click', ()=>{
+  if(NET.mode && NET.started){ SFX.menuBack(); netBackToLobby(); return; }   // online: volta para a sala, não sai dela
   netLeave();
   SFX.menuBack();
   SFX.stopMusic();
@@ -11352,6 +12397,8 @@ function castAndDraw(){
   const rowInv = rowInvTab;
   const eyeZ = 0.5 + player.z;
   const hasCeil = !levelNoCeiling;
+  const mixedC = !!ceilOnMap, roofsOn = !!(roofMap && ROOFS.length);   // mapas mistos: teto só nos tiles com ceilOn; telhados por cima
+  const cOn = ti => mixedC ? ceilOnMap[ti] === 1 : hasCeil;
 
   const imgData = ctx.createImageData(w, h);
   const buf32 = new Uint32Array(imgData.data.buffer);
@@ -11384,7 +12431,7 @@ function castAndDraw(){
   const B = v => Math.ceil(v - 0.5);           // limite de linha (centro do pixel em r+0.5)
 
   // ---- piso / teto (ou topo de parede visto de cima) entre as distâncias d0 e d1 ----
-  function drawFlat(col, r0, r1, isFloor, Z, ti, rdx, rdy, topSurf){
+  function drawFlat(col, r0, r1, isFloor, Z, ti, rdx, rdy, topSurf, sl){
     const k = (eyeZ - Z) * h;
     const mipSet = topSurf ? texMips.wall : (isFloor ? texMips.floor : texMips.ceil);
     const idx = topSurf ? wallTileMap[ti] : (isFloor ? floorTileMap[ti] : ceilTileMap[ti]);
@@ -11396,7 +12443,13 @@ function castAndDraw(){
     const mul = topSurf ? 0.85 : 1;
     const wd = (isFloor && !topSurf && waterDepth) ? waterDepth[ti] : 0;
     for (let r = r0; r < r1; r++) {
-      const d = k * rowInv[r];
+      let d;
+      if (sl) {   // piso inclinado: resolve a distância em que o raio da linha r cruza o plano da rampa
+        const den = (r + 0.5 - horizon) / h + sl.B;
+        d = den > 1e-5 ? (eyeZ - sl.A) / den : sl.dmax;
+        if (d < sl.dmin) d = sl.dmin; else if (d > sl.dmax) d = sl.dmax;
+        if (d < 0.02) d = 0.02;
+      } else d = k * rowInv[r];
       let fog = lit ? Math.max(0.5, 1 - d / 18) : Math.max(0.1, 1 - d / (10 * fogScale));
       if (L) fog += (1 - fog) * (L / 255) * 0.8;
       fog *= mul;
@@ -11431,7 +12484,8 @@ function castAndDraw(){
     }
   }
 
-  function drawSpans(col, ti, fZ, cZ, d0, d1, rdx, rdy, topSurf){
+  // piso plano entre d0 e d1 na altura fZ
+  function flatSpan(col, ti, fZ, d0, d1, rdx, rdy, topSurf){
     if (eyeZ > fZ + 1e-4) {
       const yNear = d0 <= 1e-4 ? 1e9 : horizon + (eyeZ - fZ) * h / d0;
       const rTop = B(horizon + (eyeZ - fZ) * h / d1);
@@ -11440,11 +12494,50 @@ function castAndDraw(){
       if (b > a) drawFlat(col, a, b, true, fZ, ti, rdx, rdy, topSurf);
       if (rTop < hi) hi = rTop;
     }
-    if (hasCeil && !topSurf && cZ > eyeZ + 1e-4) {
+  }
+  // piso de um tile de rampa lisa / escada entre d0 e d1 (o raio atravessa o tile)
+  function slopeFloor(col, ti, d0, d1, rdx, rdy){
+    const lo_ = SLP_LO[ti], hi_ = SLP_HI[ti], n = SLP_N[ti], ax = SLP_AX[ti];
+    const horiz = ax <= 2, T = horiz ? (ti % MAP_W) : ((ti / MAP_W) | 0);
+    const p0 = (horiz ? player.x : player.y) - T, rd = horiz ? rdx : rdy;
+    const c0 = (ax === 1 || ax === 3) ? p0 : 1 - p0, c1 = (ax === 1 || ax === 3) ? rd : -rd;   // u(d) = c0 + c1·d  (0 no pé, 1 no topo)
+    const uAt = d => { const u = c0 + c1 * d; return u < 0 ? 0 : (u > 1 ? 1 : u); };
+    if (n === 0) {
+      const A = HEIGHT_UNIT * (lo_ + (hi_ - lo_) * c0), Bq = HEIGHT_UNIT * (hi_ - lo_) * c1;   // Z(d) = A + Bq·d
+      if (eyeZ - A <= 1e-4) return;                                                             // olho abaixo do plano: não é visível por cima
+      const Z0 = HEIGHT_UNIT * (lo_ + (hi_ - lo_) * uAt(d0)), Z1 = HEIGHT_UNIT * (lo_ + (hi_ - lo_) * uAt(d1));
+      const yNear = d0 <= 1e-4 ? 1e9 : horizon + (eyeZ - Z0) * h / d0;
+      const rTop = B(horizon + (eyeZ - Z1) * h / d1);
+      const rBot = yNear >= h ? h : B(yNear);
+      const a = Math.max(rTop, lo + 1), b = Math.min(rBot, hi);
+      if (b > a) drawFlat(col, a, b, true, 0, ti, rdx, rdy, false, { A, B: Bq, dmin: d0, dmax: d1 });
+      if (rTop < hi) hi = rTop;
+      return;
+    }
+    // escada: corta [d0,d1] nos planos dos degraus; cada trecho é um piso plano, com espelho quando o degrau sobe
+    const cuts = [d0];
+    if (Math.abs(c1) > 1e-6) for (let j = 1; j < n; j++) { const dj = (j / n - c0) / c1; if (dj > d0 + 1e-5 && dj < d1 - 1e-5) cuts.push(dj); }
+    cuts.push(d1); cuts.sort((p, q) => p - q);
+    const fMips = texMips.floor[floorTileMap[ti]] || texMips.floor[0], sideF = horiz ? 0 : 1;
+    let prevZ = null;
+    for (let s = 0; s < cuts.length - 1; s++) {
+      const a = cuts[s], b = cuts[s + 1], k = Math.min(n - 1, Math.floor(uAt((a + b) / 2) * n));
+      const Zk = HEIGHT_UNIT * (lo_ + (hi_ - lo_) * (k + 1) / n);
+      if (prevZ !== null && Zk > prevZ + 1e-5) { const rr = drawFace(col, a, Zk, prevZ, fMips, ti, sideF, rdx, rdy, 0.9); if (rr.tB < hi) hi = rr.tB; }
+      flatSpan(col, ti, Zk, a, b, rdx, rdy, false);
+      prevZ = Zk;
+    }
+  }
+
+  function drawSpans(col, ti, fZ, cZ, d0, d1, rdx, rdy, topSurf){
+    if (!topSurf && SLP_AX && SLP_AX[ti]) slopeFloor(col, ti, d0, d1, rdx, rdy);
+    else flatSpan(col, ti, fZ, d0, d1, rdx, rdy, topSurf);
+    if (cOn(ti) && !topSurf && cZ > eyeZ + 1e-4) {
       const yNear = d0 <= 1e-4 ? -1e9 : horizon + (eyeZ - cZ) * h / d0;
       const rBot = B(horizon + (eyeZ - cZ) * h / d1);
       const rTop = yNear <= 0 ? 0 : B(yNear);
       const a = Math.max(rTop, lo + 1), b = Math.min(rBot, hi);
+      if (mixedC && a > lo + 1) backdrop(col, lo + 1, Math.min(a, hi), d0, rdx, rdy);   // vindo do céu aberto: acima da porta aparece telhado/céu
       if (b > a) drawFlat(col, a, b, false, cZ, ti, rdx, rdy, false);
       if (rBot - 1 > lo) lo = rBot - 1;
     }
@@ -11488,10 +12581,49 @@ function castAndDraw(){
   // Uma fatia vertical de parede. windowMode = true desenha só a moldura de uma janela
   // (peitoril, verga, laterais e travessa central); o vão deixa ver o que já foi desenhado atrás.
   // baseZ/topZ = altura do pé e do topo da parede; clLo/clHi = linhas ainda livres naquele ponto.
+  const rlBuf = new Float64Array(36);
+  function drawRailSlice(col, bf, o, rdx, rdy) {
+    const hx = bf[o], hy = bf[o+1], tExit = bf[o+2], clLo = bf[o+3], clHi = bf[o+4], baseZ = bf[o+5], tEnter = bf[o+6];
+    const ti0 = hy * MAP_W + hx, ri = railTileMap[ti0], tex = RAIL_TEX[ri];
+    if (!tex) return;
+    const d4 = railDirMap[ti0], vert = d4 < 2;
+    let pd, u;
+    if (vert) {
+      const c = hy + (d4 === 0 ? RAIL_OFF : 1 - RAIL_OFF);
+      if (Math.abs(rdy) < 1e-6) return;
+      pd = (c - player.y) / rdy; u = player.x + pd * rdx - hx;
+    } else {
+      const c = hx + (d4 === 2 ? RAIL_OFF : 1 - RAIL_OFF);
+      if (Math.abs(rdx) < 1e-6) return;
+      pd = (c - player.x) / rdx; u = player.y + pd * rdy - hy;
+    }
+    if (pd < 0.0001 || pd < tEnter - 1e-3 || pd > tExit + 1e-3 || u < 0 || u >= 1) return;
+    const rh = RAIL_HT[ri];
+    const unit = h / pd;
+    const sink = Math.min(0.5, (tex.pad || 0) + RAIL_SINK) * rh;   // desce a textura até o pé encostar no chão
+    const yTop = horizon + (eyeZ - (baseZ - sink + rh)) * unit, yBot = horizon + (eyeZ - (baseZ - sink)) * unit;
+    const yFloor = horizon + (eyeZ - baseZ) * unit;                // o que passa da linha do chão fica "enterrado"
+    const r0 = Math.max(B(yTop), clLo + 1), r1 = Math.min(B(yFloor), clHi);
+    if (r1 <= r0) return;
+    const tx = Math.min(tex.w - 1, (u * tex.w) | 0);
+    const fog = Math.max(0.15, 1 - pd / (12 * fogScale)) * (vert ? 0.85 : 1);
+    const span = yBot - yTop, dt = tex.data, tw = tex.w, th = tex.h;
+    for (let r = r0; r < r1; r++) {
+      const ty = Math.min(th - 1, Math.max(0, (((r + 0.5 - yTop) / span) * th) | 0));
+      const ti = (ty * tw + tx) * 4;
+      const a = dt[ti + 3] / 255;
+      if (a < 0.1) continue;
+      const bo = r * w + col, px = buf32[bo];
+      const pr = px & 255, pg = (px >> 8) & 255, pb = (px >> 16) & 255;
+      const R = pr + (dt[ti] * fog - pr) * a, G = pg + (dt[ti+1] * fog - pg) * a, Bc = pb + (dt[ti+2] * fog - pb) * a;
+      buf32[bo] = (255 << 24) | ((Bc | 0) << 16) | ((G | 0) << 8) | (R | 0);
+    }
+  }
   const WIN_TOP = 0.20, WIN_BOT = 0.62;
-  function drawSlice(col, hx, hy, hside, hstepX, hstepY, rdx, rdy, bx, by, windowMode, baseZ, topZ, clLo, clHi) {
+  function drawSlice(col, hx, hy, hside, hstepX, hstepY, rdx, rdy, bx, by, windowMode, baseZ, topZ, clLo, clHi, ov) {
     let perpWallDist;
-    if (hside === 0) perpWallDist = (hx - player.x + (1 - hstepX) / 2) / rdx;
+    if (ov) { perpWallDist = ov.t; hside = ov.side; }
+    else if (hside === 0) perpWallDist = (hx - player.x + (1 - hstepX) / 2) / rdx;
     else             perpWallDist = (hy - player.y + (1 - hstepY) / 2) / rdy;
     perpWallDist = Math.max(0.0001, Math.abs(perpWallDist));
     if (!windowMode) zbuffer[col] = perpWallDist;
@@ -11499,7 +12631,10 @@ function castAndDraw(){
     const inB = hx >= 0 && hy >= 0 && hx < MAP_W && hy < MAP_H;
     const tIdx = inB ? hy * MAP_W + hx : -1;
     const wMips = tIdx >= 0 ? texMips.wall[wallTileMap[tIdx]] : texMips.wall[0];
-    const dIdx = tIdx >= 0 ? doorTileMap[tIdx] : -1;
+    // parede fina: porta/janela só nas faces LONGAS da lâmina; a face da espessura/ponta (lado da parede) fica opaca e lisa
+    let longFace = true;
+    if (ov && tIdx >= 0 && thinMap) { const tm = thinMap[tIdx] & 15; if (tm === 5) longFace = hside === 0; else if (tm === 10) longFace = hside === 1; }
+    const dIdx = (tIdx >= 0 && longFace) ? doorTileMap[tIdx] : -1;
     const dTex = dIdx >= 0 ? doorSets[dIdx] : null;
 
     const unit = h / perpWallDist;                       // pixels por unidade de mundo
@@ -11510,7 +12645,8 @@ function castAndDraw(){
     const r0 = Math.max(B(yTopF), clLo + 1), r1 = Math.min(B(yBotF), clHi);
 
     let wallX;
-    if (hside === 0) wallX = player.y + perpWallDist * rdy;
+    if (ov) wallX = ov.wx;
+    else if (hside === 0) wallX = player.y + perpWallDist * rdy;
     else             wallX = player.x + perpWallDist * rdx;
     wallX -= Math.floor(wallX);
 
@@ -11526,7 +12662,7 @@ function castAndDraw(){
         doorX = Math.min(TEX_SIZE - 1, Math.floor(((u - 0.5) / dTex.frac + 0.5) * TEX_SIZE));
       }
     }
-    const inGlassX = windowMode && wallX > 0.1 && wallX < 0.9 && Math.abs(wallX - 0.5) > 0.025;
+    const inGlassX = windowMode && longFace && wallX > 0.1 && wallX < 0.9 && Math.abs(wallX - 0.5) > 0.025;
 
     const sideShade = hside === 1 ? 0.62 : 1.0;
     const wLit = litAny && tIdx >= 0 && litMap[tIdx] === 1;
@@ -11569,6 +12705,64 @@ function castAndDraw(){
     return r0;
   }
 
+  // céu (ou escuro) nas linhas a..b-1 da coluna
+  function skyFill(col, a, b){
+    let u = 0;
+    if (levelNoCeiling) { u = (player.angle + skyColAng[col]) / TWO_PI; u -= Math.floor(u); }
+    for (let r = a; r < b; r++) {
+      let px = 0xFF000000;
+      if (levelNoCeiling) {
+        const rs = r < horizon ? r : horizon - 1;   // abaixo do horizonte (olhando por cima de um muro): cor do horizonte
+        if (sky.ready) {
+          const sw = sky.w;
+          px = sky.data[Math.min(sky.h - 1, Math.floor(skyRowV[rs] * sky.h)) * sw + ((u * sw) | 0)];
+        } else {
+          const tt = (horizon - rs) / horizon;
+          px = (255 << 24) | (235 << 16) | (((190 - 60 * tt) | 0) << 8) | ((140 - 70 * tt) | 0);
+        }
+      }
+      buf32[r * w + col] = px;
+    }
+  }
+  // telhado: marcha o raio da linha r (inclinação m = dZ/dt) a partir de t0 até cruzar a superfície de algum telhado
+  function roofPixel(col, r, m, t0, rdx, rdy){
+    const maxT = t0 + 18;
+    let t = t0 > 0.02 ? t0 : 0.02, pf = 0, pt = t, first = true;
+    for (; t < maxT; t += 0.1) {
+      const px = player.x + rdx * t, py = player.y + rdy * t, ix = Math.floor(px), iy = Math.floor(py);
+      if (ix < 0 || iy < 0 || ix >= MAP_W || iy >= MAP_H) return false;
+      const zRay = eyeZ + m * t;
+      if (m > 0 && zRay > ROOF_MAXZ) return false;
+      const k = roofMap[iy * MAP_W + ix];
+      if (k) {
+        const rf = ROOFS[k - 1], f = zRay - roofZ(rf, px, py);
+        if (f <= 0) {
+          let tt = t, qx = px, qy = py;
+          if (pf > 0 && !first) { tt = pt + (t - pt) * pf / (pf - f); qx = player.x + rdx * tt; qy = player.y + rdy * tt; }
+          const mips = texMips.roof[rf.tex] || texMips.roof[0];
+          const mipL = mipFor(w / (1.3 * tt)), msz = TEX_SIZE >> mipL, tex = mips ? mips[mipL] : null;
+          let uu = qx * rf.sc, vv = qy * rf.sc; uu -= Math.floor(uu); vv -= Math.floor(vv);
+          const fog = Math.max(0.22, 1 - tt / (13 * fogScale)) * roofShade(rf, qx, qy);
+          let R, G, Bc;
+          if (tex) { const i4 = (msz * ((vv * msz) | 0) + ((uu * msz) | 0)) * 4; R = tex[i4] * fog; G = tex[i4 + 1] * fog; Bc = tex[i4 + 2] * fog; }
+          else { R = 150 * fog; G = 80 * fog; Bc = 60 * fog; }
+          buf32[r * w + col] = (255 << 24) | ((Math.min(255, Bc) | 0) << 16) | ((Math.min(255, G) | 0) << 8) | (Math.min(255, R) | 0);
+          return true;
+        }
+        pf = f;
+      } else pf = 0;
+      pt = t; first = false;
+    }
+    return false;
+  }
+  // fundo livre da coluna (linhas a..b-1): telhados das construções e, no resto, o céu
+  function backdrop(col, a, b, t0, rdx, rdy){
+    if (b <= a) return;
+    let r = b - 1;
+    if (roofsOn) for (; r >= a; r--) { if (!roofPixel(col, r, (horizon - r - 0.5) / h, t0, rdx, rdy)) break; }
+    if (r >= a) skyFill(col, a, r + 1);
+  }
+
   const MAX_STEPS = 40;
   for (let col = 0; col < w; col++) {
     const camX = (2 * col / w) - 1;
@@ -11591,9 +12785,30 @@ function castAndDraw(){
     const startIn = mapX >= 0 && mapY >= 0 && mapX < MAP_W && mapY < MAP_H;
     let curTi = startIn ? mapY * MAP_W + mapX : 0;
     let curF = FZ[curTi], curC = CZ[curTi], curTop = false;
-    let d0 = 0, endD = 0, win = null, side = 0, steps = 0;
+    let d0 = 0, endD = 0, wins = [], side = 0, steps = 0, rlN = 0;
+    if (startIn && tileAt(mapX, mapY) === 2) {   // jogador dentro do tile do rail: sem isso o rail sumia de perto
+      rlBuf[0] = mapX; rlBuf[1] = mapY; rlBuf[2] = Math.min(sideDX, sideDY);
+      rlBuf[3] = -1; rlBuf[4] = h; rlBuf[5] = FZ[curTi]; rlBuf[6] = 0;
+      rlN = 1;
+    }
 
-    while (steps < MAX_STEPS && lo + 1 < hi) {
+    let skipLoop = false;
+    if (startIn && thinMap && tileAt(mapX, mapY) === 1 && thinMap[curTi]) {   // em pé ao lado de uma parede fina, dentro do mesmo tile
+      const hS = thinRayHit(thinMap[curTi], mapX, mapY, rdx, rdy, 0);
+      if (hS) {
+        drawSpans(col, curTi, curF, curC, 0, hS.t, rdx, rdy, false);
+        const topS = cOn(curTi) ? curC : TZ[curTi];
+        if (isWindowTile(mapX, mapY)) {
+          // janela colada: a lâmina vira vidro (o raio continua) e a moldura é desenhada depois, como no caso normal
+          wins.push({ x: mapX, y: mapY, side: hS.side, px: mapX, py: mapY, lo, hi, base: curF, top: topS, stepX, stepY, ov: hS });
+          d0 = hS.t;
+        } else {
+          const r0s = drawSlice(col, mapX, mapY, hS.side, stepX, stepY, rdx, rdy, mapX, mapY, false, curF, topS, lo, hi, hS);
+          if (r0s < hi) hi = r0s; endD = hS.t; skipLoop = true;
+        }
+      }
+    }
+    while (!skipLoop && steps < MAX_STEPS && lo + 1 < hi) {
       const prevX = mapX, prevY = mapY, prevTi = curTi;
       let dB;
       if (sideDX < sideDY) { dB = sideDX; sideDX += deltaDX; mapX += stepX; side = 0; }
@@ -11602,38 +12817,52 @@ function castAndDraw(){
       if (dB < 0.0001) dB = 0.0001;
       drawSpans(col, curTi, curF, curC, d0, dB, rdx, rdy, curTop);
       d0 = dB; endD = dB;
+      // altura do piso do tile atual no ponto onde o raio sai dele (rampas/escadas variam dentro do tile)
+      const hitX = player.x + rdx * dB, hitY = player.y + rdy * dB;
+      const baseNow = (SLP_AX && !curTop && SLP_AX[prevTi]) ? slopeLevelAt(prevTi, hitX, hitY) * HEIGHT_UNIT : curF;
 
       const inB = mapX >= 0 && mapY >= 0 && mapX < MAP_W && mapY < MAP_H;
       const tIdx = inB ? mapY * MAP_W + mapX : -1;
       const t = tileAt(mapX, mapY);
-      if (t > 0) {
-        if (!win && inB && isWindowTile(mapX, mapY)) {
+      if (t === 2 && inB && rlN < 4) {
+        const rb = rlN * 9;
+        rlBuf[rb] = mapX; rlBuf[rb+1] = mapY; rlBuf[rb+2] = Math.min(sideDX, sideDY);
+        rlBuf[rb+3] = lo; rlBuf[rb+4] = hi; rlBuf[rb+5] = FZ[tIdx]; rlBuf[rb+6] = dB;
+        rlN++;
+      }
+      if (t === 1) {
+        const thM = (thinMap && inB) ? thinMap[tIdx] : 0;
+        const thH = thM ? thinRayHit(thM, mapX, mapY, rdx, rdy, dB) : null;
+        if (thM && !thH) {
+          curTi = tIdx; curTop = false;   // o raio passa ao lado da parede fina: o tile age como piso aberto
+        } else if (wins.length < 6 && inB && isWindowTile(mapX, mapY) && (thH || cOn(prevTi) || eyeZ <= TZ[tIdx] + 0.002)) {   // olho acima de uma janela em parede cheia: passa por cima (topo opaco)
           // janela: o raio atravessa; a moldura é desenhada por cima depois (mesmo piso/teto do tile anterior)
-          win = { x: mapX, y: mapY, side, px: prevX, py: prevY, lo, hi, base: curF, top: hasCeil ? curC : TZ[tIdx], stepX, stepY };
+          wins.push({ x: mapX, y: mapY, side, px: prevX, py: prevY, lo, hi, base: baseNow, top: cOn(prevTi) ? curC : TZ[tIdx], stepX, stepY, ov: thH });
           curTi = tIdx; curTop = false;
         } else {
           const wTopZ = inB ? TZ[tIdx] : curF + 1;      // fora do mapa: muro de 1 unidade, como antes
-          if (!hasCeil && inB && eyeZ > wTopZ + 0.002) {
+          if (!cOn(prevTi) && !thH && inB && eyeZ > wTopZ + 0.002) {
             // ao ar livre e olho acima do topo da parede: passa por cima, o topo vira um "piso" elevado
-            if (wTopZ > curF + 1e-4) {
-              const rr = drawFace(col, dB, wTopZ, curF, texMips.wall[wallTileMap[tIdx]] || texMips.wall[0], prevTi, side, rdx, rdy, 1);
+            if (wTopZ > baseNow + 1e-4) {
+              const rr = drawFace(col, dB, wTopZ, baseNow, texMips.wall[wallTileMap[tIdx]] || texMips.wall[0], prevTi, side, rdx, rdy, 1);
               if (rr.tB < hi) hi = rr.tB;
             }
             curTi = tIdx; curF = wTopZ; curTop = true;
           } else {
-            const topZ = hasCeil ? curC : wTopZ;
-            const r0 = drawSlice(col, mapX, mapY, side, stepX, stepY, rdx, rdy, prevX, prevY, false, curF, topZ, lo, hi);
+            let topZ = cOn(prevTi) ? curC : wTopZ, baseS = baseNow;
+            if (thH) { baseS = FZ[tIdx]; topZ = cOn(tIdx) ? CZ[tIdx] : TZ[tIdx]; drawSpans(col, tIdx, baseS, CZ[tIdx], dB, thH.t, rdx, rdy, false); endD = thH.t; }
+            const r0 = drawSlice(col, mapX, mapY, side, stepX, stepY, rdx, rdy, prevX, prevY, false, baseS, topZ, lo, hi, thH);
             if (r0 < hi) hi = r0;
             break;
           }
         }
       } else {
-        const f2 = FZ[tIdx], c2 = CZ[tIdx];
-        if (f2 > curF + 1e-4) {                                   // degrau subindo: espelho com a textura do piso
-          const rr = drawFace(col, dB, f2, curF, texMips.floor[floorTileMap[tIdx]] || texMips.floor[0], prevTi, side, rdx, rdy, 0.9);
+        const f2 = (SLP_AX && SLP_AX[tIdx]) ? slopeLevelAt(tIdx, hitX, hitY) * HEIGHT_UNIT : FZ[tIdx], c2 = CZ[tIdx];
+        if (f2 > baseNow + 1e-4) {                                // degrau subindo: espelho com a textura do piso
+          const rr = drawFace(col, dB, f2, baseNow, texMips.floor[floorTileMap[tIdx]] || texMips.floor[0], prevTi, side, rdx, rdy, 0.9);
           if (rr.tB < hi) hi = rr.tB;
         }
-        if (hasCeil && c2 < curC - 1e-4) {                        // teto descendo: face pendente
+        if (cOn(prevTi) && cOn(tIdx) && c2 < curC - 1e-4) {                        // teto descendo: face pendente
           const rr = drawFace(col, dB, curC, c2, texMips.ceil[ceilTileMap[tIdx]] || texMips.ceil[0], prevTi, side, rdx, rdy, 0.8);
           if (rr.bB - 1 > lo) lo = rr.bB - 1;
         }
@@ -11645,26 +12874,13 @@ function castAndDraw(){
     if (zbuffer[col] === undefined) zbuffer[col] = endD > 0 ? endD : 0.0001;
 
     // moldura da janela por cima de tudo que ficou atrás dela
-    if (win) drawSlice(col, win.x, win.y, win.side, win.stepX, win.stepY, rdx, rdy, win.px, win.py, true, win.base, win.top, win.lo, win.hi);
+    for (let k = wins.length - 1; k >= 0; k--) { const win = wins[k]; drawSlice(col, win.x, win.y, win.side, win.stepX, win.stepY, rdx, rdy, win.px, win.py, true, win.base, win.top, win.lo, win.hi, win.ov); }   // várias janelas na mesma coluna (parede vista de lado): da mais longe para a mais perto
+    for (let k = rlN - 1; k >= 0; k--) drawRailSlice(col, rlBuf, k * 9, rdx, rdy);   // rails: do mais longe para o mais perto
 
     // linhas que sobraram: céu (fases ao ar livre) ou escuro
     if (lo + 1 < hi) {
-      let u = 0;
-      if (levelNoCeiling) { u = (player.angle + skyColAng[col]) / TWO_PI; u -= Math.floor(u); }
-      for (let r = lo + 1; r < hi; r++) {
-        let px = 0xFF000000;
-        if (levelNoCeiling) {
-          const rs = r < horizon ? r : horizon - 1;   // abaixo do horizonte (olhando por cima de um muro): cor do horizonte
-          if (sky.ready) {
-            const sw = sky.w;
-            px = sky.data[Math.min(sky.h - 1, Math.floor(skyRowV[rs] * sky.h)) * sw + ((u * sw) | 0)];
-          } else {
-            const tt = (horizon - rs) / horizon;
-            px = (255 << 24) | (235 << 16) | (((190 - 60 * tt) | 0) << 8) | ((140 - 70 * tt) | 0);
-          }
-        }
-        buf32[r * w + col] = px;
-      }
+      if (mixedC || roofsOn) backdrop(col, lo + 1, hi, endD, rdx, rdy);
+      else skyFill(col, lo + 1, hi);
     }
   }
 
@@ -11962,6 +13178,7 @@ function drawMinimap(){
         else col = '#333';
         if(waterDepth && waterDepth[my * MAP_W + mx] > 0) col = '#2a78b4';
       }
+      else if(t===2){ col = '#b8892a'; }
       else if(t>0){
         const ti = my * MAP_W + mx;
         col = windowTileMap[ti] ? '#4aa8c8' : (doorTileMap[ti] >= 0 && doorTileMap[ti] < DOOR_AD_FROM ? '#8a5a2a' : '#666');
@@ -12049,18 +13266,54 @@ function drawMinimap(){
 function canMove(nx,ny){
   if (debugOptions.noClip) return true;
   const r = player.radius;
-  if (isWall(nx+r, ny+r) || isWall(nx-r, ny+r) || isWall(nx+r, ny-r) || isWall(nx-r, ny-r)) return false;
+  if (boxHitsWall(nx, ny, r)) return false;
+  // Rails: finos e baixos, só a borda bloqueia; passa pulando (pés acima do topo)
+  if (railEdgeBlocks(player.x, player.y, nx, ny)) {
+    // pés (z de mundo) precisam estar acima do topo do rail; o topo vem do tile que tem o rail (o mais alto dos dois)
+    const footZ = heightAt(player.x, player.y) * HEIGHT_UNIT + socJump.z;
+    if (footZ < railTopWorldZ(player.x, player.y, nx, ny) - 0.05 * HEIGHT_UNIT) return false;
+  }
   // Sistema de elevação: só é possível subir MAX_CLIMB_LEVELS por vez (como um
   // degrau de escada). Descer (declives, abismos) é sempre livre.
-  const curLvl = heightAt(player.x, player.y);
+  const curLvl = heightAt(player.x, player.y) + socJump.z / HEIGHT_UNIT;   // no ar, dá para subir em bordas mais altas
   const newLvl = heightAt(nx, ny);
   if (newLvl - curLvl > MAX_CLIMB_LEVELS) return false;
   return true;
 }
 
-function canEnemyMove(nx, ny, curX, curY) {
+// topo (z de mundo) do rail que está sendo cruzado entre (ox,oy) e (nx,ny)
+function railTopWorldZ(ox, oy, nx, ny) {
+  let top = 0;
+  for (let k = 0; k < 2; k++) {
+    const px = Math.floor(k ? ox : nx), py = Math.floor(k ? oy : ny);
+    if (tileAt(px, py) !== 2) continue;
+    const lv = HEIGHTS[py] && HEIGHTS[py][px] ? HEIGHTS[py][px] : 0;
+    top = Math.max(top, lv * HEIGHT_UNIT + Math.min(RAIL_COL_MAX, RAIL_HT[railTileMap[railIdx(px, py)]]));
+  }
+  return top;
+}
+// Bot (ent.hops) parado diante de um rail: começa um pulo se o outro lado for livre.
+// Retorna true se está pulando/vai pular (para a IA não desistir do caminho).
+function botRailHop(b, sx, sy) {
+  const blockX = sx !== 0 && railEdgeBlocks(b.x, b.y, b.x + sx, b.y);
+  const blockY = sy !== 0 && railEdgeBlocks(b.x, b.y, b.x, b.y + sy);
+  if (!blockX && !blockY) return false;
+  const nx = b.x + (blockX ? sx : 0), ny = b.y + (blockY ? sy : 0), r = 0.25;
+  if (boxHitsWall(nx, ny, r)) return false;
+  if (heightAt(nx, ny) - heightAt(b.x, b.y) > MAX_CLIMB_LEVELS) return false;
+  const fz = heightAt(b.x, b.y) * HEIGHT_UNIT;
+  if (b.vz > 0 || b.z - fz > 0.02) return true;   // já no ar: continua subindo
+  b.vz = Math.sqrt(2 * GRAVITY * (railTopWorldZ(b.x, b.y, nx, ny) - b.z + 0.07));
+  return true;
+}
+
+function canEnemyMove(nx, ny, curX, curY, ent) {
   const r = 0.25;
-  if (isWall(nx+r, ny+r) || isWall(nx-r, ny+r) || isWall(nx+r, ny-r) || isWall(nx-r, ny-r)) return false;
+  if (boxHitsWall(nx, ny, r)) return false;
+  if (curX !== undefined && railEdgeBlocks(curX, curY, nx, ny)) {
+    // só passa se for um bot que pula e já estiver acima do topo do rail
+    if (!(ent && ent.hops && ent.z !== undefined && ent.z >= railTopWorldZ(curX, curY, nx, ny) - 0.05 * HEIGHT_UNIT)) return false;
+  }
   if (curX !== undefined) {
     const curLvl = heightAt(curX, curY);
     const newLvl = heightAt(nx, ny);
@@ -12073,7 +13326,7 @@ function hasLineOfSight(x1, y1, x2, y2) {
   const dx = x2 - x1;
   const dy = y2 - y1;
   const dist = Math.hypot(dx, dy);
-  const steps = Math.ceil(dist * 5);
+  const steps = Math.ceil(dist * (thinMap ? 14 : 5));
   const stepX = dx / steps;
   const stepY = dy / steps;
 
@@ -12104,6 +13357,28 @@ function easeOutBack(t, c1){
 function updateStepAnim(dt){
   const target = player.targetZ;
   if(!stepAnim.init){ stepAnim.init = true; stepAnim.to = target; stepAnim.from = target; stepAnim.t = 1; player.z = target; return; }
+  // Rampa lisa / escada de degraus finos: a câmera acompanha o piso continuamente (sem a animação de "degrau grande").
+  // Fica ativa por um instante depois de sair, para a transição para o piso plano ser suave e sem passo extra.
+  if(SLP_AX){
+    const ix = Math.floor(player.x), iy = Math.floor(player.y);
+    const si = (ix >= 0 && iy >= 0 && ix < MAP_W && iy < MAP_H) ? iy * MAP_W + ix : -1;
+    const onSl = si >= 0 && SLP_AX[si] !== 0;
+    if(onSl) slopeHold = 0.4; else if(slopeHold > 0) slopeHold -= dt;
+    if(slopeHold > 0){
+      const stairs = onSl && SLP_N[si] > 0;
+      const diff = target - player.z;
+      if(Math.abs(diff) > STEP_SNAP_LEVELS * HEIGHT_UNIT) player.z = target;
+      else { player.z += diff * Math.min(1, dt * (stairs ? 24 : 40)); if(Math.abs(target - player.z) < 1e-4) player.z = target; }
+      stepAnim.from = stepAnim.to = target; stepAnim.t = 1;
+      if(stairs){   // mudou de degrau: reforça o balanço da arma (o passo sonoro continua o periódico)
+        const id = Math.round(target * 10000);
+        if(slopeStairId !== null && id !== slopeStairId && player.moving) stairBoost = Math.max(stairBoost, 0.55);
+        slopeStairId = id;
+      } else slopeStairId = null;
+      if(stairBoost > 0) stairBoost = Math.max(0, stairBoost - dt * 4);
+      return;
+    }
+  }
   if(target !== stepAnim.to){
     const diff = Math.abs(target - player.z);
     if(diff > STEP_SNAP_LEVELS * HEIGHT_UNIT){
@@ -12180,6 +13455,7 @@ function updatePlayer(dt){
   // Contagem inicial: o jogador fica parado (só pode olhar em volta) até o timer acabar.
   if(countdownActive){ moveF = 0; strafe = 0; }
 
+  const _pxPrev = player.x, _pyPrev = player.y;
   const mag = Math.hypot(moveF,strafe);
   player.moving = mag>0.05;
   if(mag>0){
@@ -12209,7 +13485,12 @@ function updatePlayer(dt){
 
   // Sistema de elevação: interpola suavemente a altura do jogador até a altura
   // do tile em que ele está parado (efeito de subir escadas / descer declives).
-  player.targetZ = heightAt(player.x, player.y) * HEIGHT_UNIT;
+  { const prevT = player.targetZ, newT = heightAt(player.x, player.y) * HEIGHT_UNIT;
+    player.targetZ = newT;
+    if(stepAnim.init && prevT !== undefined && prevT - newT > (MAX_CLIMB_LEVELS + 0.05) * HEIGHT_UNIT && prevT - newT < 12 && WATER.state === 0 && Math.hypot(player.x - _pxPrev, player.y - _pyPrev) < 1.2){
+      socJump.z += prevT - newT;   // saiu de uma borda: vira queda livre
+    }
+  }
   if(socJump.applied){ player.z -= socJump.applied; socJump.applied = 0; }
   if(WATER.applied){ player.z -= WATER.applied; WATER.applied = 0; }
   updateStepAnim(dt);
@@ -12449,7 +13730,7 @@ function updateEnemies(dt, now){
     const dy = tg.y - en.y;
     const dist = Math.hypot(dx, dy);
 
-    if(dist <= en.attackRange){
+    if(dist <= en.attackRange && hasLineOfSight(en.x, en.y, tg.x, tg.y)){
       if(now - en.lastAttack > 1000){
         en.lastAttack = now;
         SFX.zombieScream();
@@ -12473,8 +13754,14 @@ function updateEnemies(dt, now){
         }
       }
     } else if(dist <= en.range){
-      const dirX = dx / dist;
-      const dirY = dy / dist;
+      // parede fina entre o zumbi e o alvo: ele contorna pelo caminho (BFS) em vez de empacar na lâmina
+      let ang = Math.atan2(dy, dx);
+      if(!hasLineOfSight(en.x, en.y, tg.x, tg.y)){
+        if(!en.pathAt || now - en.pathAt > 400){ en.pathAt = now; en.pathAng = dmPathAngle(en, tg.x, tg.y); }
+        if(en.pathAng !== null && en.pathAng !== undefined) ang = en.pathAng;
+      } else en.pathAt = 0;
+      const dirX = Math.cos(ang);
+      const dirY = Math.sin(ang);
       const stepX = dirX * en.speed * dt;
       const stepY = dirY * en.speed * dt;
 
@@ -12482,8 +13769,7 @@ function updateEnemies(dt, now){
       if(canEnemyMove(en.x, en.y + stepY, en.x, en.y)) en.y += stepY;
     }
 
-    const targetZ = heightAt(en.x, en.y) * HEIGHT_UNIT;
-    en.z = (en.z === undefined ? 0 : en.z) + (targetZ - (en.z || 0)) * Math.min(1, dt * 8);
+    entGravity(en, dt, heightAt(en.x, en.y) * HEIGHT_UNIT);
   });
 }
 
@@ -12623,6 +13909,7 @@ function netMakePeer(id){
 const NET_SPAWN_OFF = [[0, 0], [0.8, 0], [-0.8, 0], [0, 0.8]];
 const NET_SFX_OK = { fnafLaugh: 1, fnafWindowScare: 1, fnafPowerDown: 1, fnafDoor: 1, fnafQuote: 1 };
 let netPeer = null, netConn = null, netMyId = 0, netEntMap = {}, netTimers = [], netPkTaken = {}, netPrev = null, netCfgKey = '';
+let netAwayPeers = [], netJoinSeq = 0;   // convidados que saíram da partida mas continuam na sala
 const netPeers = [];   // host: { conn, id, idx, team, pref:{team}, ent }
 const netUI = {};
 const netT = (pt, en) => currentLang === 'en' ? en : pt;
@@ -12648,7 +13935,7 @@ function netHumanCounts(){
 function netSpawnPos(base, si){
   const o = NET_SPAWN_OFF[si % NET_SPAWN_OFF.length], r = 0.25;
   const nx = base.x + o[0], ny = base.y + o[1];
-  const ok = !isWall(nx + r, ny + r) && !isWall(nx - r, ny + r) && !isWall(nx + r, ny - r) && !isWall(nx - r, ny - r);
+  const ok = !boxHitsWall(nx, ny, r);
   return ok ? { x: nx, y: ny } : { x: base.x, y: base.y };
 }
 
@@ -12798,7 +14085,7 @@ function netOnSfx(d){
 function netLeave(){
   const was = !!(NET.mode || NET.lobby);
   netTimers.forEach(clearInterval); netTimers = [];
-  netPeers.length = 0; netEntMap = {}; netMyId = 0; netPkTaken = {}; netPrev = null; netCfgKey = '';
+  netPeers.length = 0; netAwayPeers = []; netEntMap = {}; netMyId = 0; netPkTaken = {}; netPrev = null; netCfgKey = '';
   try { if(netConn) netConn.close(); } catch(e) {}
   try { if(netPeer) netPeer.destroy(); } catch(e) {}
   netConn = null; netPeer = null;
@@ -12807,10 +14094,88 @@ function netLeave(){
     netSetLobbyUI(false);
     refreshMapsForMode();
     const rb = document.getElementById('restartBtn'); if(rb) rb.style.display = '';
+    netSetBackLabels(false);
     if(netUI.panel) netUI.panel.style.display = 'none';
     dmPlayerDead = false;
   }
 }
+// ---------- voltar para a SALA (seleção de modo) sem desconectar ----------
+function netSetBackLabels(on){
+  const d = I18N[currentLang] || {};
+  const a = document.getElementById('backToMenuFromSettingsBtn'), r = document.getElementById('restartBtn'), b = document.getElementById('backToMenuBtn');
+  if(on){
+    const t = netT('VOLTAR À SALA', 'BACK TO ROOM');
+    if(a) a.textContent = t; if(r) r.textContent = t; if(b) b.style.display = 'none';
+  } else {
+    if(a && d.mainMenuBtn) a.textContent = d.mainMenuBtn;
+    if(r && d.retry) r.textContent = d.retry;
+    if(b) b.style.display = '';
+  }
+}
+// Convidado saiu da partida (mas continua na sala): o host tira o jogador da partida e para de enviar snapshots a ele.
+function netHostPeerAway(p){
+  const i = netPeers.indexOf(p);
+  if(i < 0 || !NET.started) return;
+  netPeers.splice(i, 1); netAwayPeers.push(p); p.away = true;
+  if(p.ent){
+    if(ctf) ctfDropFlag(p.ent);
+    if(hr) hrDropFollowers(p.ent);
+    p.ent.alive = false;
+    const k = enemies.indexOf(p.ent); if(k >= 0) enemies.splice(k, 1);
+    if(currentGameMode === 'soccer' && soc) socReplaceWithBot(p.ent);
+    p.ent = null;
+  }
+  uiToast(netT('Um jogador saiu da partida', 'A player left the match'), 'err');
+  netCoopHostCheck();
+}
+// Fim de partida ou "sair": todos voltam à tela da sala (escolha de modo/mapa), mantendo a conexão.
+//  · host: encerra a partida para todos e reabre a sala (quem tinha saído antes volta à lista)
+//  · convidado: volta sozinho; se o host voltar, o host puxa todos junto ('tolobby')
+function netBackToLobby(fromHost){
+  if(!NET.mode || NET.mode === 'clientfinal' || !(NET.started || NET.lobby)) return false;
+  const host = NET.mode === 'host', wasStarted = NET.started;
+  netTimers.forEach(clearInterval); netTimers = [];
+  if(host){
+    netAwayPeers.forEach(p => { if(p.conn && p.conn.open && netPeers.indexOf(p) < 0) netPeers.push(p); });
+    netAwayPeers = [];
+    netPeers.sort((a, b) => (a.joinN || 0) - (b.joinN || 0));
+    netPeers.forEach(p => { p.ent = null; p.away = false; });
+    if(wasStarted) netBroadcast({ t: 'tolobby' });
+    netPeers.forEach((p, i) => netSendTo(p, { t: 'welcome', me: i + 1 }));
+  } else if(!fromHost && wasStarted){
+    netSend({ t: 'away' });
+  }
+  netEntMap = {}; netPkTaken = {}; netPrev = null; netCfgKey = ''; netMyId = 0;
+  NET.started = false; NET.lobby = true; NET.forceSide = false; NET.si = 0; NET.socSlot = 0;
+  // encerra a partida local
+  SFX.stopMusic();
+  started = false;
+  if(countdownInterval) clearInterval(countdownInterval);
+  if(scoreInterval) clearInterval(scoreInterval);
+  ['gameOverOverlay', 'settingsModal'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+  document.getElementById('countdownOverlay').style.display = 'none';
+  fnafReset(); ctf = null; hr = null; ctfUpdateHud(); hrUpdateHud();
+  dmPlayerDead = false;
+  if(document.pointerLockElement) document.exitPointerLock();
+  // tela da sala
+  mainMenu.style.display = 'none';
+  if(netUI.panel) netUI.panel.style.display = 'none';
+  levelSelectModal.style.display = 'flex';
+  netSetLobbyUI(true, host ? 'host' : 'client');
+  refreshMapsForMode();
+  renderLevelPreview(parseInt(mapSelect.value));
+  SFX.playMenuMusic();
+  if(host){
+    netRefreshHostLobby();
+    netTimers.push(setInterval(() => { if(!NET.started) netRefreshHostLobby(); }, 500));
+    if(wasStarted) uiToast(netT('De volta à sala', 'Back in the room'), 'ok');
+  } else {
+    netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', team: document.getElementById('dmTeamSelect').value }); }, 500));
+    if(fromHost) uiToast(netT('O host voltou para a sala', 'The host is back in the room'), 'ok');
+  }
+  return true;
+}
+
 function netForceMenu(msg){
   netLeave();
   SFX.stopMusic();
@@ -12919,7 +14284,7 @@ function netCreateRoom(){
   netPeer.on('connection', conn => netHostAccept(conn));
 }
 function netHostAccept(conn){
-  const p = { conn, id: 0, idx: 0, team: 'CT', pref: { team: 'RANDOM' }, ent: null };
+  const p = { conn, id: 0, idx: 0, team: 'CT', pref: { team: 'RANDOM' }, ent: null, joinN: ++netJoinSeq, away: false };
   conn.on('open', () => {
     if(NET.started || netPeers.length >= NET_MAX_GUESTS){
       try { conn.send({ t: 'full' }); } catch(e) {}
@@ -12933,7 +14298,7 @@ function netHostAccept(conn){
   conn.on('data', d => netHostOnData(p, d));
   conn.on('close', () => {
     const i = netPeers.indexOf(p);
-    if(i < 0) return;
+    if(i < 0){ const j = netAwayPeers.indexOf(p); if(j >= 0) netAwayPeers.splice(j, 1); return; }
     netPeers.splice(i, 1);
     if(p.ent){
       if(ctf) ctfDropFlag(p.ent);
@@ -12968,6 +14333,7 @@ function netBeginMatch(map, mode, foe, team, order, si){
   levelSelectModal.style.display = 'none'; mainMenu.style.display = 'none';
   if(netUI.panel) netUI.panel.style.display = 'none';
   netSetLobbyUI(false);
+  netSetBackLabels(true);
   started = true;
   SFX.stopMenuMusic();
   resetGame(map);
@@ -13116,7 +14482,8 @@ function netHostOnData(p, d){
     return;
   }
   if(d.t === 'pref'){ p.pref.team = (d.team === 'CT' || d.team === 'T') ? d.team : 'RANDOM'; return; }
-  if(d.t === 'chat'){ chatHostReceive(p, d.m); return; }
+  if(d.t === 'chat'){ if(netPeers.indexOf(p) >= 0) chatHostReceive(p, d.m); return; }
+  if(d.t === 'away'){ netHostPeerAway(p); return; }
   const b = p.ent;
   if(!b || !NET.started) return;
   const now = performance.now();
@@ -13270,6 +14637,9 @@ function netJoinRoom(code){
 }
 function netClientOnData(d){
   if(!d) return;
+  if(d.t === 'tolobby'){ if(NET.started) netBackToLobby(true); return; }   // host voltou para a seleção de modo: todos voltam junto
+  // fora da partida (ex.: já voltou à sala) mensagens atrasadas de jogo são descartadas
+  if(!NET.started && d.t !== 'welcome' && d.t !== 'full' && d.t !== 'lobby' && d.t !== 'start' && d.t !== 'chat') return;
   if(d.t === 'welcome') NET.me = d.me;
   else if(d.t === 'full') { netForceMenu(netT('Sala cheia ou partida em andamento', 'Room full or match in progress')); }
   else if(d.t === 'lobby'){ if(!NET.started){ netApplyCfg(d.cfg); netRenderPlayers(d.pl, NET.me || 1); } }
@@ -13531,6 +14901,80 @@ function netClientTick(dt){
     SFX.menuBack(); netLeave(); netStatus('');
     pn.style.display = 'none'; mainMenu.style.display = 'flex';
   });
+})();
+
+// =========================================================
+// ADAPTAÇÃO PARA NAVEGADORES DE CONSOLE (Xbox Edge / PlayStation)
+// =========================================================
+(function dzConsoleInit(){
+  const C = window.DZ_CONSOLE;
+  if(!C) return;
+  const T = (pt, en) => currentLang === 'en' ? en : pt;
+  const rootEl = document.documentElement;
+  if(C.platform === 'ps') gpIsPS = true;   // dicas com ✕ ○ □ △ desde o início
+
+  // 1) Botão B/Círculo = "voltar" do navegador: segura a página para o jogo não fechar.
+  //    Com a Gamepad API ativa o B já é tratado em pollGamepad; sem ela (ex.: PS), vira "voltar" dos menus.
+  try{ history.pushState({ dz: 1 }, '', location.href); }catch(e){}
+  window.addEventListener('popstate', () => {
+    try{ history.pushState({ dz: 1 }, '', location.href); }catch(e){}
+    if(gamepadIndex !== null) return;
+    const r = gpActiveMenuRoot();
+    if(r){
+      if(r.id === 'settingsModal') gpClickId('closeSettingsBtn');
+      else if(r.id === 'levelSelectModal') gpClickId('closeLevelSelectBtn');
+      else if(r.id === 'gameOverOverlay') gpClickId(NET.mode ? 'restartBtn' : 'backToMenuBtn');
+      else if(r.id === 'netPanel') gpClickId('netClose');
+    } else if(started && !gameOver){
+      if(document.pointerLockElement) document.exitPointerLock();
+      openSettingsMenu();
+    }
+  });
+
+  // 2) Botão Xbox / PS ou troca de app: pausa sozinho (não em partida online, para não travar o host)
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden && started && !gameOver && !NET.mode && settingsModal.style.display !== 'flex') openSettingsMenu();
+  });
+
+  // 3) Esconde o cursor virtual durante a partida
+  setInterval(() => {
+    rootEl.classList.toggle('in-game', !!(started && !gameOver && settingsModal.style.display !== 'flex'));
+  }, 400);
+
+  // 4) Qualidade automática: Xbox One / PS4 começam em BAIXA; se a taxa de quadros cair, baixa um degrau
+  const qBtn = v => document.querySelector('#renderQualitySeg .seg-btn[data-val="' + v + '"]');
+  const q = { frames: 0, t: performance.now(), low: 0, warm: 0, done: false, auto: false };
+  function setQuality(v){ const b = qBtn(v); if(b){ q.auto = true; b.click(); q.auto = false; } }
+  document.querySelectorAll('#renderQualitySeg .seg-btn').forEach(b => b.addEventListener('click', () => { if(!q.auto) q.done = true; }));   // escolha manual vence
+  if(C.legacy) setQuality('0.75');
+  function qTick(now){
+    requestAnimationFrame(qTick);
+    if(q.done) return;
+    const playing = started && !gameOver && settingsModal.style.display !== 'flex' && !document.hidden;
+    if(!playing){ q.frames = 0; q.t = now; return; }
+    q.frames++;
+    if(now - q.t < 2500) return;
+    const fps = q.frames * 1000 / (now - q.t);
+    q.frames = 0; q.t = now;
+    if(q.warm < 2){ q.warm++; return; }          // ignora as primeiras janelas (carregamento / JIT)
+    if(fps >= 26){ q.low = 0; return; }
+    if(++q.low < 2) return;
+    q.low = 0;
+    const target = RENDER_SCALE > 1 ? '1' : '0.75';
+    setQuality(target);
+    uiToast(T('Qualidade reduzida para manter a fluidez', 'Quality lowered to keep it smooth'));
+    if(target === '0.75') q.done = true;
+  }
+  requestAnimationFrame(qTick);
+
+  // 5) Código da sala: teclado virtual do console em MAIÚSCULAS, sem autocorreção
+  const nc = document.getElementById('netCode');
+  if(nc){ nc.setAttribute('autocapitalize', 'characters'); nc.setAttribute('autocorrect', 'off'); nc.setAttribute('enterkeyhint', 'go'); }
+
+  // 6) Alguns navegadores só liberam o controle depois do primeiro botão apertado
+  setTimeout(() => {
+    if(gamepadIndex === null) uiToast(T('Aperte um botão do controle para ativá-lo', 'Press a controller button to activate it'));
+  }, 6000);
 })();
 
 setLanguage('pt');
