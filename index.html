@@ -113,15 +113,17 @@
       radial-gradient(ellipse at 50% 30%, rgba(90,58,16,.18), rgba(0,0,0,0) 60%),
       repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0px, rgba(255,255,255,.015) 1px, transparent 2px, transparent 4px),
       #000;
-    display:flex;align-items:center;justify-content:center;
+    display:flex;align-items:flex-end;justify-content:flex-end;
+    padding:0 max(clamp(16px,3vw,32px), env(safe-area-inset-right)) max(clamp(14px,3vh,28px), env(safe-area-inset-bottom)) 0;
+    box-sizing:border-box;
     color:#e8b93a;text-align:center;
     transition:opacity .5s ease-out;
   }
   #loadingScreen.loading-done{ opacity:0; pointer-events:none; }
-  .loading-inner{ width:min(360px, 84vw); }
+  .loading-inner{ width:min(250px, 46vw); }
   .loading-skull{ font-size:clamp(26px,5vw,38px);margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(201,75,44,.5)); }
   #loadingBarTrack{
-    width:100%;height:14px;margin-top:22px;
+    width:100%;height:10px;margin:0;
     background:rgba(0,0,0,.7);border:2px solid var(--panel-border);border-radius:3px;
     overflow:hidden;box-shadow:inset 0 1px 4px rgba(0,0,0,.8);
   }
@@ -1255,14 +1257,7 @@ html.console .gp-focus{ outline-width:4px !important; }
 <body>
 <div id="loadingScreen">
   <div class="loading-inner">
-    <div class="loading-skull">☠</div>
-    <span class="badge">REMASTERED</span>
-    <h1 class="title-header" style="font-size:clamp(24px,5vw,42px);margin-top:8px;">DEAD ZONE</h1>
     <div id="loadingBarTrack"><div id="loadingBarFill"></div></div>
-    <div class="loading-meta">
-      <span id="loadingTip">CARREGANDO TEXTURAS...</span>
-      <span id="loadingPct">0%</span>
-    </div>
   </div>
 </div>
 <div id="crtOverlay"></div>
@@ -1912,30 +1907,52 @@ const texLoaded = { wall: false, floor: false, ceiling: false };
 // evento de "carregado".
 let loadingTipTimer = null;
 const AssetLoader = (function(){
-  let total = 0, loaded = 0, finished = false;
+  let total = 0, settled = 0, finished = false, holding = false, holdSafety = null, hideTimer = null;
+  const el = () => document.getElementById('loadingScreen');
 
   function updateUI(){
-    const p = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 100;
+    const p = total > 0 ? Math.min(100, Math.round((settled / total) * 100)) : 100;
     const bar = document.getElementById('loadingBarFill');
-    const pct = document.getElementById('loadingPct');
     if(bar) bar.style.width = p + '%';
-    if(pct) pct.textContent = p + '%';
+  }
+  function hideScreen(){
+    const e = el();
+    if(!e) return;
+    e.classList.add('loading-done');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => { e.style.display = 'none'; }, 550);
   }
 
   function finish(){
     if(finished) return;
     finished = true;
-    loaded = total;
-    updateUI();
+    const bar = document.getElementById('loadingBarFill');
+    if(bar) bar.style.width = '100%';
     if(loadingTipTimer){ clearInterval(loadingTipTimer); loadingTipTimer = null; }
-    const el = document.getElementById('loadingScreen');
-    if(el){
-      el.classList.add('loading-done');
-      setTimeout(() => { el.style.display = 'none'; }, 550);
-    }
+    hideScreen();
     // Música do menu logo após o loading. Se o navegador bloquear o autoplay (sem
     // interação ainda), o primeiro clique/toque/tecla dispara a música (ver SFX.unlock).
     try { SFX.playMenuMusic(); } catch(e) {}
+  }
+
+  // Ao entrar em um mapa/modo: se ainda há textura/asset carregando (rede lenta), mostra a mesma barra
+  // e congela a partida até terminar (ou até um limite de segurança). Sem nada pendente, não faz nada.
+  function hold(){
+    if(!finished || holding || settled >= total) return false;
+    holding = true;
+    const e = el();
+    if(e){ clearTimeout(hideTimer); e.style.display = ''; void e.offsetWidth; e.classList.remove('loading-done'); }
+    updateUI();
+    holdSafety = setTimeout(release, 12000);
+    return true;
+  }
+  function release(){
+    if(!holding) return;
+    holding = false;
+    clearTimeout(holdSafety);
+    const bar = document.getElementById('loadingBarFill');
+    if(bar) bar.style.width = '100%';
+    hideScreen();
   }
 
   // Cada chamador registra um asset e recebe de volta a função que deve
@@ -1947,14 +1964,14 @@ const AssetLoader = (function(){
     return function(){
       if(called) return;
       called = true;
-      loaded++;
+      settled++;
       updateUI();
-      if(loaded >= total) finish();
+      if(settled >= total){ if(!finished) finish(); if(holding) release(); }
     };
   }
 
   setTimeout(finish, 14000);
-  return { track, finish, updateUI };
+  return { track, finish, updateUI, hold, isHolding: () => holding };
 })();
 
 // Ícones dos modos de jogo (menu de seleção e HUD). Entram na contagem do loading.
@@ -3609,6 +3626,238 @@ const SKY_V_SCALE = 1.6;   // quanto do céu aparece na vertical (maior = mais c
 let skyColAng = [];        // ângulo de cada coluna em relação ao centro da tela
 let skyRowV = [];          // linha da textura (0..1) de cada linha da tela acima do horizonte
 
+// ===== HORIZONTE ESTÁTICO (casas, prédios e árvores ao nível do chão, entre a skybox e os muros) =====
+// Imita um mapa "infinito" ao redor da arena. É um panorama 360° (2048x136) pintado UMA vez por mapa/skybox:
+// a linha HZ_ABOVE é o horizonte; as 16 linhas abaixo são o chão distante. Não se move com o jogador, só gira com a
+// câmera (igual à skybox) e é desenhado POR CIMA dela (a skybox continua lá, intacta). O estilo segue a categoria do
+// mapa (PARK, HOUSE, URBAN, METRO, INDUSTRIAL, SOCCER); mapas de deserto usam cores de areia e quase sem árvores.
+// As cores seguem a skybox do mapa (dia / pôr do sol / noite): névoa na cor do horizonte e janelas acesas à noite.
+const HZ_W = 2048, HZ_ABOVE = 120, HZ_BELOW = 16, HZ_H = HZ_ABOVE + HZ_BELOW, HZ_PPT = 192;   // HZ_PPT = linhas do panorama por unidade de tangente
+const HZ_TREE_URLS = [
+  'https://i.postimg.cc/028Ddw7X/Background-Tree1.png',
+  'https://i.postimg.cc/X7VdcC9H/Background-Tree2.png',
+  'https://i.postimg.cc/ncHBYDqw/Background-Tree3.png'
+];
+let hzTreesReady = 0;
+const hzTrees = HZ_TREE_URLS.map(url => {
+  const e = { img: null, ready: false, w: 0, h: 0 };
+  const done = AssetLoader.track();
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => { e.img = img; e.w = img.naturalWidth; e.h = img.naturalHeight; e.ready = e.w > 0 && e.h > 0; if (e.ready) hzTreesReady++; done(); };
+  img.onerror = done;
+  img.src = url;
+  return e;
+});
+const HZ = { key: '', pan: null, on: false, rowTab: null, tabH: 0, tabHz: 0, noTrees: false };
+const HZ_CFG = {
+  PARK:       { ground: [72, 106, 54], L: [{ w: { tree: 6, house: 1 }, gap: [-8, 6] },  { w: { tree: 7, house: 1 }, gap: [-8, 8] },  { w: { tree: 5, house: 0.5 }, gap: [-4, 30] }] },
+  HOUSE:      { ground: [78, 110, 58], L: [{ w: { house: 4, tree: 3, mid: 0.5 }, gap: [0, 8] }, { w: { house: 4, tree: 4 }, gap: [-2, 8] }, { w: { house: 2, tree: 4 }, gap: [0, 24] }] },
+  URBAN:      { ground: [86, 86, 88],  L: [{ w: { tower: 3, mid: 4, tree: 0.6 }, gap: [-4, 6] }, { w: { mid: 3, house: 2.5, tower: 1, tree: 1.5 }, gap: [0, 10] }, { w: { house: 3, mid: 1, tree: 2.5 }, gap: [2, 30] }] },
+  METRO:      { ground: [80, 82, 88],  L: [{ w: { tower: 6, mid: 2 }, gap: [-6, 2] },  { w: { tower: 4, mid: 3, tree: 0.5 }, gap: [-4, 6] }, { w: { mid: 2.5, house: 1, tree: 1.5 }, gap: [4, 30] }] },
+  INDUSTRIAL: { ground: [92, 90, 84],  L: [{ w: { ware: 3, chim: 1, silo: 1, mid: 0.5 }, gap: [0, 14] }, { w: { ware: 4, silo: 0.8, chim: 0.5, tree: 1 }, gap: [2, 16] }, { w: { ware: 2, tree: 2, house: 0.5 }, gap: [6, 36] }] },
+  SOCCER:     { ground: [74, 104, 56], L: [{ w: { mid: 4, tower: 1.2, tree: 1 }, gap: [0, 8] }, { w: { mid: 2, house: 2, tree: 3 }, gap: [0, 12] }, { w: { tree: 4, house: 1 }, gap: [0, 30] }] }
+};
+function hzRng(seed) {
+  let a = seed >>> 0;
+  return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function hzHash(a, b, c) {
+  let h = (a ^ Math.imul(b, 374761393) ^ Math.imul(c, 668265263)) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+// cor média da skybox logo acima do horizonte (a "névoa" do horizonte)
+function hzHazeFromSky(sky) {
+  if (!sky || !sky.ready) return [200, 215, 235];
+  const sw = sky.w, row = Math.max(0, Math.min(sky.h - 1, Math.floor(sky.h * 0.5) - 2));
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let x = 0; x < sw; x += 4) { const p = sky.data[row * sw + x]; r += p & 255; g += (p >> 8) & 255; b += (p >> 16) & 255; n++; }
+  return [r / n, g / n, b / n];
+}
+function hzBuild(idx, ldef, sky, useTrees) {
+  const th = getLevelTheme(idx, ldef), cat = th.cat || 'URBAN';
+  if (cat === 'TEST' || cat === 'FNAF') return null;
+  const desert = !!(th.fo && th.fo[0] === 9);
+  const cfg = HZ_CFG[cat] || HZ_CFG.URBAN;
+  const rnd = hzRng(idx * 7919 + 12345);
+  const R = (a, b) => a + rnd() * (b - a);
+  const pick = arr => arr[(rnd() * arr.length) | 0];
+
+  const hz = hzHazeFromSky(sky);
+  const lum = (0.299 * hz[0] + 0.587 * hz[1] + 0.114 * hz[2]) / 255;
+  const night = currentSky === 4 || currentSky === 5, sunset = currentSky === 6 || currentSky === 7;
+  const shade = night ? 0.32 : Math.min(1, 0.35 + lum * 0.85);
+  const litP = night ? 0.55 : (sunset ? 0.24 : 0);
+  const FOG = [0.6, 0.38, 0.18];                                   // névoa por camada (0 = mais longe)
+  const BASE = [HZ_ABOVE + 2, HZ_ABOVE + 6, HZ_ABOVE + 11];        // linha onde cada camada "pisa" no chão
+  const gr = desert ? [176, 146, 98] : cfg.ground;
+
+  const cv = document.createElement('canvas'); cv.width = HZ_W; cv.height = HZ_H;
+  const g = cv.getContext('2d');
+  const rgb = (r, gg, b) => 'rgb(' + (r | 0) + ',' + (gg | 0) + ',' + (b | 0) + ')';
+  const col = (c, k, m) => { const f = FOG[k], s = shade * (m || 1); return rgb(c[0] * s * (1 - f) + hz[0] * f, c[1] * s * (1 - f) + hz[1] * f, c[2] * s * (1 - f) + hz[2] * f); };
+  const litStr = FOG.map(f => rgb(255 * (1 - f * 0.4) + hz[0] * f * 0.4, 208 * (1 - f * 0.4) + hz[1] * f * 0.4, 120 * (1 - f * 0.4) + hz[2] * f * 0.4));
+  const glass = (wall, k, m) => night ? col(wall, k, 0.45) : col([wall[0] * 0.5 + 20, wall[1] * 0.5 + 35, wall[2] * 0.5 + 55], k, m || 1);
+  const wrap = (x, w, fn) => { fn(x); if (x + w > HZ_W) fn(x - HZ_W); };   // costura do panorama (360° sem emenda)
+
+  const W_URBAN = desert ? [[200, 170, 125], [185, 150, 105], [215, 190, 150], [170, 135, 95]] : [[150, 140, 128], [170, 160, 145], [120, 125, 135], [160, 120, 100], [130, 130, 130], [185, 175, 160]];
+  const W_METRO = desert ? W_URBAN : [[110, 125, 145], [95, 110, 130], [135, 150, 165], [120, 120, 130]];
+  const W_HOUSE = desert ? [[215, 190, 150], [200, 170, 125], [185, 150, 105]] : [[225, 215, 190], [205, 175, 140], [190, 200, 205], [225, 190, 150], [200, 150, 120]];
+  const W_WARE  = desert ? W_URBAN : [[140, 140, 135], [150, 120, 95], [110, 120, 125], [165, 165, 160]];
+  const ROOFS   = desert ? [[170, 130, 90], [150, 110, 80]] : [[140, 70, 50], [110, 60, 45], [90, 90, 98], [120, 85, 60]];
+
+  // --- árvores: as 3 texturas, escurecidas e esmaecidas pela névoa da camada (cache por tipo/camada) ---
+  const treeCache = {};
+  const treeTinted = (t, k) => {
+    const key = t * 4 + k; if (treeCache[key]) return treeCache[key];
+    const e = hzTrees[t], sc = Math.min(1, 256 / e.h);
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(e.w * sc)); c.height = Math.max(1, Math.round(e.h * sc));
+    const x = c.getContext('2d'); x.imageSmoothingQuality = 'high';
+    x.drawImage(e.img, 0, 0, c.width, c.height);
+    x.globalCompositeOperation = 'source-atop';
+    x.fillStyle = 'rgba(0,0,0,' + (1 - shade).toFixed(3) + ')'; x.fillRect(0, 0, c.width, c.height);
+    x.fillStyle = 'rgba(' + (hz[0] | 0) + ',' + (hz[1] | 0) + ',' + (hz[2] | 0) + ',' + FOG[k] + ')'; x.fillRect(0, 0, c.width, c.height);
+    return (treeCache[key] = c);
+  };
+  const tree = (x, h, k) => {
+    const t = (rnd() * 3) | 0, flip = rnd() < 0.5, by = BASE[k], e = hzTrees[t];
+    if (useTrees && e.ready) {
+      const im = treeTinted(t, k), w = Math.max(6, Math.round(h * e.w / e.h)), sink = Math.round(h * 0.02);
+      wrap(x, w, xo => {
+        g.save(); g.translate(xo + w / 2, 0); g.scale(flip ? -1 : 1, 1);
+        g.drawImage(im, -w / 2, by - h + sink, w, h); g.restore();
+      });
+      return w;
+    }
+    const w = Math.round(h * 0.7);   // sem textura (ainda carregando / bloqueada): copa e tronco simples
+    wrap(x, w, xo => {
+      g.fillStyle = col([70, 50, 35], k); g.fillRect(xo + w / 2 - 1, by - h * 0.4, 3, h * 0.4);
+      g.fillStyle = col(desert ? [120, 130, 70] : [45, 95, 45], k);
+      g.beginPath(); g.ellipse(xo + w / 2, by - h * 0.62, w / 2, h * 0.38, 0, 0, Math.PI * 2); g.fill();
+    });
+    return w;
+  };
+
+  // --- prédios (torres e médios) com fachada de janelas ---
+  const tower = (x, w, h, k, metro) => {
+    const wall = pick(metro ? W_METRO : W_URBAN), sd = (rnd() * 1e9) | 0, crown = rnd(), ant = rnd();
+    const by = BASE[k], top = by - h, cw = metro ? 5 : 6, ch = metro ? 6 : 8, ww = metro ? 3 : 3, wh = metro ? 3 : 4;
+    const crownH = crown < 0.4 ? Math.round(R(6, 10)) : 0;
+    wrap(x, w, xo => {
+      g.fillStyle = col(wall, k); g.fillRect(xo, top, w, h);
+      g.fillStyle = col(wall, k, 0.82); g.fillRect(xo + w * 0.72, top, w * 0.28, h);        // lado na sombra
+      g.fillStyle = col(wall, k, 0.7); g.fillRect(xo, top, w, 1);
+      if (crownH) { g.fillStyle = col(wall, k, 0.92); g.fillRect(xo + w * 0.2, top - crownH, w * 0.6, crownH); }
+      if (ant > 0.7) { g.fillStyle = col([60, 60, 66], k); g.fillRect(xo + w * 0.5, top - crownH - 12, 1, 12 + crownH); }
+      const cols = Math.floor((w - 4) / cw), rows = Math.floor((h - 6) / ch), ox = xo + (w - cols * cw) / 2 + (cw - ww) / 2;
+      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+        g.fillStyle = (litP > 0 && hzHash(sd, i, j) < litP) ? litStr[k] : glass(wall, k);
+        g.fillRect(Math.round(ox + i * cw), Math.round(top + 4 + j * ch), ww, wh);
+      }
+    });
+  };
+  // --- casas baixas ---
+  const house = (x, w, h, k) => {
+    const wall = pick(W_HOUSE), roof = pick(ROOFS), sd = (rnd() * 1e9) | 0, flat = rnd() < (desert ? 0.6 : 0.12);
+    const by = BASE[k], bodyH = Math.round(h * (flat ? 0.85 : 0.58));
+    wrap(x, w, xo => {
+      g.fillStyle = col(wall, k); g.fillRect(xo, by - bodyH, w, bodyH);
+      g.fillStyle = col(roof, k);
+      if (flat) g.fillRect(xo - 1, by - bodyH - 2, w + 2, 3);
+      else { g.beginPath(); g.moveTo(xo - 2, by - bodyH); g.lineTo(xo + w * 0.5, by - h); g.lineTo(xo + w + 2, by - bodyH); g.closePath(); g.fill(); }
+      g.fillStyle = col([60, 45, 35], k); g.fillRect(xo + Math.round(w * 0.14), by - Math.round(bodyH * 0.6), 3, Math.round(bodyH * 0.6));
+      const nw = Math.max(1, Math.floor((w - 10) / 9));
+      for (let i = 0; i < nw; i++) {
+        g.fillStyle = (litP > 0 && hzHash(sd, i, 7) < litP * 1.3) ? litStr[k] : glass(wall, k);
+        g.fillRect(xo + 8 + i * 9, by - Math.round(bodyH * 0.72), 3, 3);
+      }
+    });
+  };
+  // --- industrial ---
+  const ware = (x, w, h, k) => {
+    const wall = pick(W_WARE), saw = rnd() < 0.5, by = BASE[k];
+    wrap(x, w, xo => {
+      g.fillStyle = col(wall, k); g.fillRect(xo, by - h, w, h);
+      g.fillStyle = col(wall, k, 0.8); g.fillRect(xo, by - h, w, 1);
+      if (saw) { g.fillStyle = col(wall, k, 0.88); for (let i = 0; i + 14 <= w; i += 14) { g.beginPath(); g.moveTo(xo + i, by - h); g.lineTo(xo + i, by - h - 5); g.lineTo(xo + i + 14, by - h); g.closePath(); g.fill(); } }
+      g.fillStyle = (litP > 0) ? litStr[k] : glass(wall, k);
+      for (let i = 6; i + 5 < w; i += 9) g.fillRect(xo + i, by - Math.round(h * 0.7), 5, 2);
+      g.fillStyle = col([55, 55, 60], k); g.fillRect(xo + Math.round(w * 0.2), by - Math.round(h * 0.45), 8, Math.round(h * 0.45));
+    });
+  };
+  const chim = (x, h, k) => {
+    const w = 6 + ((rnd() * 3) | 0), by = BASE[k];
+    wrap(x, w, xo => {
+      g.fillStyle = col([160, 150, 145], k); g.fillRect(xo, by - h, w, h);
+      g.fillStyle = col([170, 60, 50], k);
+      for (let y = by - h + 4; y < by - 4; y += 16) g.fillRect(xo, y, w, 6);
+      g.fillStyle = col([50, 50, 55], k); g.fillRect(xo - 1, by - h, w + 2, 3);
+    });
+    return w;
+  };
+  const silo = (x, w, h, k) => {
+    const by = BASE[k], c = pick([[175, 175, 170], [150, 160, 165], [185, 150, 120]]);
+    wrap(x, w, xo => {
+      g.fillStyle = col(c, k); g.fillRect(xo, by - h, w, h);
+      g.beginPath(); g.arc(xo + w / 2, by - h, w / 2, Math.PI, 0); g.fill();
+      g.fillStyle = col(c, k, 0.75); for (let y = by - h + 6; y < by - 2; y += 9) g.fillRect(xo, y, w, 1);
+    });
+  };
+
+  const TREE_H = [[14, 26], [24, 44], [30, 54]], HOUSE_H = [[12, 18], [16, 26], [22, 34]], MID_H = [[30, 56], [26, 48], [24, 40]],
+        TOWER_H = [[58, 100], [46, 84], [34, 62]], WARE_H = [[12, 22], [14, 26], [18, 30]];
+  const place = (kind, x, k) => {
+    switch (kind) {
+      case 'tree':  { return tree(x, Math.round(R(TREE_H[k][0], TREE_H[k][1])), k) * 0.62; }
+      case 'house': { const h = Math.round(R(HOUSE_H[k][0], HOUSE_H[k][1])), w = Math.round(h * R(1.2, 1.8)); house(x, w, h, k); return w; }
+      case 'mid':   { const h = Math.round(R(MID_H[k][0], MID_H[k][1])), w = Math.round(R(24, 46)); tower(x, w, h, k, false); return w; }
+      case 'tower': { const h = Math.round(R(TOWER_H[k][0], TOWER_H[k][1])), w = Math.round(R(26, 52)); tower(x, w, h, k, cat === 'METRO'); return w; }
+      case 'ware':  { const h = Math.round(R(WARE_H[k][0], WARE_H[k][1])), w = Math.round(R(50, 120)); ware(x, w, h, k); return w; }
+      case 'chim':  { return chim(x, Math.round(R(48, 90)), k) + 4; }
+      case 'silo':  { const w = Math.round(R(14, 20)); silo(x, w, Math.round(R(24, 44)), k); return w; }
+    }
+    return 10;
+  };
+
+  g.fillStyle = col(gr, 0); g.fillRect(0, HZ_ABOVE, HZ_W, HZ_H - HZ_ABOVE);
+  for (let k = 0; k < 3; k++) {
+    const L = cfg.L[k], kinds = Object.keys(L.w);
+    let tot = 0; kinds.forEach(n => { tot += L.w[n]; });
+    let x = rnd() * 30;
+    while (x < HZ_W) {
+      let r = rnd() * tot, kind = kinds[0];
+      for (const n of kinds) { r -= L.w[n]; if (r <= 0) { kind = n; break; } }
+      if (desert && kind === 'tree' && rnd() > 0.15) kind = 'house';
+      x += place(kind, x, k) + R(L.gap[0], L.gap[1]);
+    }
+    g.fillStyle = col(gr, k); g.fillRect(0, BASE[k], HZ_W, HZ_H - BASE[k]);   // chão que "assenta" esta camada
+  }
+  return new Uint32Array(g.getImageData(0, 0, HZ_W, HZ_H).data.buffer);
+}
+// reconstrói quando muda o mapa, a skybox ou quando uma textura termina de carregar
+function hzEnsure(sky) {
+  const key = currentLevelIndex + '|' + currentSky + '|' + (sky && sky.ready ? 1 : 0) + '|' + hzTreesReady + '|' + (HZ.noTrees ? 0 : 1);
+  if (HZ.key === key) return;
+  HZ.key = key; HZ.pan = null;
+  const ldef = LEVEL_DEFINITIONS[currentLevelIndex];
+  try { HZ.pan = hzBuild(currentLevelIndex, ldef, sky, !HZ.noTrees); }
+  catch (e) {
+    if (!HZ.noTrees) { HZ.noTrees = true; HZ.key = ''; }   // canvas "sujo" (CORS)? tenta de novo sem as texturas das árvores
+    HZ.pan = null;
+  }
+}
+// linha da tela -> linha do panorama (mesma convenção de projeção vertical do piso: 1 unidade = SCREEN_H linhas)
+function hzRowTable(h, horizon) {
+  if (HZ.rowTab && HZ.tabH === h && HZ.tabHz === horizon) return;
+  HZ.tabH = h; HZ.tabHz = horizon; HZ.rowTab = new Int16Array(h);
+  const s = HZ_PPT / h;
+  for (let y = 0; y < h; y++) {
+    const pr = Math.floor(HZ_ABOVE + (y + 0.5 - horizon) * s);
+    HZ.rowTab[y] = pr < 0 ? -1 : (pr >= HZ_H ? HZ_H - 1 : pr);
+  }
+}
+
 const zombImg = new Image();
 zombImg.crossOrigin = "anonymous";
 zombImg.src = "https://i.postimg.cc/6Qy4H9gx/Zombie.png";
@@ -3768,22 +4017,6 @@ const FNAF_DOOR_TEX = 5;   // índice da imagem da porta em DOOR_URLS
 (function(){ const done = AssetLoader.track(); const im = new Image(); im.onload = im.onerror = done; im.src = 'https://i.postimg.cc/d0QdHKCH/HUDMOBILETOUCH.png'; })();
 
 let currentLang = 'pt';
-
-// Frases que giram na barra de loading enquanto os assets carregam.
-const LOADING_TIPS = {
-  pt: ["CARREGANDO TEXTURAS...", "CARREGANDO ARMAS...", "CARREGANDO SONS...", "ACORDANDO OS MORTOS...", "PREPARANDO O APOCALIPSE..."],
-  en: ["LOADING TEXTURES...", "LOADING WEAPONS...", "LOADING SOUNDS...", "WAKING THE DEAD...", "PREPARING THE APOCALYPSE..."]
-};
-(function startLoadingTips(){
-  let idx = 0;
-  loadingTipTimer = setInterval(() => {
-    const tipEl = document.getElementById('loadingTip');
-    if(!tipEl){ clearInterval(loadingTipTimer); return; }
-    const tips = LOADING_TIPS[currentLang] || LOADING_TIPS.pt;
-    idx = (idx + 1) % tips.length;
-    tipEl.textContent = tips[idx];
-  }, 1500);
-})();
 
 const I18N = {
   pt: {
@@ -7852,6 +8085,7 @@ function gunGameWin() {
 }
 
 function resetGame(levelIdx) {
+  AssetLoader.hold();   // texturas ainda carregando? mostra a barra e segura a partida
   gameOver = false;
   score = 0;
   player.health = player.maxHealth;
@@ -12823,7 +13057,10 @@ function castAndDraw(){
 
   // Skybox: tabelas de ângulo por coluna e de altura por linha
   const sky = skies[currentSky];
+  HZ.on = false;
   if (levelNoCeiling) {
+    hzEnsure(sky);
+    if (HZ.pan) { HZ.on = true; hzRowTable(h, horizon); }
     if (skyColAng.length !== w) {
       skyColAng = new Array(w);
       const tf = Math.tan(HALF_FOV);
@@ -13121,6 +13358,7 @@ function castAndDraw(){
   function skyFill(col, a, b){
     let u = 0;
     if (levelNoCeiling) { u = (player.angle + skyColAng[col]) / TWO_PI; u -= Math.floor(u); }
+    const pan = HZ.on ? HZ.pan : null, pc = pan ? ((u * HZ_W) | 0) : 0, rt = HZ.rowTab;   // horizonte estático por cima da skybox
     for (let r = a; r < b; r++) {
       let px = 0xFF000000;
       if (levelNoCeiling) {
@@ -13131,6 +13369,17 @@ function castAndDraw(){
         } else {
           const tt = (horizon - rs) / horizon;
           px = (255 << 24) | (235 << 16) | (((190 - 60 * tt) | 0) << 8) | ((140 - 70 * tt) | 0);
+        }
+        if (pan) {
+          const pr = rt[r];
+          if (pr >= 0) {
+            const q = pan[pr * HZ_W + pc], qa = q >>> 24;
+            if (qa === 255) px = q;
+            else if (qa) {
+              const ia = 255 - qa;
+              px = (255 << 24) | (((((px >> 16) & 255) * ia + ((q >> 16) & 255) * qa) / 255 | 0) << 16) | (((((px >> 8) & 255) * ia + ((q >> 8) & 255) * qa) / 255 | 0) << 8) | (((px & 255) * ia + (q & 255) * qa) / 255 | 0);
+            }
+          }
         }
       }
       buf32[r * w + col] = px;
@@ -14206,6 +14455,7 @@ function gameStep(now){
   const dt = Math.min(0.1, (now - lastTime) / 1000);
   lastTime = now;
 
+  if(AssetLoader.isHolding()){ mouseDX = 0; lookDX = 0; mouseDY = 0; lookDY = 0; return; }   // loading ao entrar no mapa
   pollGamepad();
 
   const menuOpen = settingsModal.style.display === 'flex';
