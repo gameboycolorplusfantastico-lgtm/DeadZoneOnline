@@ -1894,6 +1894,12 @@ html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx)
             <button type="button" id="dbgResetMap" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="dbgResetMap">REINICIAR MAPA</button>
           </div>
         </div>
+        <div class="setting-group">
+          <label style="color:#39ff14;">IR PARA QUALQUER MAPA (inclui o ESTÁDIO):</label>
+          <select id="dbgMapSelect" style="width:100%;padding:8px;background:#000;color:#39ff14;border:1px solid #39ff14;font-family:inherit;"></select>
+          <label class="checkbox-label"><input type="checkbox" id="dbgMapBots"><span>Com bots / inimigos (desmarcado = sem bots)</span></label>
+          <button type="button" id="dbgGoMapBtn" class="btn btn-secondary" style="width:100%;margin-top:6px;border-color:#39ff14;color:#39ff14;">ENTRAR NO MAPA SELECIONADO</button>
+        </div>
         <button id="dbgTestLevelBtn" class="btn btn-secondary" style="width:100%;margin-top:8px;border-color:#39ff14;color:#39ff14;">ENTRAR NO MAPA DE TESTES</button>
       </div>
     </div>
@@ -2032,6 +2038,8 @@ Object.values(MODE_ICONS).forEach(url => {
 })();
 
 const debugOptions = {
+  freeRoam: false,    // debug: mapa escolhido sem partida/bots
+  freeBots: false,    // true = liga os bots/inimigos normais no mapa do debug
   godMode: false,
   noClip: false,
   infAmmo: false,
@@ -3217,6 +3225,7 @@ function placeRails(ldef){
 // ===== PORTAS =====
 // Imagens soltas (não se repetem como textura): são desenhadas no centro de um tile de parede,
 // com a largura proporcional ao formato da imagem; o resto do tile continua sendo parede.
+const socAdImgs = []; let socAdLoaded = 0;   // imagens originais dos patrocinadores (alimentam a tira de LED do modo Futebol)
 const DOOR_URLS = [
   'https://i.postimg.cc/d3pTDPkW/Door-11.png',   // 0
   'https://i.postimg.cc/MHNjX2M9/Door-1.png',    // 1
@@ -3224,24 +3233,34 @@ const DOOR_URLS = [
   'https://i.postimg.cc/cC286yg2/Door-5.png',    // 3
   'https://i.postimg.cc/fyp0knSn/Door-6.png',    // 4
   'https://i.postimg.cc/N0XNvzxB/FNAFDOOR.png',  // 5 — porta do modo FNAF Doom
-  'https://i.postimg.cc/NMfjrfwk/Soccer-Ad1.webp',   // 6 — patrocinador (Futebol)
-  'https://i.postimg.cc/vBHZ6Hdh/Soccer-Ad2.png',   // 7 — patrocinador (Futebol)
-  'https://i.postimg.cc/Jn4zB4WN/Soccer-Ad3.jpg',   // 8 — patrocinador (Futebol)
-  'https://i.postimg.cc/k4XgtXdK/Soccer-Ad4.jpg',   // 9 — patrocinador (Futebol)
-  'https://i.postimg.cc/50N2FNMz/Soccer-Ad5.jpg',   // 10 — patrocinador (Futebol)
-  'https://i.postimg.cc/vBHZ6Hd5/Soccer-Ad6.jpg',   // 11 — patrocinador (Futebol)
-  'https://i.postimg.cc/mD2gF2GV/Soccer-Ad7.png',   // 12 — patrocinador (Futebol)
-  'https://i.postimg.cc/k4XgtXdN/Soccer-Ad8.png',   // 13 — patrocinador (Futebol)
-  'https://i.postimg.cc/tTC4VCHh/Soccer-Ad9.png',   // 14 — patrocinador (Futebol)
-  'https://i.postimg.cc/k4VV1Fj5/Soccer-Ad10.png',   // 15 — patrocinador (Futebol)
+  'https://i.postimg.cc/NMfjrfwk/Soccer-Ad1.webp',   // 6 — patrocinador (Futebol) · Soccer-Ad1
+  'https://i.postimg.cc/k4XgtXdN/Soccer-Ad8.png',    // 7 — patrocinador (Futebol) · Soccer-Ad8
+  'https://i.postimg.cc/PqZy0CTp/Soccerad2.png',     // 8 — patrocinador (Futebol)
+  'https://i.postimg.cc/QM5mvFhh/Soccerad3.jpg',     // 9
+  'https://i.postimg.cc/YSgRTvMp/Soccerad4.png',     // 10
+  'https://i.postimg.cc/GpYK64dC/Soccerad5.png',     // 11
+  'https://i.postimg.cc/XvFLtr4q/Soccerad6.png',     // 12
+  'https://i.postimg.cc/hGxsNXcD/Soccerad7.jpg',     // 13
+  'https://i.postimg.cc/VNMg2Jmk/Soccerad8.png',     // 14
+  'https://i.postimg.cc/KYLfC1xz/Soccerad9.png',     // 15
+  'https://i.postimg.cc/CKD79RSq/Soccerad10.png',    // 16
+  'https://i.postimg.cc/R0fd2W4J/Soccerad11.png',    // 17
+  'https://i.postimg.cc/C1mzLVgb/Soccerad12.png',    // 18
+  'https://i.postimg.cc/j5ZLdrbz/Soccerad13.png',    // 19
+  'https://i.postimg.cc/W3XhbPvS/Soccerad14.png',    // 20
+  'https://i.postimg.cc/B6MXQG0C/Soccerad15.png',    // 21
+  'https://i.postimg.cc/0Qcb2qsm/Soccerad16.png',    // 22
+  'https://i.postimg.cc/0Qcb2qsS/Soccerad17.png',    // 23
 ];
 const DOOR_AD_FROM = 6;   // a partir daqui são anúncios: mantêm a proporção e não ocupam a parede inteira
+const SOC_AD_COUNT = DOOR_URLS.length - DOOR_AD_FROM;
 const doorSets = DOOR_URLS.map(() => null);
 DOOR_URLS.forEach((url, i) => {
   const done = AssetLoader.track();
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = () => {
+    if (i >= DOOR_AD_FROM) { socAdImgs[i - DOOR_AD_FROM] = img; socAdLoaded++; }
     try {
       const c = document.createElement('canvas');
       c.width = TEX_SIZE; c.height = TEX_SIZE;
@@ -3262,6 +3281,121 @@ DOOR_URLS.forEach((url, i) => {
   img.onerror = done;
   img.src = url;
 });
+
+// ===== ESTÁDIO (modo Futebol) =====
+// Em volta do campo há uma barreira BAIXA de painéis de LED: uma tira contínua com todos os patrocinadores que "passa" (rola)
+// pelos painéis. Atrás dela, o renderizador desenha a arquibancada (rampa de torcida + fachada + refletores) por cima da skybox,
+// que continua a de dia. A parede do mapa segue sólida para colisão; só o visual fica baixo (veja socLowMap em castAndDraw).
+const SOC_BOARD_H = 0.42;      // altura da barreira (mundo): o olho fica em 0,5, então se vê por cima dela
+const SOC_LED_PPU = 200;       // texels do painel por unidade de mundo
+const SOC_LED_CELL = 1.9;      // largura (em tiles) de cada anúncio na tira
+const SOC_LED_SPEED = 1.15;    // tiles por segundo com que os anúncios passam
+const SOC_STAND = { slope: 0.64, depth: 7, zf: 9, gap: 3.0, tile: 1.6, facadeLen: 16 };   // rampa: sobe 0,64 por tile, 7 tiles de profundidade; fachada/refletores até z = 9
+const SOC_WALLBOARD = { w: 4.2, z0: 1.0, z1: 2.47, y: -0.3 };   // placar fixo na arquibancada do lado de cima, no meio do campo
+let socLowMap = null;          // por tile: bit 1 = face em X, bit 2 = face em Y (só no mapa do modo Futebol)
+let socStand = null;           // planos de início da arquibancada em cada lado
+const SOC_ST = { nImgs: -1, led: null, crowd: null, facade: null };
+// pixels do canvas do placar (refeitos só quando o placar/tempo muda)
+function socBoardTex(){
+  if (!soc || soc.test) return null;
+  try {
+    const cv = socBoardCanvas();
+    if (!soc.boardTex || soc.boardTexKey !== soc.boardKey) {
+      soc.boardTex = { w: cv.width, h: cv.height, data: cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data };
+      soc.boardTexKey = soc.boardKey;
+    }
+    return soc.boardTex;
+  } catch (e) { return null; }
+}
+function socStadiumBuild(){
+  SOC_ST.nImgs = socAdLoaded;
+  const imgs = socAdImgs.filter(im => im && im.naturalWidth > 0);
+  const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  const rd = c => ({ w: c.width, h: c.height, data: c.getContext('2d').getImageData(0, 0, c.width, c.height).data });
+  const mips = (src, n) => {
+    const out = [rd(src)]; let prev = src;
+    for (let L = 1; L < n; L++) {
+      const c = mk(Math.max(2, prev.width >> 1), Math.max(2, prev.height >> 1)), g = c.getContext('2d');
+      g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(prev, 0, 0, c.width, c.height);
+      out.push(rd(c)); prev = c;
+    }
+    return out;
+  };
+  // --- tira de LED: um painel por anúncio, em sequência (a tira dá a volta) ---
+  try {
+    const n = Math.max(1, imgs.length), cw = Math.round(SOC_LED_CELL * SOC_LED_PPU), ch = Math.round(SOC_BOARD_H * SOC_LED_PPU);
+    const strip = mk(cw * n, ch), g = strip.getContext('2d');
+    const capH = Math.max(3, Math.round(ch * 0.07)), baseH = Math.max(4, Math.round(ch * 0.10)), ay = capH, ah = ch - capH - baseH;
+    const cap = g.createLinearGradient(0, 0, 0, capH); cap.addColorStop(0, '#eef1f5'); cap.addColorStop(1, '#aab2bd');
+    g.fillStyle = cap; g.fillRect(0, 0, cw * n, capH);
+    g.fillStyle = '#1b1f26'; g.fillRect(0, ch - baseH, cw * n, baseH);
+    g.fillStyle = '#323843'; g.fillRect(0, ch - baseH, cw * n, 2);
+    for (let k = 0; k < n; k++) {
+      const im = imgs[k], x0 = k * cw;
+      let bg = [10, 16, 32];
+      if (im) {
+        try {   // cor de fundo = média das bordas da imagem (banners ficam "sem emenda" no painel)
+          const sc = mk(48, 48), sg = sc.getContext('2d'); sg.drawImage(im, 0, 0, 48, 48);
+          const d = sg.getImageData(0, 0, 48, 48).data; let r = 0, gg = 0, b = 0, c = 0, tr = 0;
+          for (let i = 0; i < 48; i++) for (let j = 0; j < 48; j++) {
+            if (i > 2 && i < 45 && j > 2 && j < 45) continue;
+            const o = (i * 48 + j) * 4; if (d[o + 3] > 200) { r += d[o]; gg += d[o + 1]; b += d[o + 2]; c++; } else tr++;
+          }
+          if (tr > 0.3 * (c + tr)) bg = [255, 255, 255];   // imagem com fundo transparente: painel branco
+          else if (c > 40) bg = [r / c, gg / c, b / c];
+        } catch (e) {}
+      }
+      g.fillStyle = 'rgb(' + (bg[0] | 0) + ',' + (bg[1] | 0) + ',' + (bg[2] | 0) + ')'; g.fillRect(x0, ay, cw, ah);
+      if (im) {
+        const aw = cw - 16, ahh = ah - 6, iw = im.naturalWidth, ih = im.naturalHeight, sc = Math.min(aw / iw, ahh / ih);
+        g.drawImage(im, x0 + (cw - iw * sc) / 2, ay + 3 + (ahh - ih * sc) / 2, iw * sc, ih * sc);
+      }
+      g.fillStyle = '#05070b'; g.fillRect(x0, ay, 3, ah);   // emenda entre os painéis
+    }
+    SOC_ST.led = { mips: mips(strip, 4) };
+  } catch (e) { SOC_ST.led = null; }
+  if (SOC_ST.crowd && SOC_ST.facade) return;   // torcida e fachada não dependem das imagens: só uma vez
+  // --- torcida: ladrilho 8x8 pessoas (A = sentados, B = braços para cima: a "ola" alterna os dois) ---
+  try {
+    const shirts = ['#d8302f', '#f4f4f4', '#2f66d8', '#f1c232', '#32a852', '#1d1d22', '#e8812a', '#8c46bd', '#f4f4f4', '#d8302f'];
+    const skins = ['#f1c9a5', '#dcaa82', '#b27a4e', '#7a4c2c'];
+    const mkCrowd = up => {
+      const c = mk(128, 128), g = c.getContext('2d'), rnd = hzRng(777);
+      g.fillStyle = '#3d5d96'; g.fillRect(0, 0, 128, 128);
+      for (let r = 0; r < 8; r++) { g.fillStyle = '#6a8fc8'; g.fillRect(0, r * 16 + 13, 128, 2); g.fillStyle = '#243a63'; g.fillRect(0, r * 16 + 15, 128, 1); }
+      for (let r = 0; r < 8; r++) for (let q = 0; q < 8; q++) {
+        const sh = shirts[(rnd() * shirts.length) | 0], sk = skins[(rnd() * skins.length) | 0], emp = rnd() < 0.55, off = rnd() < 0.12;
+        if (off) continue;   // lugar vazio
+        const x = q * 16 + 8, y = r * 16, lift = (up && emp) ? 3 : 0;
+        g.fillStyle = sh; g.fillRect(x - 5, y + 8 - lift, 10, 8 + lift);
+        g.fillStyle = sk; g.beginPath(); g.arc(x, y + 5 - lift, 3.4, 0, 6.2832); g.fill();
+        if (up && emp) {
+          g.strokeStyle = sk; g.lineWidth = 2; g.beginPath();
+          g.moveTo(x - 4, y + 9 - lift); g.lineTo(x - 6, y + 1 - lift); g.moveTo(x + 4, y + 9 - lift); g.lineTo(x + 6, y + 1 - lift); g.stroke();
+        }
+      }
+      return mips(c, 4);
+    };
+    SOC_ST.crowd = { A: mkCrowd(false), B: mkCrowd(true) };
+  } catch (e) { SOC_ST.crowd = null; }
+  // --- fachada traseira (z de 0 a zf) com cobertura, janelas e torres de refletores; transparente = céu ---
+  try {
+    const S = SOC_STAND, FW = 256, FH = Math.round(S.zf * 64), c = mk(FW, FH), g = c.getContext('2d');
+    const zy = z => Math.round((S.zf - z) * 64);
+    g.fillStyle = '#6c727b'; g.fillRect(0, zy(4.3), FW, FH - zy(4.3));
+    g.fillStyle = '#7b828c'; g.fillRect(0, zy(5.6), FW, zy(4.3) - zy(5.6));
+    g.fillStyle = '#26303d'; for (let x = 3; x < FW - 8; x += 16) g.fillRect(x, zy(5.2), 10, zy(4.7) - zy(5.2));
+    g.fillStyle = '#2b2f36'; g.fillRect(0, zy(5.9), FW, zy(5.6) - zy(5.9));
+    g.fillStyle = '#c9ced6'; g.fillRect(0, zy(5.9), FW, 2);
+    const px = 124, pw = 8;   // torre centralizada (124..132 em 256)
+    g.fillStyle = '#656b75'; g.fillRect(px, 0, pw, zy(5.6));                       // torre do refletor
+    const lx = 76, lw = 104, ly = zy(8.9), lh = zy(7.6) - zy(8.9);   // painel centralizado (76..180 em 256)
+    g.fillStyle = '#30343b'; g.fillRect(lx, ly, lw, lh);                           // painel de refletores
+    g.fillStyle = '#fffbe0';
+    for (let i = 0; i < 10; i++) for (let j = 0; j < 4; j++) g.fillRect(lx + 3 + i * 10, ly + 3 + j * 20, 8, 18);
+    SOC_ST.facade = rd(c);
+  } catch (e) { SOC_ST.facade = null; }
+}
 
 // ===== ESTILOS DE MAPA (categorias internas) =====
 // Todo mapa pertence a UMA categoria: PARK, INDUSTRIAL, URBAN, HOUSE ou METRO (FNAF e SOCCER são exclusivos dos seus modos).
@@ -3762,7 +3896,7 @@ const HZ_CFG = {
   URBAN:      { ground: [86, 86, 88],  L: [{ w: { tower: 3, mid: 4, tree: 0.6 }, gap: [-4, 6] }, { w: { mid: 3, house: 2.5, tower: 1, tree: 1.5 }, gap: [0, 10] }, { w: { house: 3, mid: 1, tree: 2.5 }, gap: [2, 30] }] },
   METRO:      { ground: [80, 82, 88],  L: [{ w: { tower: 6, mid: 2 }, gap: [-6, 2] },  { w: { tower: 4, mid: 3, tree: 0.5 }, gap: [-4, 6] }, { w: { mid: 2.5, house: 1, tree: 1.5 }, gap: [4, 30] }] },
   INDUSTRIAL: { ground: [92, 90, 84],  L: [{ w: { ware: 3, chim: 1, silo: 1, mid: 0.5 }, gap: [0, 14] }, { w: { ware: 4, silo: 0.8, chim: 0.5, tree: 1 }, gap: [2, 16] }, { w: { ware: 2, tree: 2, house: 0.5 }, gap: [6, 36] }] },
-  SOCCER:     { ground: [74, 104, 56], L: [{ w: { mid: 4, tower: 1.2, tree: 1 }, gap: [0, 8] }, { w: { mid: 2, house: 2, tree: 3 }, gap: [0, 12] }, { w: { tree: 4, house: 1 }, gap: [0, 30] }] }
+  SOCCER:     { ground: [86, 86, 90], L: [{ w: { tower: 6, mid: 2 }, gap: [-6, 2] }, { w: { tower: 4, mid: 3 }, gap: [-4, 4] }, { w: { tower: 2.5, mid: 3 }, gap: [-2, 10] }] }   // só cidade grande: arranha-céus e prédios, sem árvores nem casas
 };
 HZ_CFG.FOREST = { ground: [34, 62, 36], L: [{ w: { tree: 1 }, gap: [-12, 0] }, { w: { tree: 1 }, gap: [-12, 2] }, { w: { tree: 1 }, gap: [-8, 6] }] };
 function hzRng(seed) {
@@ -4125,14 +4259,6 @@ const FNAF_DOOR_TEX = 5;   // índice da imagem da porta em DOOR_URLS
 
 let currentLang = 'pt';
 
-// ┌─ LEMBRETE — DESCRIÇÃO DE MAPAS ───────────────────────────────────────────────────────────────────────┐
-// │ Todo mapa novo precisa de `lvlNDesc` em PT **e** EN (junto de `lvlN`, o nome). Padrão das descrições:   │
-// │  • UMA frase curta (até ~90 caracteres), terminando em ponto, só sobre o TEMA/cenário do mapa;          │
-// │  • réplicas começam com "Estilo X:" (EN: "X style:"); CoD/CS entre parênteses quando for o caso;        │
-// │  • NÃO colocar lado das equipes (T/CT), modos de jogo "(Deathmatch / CTF)", instruções ou mecânicas;   │
-// │  • versões do mesmo mapa (Deathmatch, Resgate, Zumbi) usam o mesmo texto da versão base.               │
-// │ Um aviso no console (F12) aparece ao carregar se faltar descrição ou se ela passar do tamanho.          │
-// └────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 const I18N = {
   pt: {
     pause: "⏸ PAUSA", health: "VIDA", sector: "WAVE", ammo: "MUNIÇÃO", score: "PONTOS",
@@ -4151,94 +4277,94 @@ const I18N = {
     lvl10: "DE_ANCIENT", lvl11: "DE_TUSCAN", lvl12: "DE_CANALS",
     lvl13: "CS_SIEGE", lvl14: "DE_OVERPASS", lvl15: "DE_VERTIGO",
     lvl16: "DE_LAKE", lvl17: "AWP_LEGO", lvlTest: "MAPA DE TESTES (DEBUG)",
-    lvl0Desc: "Estilo Cache: dois sites ligados por um Meio longo e aberto.",
-    lvl1Desc: "Estilo Inferno: vila italiana com Banana curva e Apartamentos.",
-    lvl2Desc: "Estilo Cobblestone: castelo murado com portões e salão central.",
-    lvl3Desc: "Estilo Mirage: cidade árabe com Palácio, Selva e Meio aberto.",
-    lvl4Desc: "Estilo Aztec: ruínas cortadas por um rio com pontes.",
-    lvl5Desc: "Pátio industrial de contêineres com armazém central.",
-    lvl6Desc: "Estilo Nuke: usina nuclear com pátio, silo e saguão.",
-    lvl7Desc: "Estilo Italy: vila italiana com praça central rebaixada.",
-    lvl8Desc: "Estilo Office: prédio de escritórios com corredores e hall central.",
-    lvl9Desc: "Estilo Train: pátio ferroviário com vagões e passarelas.",
-    lvl10Desc: "Templo em plataforma com casa central e pilares.",
-    lvl11Desc: "Vila toscana com casas de telhado e praça rebaixada.",
-    lvl12Desc: "Cruz de canais com pontes e casas nos cantos.",
-    lvl13Desc: "Castelo cercado por fosso raso, com torre interna.",
-    lvl14Desc: "Estilo Overpass: canal de água cruzado por pontes.",
-    lvl15Desc: "Estilo Vertigo: topo de arranha-céu com plataformas elevadas.",
-    lvl16Desc: "Lagoas rasas com píeres em cruz e casas nos cantos.",
-    lvl17Desc: "Crista elevada e comprida com longas linhas de tiro.",
-    lvlTestDesc: "Laboratório de testes com texturas, elevações, armas, água e campo de futebol.",
+    lvl0Desc: "Estilo Cache: site A a oeste, site B a leste e um Meio longo ligando os dois. CT ao norte, T ao sul.",
+    lvl1Desc: "Estilo Inferno: Banana curva a oeste, Meio no centro e Apartamentos a leste. Site B ao noroeste, site A ao leste.",
+    lvl2Desc: "Estilo Cobblestone: castelo murado ao norte com três portões, salão central e sites A e B por dentro.",
+    lvl3Desc: "Estilo Mirage: Rampa do A, Palácio, Selva, Apartamentos do B e Meio aberto com conectores.",
+    lvl4Desc: "Estilo Aztec: um rio de verdade corta o mapa (margem rasa, centro fundo para nadar), com pontes. Sites ao sul, T ao norte.",
+    lvl5Desc: "Pátio industrial de contêineres de paredes finas com um armazém central de telhado e quatro entradas.",
+    lvl6Desc: "Estilo Nuke: pátio externo com silo, prédio com saguão, site A no andar de cima e site B rebaixado.",
+    lvl7Desc: "Estilo Italy: vila italiana com ruas, praça central rebaixada com rampas (declive seco), barracas e prédios com portas.",
+    lvl8Desc: "Estilo Office: corredores, escritórios com portas e um hall central. Muito combate em curta distância.",
+    lvl9Desc: "Estilo Train: pátio ferroviário com vagões em fileiras, prédios nos cantos e passarelas elevadas.",
+    lvl10Desc: "Templo em plataforma com casa central de quatro portas, rampas lisas e pilares nos cantos.",
+    lvl11Desc: "Vila toscana: casas de telhado nas pontas e uma praça rebaixada no meio, com rampas (declive seco).",
+    lvl12Desc: "Cruz de canais com pontes, margens rasas, centro fundo para nadar e quatro casas nos cantos.",
+    lvl13Desc: "Castelo com fosso raso, quatro pontes de entrada, salão coberto e torre interna.",
+    lvl14Desc: "Estilo Overpass: canal de água no centro (margens rasas, calha funda) com pontes, Long A a oeste e Banheiros a leste.",
+    lvl15Desc: "Estilo Vertigo: topo de arranha-céu com sites elevados, plataforma central em degraus e vãos nos cantos.",
+    lvl16Desc: "Quatro lagoas rasas com centro fundo, píeres em cruz e casas de telhado nos quatro cantos.",
+    lvl17Desc: "Crista elevada e comprida com rampas lisas, paredes finas e linhas de tiro longas.",
+    lvlTestDesc: "Laboratório de testes: todas as texturas (pisos, tetos, paredes, portas, janelas), elevação (escadas, rampa, poço, espiral), skins, pickups, armas, itens de interação, campo de futebol (gols, bola, clubes, patrocinadores) e água (rasa e profunda).",
     lvl18: "DE_RIALTO", lvl19: "CS_BAGGAGE", lvl20: "CS_AGENCY", lvl21: "CS_MILITIA",
-    lvl18Desc: "Cidade veneziana com canal central, pontes e praças.",
-    lvl19Desc: "Salão de bagagem do metrô com esteiras e pilares.",
-    lvl20Desc: "Escritório fechado com salas, corredores e saguão central.",
-    lvl21Desc: "Casa de fazenda com quintal, muros baixos e caixotes.",
+    lvl18Desc: "Cidade veneziana: canal fundo no meio com duas pontes, casas de telhado com portas e barracas nas praças. T a oeste, CT a leste.",
+    lvl19Desc: "Salão de bagagem do metrô: esteiras de paredes finas formam corredores paralelos, com pilares e salas de apoio. Muito cruzamento de tiro.",
+    lvl20Desc: "Escritório fechado: salas de portas estreitas ao redor de corredores e um saguão central. Combate em curta distância.",
+    lvl21Desc: "Casa de fazenda com quintal: duas casas de telhado com cômodos, muros baixos e caixotes no pátio.",
     lvl22: "SCRAPYARD", lvl23: "CS_BACKALLEY", lvl24: "DE_MONASTERY", lvl25: "TERMINAL",
-    lvl22Desc: "Ferro-velho com pilhas de sucata e galpão central.",
-    lvl23Desc: "Becos em cruz entre quatro prédios de telhado.",
-    lvl24Desc: "Abadia sobre um platô baixo, com claustro e jardim.",
-    lvl25Desc: "Saguão de terminal com colunas e balcões.",
+    lvl22Desc: "Ferro-velho: pilhas de sucata de paredes finas, um galpão central com duas portas e becos entre os montes.",
+    lvl23Desc: "Becos em cruz entre quatro prédios de telhado, com entradas pelos dois lados e caixotes nas esquinas.",
+    lvl24Desc: "Abadia sobre um platô baixo: claustro de várias salas, rampas lisas nos quatro lados e jardim aberto em volta.",
+    lvl25Desc: "Saguão de terminal: colunas em grade, balcões de paredes finas e corredores laterais. Muito cruzamento de tiro.",
     lvl26: "DE_AIRSTRIP", lvl27: "DE_PRISON", lvl28: "FAVELA", lvl29: "DE_TORN",
-    lvl26Desc: "Pista de aeroporto com hangares e torre de controle.",
-    lvl27Desc: "Presídio com blocos de celas e pátio central.",
-    lvl28Desc: "Casebres amontoados e vielas estreitas numa encosta.",
-    lvl29Desc: "Ruas em ruínas com prédios abertos e muros quebrados.",
+    lvl26Desc: "Pista com dois hangares de telhado, torre de controle no meio e longas linhas de tiro entre eles.",
+    lvl27Desc: "Blocos de celas com portas estreitas, pátio central e corredores de guarda. Combate em curta distância.",
+    lvl28Desc: "Casebres amontoados, vielas estreitas e uma encosta com rampa lisa no meio. Portas apertadas e muitas esquinas.",
+    lvl29Desc: "Ruas em ruínas: prédios abertos, muros quebrados e um desnível no centro com rampas lisas.",
     lvl30: "SHIPMENT", lvl31: "ESTATE", lvl32: "UNDERPASS", lvl33: "DE_CHATEAU", lvl34: "CS_BIOHAZARD", lvl35: "DE_ANUBIS", lvl36: "WASTELAND", lvl37: "DE_BRIDGE", lvl38: "DE_DUST2", lvl39: "DE_DUST2", lvl40: "DE_INFERNO", lvl41: "DE_MIRAGE", lvl42: "DE_AZTEC", lvl43: "CS_ITALY", lvl44: "CS_OFFICE", lvl45: "DE_CACHE", lvl46: "DE_CBBLE", lvl47: "DE_NUKE", lvl48: "DE_OVERPASS",
-    lvl30Desc: "Pátio de contêineres com corredores de paredes finas.",
-    lvl31Desc: "Mansão com salão central, jardim e piscina rasa.",
-    lvl32Desc: "Passagem sob viadutos, com asfalto, grades e muro de tijolos.",
-    lvl33Desc: "Château com muralhas internas, torre central e jardins.",
-    lvl34Desc: "Laboratório com câmaras de contenção e corredor longo.",
-    lvl35Desc: "Templo escalonado com pátio de pilares e pirâmide central.",
-    lvl36Desc: "Terreno arrasado com barracões, muros baixos e ferragens.",
-    lvl37Desc: "Rio fundo cruzado por pontes, com cabanas nas margens.",
-    lvl38Desc: "Estilo Dust 2: deserto com Long A, Meio e Túneis do B.",
-    lvl39Desc: "Estilo Dust 2: deserto com Long A, Meio e Túneis do B.",
-    lvl40Desc: "Estilo Inferno: vila italiana com Banana curva e Apartamentos.",
-    lvl41Desc: "Estilo Mirage: cidade árabe com Palácio, Selva e Meio aberto.",
-    lvl42Desc: "Estilo Aztec: ruínas cortadas por um rio com pontes.",
-    lvl43Desc: "Estilo Italy: vila italiana com praça central rebaixada.",
-    lvl44Desc: "Estilo Office: prédio de escritórios com corredores e hall central.",
-    lvl45Desc: "Estilo Cache: dois sites ligados por um Meio longo e aberto.",
-    lvl46Desc: "Estilo Cobblestone: castelo murado com portões e salão central.",
-    lvl47Desc: "Estilo Nuke: usina nuclear com pátio, silo e saguão.",
-    lvl48Desc: "Estilo Overpass: canal de água cruzado por pontes.",
-    lvl49: "CS_BANK", lvl49Desc: "Banco com cofre central e saguão de pilares.",
-    lvl50: "CS_WAREHOUSE", lvl50Desc: "Depósito com pilhas de caixotes e escritório nos fundos.",
-    lvl51: "EMBASSY", lvl51Desc: "Embaixada: complexo murado com prédio principal.",
-    lvl52: "CARGOSHIP", lvl52Desc: "Cargueiro com convés comprido cheio de contêineres.",
-    lvl53: "CS_MANSION", lvl53Desc: "Mansão de vários cômodos com andar de cima.",
-    lvl54: "CS_PRISON", lvl54Desc: "Presídio com celas nos dois lados e bloco central.",
-    lvl55: "CS_VILLAGE", lvl55Desc: "Vilarejo de casas pequenas e ruas abertas.",
-    lvl56: "CS_HOTEL", lvl56Desc: "Hotel em torno de um corredor longo, até a cobertura.",
-    lvl57: "CS_ITALY", lvl57Desc: "Estilo Italy: vila italiana com ruas e prédios.",
-    lvl58: "CS_OFFICE", lvl58Desc: "Estilo Office: prédio comercial com corredores curtos.",
-    lvl59: "CS_DUST2", lvl59Desc: "Estilo Dust 2: deserto com Long A, Meio e Túneis do B.",
-    lvl60: "CRASH", lvl60Desc: "Estilo Crash (CoD): cruzamento urbano com posto de gasolina.",
-    lvl61: "CRASH", lvl61Desc: "Estilo Crash (CoD): cruzamento urbano com posto de gasolina.",
-    lvl62: "CRASH", lvl62Desc: "Estilo Crash (CoD): cruzamento urbano com posto de gasolina.",
-    lvl63: "NUKETOWN", lvl63Desc: "Estilo Nuketown (CoD): vilinha com duas casas e um ônibus.",
-    lvl64: "NUKETOWN", lvl64Desc: "Estilo Nuketown (CoD): vilinha com duas casas e um ônibus.",
-    lvl65: "NUKETOWN", lvl65Desc: "Estilo Nuketown (CoD): vilinha com duas casas e um ônibus.",
-    lvl66: "RUST", lvl66Desc: "Estilo Rust (CoD): arena de deserto com torre central e contêineres.",
-    lvl67: "RUST", lvl67Desc: "Estilo Rust (CoD): arena de deserto com torre central e contêineres.",
-    lvl68: "DE_PRODIGY", lvl68Desc: "Estilo Prodigy (CS): complexo de escritórios com saguão de pilares.",
-    lvl69: "DE_PRODIGY", lvl69Desc: "Estilo Prodigy (CS): complexo de escritórios com saguão de pilares.",
-    lvl70: "CROSSFIRE", lvl70Desc: "Estilo Crossfire (CoD): rua larga entre prédios destruídos.",
-    lvl71: "CS_HAVANA", lvl71Desc: "Estilo Havana (CS): vila com pátio murado e sala central.",
-    lvl72: "AS_OILRIG", lvl72Desc: "Estilo Oilrig (CS): plataforma de petróleo com alojamento central.",
-    lvl73: "AS_OILRIG", lvl73Desc: "Estilo Oilrig (CS): plataforma de petróleo com alojamento central.",
-    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Pizzaria do Freddy em salas fechadas: palco, Pirate Cove, cozinha e backstage.",
-    lvl75: "ESTADIO_FUTEBOL", lvl75Desc: "Estádio de futebol com gramado e dois gols.",
-    lvl76: "DE_VILLAGE", lvl76Desc: "Estilo Counter-Strike: vila com casas de telhado, rio e colina.",
-    lvl77: "DE_VILLAGE", lvl77Desc: "Estilo Counter-Strike: vila com casas de telhado, rio e colina.",
-    lvl78: "MP_DOCKYARD", lvl78Desc: "Estilo Call of Duty: porto de becos estreitos com canal e pontes.",
-    lvl79: "MP_DOCKYARD", lvl79Desc: "Estilo Call of Duty: porto de becos estreitos com canal e pontes.",
-    lvl80: "CS_MONASTERY", lvl80Desc: "Estilo Counter-Strike: mosteiro num platô com rampas e lago.",
-    lvl81: "CS_MONASTERY", lvl81Desc: "Estilo Counter-Strike: mosteiro num platô com rampas e lago.",
-    lvl82: "CS_DOWNHILL", lvl82Desc: "Estilo Counter-Strike: descida de montanha em 5 patamares.",
+    lvl30Desc: "Pátio de contêineres: paredes finas compridas formam corredores. Cuidado com o centro aberto.",
+    lvl31Desc: "Mansão com salão central de seis portas, jardim com piscina rasa para vadear e flancos abertos.",
+    lvl32Desc: "Passagem sob viadutos: chão de asfalto cercado por grades metálicas e um muro de tijolos, dois viadutos sobre as colunas centrais e céu aberto nas laterais e no centro. Descer é fácil, subir custa um degrau.",
+    lvl33Desc: "Château: muralhas internas, torre central em degraus e jardins rebaixados com rampas nas laterais.",
+    lvl34Desc: "Laboratório com câmaras de contenção, corredor longo e sala central. Combate em curta e média distância.",
+    lvl35Desc: "Templo escalonado com pátio de pilares e uma pirâmide de dois níveis no centro. Disputa pelo alto.",
+    lvl36Desc: "Terreno arrasado: dois barracões de telhado, muros baixos e ferragens espalhadas. Cobertura por todo lado.",
+    lvl37Desc: "Rio fundo no centro cruzado por 3 pontes, com cabanas nas margens. Dá para nadar, mas voltar custa tempo.",
+    lvl38Desc: "Réplica do Dust 2: Long A a leste, Meio no centro, Túneis do B a oeste. T ao sul, CT ao norte.",
+    lvl39Desc: "Dust 2 para Zombie Survival e Gun Game. Comece no spawn T e explore Long, Meio e Túneis.",
+    lvl40Desc: "Estilo Inferno: Banana curva a oeste, Meio no centro e Apartamentos a leste. Site B ao noroeste, site A ao leste. (Deathmatch)",
+    lvl41Desc: "Estilo Mirage: Rampa do A, Palácio, Selva, Apartamentos do B e Meio aberto com conectores. (Deathmatch)",
+    lvl42Desc: "Estilo Aztec: um rio de verdade corta o mapa (margem rasa, centro fundo para nadar), com pontes. Sites ao sul, T ao norte. (Deathmatch)",
+    lvl43Desc: "Estilo Italy: vila italiana com ruas, praça central rebaixada com rampas (declive seco), barracas e prédios com portas. (Deathmatch)",
+    lvl44Desc: "Estilo Office: corredores, escritórios com portas e um hall central. Muito combate em curta distância. (Deathmatch)",
+    lvl45Desc: "Estilo Cache: site A a oeste, site B a leste e um Meio longo ligando os dois. CT ao norte, T ao sul. (Deathmatch)",
+    lvl46Desc: "Estilo Cobblestone: castelo murado ao norte com três portões, salão central e sites A e B por dentro. (Deathmatch)",
+    lvl47Desc: "Estilo Nuke: pátio externo com silo, prédio com saguão, site A no andar de cima e site B rebaixado. (Deathmatch)",
+    lvl48Desc: "Estilo Overpass: canal de água no centro (margens rasas, calha funda) com pontes, Long A a oeste e Banheiros a leste. (Deathmatch)",
+    lvl49: "CS_BANK", lvl49Desc: "Assalto a um banco: os reféns estão no cofre, no centro do prédio. Saguão com pilares e acessos pelos dois lados.",
+    lvl50: "CS_WAREHOUSE", lvl50Desc: "Depósito com pilhas de caixotes. Os reféns estão no escritório do fundo; cubra-se entre as pilhas.",
+    lvl51: "EMBASSY", lvl51Desc: "Complexo murado com dois portões. O prédio principal guarda os reféns numa sala interna.",
+    lvl52: "CARGOSHIP", lvl52Desc: "Convés comprido de cargueiro cheio de contêineres. Os reféns estão no porão da popa; avance pelos corredores.",
+    lvl53: "CS_MANSION", lvl53Desc: "Mansão de vários cômodos. Os reféns estão na sala elevada do andar de cima, com entrada pelos fundos.",
+    lvl54: "CS_PRISON", lvl54Desc: "Presídio com celas nos dois lados. Os reféns estão no bloco central, cercado por corredores.",
+    lvl55: "CS_VILLAGE", lvl55Desc: "Vilarejo de casas pequenas e ruas abertas. Os reféns estão na casa grande do lado leste.",
+    lvl56: "CS_HOTEL", lvl56Desc: "Hotel em torno de um corredor longo. Suba dos quartos do térreo até a cobertura, onde estão os reféns.",
+    lvl57: "CS_ITALY", lvl57Desc: "Vila italiana: os reféns estão no prédio do canto nordeste. Os CT resgatam a noroeste.",
+    lvl58: "CS_OFFICE", lvl58Desc: "Prédio comercial: os reféns estão na sala do canto noroeste. Combate em corredores curtos.",
+    lvl59: "CS_DUST2", lvl59Desc: "Réplica do Dust 2: os reféns ficam no Bombsite B. Traga-os pelo meio até a base CT, no norte.",
+    lvl60: "CRASH", lvl60Desc: "Estilo Crash (CoD): cruzamento urbano com posto de gasolina no centro e prédios nos quatro cantos. Os zumbis vêm por todas as ruas.",
+    lvl61: "CRASH", lvl61Desc: "Estilo Crash (CoD): cruzamento com posto de gasolina no centro e prédios nos cantos. T a oeste, CT a leste. (Deathmatch / CTF)",
+    lvl62: "CRASH", lvl62Desc: "Estilo Crash (CoD): os reféns estão na rua ao norte do posto de gasolina. Os CT resgatam na base do lado leste.",
+    lvl63: "NUKETOWN", lvl63Desc: "Estilo Nuketown (CoD): vilinha com duas casas, ônibus no centro e quintais cheios de carros. Mapa pequeno e frenético.",
+    lvl64: "NUKETOWN", lvl64Desc: "Estilo Nuketown (CoD): casa T a oeste, casa CT a leste e um ônibus no meio do caminho. (Deathmatch / CTF)",
+    lvl65: "NUKETOWN", lvl65Desc: "Estilo Nuketown (CoD): os reféns estão na casa oeste, guardada pelos T. Leve-os até a casa leste, dos CT.",
+    lvl66: "RUST", lvl66Desc: "Estilo Rust (CoD): arena de deserto com torre central em degraus e contêineres nos cantos. Quem sobe na torre vê as quatro ruas.",
+    lvl67: "RUST", lvl67Desc: "Estilo Rust (CoD): torre central em degraus e contêineres nos cantos. T a oeste, CT a leste. (Deathmatch / CTF)",
+    lvl68: "DE_PRODIGY", lvl68Desc: "Estilo Prodigy (CS): complexo de escritórios com salas de portas largas, corredores e um saguão central de pilares.",
+    lvl69: "DE_PRODIGY", lvl69Desc: "Estilo Prodigy (CS): escritórios ao norte e ao sul, saguão de pilares no meio. T a oeste, CT a leste. (Deathmatch / CTF)",
+    lvl70: "CROSSFIRE", lvl70Desc: "Estilo Crossfire (CoD): rua larga entre prédios destruídos, com vãos para flanquear. Muita troca de tiro. (Deathmatch / CTF)",
+    lvl71: "CS_HAVANA", lvl71Desc: "Estilo Havana (CS): vila com pátio murado e a sala dos reféns no centro. Entre pelos portões e traga todos à base CT, a oeste.",
+    lvl72: "AS_OILRIG", lvl72Desc: "Estilo Oilrig (CS): plataforma de petróleo. Os reféns estão no alojamento central, no convés elevado. Os CT resgatam na doca oeste.",
+    lvl73: "AS_OILRIG", lvl73Desc: "Estilo Oilrig (CS): plataforma com módulos nos cantos e alojamento central em convés elevado. T a oeste, CT a leste. (Deathmatch / CTF)",
+    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Pizzaria do Freddy, agora em salas fechadas (paredes finas): palco com cortinas, Pirate Cove com porta, banheiro, almoxarifados, backstage e cozinha. Sobreviva da meia-noite às 6 AM; feche as portas, use as luzes e economize energia. Armas e munição escassas.",
+    lvl75: "ESTADIO_FUTEBOL", lvl75Desc: "Estádio exclusivo do modo Futebol: gramado com dois gols. Chute a bola (F) e faça gols — todos com a Desert Eagle.",
+    lvl76: "DE_VILLAGE", lvl76Desc: "Estilo Counter-Strike: Vila com casas de telhado de duas e quatro águas, paredes finas com janelas em todos os lados, rio com ponte e vau, colina com rampa lisa e escada.",
+    lvl77: "DE_VILLAGE", lvl77Desc: "Estilo Counter-Strike: Vila com casas de telhado de duas e quatro águas, rio com ponte e vau e colina com rampa e escada. T ao norte, CT ao sul. (Deathmatch / CTF)",
+    lvl78: "MP_DOCKYARD", lvl78Desc: "Estilo Call of Duty: Porto de becos estreitos: quarteirões com paredes finas, telhados variados, canal com pontes em arco e passagens por dentro das casas.",
+    lvl79: "MP_DOCKYARD", lvl79Desc: "Estilo Call of Duty: Porto de becos estreitos, canal com pontes em arco e casas atravessáveis. T a oeste, CT a leste. (Deathmatch / CTF)",
+    lvl80: "CS_MONASTERY", lvl80Desc: "Estilo Counter-Strike: Mosteiro no alto de um platô com quatro rampas, corredor interno estreito, casas de telhado e lago ao sudoeste.",
+    lvl81: "CS_MONASTERY", lvl81Desc: "Estilo Counter-Strike: Mosteiro no platô com quatro rampas (uma em escada), telhados e lago. T ao sul, CT ao norte. (Deathmatch / CTF)",
+    lvl82: "CS_DOWNHILL", lvl82Desc: "Estilo Counter-Strike: Montanha estreita e bem comprida, em 5 patamares ligados por rampas em zigue-zague. T no topo, CT na base. Dá para pular os penhascos e descer rápido (dano leve), mas para subir só pelas rampas. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
     gunFoeLabel: "CONTRA:", gunFoeZombies: "ZUMBIS", gunFoeBots: "BOTS",
@@ -4294,94 +4420,94 @@ const I18N = {
     lvl10: "DE_ANCIENT", lvl11: "DE_TUSCAN", lvl12: "DE_CANALS",
     lvl13: "CS_SIEGE", lvl14: "DE_OVERPASS", lvl15: "DE_VERTIGO",
     lvl16: "DE_LAKE", lvl17: "AWP_LEGO", lvlTest: "TEST MAP (DEBUG)",
-    lvl0Desc: "Cache style: two bomb sites linked by a long, open Mid.",
-    lvl1Desc: "Inferno style: Italian village with a curved Banana and Apartments.",
-    lvl2Desc: "Cobblestone style: a walled castle with gates and a central hall.",
-    lvl3Desc: "Mirage style: Arabian town with a Palace, Jungle and an open Mid.",
-    lvl4Desc: "Aztec style: ruins split by a river with bridges.",
-    lvl5Desc: "Industrial container yard with a central warehouse.",
-    lvl6Desc: "Nuke style: a nuclear plant with a yard, silo and lobby.",
-    lvl7Desc: "Italy style: Italian village with a sunken central square.",
-    lvl8Desc: "Office style: office building with corridors and a central hall.",
-    lvl9Desc: "Train style: rail yard with wagons and walkways.",
-    lvl10Desc: "Platform temple with a central house and pillars.",
-    lvl11Desc: "Tuscan village with tiled houses and a sunken square.",
-    lvl12Desc: "Cross of canals with bridges and houses in the corners.",
-    lvl13Desc: "Castle surrounded by a shallow moat, with an inner tower.",
-    lvl14Desc: "Overpass style: a water canal crossed by bridges.",
-    lvl15Desc: "Vertigo style: skyscraper rooftop with raised platforms.",
-    lvl16Desc: "Shallow lagoons with cross-shaped piers and corner houses.",
-    lvl17Desc: "A long, raised ridge with long lines of sight.",
-    lvlTestDesc: "Test lab with textures, elevations, weapons, water and a soccer field.",
+    lvl0Desc: "Cache style: A site to the west, B site to the east and a long Mid linking both. CT north, T south.",
+    lvl1Desc: "Inferno style: curved Banana to the west, Mid in the center, Apartments to the east. B site NW, A site east.",
+    lvl2Desc: "Cobblestone style: a walled castle to the north with three gates, a central hall and A/B sites inside.",
+    lvl3Desc: "Mirage style: A Ramp, Palace, Jungle, B Apartments and an open Mid with connectors.",
+    lvl4Desc: "Aztec style: a real river splits the map (shallow banks, deep middle you can swim in), crossed by bridges. Sites to the south, T to the north.",
+    lvl5Desc: "Industrial container yard of thin walls with a roofed central warehouse and four entrances.",
+    lvl6Desc: "Nuke style: outdoor yard with a silo, a building with a lobby, an upper A site and a sunken B site.",
+    lvl7Desc: "Italy style: Italian village with streets, a sunken central plaza with ramps (dry slope), market stalls and buildings with doors.",
+    lvl8Desc: "Office style: corridors, offices with doors and a central hall. Lots of close-quarters fights.",
+    lvl9Desc: "Train style: rail yard with rows of train cars, corner buildings and raised walkways.",
+    lvl10Desc: "Platform temple with a four-door central house, smooth ramps and pillars in the corners.",
+    lvl11Desc: "Tuscan village: roofed houses at both ends and a sunken plaza in the middle, with ramps (dry slope).",
+    lvl12Desc: "Cross of canals with bridges, shallow banks, a deep centre to swim in and four houses in the corners.",
+    lvl13Desc: "Castle with a shallow moat, four entrance bridges, a covered hall and an inner tower.",
+    lvl14Desc: "Overpass style: a water canal in the middle (shallow banks, deep channel) with bridges, Long A to the west and Bathrooms to the east.",
+    lvl15Desc: "Vertigo style: skyscraper rooftop with raised sites, a stepped central platform and drops in the corners.",
+    lvl16Desc: "Four shallow ponds with deep centres, crossing piers and roofed houses in the four corners.",
+    lvl17Desc: "Long raised ridge with smooth ramps, thin walls and long sight lines.",
+    lvlTestDesc: "Test lab: every texture (floors, ceilings, walls, doors, windows), elevation (stairs, ramp, pit, spiral), skins, pickups, weapons, interactive items, a soccer pitch (goals, ball, clubs, sponsors) and water (shallow and deep).",
     lvl18: "DE_RIALTO", lvl19: "CS_BAGGAGE", lvl20: "CS_AGENCY", lvl21: "CS_MILITIA",
-    lvl18Desc: "Venetian town with a central canal, bridges and squares.",
-    lvl19Desc: "Subway baggage hall with conveyor belts and pillars.",
-    lvl20Desc: "Closed office with rooms, corridors and a central lobby.",
-    lvl21Desc: "Farmhouse with a yard, low walls and crates.",
+    lvl18Desc: "Venetian town: a deep canal down the middle with two bridges, roofed houses with doors and market stalls. T in the west, CT in the east.",
+    lvl19Desc: "Metro baggage hall: thin-walled conveyor belts make parallel lanes, with pillars and side rooms. Lots of crossfire.",
+    lvl20Desc: "Enclosed office floor: narrow-door rooms around corridors and a central lobby. Close-quarters combat.",
+    lvl21Desc: "Farmhouse with a yard: two roofed houses with rooms, low walls and crates in the yard.",
     lvl22: "SCRAPYARD", lvl23: "CS_BACKALLEY", lvl24: "DE_MONASTERY", lvl25: "TERMINAL",
-    lvl22Desc: "Junkyard with scrap piles and a central shed.",
-    lvl23Desc: "Crossing alleys between four roofed buildings.",
-    lvl24Desc: "Abbey on a low plateau with a cloister and garden.",
-    lvl25Desc: "Terminal concourse with columns and counters.",
+    lvl22Desc: "Scrapyard: thin-walled scrap piles, a central shed with two doors and alleys between the heaps.",
+    lvl23Desc: "Crossing alleys between four roofed buildings, with entrances on both sides and crates at the corners.",
+    lvl24Desc: "Abbey on a low plateau: a cloister of several rooms, smooth ramps on all four sides and an open garden around it.",
+    lvl25Desc: "Terminal concourse: grid of columns, thin-walled counters and side corridors. Lots of crossfire.",
     lvl26: "DE_AIRSTRIP", lvl27: "DE_PRISON", lvl28: "FAVELA", lvl29: "DE_TORN",
-    lvl26Desc: "Airstrip with hangars and a control tower.",
-    lvl27Desc: "Prison with cell blocks and a central yard.",
-    lvl28Desc: "Crowded shacks and narrow alleys on a hillside.",
-    lvl29Desc: "Ruined streets with open buildings and broken walls.",
+    lvl26Desc: "Airstrip with two roofed hangars, a control tower in the middle and long sight lines between them.",
+    lvl27Desc: "Cell blocks with narrow doors, a central yard and guard corridors. Close-quarters combat.",
+    lvl28Desc: "Packed shacks, narrow lanes and a hillside with a smooth ramp in the middle. Tight doors and lots of corners.",
+    lvl29Desc: "Ruined streets: open buildings, broken walls and a raised patch in the centre with smooth ramps.",
     lvl30: "SHIPMENT", lvl31: "ESTATE", lvl32: "UNDERPASS", lvl33: "DE_CHATEAU", lvl34: "CS_BIOHAZARD", lvl35: "DE_ANUBIS", lvl36: "WASTELAND", lvl37: "DE_BRIDGE", lvl38: "DE_DUST2", lvl39: "DE_DUST2", lvl40: "DE_INFERNO", lvl41: "DE_MIRAGE", lvl42: "DE_AZTEC", lvl43: "CS_ITALY", lvl44: "CS_OFFICE", lvl45: "DE_CACHE", lvl46: "DE_CBBLE", lvl47: "DE_NUKE", lvl48: "DE_OVERPASS",
-    lvl30Desc: "Container yard with thin-walled corridors.",
-    lvl31Desc: "Mansion with a central hall, garden and shallow pool.",
-    lvl32Desc: "Underpass beneath overpasses with asphalt, fences and a brick wall.",
-    lvl33Desc: "Château with inner walls, a central tower and gardens.",
-    lvl34Desc: "Laboratory with containment chambers and a long corridor.",
-    lvl35Desc: "Stepped temple with a pillared courtyard and a central pyramid.",
-    lvl36Desc: "Devastated wasteland with sheds, low walls and scrap.",
-    lvl37Desc: "Deep river crossed by bridges, with huts on the banks.",
-    lvl38Desc: "Dust 2 style: desert map with Long A, Mid and B Tunnels.",
-    lvl39Desc: "Dust 2 style: desert map with Long A, Mid and B Tunnels.",
-    lvl40Desc: "Inferno style: Italian village with a curved Banana and Apartments.",
-    lvl41Desc: "Mirage style: Arabian town with a Palace, Jungle and an open Mid.",
-    lvl42Desc: "Aztec style: ruins split by a river with bridges.",
-    lvl43Desc: "Italy style: Italian village with a sunken central square.",
-    lvl44Desc: "Office style: office building with corridors and a central hall.",
-    lvl45Desc: "Cache style: two bomb sites linked by a long, open Mid.",
-    lvl46Desc: "Cobblestone style: a walled castle with gates and a central hall.",
-    lvl47Desc: "Nuke style: a nuclear plant with a yard, silo and lobby.",
-    lvl48Desc: "Overpass style: a water canal crossed by bridges.",
-    lvl49: "CS_BANK", lvl49Desc: "Bank with a central vault and a pillared lobby.",
-    lvl50: "CS_WAREHOUSE", lvl50Desc: "Warehouse with crate stacks and a back office.",
-    lvl51: "EMBASSY", lvl51Desc: "Embassy: a walled compound with a main building.",
-    lvl52: "CARGOSHIP", lvl52Desc: "Cargo ship with a long deck full of containers.",
-    lvl53: "CS_MANSION", lvl53Desc: "Multi-room mansion with an upper floor.",
-    lvl54: "CS_PRISON", lvl54Desc: "Prison with cells on both sides and a central block.",
-    lvl55: "CS_VILLAGE", lvl55Desc: "Village of small houses and open streets.",
-    lvl56: "CS_HOTEL", lvl56Desc: "Hotel around a long corridor, up to the rooftop.",
-    lvl57: "CS_ITALY", lvl57Desc: "Italy style: Italian village with streets and buildings.",
-    lvl58: "CS_OFFICE", lvl58Desc: "Office style: commercial building with short corridors.",
-    lvl59: "CS_DUST2", lvl59Desc: "Dust 2 style: desert map with Long A, Mid and B Tunnels.",
-    lvl60: "CRASH", lvl60Desc: "Crash style (CoD): urban crossroads with a gas station.",
-    lvl61: "CRASH", lvl61Desc: "Crash style (CoD): urban crossroads with a gas station.",
-    lvl62: "CRASH", lvl62Desc: "Crash style (CoD): urban crossroads with a gas station.",
-    lvl63: "NUKETOWN", lvl63Desc: "Nuketown style (CoD): small town with two houses and a bus.",
-    lvl64: "NUKETOWN", lvl64Desc: "Nuketown style (CoD): small town with two houses and a bus.",
-    lvl65: "NUKETOWN", lvl65Desc: "Nuketown style (CoD): small town with two houses and a bus.",
-    lvl66: "RUST", lvl66Desc: "Rust style (CoD): desert arena with a central tower and containers.",
-    lvl67: "RUST", lvl67Desc: "Rust style (CoD): desert arena with a central tower and containers.",
-    lvl68: "DE_PRODIGY", lvl68Desc: "Prodigy style (CS): office complex with a pillared lobby.",
-    lvl69: "DE_PRODIGY", lvl69Desc: "Prodigy style (CS): office complex with a pillared lobby.",
-    lvl70: "CROSSFIRE", lvl70Desc: "Crossfire style (CoD): wide street between ruined buildings.",
-    lvl71: "CS_HAVANA", lvl71Desc: "Havana style (CS): village with a walled courtyard and a central room.",
-    lvl72: "AS_OILRIG", lvl72Desc: "Oilrig style (CS): oil platform with a central living quarters.",
-    lvl73: "AS_OILRIG", lvl73Desc: "Oilrig style (CS): oil platform with a central living quarters.",
-    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Freddy's pizzeria in closed rooms: stage, Pirate Cove, kitchen and backstage.",
-    lvl75: "SOCCER_STADIUM", lvl75Desc: "Soccer stadium with a pitch and two goals.",
-    lvl76: "DE_VILLAGE", lvl76Desc: "Counter-Strike style: village with tiled houses, a river and a hill.",
-    lvl77: "DE_VILLAGE", lvl77Desc: "Counter-Strike style: village with tiled houses, a river and a hill.",
-    lvl78: "MP_DOCKYARD", lvl78Desc: "Call of Duty style: harbor of narrow alleys with a canal and bridges.",
-    lvl79: "MP_DOCKYARD", lvl79Desc: "Call of Duty style: harbor of narrow alleys with a canal and bridges.",
-    lvl80: "CS_MONASTERY", lvl80Desc: "Counter-Strike style: monastery on a plateau with ramps and a lake.",
-    lvl81: "CS_MONASTERY", lvl81Desc: "Counter-Strike style: monastery on a plateau with ramps and a lake.",
-    lvl82: "CS_DOWNHILL", lvl82Desc: "Counter-Strike style: a mountain descent in 5 terraces.",
+    lvl30Desc: "Container yard: long thin walls form lanes. Watch out for the open centre.",
+    lvl31Desc: "Mansion with a six-door central hall, a garden with a shallow pool to wade through and open flanks.",
+    lvl32Desc: "Underpass beneath two viaducts: asphalt ground fenced by metal grids and a brick outer wall, with open sky on the sides and in the middle. Dropping down is easy, climbing back costs a step.",
+    lvl33Desc: "Chateau: inner walls, a stepped central tower and sunken gardens with ramps on the sides.",
+    lvl34Desc: "Laboratory with containment chambers, a long corridor and a central room. Short and medium range combat.",
+    lvl35Desc: "Stepped temple with a pillared courtyard and a two-level pyramid in the middle. Fight for the high ground.",
+    lvl36Desc: "Razed ground: two roofed sheds, low walls and scattered scrap. Cover everywhere.",
+    lvl37Desc: "A deep river in the middle crossed by 3 bridges, with huts on the banks. You can swim, but coming back takes time.",
+    lvl38Desc: "Dust 2 replica: Long A to the east, Mid in the center, B Tunnels to the west. T south, CT north.",
+    lvl39Desc: "Dust 2 for Zombie Survival and Gun Game. Start at T spawn and explore Long, Mid and Tunnels.",
+    lvl40Desc: "Inferno style: curved Banana to the west, Mid in the center, Apartments to the east. B site NW, A site east. (Deathmatch)",
+    lvl41Desc: "Mirage style: A Ramp, Palace, Jungle, B Apartments and an open Mid with connectors. (Deathmatch)",
+    lvl42Desc: "Aztec style: a real river splits the map (shallow banks, deep middle you can swim in), crossed by bridges. Sites to the south, T to the north. (Deathmatch)",
+    lvl43Desc: "Italy style: Italian village with streets, a sunken central plaza with ramps (dry slope), market stalls and buildings with doors. (Deathmatch)",
+    lvl44Desc: "Office style: corridors, offices with doors and a central hall. Lots of close-quarters fights. (Deathmatch)",
+    lvl45Desc: "Cache style: A site to the west, B site to the east and a long Mid linking both. CT north, T south. (Deathmatch)",
+    lvl46Desc: "Cobblestone style: a walled castle to the north with three gates, a central hall and A/B sites inside. (Deathmatch)",
+    lvl47Desc: "Nuke style: outdoor yard with a silo, a building with a lobby, an upper A site and a sunken B site. (Deathmatch)",
+    lvl48Desc: "Overpass style: a water canal in the middle (shallow banks, deep channel) with bridges, Long A to the west and Bathrooms to the east. (Deathmatch)",
+    lvl49: "CS_BANK", lvl49Desc: "Bank heist: the hostages are in the vault at the heart of the building. Pillared lobby, entrances on both sides.",
+    lvl50: "CS_WAREHOUSE", lvl50Desc: "Depot with crate stacks. The hostages are in the back office; use the stacks for cover.",
+    lvl51: "EMBASSY", lvl51Desc: "Walled compound with two gates. The main building keeps the hostages in an inner room.",
+    lvl52: "CARGOSHIP", lvl52Desc: "Long cargo deck stacked with containers. The hostages are in the stern hold; push along the lanes.",
+    lvl53: "CS_MANSION", lvl53Desc: "Multi-room mansion. The hostages are in the raised room at the top, with a back-door entrance.",
+    lvl54: "CS_PRISON", lvl54Desc: "Prison with cells on both sides. The hostages are in the central block, ringed by corridors.",
+    lvl55: "CS_VILLAGE", lvl55Desc: "Hamlet of small houses and open streets. The hostages are in the big house on the east side.",
+    lvl56: "CS_HOTEL", lvl56Desc: "Hotel built around one long corridor. Fight up from the lobby to the penthouse where the hostages are.",
+    lvl57: "CS_ITALY", lvl57Desc: "Italian village: the hostages are in the north-east building. CT rescue in the north-west.",
+    lvl58: "CS_OFFICE", lvl58Desc: "Office block: the hostages are in the north-west corner room. Tight corridor fights.",
+    lvl59: "CS_DUST2", lvl59Desc: "Dust 2 replica: the hostages sit on B Site. Bring them through Mid to the CT base in the north.",
+    lvl60: "CRASH", lvl60Desc: "Crash style (CoD): urban crossroads with a gas station in the middle and buildings in all four corners. Zombies pour in from every street.",
+    lvl61: "CRASH", lvl61Desc: "Crash style (CoD): crossroads with a gas station in the middle and corner buildings. T in the west, CT in the east. (Deathmatch / CTF)",
+    lvl62: "CRASH", lvl62Desc: "Crash style (CoD): the hostages are in the street north of the gas station. CT rescue at the base on the east side.",
+    lvl63: "NUKETOWN", lvl63Desc: "Nuketown style (CoD): tiny suburb with two houses, a bus in the middle and yards full of cars. Small and frantic.",
+    lvl64: "NUKETOWN", lvl64Desc: "Nuketown style (CoD): T house in the west, CT house in the east and a bus in between. (Deathmatch / CTF)",
+    lvl65: "NUKETOWN", lvl65Desc: "Nuketown style (CoD): the hostages are in the west house, guarded by the T. Bring them to the CT house in the east.",
+    lvl66: "RUST", lvl66Desc: "Rust style (CoD): desert arena with a stepped central tower and containers in the corners. The tower covers all four lanes.",
+    lvl67: "RUST", lvl67Desc: "Rust style (CoD): stepped central tower and corner containers. T in the west, CT in the east. (Deathmatch / CTF)",
+    lvl68: "DE_PRODIGY", lvl68Desc: "Prodigy style (CS): office complex with wide-door rooms, corridors and a central pillared lobby.",
+    lvl69: "DE_PRODIGY", lvl69Desc: "Prodigy style (CS): offices north and south, pillared lobby in the middle. T in the west, CT in the east. (Deathmatch / CTF)",
+    lvl70: "CROSSFIRE", lvl70Desc: "Crossfire style (CoD): wide street between ruined buildings with gaps to flank through. Lots of crossfire. (Deathmatch / CTF)",
+    lvl71: "CS_HAVANA", lvl71Desc: "Havana style (CS): villa with a walled courtyard and the hostage room in the middle. Go in through the gates and bring them to the CT base in the west.",
+    lvl72: "AS_OILRIG", lvl72Desc: "Oilrig style (CS): oil platform. The hostages are in the central quarters on the raised deck. CT rescue at the west dock.",
+    lvl73: "AS_OILRIG", lvl73Desc: "Oilrig style (CS): platform with corner modules and central quarters on a raised deck. T in the west, CT in the east. (Deathmatch / CTF)",
+    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Freddy's pizzeria, now in closed rooms (thin walls): curtained stage, Pirate Cove with a door, restroom, supply closets, backstage and kitchen. Survive from midnight to 6 AM; close the doors, use the hall lights and save power. Scarce weapons and ammo.",
+    lvl75: "SOCCER_STADIUM", lvl75Desc: "Exclusive Soccer-mode stadium: a pitch with two goals. Kick the ball (F) and score — everyone carries the Desert Eagle.",
+    lvl76: "DE_VILLAGE", lvl76Desc: "Counter-Strike style: Village of gable and hip-roofed houses, thin walls with windows on every side, a river with bridge and ford, a hill with a smooth ramp and stairs.",
+    lvl77: "DE_VILLAGE", lvl77Desc: "Counter-Strike style: Village of gable and hip-roofed houses, river with bridge and ford, a hill with ramp and stairs. T in the north, CT in the south. (Deathmatch / CTF)",
+    lvl78: "MP_DOCKYARD", lvl78Desc: "Call of Duty style: Harbor of narrow alleys: thin-walled blocks, varied roofs, a canal with arched bridges and paths through the houses.",
+    lvl79: "MP_DOCKYARD", lvl79Desc: "Call of Duty style: Narrow-alley harbor, canal with arched bridges and walk-through houses. T in the west, CT in the east. (Deathmatch / CTF)",
+    lvl80: "CS_MONASTERY", lvl80Desc: "Counter-Strike style: Monastery on top of a plateau with four ramps, a narrow inner corridor, roofed houses and a lake in the southwest.",
+    lvl81: "CS_MONASTERY", lvl81Desc: "Counter-Strike style: Monastery on the plateau with four ramps (one is a stair), roofs and a lake. T in the south, CT in the north. (Deathmatch / CTF)",
+    lvl82: "CS_DOWNHILL", lvl82Desc: "Counter-Strike style: A narrow, very long mountain in 5 terraces linked by zig-zag ramps. T on the summit, CT at the base. You can jump off the cliffs to go down fast (light damage), but climbing back is only by the ramps. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
     gunFoeLabel: "VERSUS:", gunFoeZombies: "ZOMBIES", gunFoeBots: "BOTS",
@@ -4768,7 +4894,7 @@ function buildTestMapData() {
   for (let y = PY0; y < PY1; y++) { if (y >= gy0 && y < gy1) continue; solid(1, y, 2, y, 7); solid(W - 3, y, W - 2, y, 7); }   // laterais, exceto a boca dos gols
   solid(1, PY1, W - 2, PY1, 5); open(28, PY1, 29, PY1);
   for (let x = 1; x <= W - 2; x++) wall[I(x, PY0 - 1)] = 5;
-  const adN = 10;   // patrocinadores = portas 6..15
+  const adN = SOC_AD_COUNT;   // patrocinadores = portas 6..(6+SOC_AD_COUNT-1)
   for (let x = sx0; x < sx1; x++) { if (x === 28 || x === 29) continue; door[I(x, PY0 - 1)] = 6 + (x % adN); door[I(x, PY1)] = 6 + ((x + 5) % adN); }
   for (let y = PY0; y < PY1; y++) { if (y >= gy0 && y < gy1) continue; door[I(sx0 - 1, y)] = 6 + ((y + 3) % adN); door[I(sx1, y)] = 6 + ((y + 7) % adN); }
   // faixa dos clubes
@@ -7791,7 +7917,7 @@ function nmMontanha() {
 (function nmRegisterMontanha(){
   const m = nmMontanha();
   const ldef = { keyName: 'lvl82', w: m.w, h: m.h, grid: m.grid, heights: m.heights, slopes: m.slopes, water: m.water, layout: m.layout,
-    noCeiling: true, sky: 2, spawn: { x: 10.5, y: 5.5, angle: Math.PI / 2 }, dmOnly: true, baseRespawn: true,
+    noCeiling: true, sky: 2, spawn: { x: 10.5, y: 5.5, angle: Math.PI / 2 }, dmOnly: true,
     dmZones: { T: { x0: 6, y0: 2, x1: 15, y1: 8 }, CT: { x0: 7, y0: 65, x1: 16, y1: 70 } } };
   LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, ldef);
   LEVEL_THEMES[LEVEL_DEFINITIONS.length - 2] = STYLES.PARK;
@@ -7923,19 +8049,6 @@ const NM_ASCII_MAPS = [
 })();
 applyMapCategories();
 
-// Verificação interna das descrições (ver LEMBRETE acima do I18N): avisa no console se um mapa não tiver `Desc` em PT/EN ou se passar de ~90 caracteres.
-(function checkMapDescriptions(){
-  const MAX = 100;
-  LEVEL_DEFINITIONS.forEach(ld => {
-    if (!ld || !ld.keyName) return;
-    ['pt', 'en'].forEach(lang => {
-      const d = I18N[lang] && I18N[lang][ld.keyName + 'Desc'];
-      if (!d) console.warn('[mapas] ' + ld.keyName + ': falta a descrição (' + lang.toUpperCase() + ') — adicione ' + ld.keyName + 'Desc no I18N.');
-      else if (d.length > MAX) console.warn('[mapas] ' + ld.keyName + ': descrição (' + lang.toUpperCase() + ') com ' + d.length + ' caracteres — deixe curta, só o tema.');
-    });
-  });
-})();
-
 function renderLevelPreview(idx) {
   const ldef = LEVEL_DEFINITIONS[idx];
   if (!ldef) return;
@@ -8061,6 +8174,7 @@ function loadLevel(idx){
   placeRails(ldef);
   buildTileTextures(currentLevelIndex, ldef);
   cleanWindows();
+  socLowMap = null; socStand = null;
   if (ldef.soccerOnly) socPaintPitch(ldef);
   { const _th = getLevelTheme(currentLevelIndex, ldef);
     currentSky = (typeof ldef.sky === 'number') ? ldef.sky : _th.s[Math.floor(Math.random() * _th.s.length)]; }
@@ -8143,6 +8257,7 @@ function loadLevel(idx){
   if (isTeamMode() && !ldef.isTestMap) switchWeapon(player.weapon);
   updateHUDModeLabel();
 
+  if (debugOptions.freeRoam && !debugOptions.freeBots) { enemies = []; if (fnaf && fnaf.anims) fnaf.anims = []; }   // debug: mapa livre, sem bots
   startScoreTracker();
   startCountdown();
 }
@@ -8997,8 +9112,6 @@ function dmZoneTiles(team){
 // - bot/jogador renascendo: o mais longe possível dos oponentes;
 // - aliados no início: perto do jogador.
 function dmPickSpawn(team, nearPlayer, useZone){
-  const _ld = LEVEL_DEFINITIONS[currentLevelIndex];
-  if(_ld && _ld.baseRespawn) useZone = true;   // mapas em patamares (ex.: CS_DOWNHILL): sempre renasce na própria base, nunca no ponto "mais longe" do mapa
   const all = (useZone && dmZoneTiles(team)) || getEmptyTiles(0);
   if(!all.length) return null;
   const opps = [];
@@ -9597,7 +9710,12 @@ const SOC_KICK_SPEED = 13.5;      // velocidade do chute
 const SOC_SHOT_SPEED = 11;        // velocidade da bola atingida por um tiro
 const SOC_KICK_RANGE = 1.25;      // alcance do chute
 const SOC_KICK_CD_MS = 420;
-const SOC_MATCH_SECONDS = 240;
+const SOC_MATCH_SECONDS = 240;      // 90' de jogo = 240 s reais (2 tempos de 45' = 120 s cada)
+const SOC_HALF_SECONDS = SOC_MATCH_SECONDS / 2;
+const SOC_SEC_PER_MIN = SOC_MATCH_SECONDS / 90;   // segundos reais por minuto de jogo
+const SOC_HALFTIME_PAUSE = 5;       // intervalo entre os tempos (s)
+function socRollAdd(){ return Math.random() < 0.15 ? 0 : 1 + Math.floor(Math.random() * 5); }   // acréscimos aleatórios: 0 a 5 min
+function socAddMsg(m){ return (currentLang === 'en' ? 'STOPPAGE TIME: +' : 'ACRÉSCIMOS: +') + m + (currentLang === 'en' ? ' MIN' : ' MIN'); }
 const SOC_GOAL_PAUSE = 3.4;
 const SOC_KICKOFF_PAUSE = 1.3;
 const SOC_BOT_RESPAWN_MS = 4000;
@@ -9628,13 +9746,32 @@ function socPaintPitch(ldef){
       }
     }
   }
-  // Patrocinadores: faixas nas paredes (não ocupam a parede inteira). Índices 6..15 de doorSets.
-  const AD0 = DOOR_AD_FROM, N = 10;
-  for(let x = d.x0; x < d.x1; x++){ doorTileMap[x] = AD0 + (x % N); doorTileMap[(H - 1) * W + x] = AD0 + ((x + 5) % N); }
+  // Barreira baixa de LED (propagandas animadas passando) em volta do campo; atrás dela fica a arquibancada do estádio,
+  // desenhada pelo renderizador (castAndDraw). A colisão continua sendo a da parede: só o visual fica baixo.
+  socLowMap = new Uint8Array(W * H);   // bit 1 = face em X (lados), bit 2 = face em Y (fundos)
+  for(let x = d.x0; x < d.x1; x++){
+    const t0 = x, t1 = (H - 1) * W + x;
+    doorTileMap[t0] = -1; doorTileMap[t1] = -1;
+    socLowMap[t0] |= 2; socLowMap[t1] |= 2;
+  }
   for(let y = 1; y < H - 1; y++){
     if(y >= d.gy0 && y < d.gy1) continue;   // não na boca do gol
-    doorTileMap[y * W + (d.x0 - 1)] = AD0 + ((y + 3) % N); doorTileMap[y * W + d.x1] = AD0 + ((y + 7) % N);
+    const t0 = y * W + (d.x0 - 1), t1 = y * W + d.x1;
+    doorTileMap[t0] = -1; doorTileMap[t1] = -1;
+    socLowMap[t0] |= 1; socLowMap[t1] |= 1;
   }
+  const backLow = (x, y) => { if (x >= 0 && y >= 0 && x < W && y < H && g[y][x] !== 0) socLowMap[y * W + x] |= 4; };   // bit 4 = parede do vão do gol: quase sem altura
+  for(let y = d.gy0 - 1; y <= d.gy1; y++){ backLow(0, y); backLow(W - 1, y); }
+  for(let x = 1; x <= 2; x++){ [d.gy0 - 1, d.gy1].forEach(y => { backLow(x, y); backLow(W - 1 - x, y); }); }
+  const gp = SOC_STAND.gap;
+  socStand = { BX: (d.x0 + d.x1) / 2, XL0: d.x0 - 1 - gp, XR0: d.x1 + 1 + gp, YT0: -gp, YB0: H + gp };
+  {   // fachada: cada lado é dividido em módulos IGUAIS que começam/terminam exatamente nos cantos (luzes sempre inteiras e simétricas)
+    const Dp = SOC_STAND.depth, fL = SOC_STAND.facadeLen;
+    const lenY = (socStand.YB0 - socStand.YT0) + 2 * Dp, lenX = (socStand.XR0 - socStand.XL0) + 2 * Dp;
+    socStand.fy0 = socStand.YT0 - Dp; socStand.fyK = Math.max(1, Math.round(lenY / fL)) / lenY;   // lados esquerdo/direito (ao longo de y)
+    socStand.fx0 = socStand.XL0 - Dp; socStand.fxK = Math.max(1, Math.round(lenX / fL)) / lenX;   // lados de cima/baixo (ao longo de x)
+  }
+  socStadiumBuild();
 }
 
 function socApplyLoadout(){
@@ -9653,7 +9790,7 @@ function socInit(ldef){
   soc = {
     d, L, home: socMatch.home, away: socMatch.away,
     ball: { x: (d.x0 + d.x1) / 2, y: d.cy, z: 0, vx: 0, vy: 0, vz: 0, spin: 0, lastTouch: null },
-    clock: 0, golden: false, phase: 'pre', phaseT: 0, finishAfterGoal: false,
+    clock: 0, golden: false, half: 1, add: socRollAdd(), addShown: false, phase: 'pre', phaseT: 0, finishAfterGoal: false,
     chaser: { CT: null, T: null }, chaseAt: 0, gk: { CT: null, T: null }, resetN: 0,
     lastKickAt: 0, kicks: 0, playerGoals: 0, stillT: 0,
     posts: [{ x: d.lineL, y: d.gy0 }, { x: d.lineL, y: d.gy1 }, { x: d.lineR, y: d.gy0 }, { x: d.lineR, y: d.gy1 }],
@@ -9661,10 +9798,8 @@ function socInit(ldef){
     hudKey: '', boardKey: '', boardCv: null, netCv: null,
     props: [
       { kind: 'socgoal',  x: 1.7,     y: d.cy, side: 'L' },
-      { kind: 'socgoal',  x: W - 1.7, y: d.cy, side: 'R' },
-      { kind: 'socboard', x: 1.7,     y: d.cy },
-      { kind: 'socboard', x: W - 1.7, y: d.cy }
-    ]
+      { kind: 'socgoal',  x: W - 1.7, y: d.cy, side: 'R' }
+    ]   // o placar não é mais sprite: é um painel fixo na parede (veja socStandFill)
   };
   enemies = []; pickups = [];
   let id = 1;
@@ -10161,11 +10296,23 @@ function socUpdate(dt, now){
     socUpdateHud(); return;
   }
 
-  soc.clock += dt;
-  if(soc.clock >= SOC_MATCH_SECONDS && !soc.golden){
-    if(dmScoreCT !== dmScoreT){ socFinish(); return; }
-    soc.golden = true; SFX.socWhistle('end');
-    flashMsg(currentLang === 'en' ? 'GOLDEN GOAL!' : 'GOL DE OURO!');
+  if(!debugOptions.freeRoam) soc.clock += dt;   // debug: relógio parado, a partida não acaba
+  if(!soc.golden){
+    const endAt = (soc.half === 1 ? SOC_HALF_SECONDS : SOC_MATCH_SECONDS) + soc.add * SOC_SEC_PER_MIN;
+    if(!soc.addShown && soc.clock >= (soc.half === 1 ? SOC_HALF_SECONDS : SOC_MATCH_SECONDS)){   // fim do tempo normal: mostra os acréscimos
+      soc.addShown = true; if(soc.add > 0) flashMsg(socAddMsg(soc.add));
+    }
+    if(soc.clock >= endAt){
+      if(soc.half === 1){   // intervalo: 2º tempo recomeça aos 45'
+        soc.half = 2; soc.clock = SOC_HALF_SECONDS; soc.add = socRollAdd(); soc.addShown = false;
+        SFX.socWhistle('end'); flashMsg(currentLang === 'en' ? 'HALF TIME' : 'INTERVALO');
+        socResetPositions(); soc.phase = 'kick'; soc.phaseT = SOC_HALFTIME_PAUSE; countdownActive = true; fireHeld = false;
+        socUpdateHud(true); return;
+      }
+      if(dmScoreCT !== dmScoreT){ socFinish(); return; }
+      soc.golden = true; SFX.socWhistle('end');
+      flashMsg(currentLang === 'en' ? 'GOLDEN GOAL!' : 'GOL DE OURO!');
+    }
   }
   if(!debugOptions.pauseEnemies){
     if(now >= soc.chaseAt){ soc.chaseAt = now + 200; socPickChasers(); }
@@ -10216,7 +10363,7 @@ function socGoal(side){   // side = lado que MARCOU
   if(lt === player && side === 'CT'){ soc.playerGoals++; score += 50; updateHUD(); }
   soc.threat = null;
   soc.phase = 'goal'; soc.phaseT = SOC_GOAL_PAUSE; countdownActive = true; fireHeld = false;
-  soc.finishAfterGoal = soc.golden || (soc.clock >= SOC_MATCH_SECONDS && dmScoreCT !== dmScoreT);
+  soc.finishAfterGoal = soc.golden || (soc.half === 2 && soc.clock >= SOC_MATCH_SECONDS + soc.add * SOC_SEC_PER_MIN && dmScoreCT !== dmScoreT);
   SFX.socGoal(); gpRumble(0.9, 0.9, 500);
   if(NET.mode === 'host' && NET.started) netBroadcast({ t: 'sg', s: side, own: own ? 1 : 0, by: lt ? (lt === player ? 0 : (lt.id !== undefined ? lt.id : null)) : null, c: dmScoreCT, r: dmScoreT });
   socShowGoal(side, own);
@@ -10250,6 +10397,10 @@ function netApplySoc(d){
   if(!b.sx || Math.hypot(b.x - sb[0], b.y - sb[1]) > 3){ b.x = sb[0]; b.y = sb[1]; b.z = sb[2]; }   // saltos grandes (saída de bola): sem interpolar
   b.sx = 1; b.tx = sb[0]; b.ty = sb[1]; b.tz = sb[2]; b.vx = sb[3]; b.vy = sb[4]; b.vz = sb[5];
   soc.clock = d.sk || 0;
+  { const h = d.sh || 1, a = d.sa || 0;
+    if(h !== (soc.half || 1)){ soc.half = h; soc.add = a; soc.addShown = false; SFX.socWhistle('end'); flashMsg(en ? 'HALF TIME' : 'INTERVALO'); }
+    soc.add = a;
+    if(!soc.addShown && soc.clock >= (h === 1 ? SOC_HALF_SECONDS : SOC_MATCH_SECONDS)){ soc.addShown = true; if(a > 0) flashMsg(socAddMsg(a)); } }
   if(d.sg && !soc.golden){ soc.golden = true; SFX.socWhistle('end'); flashMsg(en ? 'GOLDEN GOAL!' : 'GOL DE OURO!'); }
   const ph = d.sp;
   if(ph && ph !== soc.phase){
@@ -10298,7 +10449,10 @@ function socClientTick(dt, now){
 // ---------- HUD ----------
 function socMinuteLabel(){
   if(soc.golden) return currentLang === 'en' ? '90+ GOLDEN GOAL' : '90+ GOL DE OURO';
-  return Math.min(90, Math.floor(soc.clock / SOC_MATCH_SECONDS * 90)) + "'";
+  const c = soc.clock, half = soc.half || 1;
+  if(half === 1 && c >= SOC_HALF_SECONDS) return "45+" + (Math.floor((c - SOC_HALF_SECONDS) / SOC_SEC_PER_MIN) + 1) + "'";   // acréscimos do 1º tempo
+  if(half === 2 && c >= SOC_MATCH_SECONDS) return "90+" + (Math.floor((c - SOC_MATCH_SECONDS) / SOC_SEC_PER_MIN) + 1) + "'";   // acréscimos do 2º tempo
+  return Math.min(90, Math.floor(c / SOC_MATCH_SECONDS * 90)) + "'";
 }
 function socUpdateHud(force){
   const el = document.getElementById('socHud');
@@ -10439,9 +10593,12 @@ function socGoalPlanes(side, d, W){
     pl(lx - T, py - T, lx - T, py + T, 0, GH, 'post', 0); pl(lx + T, py - T, lx + T, py + T, 0, GH, 'post', 0);
     pl(lx - T, py - T, lx + T, py - T, 0, GH, 'post', 0); pl(lx - T, py + T, lx + T, py + T, 0, GH, 'post', 0);
   });
-  pl(lx - T, y0, lx - T, y1, GH - BH, GH, 'post', 6); pl(lx + T, y0, lx + T, y1, GH - BH, GH, 'post', 6);   // travessão
-  pl(bx, y0 + T, bx, y1 - T, 0, GH, 'net', 6);                    // fundo da rede
-  pl(lx, y0 + T, bx, y0 + T, 0, GH, 'net', 2); pl(lx, y1 - T, bx, y1 - T, 0, GH, 'net', 2);   // laterais da rede
+  pl(lx - T, y0, lx - T, y1, GH - BH, GH, 'post', 1); pl(lx + T, y0, lx + T, y1, GH - BH, GH, 'post', 1);
+  pl(lx - T, y0 - T, lx + T, y0 - T, GH - BH, GH, 'post', 0); pl(lx - T, y1 + T, lx + T, y1 + T, GH - BH, GH, 'post', 0);   // fecha as pontas do travessão
+  pl(lx - T, y0, lx + T, y0, GH - BH, GH, 'post', 0); pl(lx - T, y1, lx + T, y1, GH - BH, GH, 'post', 0);   // travessão
+  pl(bx, y0 + T, bx, y1 - T, 0, GH, 'net', y1 - y0 - 2 * T);                    // fundo da rede
+  const dep = Math.abs(lx - bx);
+  pl(lx, y0 + T, bx, y0 + T, 0, GH, 'net', dep); pl(lx, y1 - T, bx, y1 - T, 0, GH, 'net', dep);   // laterais da rede
   return P;
 }
 // versão reduzida (máx. 256px) da textura, criada uma única vez: drawImage de colunas de 1px e o pattern ficam bem mais baratos
@@ -10468,12 +10625,12 @@ function socDrawPlane(p){
   const sideShade = p.ay === p.by ? 0.62 : 1.0, net = p.tex === 'net';
   ctx.save();
   // colunas vizinhas com a mesma fatia da textura e mesma altura viram um único drawImage
-  let rc = -1, rsx = 0, rt = 0, rb = 0, rsh = 1, rn = 0;
+  let rc = -1, rsx = 0, rt = 0, rb = 0, rsh = 1, rn = 0, rrf = 1;
   const flush = () => {
     if(rc < 0) return;
-    if(net){ ctx.globalAlpha = Math.min(1, rsh * 1.1); ctx.drawImage(im, rsx, 0, 1, sh, rc, rt, rn, rb - rt); }
+    if(net){ ctx.globalAlpha = Math.min(1, rsh * 1.1); ctx.drawImage(im, rsx, 0, 1, Math.max(0.5, sh * rrf), rc, rt, rn, rb - rt); }
     else {
-      ctx.globalAlpha = 1; ctx.drawImage(im, rsx, 0, 1, sh, rc, rt, rn, rb - rt);
+      ctx.globalAlpha = 1; ctx.drawImage(im, rsx, 0, 1, Math.max(0.5, sh * rrf), rc, rt, rn, rb - rt);
       if(rsh < 0.99){ ctx.globalAlpha = 1 - rsh; ctx.fillStyle = '#000'; ctx.fillRect(rc, rt, rn, rb - rt); }
     }
     rc = -1;
@@ -10485,13 +10642,16 @@ function socDrawPlane(p){
     if(Math.abs(den) < 1e-9){ flush(); continue; }
     const s = (apx * ey - apy * ex) / den, t = (apx * ry - apy * rx) / den;
     if(s < 0.3 || t < 0 || t > 1 || s > 40){ flush(); continue; }
-    const unit = h / s, yBot = horizon + (eyeZ - p.z0) * unit, yTop = horizon + (eyeZ - p.z1) * unit;
+    const unit = h / s, yTop = horizon + (eyeZ - p.z1) * unit;
+    let yBot = horizon + (eyeZ - p.z0) * unit;
     if(!spriteColVisible(c, s - 0.03, yTop, yBot)){ flush(); continue; }
+    let rf = 1; const lim = spriteColHi(c, s - 0.03);   // barreira baixa à frente: só a parte acima dela aparece
+    if(yBot > lim){ const span = yBot - yTop; rf = span > 0 ? (lim - yTop) / span : 0; if(rf <= 0.002){ flush(); continue; } yBot = lim; }
     const u = p.rep ? ((t * p.rep) % 1) : t;   // rep = repetições da textura ao longo do plano
     const sx = Math.min(sw - 1, Math.floor(u * sw));
     const shade = Math.max(0.15, 1 - s / (12 * fogScale)) * sideShade;
-    if(rc >= 0 && sx === rsx && Math.abs(yTop - rt) < 1 && Math.abs(yBot - rb) < 1 && Math.abs(shade - rsh) < 0.04){ rn++; continue; }
-    flush(); rc = c; rsx = sx; rt = yTop; rb = yBot; rsh = shade; rn = 1;
+    if(rc >= 0 && sx === rsx && Math.abs(yTop - rt) < 1 && Math.abs(yBot - rb) < 1 && Math.abs(shade - rsh) < 0.04 && Math.abs(rf - rrf) < 0.02){ rn++; continue; }
+    flush(); rc = c; rsx = sx; rt = yTop; rb = yBot; rsh = shade; rrf = rf; rn = 1;
   }
   flush();
   ctx.restore();
@@ -12591,6 +12751,7 @@ document.getElementById('closeLevelSelectBtn').addEventListener('click', ()=>{
 document.getElementById('playSelectedLevelBtn').addEventListener('click', ()=>{
   if(NET.lobby){ if(NET.mode === 'host') netHostStart(); return; }
   SFX.menuAccept();
+  debugOptions.freeRoam = false;
   let selectedLvl = parseInt(document.getElementById('mainLevelSelect').value);
   currentGameMode = document.getElementById('gameModeSelect').value;
   gunGameFoe = document.getElementById('gunFoeSelect').value;
@@ -12622,7 +12783,33 @@ document.getElementById('playSelectedLevelBtn').addEventListener('click', ()=>{
   if(!usingTouch) requestPointerLockSafe();
 });
 
+(function dbgMapPicker(){
+  const sel = document.getElementById('dbgMapSelect'), src = document.getElementById('mainLevelSelect');
+  const fill = () => {
+    const keep = sel.value; sel.innerHTML = '';
+    Array.from(src.options).forEach(o => { const op = document.createElement('option'); op.value = o.value; op.textContent = o.value + ' · ' + o.text; sel.appendChild(op); });
+    if (keep) sel.value = keep;
+  };
+  fill();
+  sel.addEventListener('focus', fill);
+  document.getElementById('dbgGoMapBtn').addEventListener('click', () => {
+    const idx = parseInt(sel.value, 10), ld = LEVEL_DEFINITIONS[idx];
+    if (!ld) return;
+    SFX.menuAccept(); netLeave();
+    debugOptions.freeRoam = true; debugOptions.freeBots = document.getElementById('dbgMapBots').checked;
+    currentGameMode = ld.soccerOnly ? 'soccer' : ld.fnafOnly ? 'fnaf' : ld.hrOnly ? 'hostage' : ld.dmOnly ? 'deathmatch' : 'waves';
+    dmPlayerTeam = 'CT';
+    if (currentGameMode === 'soccer') socResolveClubs(); else if (isTeamMode()) dmResolveLoadout();
+    settingsModal.style.display = 'none'; mainMenu.style.display = 'none';
+    SFX.stopMenuMusic(); started = true;
+    resetGame(idx);
+    startMatchAudio();
+    if (!usingTouch) requestPointerLockSafe();
+  });
+})();
+
 dbgTestLevelBtn.addEventListener('click', ()=>{
+  debugOptions.freeRoam = false;
   SFX.menuAccept();
   settingsModal.style.display = 'none';
   mainMenu.style.display = 'none';
@@ -13219,13 +13406,21 @@ function spriteColVisible(c, dist, rowTop, rowBot){
   while (k > 0 && clipD[base + k] > dist) k--;
   return rowBot > clipLo[base + k] + 1 && rowTop < clipHi[base + k];
 }
+function spriteColHi(c, dist){
+  if (!clipN || c >= clipW) return SCREEN_H;
+  const base = c * CLIP_MAX; let k = clipN[c] - 1;
+  while (k > 0 && clipD[base + k] > dist) k--;
+  return clipHi[base + k];
+}
 let rowInvTab = null, rowInvH = 0, rowInvHz = 0, skyHz = 0;
 
 function castAndDraw(){
   const w = SCREEN_W, h = SCREEN_H;
   ensureGeo();
   waterClock = performance.now() / 1000;
+  if (socLowMap && SOC_ST.nImgs !== socAdLoaded) socStadiumBuild();   // chegaram mais anúncios: refaz a tira de LED
   const FZ = geo.floorZ, CZ = geo.ceilZ, TZ = geo.topZ;
+  const sbTex = socLowMap ? socBoardTex() : null;   // placar da parede (Futebol)
   zbuffer = new Array(w);
   if (!clipN || clipW !== w) {
     clipW = w; clipD = new Float32Array(w * CLIP_MAX);
@@ -13488,6 +13683,7 @@ function castAndDraw(){
     const yBotF = horizon + (eyeZ - baseZ) * unit;       // pé da parede na tela
     const yV0 = horizon + (eyeZ - (baseZ + 1)) * unit;   // textura ancorada: v = 0 a 1 unidade acima do pé
     const r0 = Math.max(B(yTopF), clLo + 1), r1 = Math.min(B(yBotF), clHi);
+    if (!windowMode && socLowMap && tIdx >= 0 && (socLowMap[tIdx] & (hside === 0 ? 1 : 2)) && drawLedSlice(col, r0, r1, yTopF, yBotF, perpWallDist, hside, hstepX, hstepY, rdx, rdy)) return r0;
 
     let wallX;
     if (ov) wallX = ov.wx;
@@ -13595,6 +13791,103 @@ function castAndDraw(){
       buf32[r * w + col] = px;
     }
   }
+  // Futebol: painel de LED da barreira baixa. A tira (todas as propagandas) rola ao longo dos painéis: "passa" por eles.
+  function drawLedSlice(col, r0, r1, yTopF, yBotF, dist, hside, hstepX, hstepY, rdx, rdy){
+    const led = SOC_ST.led; if (!led) return false;
+    const unit = h / dist, tpp = SOC_LED_PPU / unit;
+    const L = tpp >= 8 ? 3 : tpp >= 4 ? 2 : tpp >= 2 ? 1 : 0, T = led.mips[L], sw = T.w, sh = T.h, td = T.data;
+    // coordenada ao longo do painel, crescendo para a direita da tela (o texto lê da esquerda para a direita visto do campo)
+    const along = hside === 0 ? (player.y + dist * rdy) * hstepX : -(player.x + dist * rdx) * hstepY;
+    let pos = ((along + waterClock * SOC_LED_SPEED) * SOC_LED_PPU) / (1 << L);
+    pos %= sw; if (pos < 0) pos += sw;
+    const tx = Math.min(sw - 1, pos | 0), span = Math.max(1, yBotF - yTopF), fog = Math.max(0.8, 1 - dist / 140);   // LED é emissivo: quase não escurece
+    for (let r = r0; r < r1; r++) {
+      let ty = (((r + 0.5 - yTopF) / span) * sh) | 0; if (ty < 0) ty = 0; else if (ty >= sh) ty = sh - 1;
+      const o = (ty * sw + tx) * 4;
+      buf32[r * w + col] = (255 << 24) | (((td[o + 2] * fog) | 0) << 16) | (((td[o + 1] * fog) | 0) << 8) | ((td[o] * fog) | 0);
+    }
+    return true;
+  }
+  // Futebol: arquibancada ao redor (planos fixos no mundo). Para cada linha livre acima da barreira, acha o 1º ponto em que o raio
+  // toca: o chão atrás da barreira, a rampa da torcida (sobe slope por tile), a fachada traseira (alta, com torres) ou nada (céu).
+  function socStandFill(col, a, b, rdx, rdy){
+    const S = SOC_STAND, st = socStand, cr = SOC_ST.crowd, fa = SOC_ST.facade;
+    if (!st || !cr) { skyFill(col, a, b); return; }
+    const sl = S.slope, Dp = S.depth, ZF = S.zf, tile = S.tile, fL = S.facadeLen;
+    const px0 = player.x, py0 = player.y;
+    let p0x, pvx, p0y, pvy;   // p = distância (em tiles) além do início da rampa daquele lado; p(t) = p0 + pv*t
+    if (rdx < 0) { p0x = st.XL0 - px0; pvx = -rdx; } else { p0x = px0 - st.XR0; pvx = rdx; }
+    if (rdy < 0) { p0y = st.YT0 - py0; pvy = -rdy; } else { p0y = py0 - st.YB0; pvy = rdy; }
+    const vx = pvx > 1e-5, vy = pvy > 1e-5;
+    for (let r = b - 1; r >= a; r--) {
+      const m = (horizon - r - 0.5) / h;   // dz/dt do raio nesta linha
+      let bt = Infinity, kind = 0, bp = 0, bz = 0, ba = 0, bsd = 0;
+      for (let sd = 0; sd < 2; sd++) {
+        if (sd === 0 ? !vx : !vy) continue;
+        const p0 = sd === 0 ? p0x : p0y, pv = sd === 0 ? pvx : pvy;
+        const den = m - sl * pv;
+        let t = -1, k = 0, p = 0, z = 0;
+        if (den < 0) {
+          const tr = (sl * p0 - eyeZ) / den, pr = p0 + pv * tr;
+          if (pr >= 0 && pr <= Dp) { t = tr; k = 1; p = pr; }
+          else if (pr > Dp) { const tf = (Dp - p0) / pv, zf = eyeZ + m * tf; if (zf <= ZF) { t = tf; k = 2; z = zf; } }
+        } else { const tf = (Dp - p0) / pv, zf = eyeZ + m * tf; if (zf <= ZF) { t = tf; k = 2; z = zf; } }
+        if (k && t > 0 && t < bt) { bt = t; kind = k; bp = p; bz = z; bsd = sd; ba = sd === 0 ? py0 + rdy * t : px0 + rdx * t; }
+      }
+      if (m < 0) {   // chão atrás da barreira
+        const tg = -eyeZ / m;
+        if (tg < bt && (!vx || p0x + pvx * tg < 0) && (!vy || p0y + pvy * tg < 0)) { bt = tg; kind = 3; }
+      }
+      if (sbTex && rdy * rdy > 1e-10) {   // placar com moldura e pés apoiados no chão, igual nos dois lados largos (cima e baixo)
+        const WB = SOC_WALLBOARD, top = rdy < 0, tB = ((top ? st.YT0 + 0.1 : st.YB0 - 0.1) - py0) / rdy;
+        if (tB > 0 && tB < bt) {
+          const zB = eyeZ + m * tB, dxw = px0 + rdx * tB - st.BX, ax = Math.abs(dxw), half = WB.w / 2, fr = 0.1;
+          if (zB >= 0 && zB < WB.z1 + fr && ax < half + fr) {
+            let c32 = 0;
+            if (zB >= WB.z0 && zB < WB.z1 && ax < half) {
+              const u = (top ? dxw : -dxw) / WB.w + 0.5;
+              const bx = Math.min(sbTex.w - 1, (u * sbTex.w) | 0), by = Math.min(sbTex.h - 1, (((WB.z1 - zB) / (WB.z1 - WB.z0)) * sbTex.h) | 0), bo = (by * sbTex.w + bx) * 4;
+              c32 = (255 << 24) | (sbTex.data[bo + 2] << 16) | (sbTex.data[bo + 1] << 8) | sbTex.data[bo];
+            } else if (zB >= WB.z0 - fr) c32 = (255 << 24) | (56 << 16) | (46 << 8) | 40;                          // moldura
+            else if (ax > half - 0.6 && ax < half - 0.3) c32 = (255 << 24) | (74 << 16) | (64 << 8) | 58;        // pés até o chão
+            if (c32) { buf32[r * w + col] = c32; continue; }
+          }
+        }
+      }
+      if (kind === 0) { skyFill(col, a, r + 1); return; }   // acima de tudo: o resto da coluna é céu
+      const fog = Math.max(0.6, 1 - bt / 90);
+      let R, G, Bc;
+      if (kind === 1) {
+        const u = ba / tile, v = bp / (tile * 0.7), unit = h / bt;
+        const L = unit >= 80 ? 0 : unit >= 40 ? 1 : unit >= 20 ? 2 : 3;
+        const up = Math.sin(ba * 0.42 - waterClock * 2.6) > 0.55;   // "ola" correndo pela arquibancada
+        const T = (up ? cr.B : cr.A)[L], sz = T.w;
+        const tx = Math.min(sz - 1, ((u - Math.floor(u)) * sz) | 0), ty = Math.min(sz - 1, ((1 - (v - Math.floor(v))) * sz) | 0), o = (ty * sz + tx) * 4;
+        R = T.data[o] * fog; G = T.data[o + 1] * fog; Bc = T.data[o + 2] * fog;
+      } else if (kind === 2) {
+        if (!fa) { skyFill(col, r, r + 1); continue; }
+        const u = bsd === 0 ? (ba - st.fy0) * st.fyK : (ba - st.fx0) * st.fxK, tc = Math.min(fa.w - 1, ((u - Math.floor(u)) * fa.w) | 0), tr2 = Math.max(0, Math.min(fa.h - 1, (((ZF - bz) / ZF) * fa.h) | 0)), o = (tr2 * fa.w + tc) * 4;
+        if (fa.data[o + 3] < 128) { skyFill(col, r, r + 1); continue; }   // transparente: céu
+        const lamp = fa.data[o] > 240 && fa.data[o + 1] > 240;            // lâmpadas acesas, sem névoa
+        const f2 = lamp ? 1 : fog;
+        R = fa.data[o] * f2; G = fa.data[o + 1] * f2; Bc = fa.data[o + 2] * f2;
+      } else {   // chão visto por cima da barreira: dentro do campo/gol é a GRAMA de verdade; fora dele, concreto
+        const gx = px0 + rdx * bt, gy = py0 + rdy * bt, ix = Math.floor(gx), iy = Math.floor(gy);
+        let done = false;
+        if (ix >= 0 && iy >= 0 && ix < MAP_W && iy < MAP_H && MAP[iy] && MAP[iy][ix] === 0) {
+          const gi = iy * MAP_W + ix, mips = texMips.floor[floorTileMap[gi]] || texMips.floor[0];
+          const mipL = mipFor(w / (1.3 * bt)), tex = mips ? mips[mipL] : null, msz = TEX_SIZE >> mipL;
+          if (tex) {
+            const uu = gx - ix, vv = gy - iy, i4 = (msz * ((vv * msz) | 0) + ((uu * msz) | 0)) * 4, fg = Math.max(0.5, 1 - bt / (14 * fogScale));
+            R = tex[i4] * fg; G = tex[i4 + 1] * fg; Bc = tex[i4 + 2] * fg; done = true;
+          }
+        }
+        if (!done) { R = 142 * fog; G = 144 * fog; Bc = 140 * fog; }
+      }
+      buf32[r * w + col] = (255 << 24) | ((Bc | 0) << 16) | ((G | 0) << 8) | (R | 0);
+    }
+  }
+
   // telhado: marcha o raio da linha r (inclinação m = dZ/dt) a partir de t0 até cruzar a superfície de algum telhado
   function roofPixel(col, r, m, t0, rdx, rdy){
     const maxT = t0 + 18;
@@ -13738,6 +14031,11 @@ function castAndDraw(){
             curTi = tIdx; curF = wTopZ; curTop = true;
           } else {
             let topZ = cOn(prevTi) ? curC : wTopZ, baseS = baseNow;
+            if (socLowMap && inB && !thH) {   // Futebol: barreira baixa de LED; fundo/laterais do vão do gol ficam rasos (arquibancada por cima)
+              const lm = socLowMap[tIdx];
+              if (lm & (side === 0 ? 1 : 2)) topZ = Math.min(topZ, baseS + SOC_BOARD_H);
+              else if (lm & 4) topZ = Math.min(topZ, baseS + 0.03);
+            }
             if (thH) { baseS = FZ[tIdx]; topZ = cOn(tIdx) ? CZ[tIdx] : TZ[tIdx]; drawSpans(col, tIdx, baseS, CZ[tIdx], dB, thH.t, rdx, rdy, false); endD = thH.t; }
             const r0 = drawSlice(col, mapX, mapY, side, stepX, stepY, rdx, rdy, prevX, prevY, false, baseS, topZ, lo, hi, thH);
             if (r0 < hi) hi = r0;
@@ -13745,7 +14043,15 @@ function castAndDraw(){
             // (senão as linhas acima da parede ficavam "abertas" e mostravam o céu/panorama de fundo)
             if (thH && !cOn(prevTi) && !cOn(tIdx) && eyeZ > topZ + 0.002 && lo + 1 < hi) {
               curTi = tIdx; curF = topZ; curTop = true; d0 = thH.t; endD = thH.t;
-            } else break;
+            } else {
+              if (socLowMap && inB && !thH && ((socLowMap[tIdx] & (side === 0 ? 1 : 2)) || (socLowMap[tIdx] & 4))) {
+                // Futebol: barreira baixa (LED / vão do gol). O que está atrás (rede, fundo do gol) continua visível POR CIMA dela:
+                // registra a camada de recorte (só as linhas acima da barreira) e libera o zbuffer da coluna.
+                if (cn < CLIP_MAX) { clipD[cb + cn] = dB; clipLo[cb + cn] = lo; clipHi[cb + cn] = hi; cn++; }
+                zbuffer[col] = 1e9;
+              }
+              break;
+            }
           }
         }
       } else {
@@ -13771,7 +14077,8 @@ function castAndDraw(){
 
     // linhas que sobraram: céu (fases ao ar livre) ou escuro
     if (lo + 1 < hi) {
-      if (mixedC || roofsOn) backdrop(col, lo + 1, hi, endD, rdx, rdy);
+      if (socLowMap && SOC_ST.crowd) socStandFill(col, lo + 1, hi, rdx, rdy);   // Futebol: arquibancada do estádio por cima da skybox
+      else if (mixedC || roofsOn) backdrop(col, lo + 1, hi, endD, rdx, rdy);
       else skyFill(col, lo + 1, hi);
     }
   }
@@ -14698,14 +15005,15 @@ function gameStep(now){
     updateTestHud(now);
     updateFps(now);
     if(fnaf) SFX.fnafKeepAmbient();
-    if(NET.mode !== 'client') updateEnemies(dt, now);
+    const dbgNoBots = debugOptions.freeRoam && !debugOptions.freeBots;
+    if(NET.mode !== 'client' && !dbgNoBots) updateEnemies(dt, now);
     if(NET.mode !== 'client') updateTestMapDummies(now);
     updateDeathmatch(dt, now);
     if(soc && soc.test) socTestUpdate(dt, now);
     if(NET.mode === 'client') netClientTick(dt);
     if(NET.mode) netCoopTick(now);
-    if(NET.mode !== 'client') updateFnaf(dt, now);
-    if(NET.mode !== 'client') spawnWaveEnemies(now);
+    if(NET.mode !== 'client' && !dbgNoBots) updateFnaf(dt, now);
+    if(NET.mode !== 'client' && !dbgNoBots) spawnWaveEnemies(now);
     if(NET.mode !== 'client') spawnPickupsLogic(now);
     castAndDraw();
     drawMinimap();
@@ -15714,7 +16022,7 @@ function netHostSnapshot(){
   });
   const d = { t: 'snap', e, c: dmScoreCT, r: dmScoreT, go: (gameOver && team) ? 1 : 0 };
   if(currentGameMode === 'waves') d.w = currentWave;
-  if(currentGameMode === 'soccer' && soc){ const bl = soc.ball; d.sb = [netF(bl.x), netF(bl.y), netF(bl.z), netF(bl.vx), netF(bl.vy), netF(bl.vz)]; d.sp = soc.phase; d.sk = +soc.clock.toFixed(1); d.sg = soc.golden ? 1 : 0; }
+  if(currentGameMode === 'soccer' && soc){ const bl = soc.ball; d.sb = [netF(bl.x), netF(bl.y), netF(bl.z), netF(bl.vx), netF(bl.vy), netF(bl.vz)]; d.sp = soc.phase; d.sk = +soc.clock.toFixed(1); d.sg = soc.golden ? 1 : 0; d.sh = soc.half || 1; d.sa = soc.add || 0; }
   if(!team) d.p = pickups.map(k => [netF(k.x), netF(k.y), k.type, k.taken ? 1 : 0, k.weaponId || '', k.amount || 0]);
   if(ctf) d.cf = ['T', 'CT'].map(t => {
     const f = ctf.flags[t], c = f.carrier;
