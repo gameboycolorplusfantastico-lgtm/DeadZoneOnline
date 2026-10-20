@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-menu="green">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -858,8 +858,9 @@ window.addEventListener('keydown', function(e){
 
 /* Mira fina com abertura no centro, como no CS */
 #crosshair{ width:26px;height:26px; }
-#crosshair:before{ left:12px;top:0;width:2px;height:26px;background:linear-gradient(#39ff14 0 36%,transparent 36% 64%,#39ff14 64% 100%); }
-#crosshair:after{ top:12px;left:0;height:2px;width:26px;background:linear-gradient(90deg,#39ff14 0 36%,transparent 36% 64%,#39ff14 64% 100%); }
+#crosshair{ filter:drop-shadow(0 0 1px var(--ch-edge,#000)) drop-shadow(0 0 1px var(--ch-edge,#000)); }
+#crosshair:before{ left:12px;top:0;width:2px;height:26px;background:linear-gradient(var(--ch-color,#39ff14) 0 36%,transparent 36% 64%,var(--ch-color,#39ff14) 64% 100%); }
+#crosshair:after{ top:12px;left:0;height:2px;width:26px;background:linear-gradient(90deg,var(--ch-color,#39ff14) 0 36%,transparent 36% 64%,var(--ch-color,#39ff14) 64% 100%); }
 #crosshair .ch-dot{ display:none; }
 
 /* Arma sobe até perto da borda, já que não há mais barra escura */
@@ -1466,7 +1467,7 @@ html.console .dz-sb{width:24px;}
   --mt-strong:#fff; --mt-onfill:#fff; --mt-badge:#000; --mt-glow:rgba(159,227,255,.35); --mt-hov:rgba(159,227,255,.22);
   --mt-v1:rgba(4,8,22,.72); --mt-v2:rgba(4,8,22,.28); --mt-v3:rgba(4,8,22,0);
   --mt-fill:linear-gradient(115deg,#0a1840 0%,#1b3270 45%,#2b3f5c 70%,#13224a 100%);
-  --mt-icon:none; --mt-shadow:0 1px 3px #000;
+  --mt-icon:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px rgba(255,255,255,.8)); --mt-shadow:0 1px 3px #000;
 }
 html[data-menu="orange"]{
   --cs-bg:#2a1608; --cs-panel:rgba(38,22,10,.93); --cs-panel2:rgba(22,12,5,.78); --cs-line:rgba(255,190,120,.42);
@@ -1493,6 +1494,22 @@ html[data-menu="black"]{
   --mt-glow:rgba(255,255,255,.3); --mt-hov:rgba(255,255,255,.16);
   --mt-v1:rgba(0,0,0,.84); --mt-v2:rgba(0,0,0,.42); --mt-v3:rgba(0,0,0,0);
   --mt-fill:#050505; --mt-icon:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+}
+html[data-menu="green"]{
+  --cs-bg:#07210f; --cs-panel:rgba(9,30,15,.93); --cs-panel2:rgba(5,18,9,.78); --cs-line:rgba(120,255,150,.42);
+  --cs-txt:#eafff0; --cs-dim:#9ccfa9; --cs-y:#39ff6a;
+  --mt-a:#1f8a43; --mt-b:#0f5a28; --mt-hdA:#1f6b3a; --mt-hdB:#0e3a1e; --mt-btA:#2c5a3a; --mt-btB:#1c3a26;
+  --mt-seA:#17301f; --mt-seB:#0d1e13; --mt-tab:#1f5a35; --mt-glow:rgba(57,255,106,.4); --mt-hov:rgba(57,255,106,.22);
+  --mt-v1:rgba(3,18,8,.74); --mt-v2:rgba(3,18,8,.3); --mt-v3:rgba(3,18,8,0);
+  --mt-fill:linear-gradient(115deg,#04200c 0%,#0f4a22 45%,#143a22 70%,#06200e 100%);
+}
+html[data-menu="pink"]{
+  --cs-bg:#2a0618; --cs-panel:rgba(40,10,26,.93); --cs-panel2:rgba(24,5,15,.78); --cs-line:rgba(255,130,200,.44);
+  --cs-txt:#ffeaf5; --cs-dim:#dba5c3; --cs-y:#ff4db2;
+  --mt-a:#d4207f; --mt-b:#8a0f4f; --mt-hdA:#8a1e55; --mt-hdB:#4d0e30; --mt-btA:#74294f; --mt-btB:#4f1836;
+  --mt-seA:#3b1228; --mt-seB:#25091a; --mt-tab:#6a1f45; --mt-glow:rgba(255,77,178,.42); --mt-hov:rgba(255,77,178,.24);
+  --mt-v1:rgba(30,4,16,.74); --mt-v2:rgba(30,4,16,.3); --mt-v3:rgba(30,4,16,0);
+  --mt-fill:linear-gradient(115deg,#2a0415 0%,#6b1240 45%,#4a1430 70%,#2a0618 100%);
 }
 .overlay-screen,#mainMenu,#gameOverOverlay,#loadingScreen{
   background:linear-gradient(90deg,var(--mt-v1) 0%,var(--mt-v2) 42%,var(--mt-v3) 70%),
@@ -1531,7 +1548,56 @@ html[data-menu="black"]{
 .dz-sb-thumb{background:linear-gradient(var(--mt-a),var(--mt-b));}
 .dz-sb{background:var(--mt-sub);}
 .mode-icon,#dmTeamSeg .seg-btn::before{filter:var(--mt-icon);}
-.seg-btn.active .mode-icon{filter:none;}
+.seg-btn.active .mode-icon{filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px rgba(255,255,255,.8));}
+/* ===== HUD segue a cor do menu (contorno garante contraste em qualquer cenário) ===== */
+:root{
+  --hud-line:rgba(159,227,255,.55); --hud-panel:rgba(0,0,0,.4); --hud-hover:rgba(40,90,120,.5);
+  --hud-edge:#000; --hud-shadow:0 0 10px var(--cs-hud-glow),0 1px 2px #000; --hud-ico:drop-shadow(0 0 6px var(--cs-hud-glow));
+}
+html[data-menu="orange"]{
+  --cs-hud:#ffb347; --cs-hud-glow:rgba(255,150,40,.6); --cs-hud-dim:rgba(255,200,130,.8); --cs-msg:#ffb347;
+  --hud-line:rgba(255,179,71,.6); --hud-hover:rgba(120,60,10,.55);
+}
+html[data-menu="green"]{
+  --cs-hud:#4dff7a; --cs-hud-glow:rgba(57,255,106,.55); --cs-hud-dim:rgba(150,255,180,.8); --cs-msg:#4dff7a;
+  --hud-line:rgba(77,255,122,.6); --hud-hover:rgba(10,90,35,.55);
+}
+html[data-menu="pink"]{
+  --cs-hud:#ff4db2; --cs-hud-glow:rgba(255,45,155,.6); --cs-hud-dim:rgba(255,160,215,.82); --cs-msg:#ff4db2;
+  --hud-line:rgba(255,77,178,.65); --hud-hover:rgba(110,10,65,.55);
+}
+html[data-menu="white"]{
+  --cs-hud:#ffffff; --cs-hud-glow:rgba(0,0,0,.95); --cs-hud-dim:rgba(255,255,255,.9); --cs-msg:#ffffff;
+  --hud-line:rgba(255,255,255,.85); --hud-panel:rgba(0,0,0,.55); --hud-hover:rgba(0,0,0,.7); --hud-edge:#000;
+  --hud-shadow:0 0 2px #000,0 0 2px #000,0 1px 3px #000,0 0 8px rgba(0,0,0,.7);
+  --hud-ico:drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000) drop-shadow(0 0 4px #000);
+}
+html[data-menu="black"]{
+  --cs-hud:#000000; --cs-hud-glow:rgba(255,255,255,.95); --cs-hud-dim:rgba(0,0,0,.85); --cs-msg:#000000;
+  --hud-line:rgba(0,0,0,.9); --hud-panel:rgba(255,255,255,.6); --hud-hover:rgba(255,255,255,.8); --hud-edge:#fff;
+  --hud-shadow:0 0 2px #fff,0 0 2px #fff,0 1px 3px #fff,0 0 8px rgba(255,255,255,.8);
+  --hud-ico:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 0 4px #fff);
+}
+#bottombar .stat{text-shadow:var(--hud-shadow);}
+#bottombar .cs-mode .lbl,#bottombar .cs-score .lbl{text-shadow:var(--hud-shadow);}
+.cs-ico,.cs-ammo-ico,#bottombar .hud-icon{filter:var(--hud-ico);}
+#minimapWrapper{border-color:var(--hud-line);background:var(--hud-panel);}
+#menuBtn{border-color:var(--hud-line);background:var(--hud-panel);color:var(--cs-hud);text-shadow:var(--hud-shadow);}
+#menuBtn:hover{background:var(--hud-hover);border-color:var(--cs-hud);}
+.wbtn{border-color:var(--hud-line);background:var(--hud-panel);}
+.wbtn.active{border-color:var(--cs-hud);box-shadow:0 0 8px var(--cs-hud-glow),0 0 0 1px var(--cs-hud);}
+#ctfHud .ctf-row,#hrHud .ctf-row{background:var(--hud-panel);}
+#ctfHud .ctf-txt,#hrHud .ctf-txt{color:var(--cs-hud);text-shadow:var(--hud-shadow);}
+#ctfHud .ctf-txt small,#hrHud .ctf-txt small{color:var(--cs-hud-dim);}
+#msgFlash{color:var(--cs-msg);text-shadow:var(--hud-shadow);}
+#countdownOverlay{color:var(--cs-hud);text-shadow:var(--hud-shadow),0 2px 3px var(--hud-edge);}
+/* ícones PNG da HUD (dinheiro, abates, modo) pintados na cor da HUD */
+#menuThemeSeg,#crosshairColorSeg{flex-wrap:wrap;}
+#crosshairColorSeg .seg-btn{flex:1 1 22%;padding:9px 4px;}
+.ch-sw::before{content:'';display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--sw);border:1px solid rgba(255,255,255,.85);box-shadow:0 0 0 1px #000;margin-right:6px;vertical-align:-1px;}
+#menuThemeSeg .seg-btn{flex:1 1 30%;padding:10px 4px;}
+#bottombar .hud-icon:has(img){overflow:hidden;padding:5px;margin:-5px;}
+#bottombar .hud-icon img{transform:translateX(-600px);filter:drop-shadow(600px 0 0 var(--cs-hud)) drop-shadow(0 0 2px var(--hud-edge));}
 </style>
 <div id="mainMenu" class="overlay-screen">
   <div id="menuLogo">DEAD ZONE<small>REMASTERED</small></div>
@@ -1807,10 +1873,12 @@ html[data-menu="black"]{
       <div class="setting-group">
         <label data-i18n="menuColorLabel">COR DO MENU:</label>
         <div class="seg" id="menuThemeSeg">
-          <button type="button" class="seg-btn active" data-val="blue" data-i18n="mcBlue">AZUL</button>
+          <button type="button" class="seg-btn active" data-val="green" data-i18n="mcGreen">VERDE</button>
           <button type="button" class="seg-btn" data-val="orange" data-i18n="mcOrange">LARANJA</button>
           <button type="button" class="seg-btn" data-val="white" data-i18n="mcWhite">BRANCO</button>
           <button type="button" class="seg-btn" data-val="black" data-i18n="mcBlack">PRETO</button>
+          <button type="button" class="seg-btn" data-val="blue" data-i18n="mcBlue">AZUL</button>
+          <button type="button" class="seg-btn" data-val="pink" data-i18n="mcPink">ROSA CHOQUE</button>
         </div>
       </div>
 
@@ -1875,6 +1943,23 @@ html[data-menu="black"]{
           <input type="checkbox" id="optShowCrosshair" checked>
           <span data-i18n="showCrosshairLabel">MOSTRAR MIRA</span>
         </label>
+      </div>
+      <div class="setting-group" id="crosshairColorGroup">
+        <label data-i18n="crosshairColorLabel">COR DA MIRA:</label>
+        <div class="seg" id="crosshairColorSeg">
+          <button type="button" class="seg-btn ch-sw active" data-val="green" data-col="#39ff14" style="--sw:#39ff14" data-i18n="chc_green">VERDE</button>
+          <button type="button" class="seg-btn ch-sw" data-val="yellow" data-col="#ffe600" style="--sw:#ffe600" data-i18n="chc_yellow">AMARELO</button>
+          <button type="button" class="seg-btn ch-sw" data-val="red" data-col="#ff2a2a" style="--sw:#ff2a2a" data-i18n="chc_red">VERMELHO</button>
+          <button type="button" class="seg-btn ch-sw" data-val="purple" data-col="#b44dff" style="--sw:#b44dff" data-i18n="chc_purple">ROXO</button>
+          <button type="button" class="seg-btn ch-sw" data-val="cyan" data-col="#00e5ff" style="--sw:#00e5ff" data-i18n="chc_cyan">CIANO</button>
+          <button type="button" class="seg-btn ch-sw" data-val="blue" data-col="#3a8bff" style="--sw:#3a8bff" data-i18n="chc_blue">AZUL</button>
+          <button type="button" class="seg-btn ch-sw" data-val="orange" data-col="#ff9a1f" style="--sw:#ff9a1f" data-i18n="chc_orange">LARANJA</button>
+          <button type="button" class="seg-btn ch-sw" data-val="pink" data-col="#ff2fa0" style="--sw:#ff2fa0" data-i18n="chc_pink">ROSA CHOQUE</button>
+          <button type="button" class="seg-btn ch-sw" data-val="white" data-col="#ffffff" style="--sw:#ffffff" data-i18n="chc_white">BRANCO</button>
+          <button type="button" class="seg-btn ch-sw" data-val="lime" data-col="#b6ff00" style="--sw:#b6ff00" data-i18n="chc_lime">LIMÃO</button>
+          <button type="button" class="seg-btn ch-sw" data-val="magenta" data-col="#ff00ff" style="--sw:#ff00ff" data-i18n="chc_magenta">MAGENTA</button>
+          <button type="button" class="seg-btn ch-sw" data-val="black" data-col="#000000" style="--sw:#000000" data-i18n="chc_black">PRETO</button>
+        </div>
       </div>
       <div class="setting-group">
         <label class="checkbox-label">
@@ -4611,7 +4696,7 @@ const I18N = {
     lvl82: "CS_DOWNHILL", lvl82Desc: "Estilo Counter-Strike: Montanha estreita e bem comprida, em 5 patamares ligados por rampas em zigue-zague. T no topo, CT na base. Dá para pular os penhascos e descer rápido (dano leve), mas para subir só pelas rampas. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
-    matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
+    matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", mcGreen: "VERDE", mcPink: "ROSA CHOQUE", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
     gunFoeLabel: "CONTRA:", gunFoeZombies: "ZUMBIS", gunFoeBots: "BOTS",
     dmPrimaryLabel: "ARMA PRINCIPAL (PESADA):", dmSecondaryLabel: "ARMA SECUNDÁRIA (LEVE):", dmRandomWeapon: "ALEATÓRIA",
     debugMenuTitle: "MENU DEBUG", dbgGodMode: "Vida Infinita (God Mode)", dbgInfAmmo: "Munição Infinita", dbgPauseEnemies: "Pausar Inimigos",
@@ -4625,7 +4710,7 @@ const I18N = {
     dbgSpeedLabel: "VELOCIDADE DO JOGADOR", dbgFogLabel: "ALCANCE DE VISÃO (NEBLINA)", dbgSkyLabel: "CÉU (SKYBOX):",
     dbgTeleportLabel: "TELEPORTE (MAPA DE TESTES):", tpTex: "TEXTURAS", tpHub: "CORREDOR", tpElev: "ELEVAÇÃO", tpSkins: "SKINS / ALVOS", tpPick: "PICKUPS / ARMAS", tpInter: "INTERAÇÕES", tpAudio: "ÁUDIO / SONS", tpSoc: "FUTEBOL", tpWater: "ÁGUA", tpCeil: "TETOS", tpRoof: "TELHADOS",
     dbgToolsLabel: "FERRAMENTAS:", dbgRespawn: "RENASCER ALVOS", dbgKillAll: "ELIMINAR TODOS", dbgSpawnZombie: "+ ZUMBI", dbgHeal: "CURAR + MUNIÇÃO", dbgSpawnT: "+ BOT T", dbgSpawnCT: "+ BOT CT", dbgResetMap: "REINICIAR MAPA",
-    tabAudio: "ÁUDIO", sfxVolumeLabel: "VOLUME DOS EFEITOS", musicVolumeLabel: "VOLUME DA MÚSICA", musicOffLabel: "DESATIVAR MÚSICA (SEM MEXER NO VOLUME)", showCrosshairLabel: "MOSTRAR MIRA", damageFlashLabel: "FLASH VERMELHO AO LEVAR DANO", botGunLabel: "BOTS INIMIGOS", botEnemyLabel: "BOTS INIMIGOS", botAllyLabel: "BOTS ALIADOS",
+    tabAudio: "ÁUDIO", sfxVolumeLabel: "VOLUME DOS EFEITOS", musicVolumeLabel: "VOLUME DA MÚSICA", musicOffLabel: "DESATIVAR MÚSICA (SEM MEXER NO VOLUME)", showCrosshairLabel: "MOSTRAR MIRA", crosshairColorLabel: "COR DA MIRA:", chc_green: "VERDE", chc_yellow: "AMARELO", chc_red: "VERMELHO", chc_purple: "ROXO", chc_cyan: "CIANO", chc_blue: "AZUL", chc_orange: "LARANJA", chc_pink: "ROSA CHOQUE", chc_white: "BRANCO", chc_lime: "LIMÃO", chc_magenta: "MAGENTA", chc_black: "PRETO", damageFlashLabel: "FLASH VERMELHO AO LEVAR DANO", botGunLabel: "BOTS INIMIGOS", botEnemyLabel: "BOTS INIMIGOS", botAllyLabel: "BOTS ALIADOS",
     gamepadNone: "NENHUM CONTROLE CONECTADO", gamepadConnected: "CONTROLE CONECTADO",
     controlsKbTitle: "TECLADO / MOUSE", controlsTouchTitle: "TOQUE (MOBILE)", controlsGamepadTitle: "XBOX SERIES X / PS4 / PS5",
     ctlMove: "Mover", ctlLook: "Mirar / olhar", ctlFire: "Atirar", ctlReload: "Recarregar", ctlWeapons: "Trocar arma", ctlPause: "Pausar", ctlSwap: "Trocar arma do chão",
@@ -4759,7 +4844,7 @@ const I18N = {
     lvl82: "CS_DOWNHILL", lvl82Desc: "Counter-Strike style: A narrow, very long mountain in 5 terraces linked by zig-zag ramps. T on the summit, CT at the base. You can jump off the cliffs to go down fast (light damage), but climbing back is only by the ramps. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
-    matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
+    matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", mcGreen: "GREEN", mcPink: "HOT PINK", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
     gunFoeLabel: "VERSUS:", gunFoeZombies: "ZOMBIES", gunFoeBots: "BOTS",
     dmPrimaryLabel: "PRIMARY WEAPON (HEAVY):", dmSecondaryLabel: "SECONDARY WEAPON (LIGHT):", dmRandomWeapon: "RANDOM",
     debugMenuTitle: "DEBUG MENU", dbgGodMode: "Infinite Health (God Mode)", dbgInfAmmo: "Infinite Ammo", dbgPauseEnemies: "Pause Enemies",
@@ -4773,7 +4858,7 @@ const I18N = {
     dbgSpeedLabel: "PLAYER SPEED", dbgFogLabel: "VIEW DISTANCE (FOG)", dbgSkyLabel: "SKY (SKYBOX):",
     dbgTeleportLabel: "TELEPORT (TEST MAP):", tpTex: "TEXTURES", tpHub: "HALL", tpElev: "ELEVATION", tpSkins: "SKINS / TARGETS", tpPick: "PICKUPS / WEAPONS", tpInter: "INTERACTIONS", tpAudio: "AUDIO / SOUNDS", tpSoc: "SOCCER", tpWater: "WATER", tpCeil: "CEILINGS", tpRoof: "ROOFS",
     dbgToolsLabel: "TOOLS:", dbgRespawn: "RESPAWN TARGETS", dbgKillAll: "KILL ALL", dbgSpawnZombie: "+ ZOMBIE", dbgHeal: "HEAL + AMMO", dbgSpawnT: "+ BOT T", dbgSpawnCT: "+ BOT CT", dbgResetMap: "RESTART MAP",
-    tabAudio: "AUDIO", sfxVolumeLabel: "EFFECTS VOLUME", musicVolumeLabel: "MUSIC VOLUME", musicOffLabel: "TURN MUSIC OFF (KEEPS THE VOLUME)", showCrosshairLabel: "SHOW CROSSHAIR", damageFlashLabel: "RED FLASH WHEN HIT", botGunLabel: "ENEMY BOTS", botEnemyLabel: "ENEMY BOTS", botAllyLabel: "ALLY BOTS",
+    tabAudio: "AUDIO", sfxVolumeLabel: "EFFECTS VOLUME", musicVolumeLabel: "MUSIC VOLUME", musicOffLabel: "TURN MUSIC OFF (KEEPS THE VOLUME)", showCrosshairLabel: "SHOW CROSSHAIR", crosshairColorLabel: "CROSSHAIR COLOR:", chc_green: "GREEN", chc_yellow: "YELLOW", chc_red: "RED", chc_purple: "PURPLE", chc_cyan: "CYAN", chc_blue: "BLUE", chc_orange: "ORANGE", chc_pink: "HOT PINK", chc_white: "WHITE", chc_lime: "LIME", chc_magenta: "MAGENTA", chc_black: "BLACK", damageFlashLabel: "RED FLASH WHEN HIT", botGunLabel: "ENEMY BOTS", botEnemyLabel: "ENEMY BOTS", botAllyLabel: "ALLY BOTS",
     gamepadNone: "NO CONTROLLER CONNECTED", gamepadConnected: "CONTROLLER CONNECTED",
     controlsKbTitle: "KEYBOARD / MOUSE", controlsTouchTitle: "TOUCH (MOBILE)", controlsGamepadTitle: "XBOX SERIES X / PS4 / PS5",
     ctlMove: "Move", ctlLook: "Look / aim", ctlFire: "Fire", ctlReload: "Reload", ctlWeapons: "Switch weapon", ctlPause: "Pause", ctlSwap: "Swap with floor weapon",
@@ -17456,20 +17541,51 @@ requestAnimationFrame(gameLoop);
 <script>
 /* Cor dos menus: azul (padrão), laranja, branco ou preto. Salva no aparelho. */
 (function dzMenuTheme(){
-  const KEY = 'dz_menu_theme', OK = ['blue', 'orange', 'white', 'black'];
+  const KEY = 'dz_menu_theme_v2', OK = ['blue', 'orange', 'white', 'black', 'green', 'pink'];
   function apply(v){
-    if(OK.indexOf(v) < 0) v = 'blue';
+    if(OK.indexOf(v) < 0) v = 'green';
     document.documentElement.setAttribute('data-menu', v);
     document.querySelectorAll('#menuThemeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === v));
     return v;
   }
-  let cur = 'blue';
-  try{ cur = localStorage.getItem(KEY) || 'blue'; }catch(e){}
+  let cur = 'green';
+  try{ cur = localStorage.getItem(KEY) || 'green'; }catch(e){}
   apply(cur);
   document.querySelectorAll('#menuThemeSeg .seg-btn').forEach(b => b.addEventListener('click', () => {
     if(typeof SFX !== 'undefined' && SFX.menuSelect) SFX.menuSelect();
     const v = apply(b.getAttribute('data-val'));
     try{ localStorage.setItem(KEY, v); }catch(e){}
+  }));
+})();
+</script>
+<script>
+/* Cor da mira: várias cores, salva no aparelho. Preto ganha contorno branco. */
+(function dzCrosshairColor(){
+  (function(){
+    const cb=document.getElementById('optShowCrosshair'), g=document.getElementById('crosshairColorGroup');
+    if(!cb||!g) return;
+    const sync=()=>{ g.style.display = cb.checked ? '' : 'none'; };
+    cb.addEventListener('change',sync);
+    sync();
+    setInterval(sync,500); /* acompanha mudanças feitas ao carregar/restaurar as opções */
+  })();
+  const KEY='dz_crosshair_color', seg=document.getElementById('crosshairColorSeg');
+  if(!seg) return;
+  const btns=[...seg.querySelectorAll('.seg-btn')];
+  function apply(v){
+    let b=btns.find(x=>x.getAttribute('data-val')===v) || btns[0];
+    const col=b.getAttribute('data-col');
+    document.documentElement.style.setProperty('--ch-color',col);
+    document.documentElement.style.setProperty('--ch-edge', v==='black' ? '#fff' : '#000');
+    btns.forEach(x=>x.classList.toggle('active',x===b));
+    return b.getAttribute('data-val');
+  }
+  let cur='green'; try{ cur=localStorage.getItem(KEY)||'green'; }catch(e){}
+  apply(cur);
+  btns.forEach(b=>b.addEventListener('click',()=>{
+    if(typeof SFX!=='undefined'&&SFX.menuSelect) SFX.menuSelect();
+    const v=apply(b.getAttribute('data-val'));
+    try{ localStorage.setItem(KEY,v); }catch(e){}
   }));
 })();
 </script>
