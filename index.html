@@ -1269,6 +1269,7 @@ html body:not(.touch-ui) #menuBtn, html body:not(.touch-ui) #chatBtn{
   background:rgba(0,0,0,.35);border:1px solid rgba(159,227,255,.55);border-radius:5px;
   top:8px;transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;
 }
+html body:not(.touch-ui) #menuBtn, html body:not(.touch-ui) #chatBtn, html body:not(.touch-ui) #chatSend{display:none !important;}
 html body:not(.touch-ui) #menuBtn{right:8px;}
 html body:not(.touch-ui) #chatBtn{right:48px;}
 html body:not(.touch-ui) #menuBtn:hover, html body:not(.touch-ui) #chatBtn:hover{background:rgba(40,90,120,.55);border-color:var(--cs-hud,#9fe3ff);}
@@ -1378,6 +1379,7 @@ html:not(.console) #ctfHud,html:not(.console) #hrHud,html:not(.console) #fnafHud
     <div class="ctf-row CT" id="hrRow"><img id="hrImg" alt="Refém"><div class="ctf-txt"><span id="hrTxt">REFÉNS</span><small id="hrSub"></small></div></div>
     <div class="ctf-carry" id="hrCarry"></div>
   </div>
+  <div id="matchClock"></div>
   <div id="fnafHud"></div>
   <div id="socHud"></div>
   <div id="socGoal"></div>
@@ -1436,12 +1438,32 @@ html:not(.console) #ctfHud,html:not(.console) #hrHud,html:not(.console) #fnafHud
   <div data-i18n="rotateMsg">Gire seu dispositivo para o modo PAISAGEM para jogar</div>
 </div>
 
+<style id="matchEndCss">
+#matchClock{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:none;display:none;
+  padding:4px 16px;background:rgba(0,0,0,.45);border:1px solid rgba(159,227,255,.55);border-radius:4px;color:#fff;
+  font:700 clamp(14px,2.6vh,22px)/1.2 'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;letter-spacing:2px;text-shadow:0 1px 3px #000;}
+#matchClock.hot{color:#ff5a4a;border-color:#ff5a4a;animation:ctfBlink .9s infinite;}
+#matchEndSeg .seg-btn{font-size:11px;letter-spacing:1px;}
+/* mapa único (FNAF Doom / Futebol): sem a caixa preta da lista, sem barra e sem mapa aleatório */
+#mapPicker.single-map #mapListHead,#mapPicker.single-map #mapList{display:none !important;}
+#mapPicker.single-map #mapInfo{margin-top:0;}
+/* barra lateral própria dos menus (funciona em toque, mouse e controle; a nativa fica escondida) */
+.modal-box{scrollbar-width:none;}
+.modal-box::-webkit-scrollbar{display:none;width:0;height:0;}
+.modal-box>*:not(h2){margin-right:24px;}
+.dz-sb{position:fixed !important;z-index:5 !important;display:none;width:16px;box-sizing:border-box;touch-action:none;
+  background:rgba(0,0,0,.4);border:1px solid var(--cs-line,#5a3a10);border-radius:8px;}
+.dz-sb-thumb{position:absolute;left:2px;right:2px;top:0;min-height:40px;box-sizing:border-box;border-radius:6px;cursor:grab;touch-action:none;
+  background:linear-gradient(#4a63a8,#2c3f72);border:1px solid var(--cs-y,#9fe3ff);}
+.dz-sb-thumb:hover,.dz-sb-thumb.drag{background:linear-gradient(#5a78c0,#3a5090);}
+html.console .dz-sb{width:24px;}
+</style>
 <div id="mainMenu" class="overlay-screen">
   <div id="menuLogo">DEAD ZONE<small>REMASTERED</small></div>
   <button id="startBtn" class="btn" data-i18n="selectLevel">JOGAR</button>
   <button id="openSettingsBtn" class="btn" data-i18n="settings">CONFIGURAÇÕES</button>
   <button id="fullscreenBtn" class="btn" data-i18n="fullscreen">TELA CHEIA</button>
-  <div class="menu-footer">↑ ↓ ENTER</div>
+  <div class="menu-footer" id="menuPlayer" style="margin-top:4px"></div>
 </div>
 <div id="uiToast"></div>
 
@@ -1496,6 +1518,29 @@ html:not(.console) #ctfHud,html:not(.console) #hrHud,html:not(.console) #fnafHud
           <label for="dmAllyBotRange"><span data-i18n="botAllyLabel">BOTS ALIADOS</span>: <span id="dmAllyBotVal">3</span></label>
           <input type="range" id="dmAllyBotRange" min="0" max="9" step="1" value="3">
         </div>
+      </div>
+    </div>
+    <div id="matchEndOptions" style="display:none">
+      <div class="setting-group">
+        <label data-i18n="matchEndLabel">FIM DA PARTIDA:</label>
+        <div class="seg" id="matchEndSeg">
+          <button type="button" class="seg-btn active" data-val="score" data-i18n="matchEndScore">POR PONTUAÇÃO</button>
+          <button type="button" class="seg-btn" data-val="time" data-i18n="matchEndTime">POR TEMPO</button>
+          <button type="button" class="seg-btn" data-val="none" data-i18n="matchEndNone">SEM LIMITE</button>
+        </div>
+        <select id="matchEndSelect" style="display:none">
+          <option value="score">SCORE</option>
+          <option value="time">TIME</option>
+          <option value="none">NONE</option>
+        </select>
+      </div>
+      <div class="setting-group" id="matchScoreGroup">
+        <label for="matchScoreRange"><span class="ml" data-mode="deathmatch" data-i18n="matchGoalKills">META DE ABATES</span><span class="ml" data-mode="ctf" data-i18n="matchGoalCaps" style="display:none">META DE CAPTURAS</span><span class="ml" data-mode="hostage" data-i18n="matchGoalLoss" style="display:none">BAIXAS CT PARA OS T VENCEREM</span>: <span id="matchScoreVal">25</span></label>
+        <input type="range" id="matchScoreRange" min="5" max="100" step="5" value="25">
+      </div>
+      <div class="setting-group" id="matchTimeGroup" style="display:none">
+        <label for="matchTimeRange"><span data-i18n="matchTimeLbl">TEMPO DA PARTIDA</span>: <span id="matchTimeVal">5</span> <span data-i18n="matchMinUnit">MIN</span></label>
+        <input type="range" id="matchTimeRange" min="1" max="30" step="1" value="5">
       </div>
     </div>
     <div class="setting-group">
@@ -1669,6 +1714,10 @@ html:not(.console) #ctfHud,html:not(.console) #hrHud,html:not(.console) #fnafHud
     </div>
 
     <div class="tab-panel active" id="tabGeneral">
+      <div class="setting-group">
+        <label data-i18n="playerNameLabel">NOME DO JOGADOR:</label>
+        <input type="text" id="playerNameInput" maxlength="16" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;padding:8px;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(159,227,255,.55);border-radius:5px;font:inherit">
+      </div>
       <div class="setting-group">
         <label data-i18n="langLabel">IDIOMA / LANGUAGE:</label>
         <div class="seg" id="langSeg">
@@ -4375,6 +4424,7 @@ const I18N = {
     rotateMsg: "Gire seu dispositivo para o modo PAISAGEM para jogar",
     menuSub: "SELECIONE UMA OPÇÃO PARA COMEÇAR", selectLevel: "JOGAR", fullscreen: "TELA CHEIA",
     selectLevelTitle: "CONFIGURAR PARTIDA", modeLabel: "MODO DE JOGO:", play: "JOGAR", mainMenuBtn: "MENU PRINCIPAL",
+    playerNameLabel: "NOME DO JOGADOR:",
     settings: "CONFIGURAÇÕES", settingsTitle: "CONFIGURAÇÕES DE JOGO", langLabel: "IDIOMA / LANGUAGE:", 
     levelLabel: "SELECIONAR MAPA:", sensLabel: "SENSIBILIDADE DA MIRA", apply: "✓ APLICAR", back: "← VOLTAR", resetSettings: "↺ RESTAURAR PADRÃO", resetSettingsDone: "CONFIGURAÇÕES RESTAURADAS PARA O PADRÃO",
     youDied: "VOCÊ MORREU", retry: "TENTAR NOVAMENTE",
@@ -4477,6 +4527,7 @@ const I18N = {
     lvl82: "CS_DOWNHILL", lvl82Desc: "Estilo Counter-Strike: Montanha estreita e bem comprida, em 5 patamares ligados por rampas em zigue-zague. T no topo, CT na base. Dá para pular os penhascos e descer rápido (dano leve), mas para subir só pelas rampas. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
+    matchEndLabel: "FIM DA PARTIDA:", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
     gunFoeLabel: "CONTRA:", gunFoeZombies: "ZUMBIS", gunFoeBots: "BOTS",
     dmPrimaryLabel: "ARMA PRINCIPAL (PESADA):", dmSecondaryLabel: "ARMA SECUNDÁRIA (LEVE):", dmRandomWeapon: "ALEATÓRIA",
     debugMenuTitle: "MENU DEBUG", dbgGodMode: "Vida Infinita (God Mode)", dbgInfAmmo: "Munição Infinita", dbgPauseEnemies: "Pausar Inimigos",
@@ -4521,6 +4572,7 @@ const I18N = {
     rotateMsg: "Rotate your device to LANDSCAPE mode to play",
     menuSub: "SELECT AN OPTION TO START", selectLevel: "PLAY", fullscreen: "FULLSCREEN",
     selectLevelTitle: "SETUP GAME", modeLabel: "GAME MODE:", play: "PLAY", mainMenuBtn: "MAIN MENU",
+    playerNameLabel: "PLAYER NAME:",
     settings: "SETTINGS", settingsTitle: "GAME SETTINGS", langLabel: "LANGUAGE / IDIOMA:", 
     levelLabel: "SELECT MAP:", sensLabel: "AIM SENSITIVITY", apply: "✓ APPLY", back: "← BACK", resetSettings: "↺ RESET TO DEFAULT", resetSettingsDone: "SETTINGS RESET TO DEFAULT",
     youDied: "YOU DIED", retry: "TRY AGAIN",
@@ -4623,6 +4675,7 @@ const I18N = {
     lvl82: "CS_DOWNHILL", lvl82Desc: "Counter-Strike style: A narrow, very long mountain in 5 terraces linked by zig-zag ramps. T on the summit, CT at the base. You can jump off the cliffs to go down fast (light damage), but climbing back is only by the ramps. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
+    matchEndLabel: "MATCH END:", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
     gunFoeLabel: "VERSUS:", gunFoeZombies: "ZOMBIES", gunFoeBots: "BOTS",
     dmPrimaryLabel: "PRIMARY WEAPON (HEAVY):", dmSecondaryLabel: "SECONDARY WEAPON (LIGHT):", dmRandomWeapon: "RANDOM",
     debugMenuTitle: "DEBUG MENU", dbgGodMode: "Infinite Health (God Mode)", dbgInfAmmo: "Infinite Ammo", dbgPauseEnemies: "Pause Enemies",
@@ -4803,7 +4856,13 @@ let gunGameWeaponIdx = 0;
 let gunGameCycle = 0; // quantas vezes o jogador já deu a volta completa na lista de armas (progresso infinito)
 let gunGameTotalKills = 0; // total de kills acumulados na partida de gun game, independente do ciclo
 // --- Deathmatch ---
-let dmScoreT = 0, dmScoreCT = 0;       // placar por equipe (primeiro a chegar em DM_TARGET vence)
+let dmScoreT = 0, dmScoreCT = 0;       // placar por equipe (a meta agora é escolhida no menu: pontuação, tempo ou sem limite)
+// ===== Fim de partida configurável (Deathmatch / CTF / Resgate de Reféns) =====
+// mode: 'score' (primeiro a chegar na meta), 'time' (vence quem tiver mais pontos quando o relógio zera) ou 'none' (sem limite).
+var matchUI = { mode: 'score', minutes: 5, score: { deathmatch: 25, ctf: 3, hostage: 20 } };   // o que está no menu
+var dmEnd = { mode: 'score', target: 25, minutes: 5 };                                           // o que vale na partida em andamento
+var dmTimeLeft = 0;                                                                              // segundos restantes (modo por tempo)
+var dmEndInfo = { winner: '', reason: '' };                                                      // resultado, enviado aos convidados online
 let dmPlayerKills = 0, dmDeaths = 0;   // K/D do jogador
 let dmPlayerDead = false, dmPlayerRespawnAt = 0;
 const NET = { mode: null, started: false, lastRespawn: 0, lobby: false, si: 0, respawnAt: 0, forceSide: false, me: 1 };   // mode: null | 'host' | 'client' (multiplayer online)
@@ -8622,6 +8681,7 @@ function resetGame(levelIdx) {
   if(typeof ggReset === 'function') ggReset();
   AssetLoader.hold();   // texturas ainda carregando? mostra a barra e segura a partida
   gameOver = false;
+  matchClockReset();
   score = 0;
   player.health = player.maxHealth;
   updateHUD();
@@ -8660,7 +8720,7 @@ function updateHUDModeLabel() {
   }
   if (currentGameMode === 'hostage') {
     lvlLbl.textContent = (currentLang === 'en' ? "RESCUED x CT LOSSES" : "RESGATES x BAIXAS CT");
-    lvlVal.textContent = dmScoreCT + "/" + HR_COUNT + " x " + dmScoreT + "/" + HR_T_TARGET;
+    lvlVal.textContent = dmScoreCT + "/" + HR_COUNT + " x " + dmScoreT + (dmEnd.mode === 'score' ? "/" + dmEnd.target : "");
     return;
   }
   if (currentGameMode === 'ctf') {
@@ -9666,28 +9726,122 @@ function dmInit(){
   if(NET.mode === 'host' && NET.started) netHostAddRemotes();
 }
 
+function isDmEndMode(){ return currentGameMode === 'deathmatch' || currentGameMode === 'ctf' || currentGameMode === 'hostage'; }
+
+// Metas de cada lado conforme o fim de partida escolhido (Infinity = não existe meta de pontos).
+function matchTargets(){
+  if(currentGameMode === 'hostage') return { ct: HR_COUNT, t: dmEnd.mode === 'score' ? dmEnd.target : Infinity };   // CT sempre vence resgatando todos os reféns
+  if(dmEnd.mode !== 'score') return { ct: Infinity, t: Infinity };
+  return { ct: dmEnd.target, t: dmEnd.target };
+}
+
+// ---- menu: opções de fim de partida (pontuação / tempo / sem limite) ----
+var MATCH_RANGES = { deathmatch: { min: 5, max: 100, step: 5 }, ctf: { min: 1, max: 15, step: 1 }, hostage: { min: 5, max: 60, step: 5 } };
+function matchGuestLocked(){ return !!(NET.lobby && NET.mode === 'client'); }
+function matchUISync(){
+  const box = document.getElementById('matchEndOptions'); if(!box) return;
+  const gm = document.getElementById('gameModeSelect').value, rg = MATCH_RANGES[gm];
+  box.style.display = rg ? 'block' : 'none';
+  if(!rg) return;
+  document.querySelectorAll('#matchEndSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === matchUI.mode));
+  document.getElementById('matchEndSelect').value = matchUI.mode;
+  const sr = document.getElementById('matchScoreRange');
+  sr.min = rg.min; sr.max = rg.max; sr.step = rg.step;
+  sr.value = Math.max(rg.min, Math.min(rg.max, matchUI.score[gm] || rg.min));
+  document.getElementById('matchScoreVal').textContent = sr.value;
+  document.querySelectorAll('#matchScoreGroup .ml').forEach(el => { el.style.display = el.getAttribute('data-mode') === gm ? '' : 'none'; });
+  document.getElementById('matchScoreGroup').style.display = matchUI.mode === 'score' ? '' : 'none';
+  document.getElementById('matchTimeRange').value = matchUI.minutes;
+  document.getElementById('matchTimeVal').textContent = matchUI.minutes;
+  document.getElementById('matchTimeGroup').style.display = matchUI.mode === 'time' ? '' : 'none';
+}
+function matchEndLoadFromUI(gm){
+  gm = gm || document.getElementById('gameModeSelect').value;
+  dmEnd = { mode: matchUI.mode, target: (matchUI.score[gm] || 25) | 0, minutes: matchUI.minutes | 0 || 5 };
+}
+function matchUIApplyCfg(cfg){   // convidado: espelha o que o host escolheu
+  if(!cfg) return;
+  if(cfg.em === 'score' || cfg.em === 'time' || cfg.em === 'none') matchUI.mode = cfg.em;
+  if(cfg.es && matchUI.score[cfg.mode] !== undefined) matchUI.score[cfg.mode] = cfg.es | 0;
+  if(cfg.et) matchUI.minutes = cfg.et | 0;
+  matchUISync();
+}
+(function matchUIBind(){
+  const sr = document.getElementById('matchScoreRange'), tr = document.getElementById('matchTimeRange');
+  if(!sr || !tr) return;
+  sr.addEventListener('input', () => {
+    if(matchGuestLocked()){ matchUISync(); return; }
+    const gm = document.getElementById('gameModeSelect').value;
+    if(matchUI.score[gm] !== undefined) matchUI.score[gm] = parseInt(sr.value, 10);
+    document.getElementById('matchScoreVal').textContent = sr.value;
+  });
+  tr.addEventListener('input', () => {
+    if(matchGuestLocked()){ matchUISync(); return; }
+    matchUI.minutes = parseInt(tr.value, 10);
+    document.getElementById('matchTimeVal').textContent = tr.value;
+  });
+})();
+
+// ---- relógio / meta no HUD ----
+function matchClockReset(){
+  dmTimeLeft = (dmEnd.mode === 'time') ? Math.max(1, dmEnd.minutes) * 60 : 0;
+  dmEndInfo = { winner: '', reason: '' };
+  const el = document.getElementById('matchClock'); if(el){ el.style.display = 'none'; el.classList.remove('hot'); }
+}
+function matchClockUpdate(){
+  const el = document.getElementById('matchClock'); if(!el) return;
+  let txt = '', hot = false;
+  if(dmEnd.mode === 'time'){
+    const sec = Math.max(0, Math.ceil(dmTimeLeft));
+    txt = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+    hot = sec <= 10 && !countdownActive;
+  } else if(dmEnd.mode === 'score' && currentGameMode !== 'hostage'){
+    txt = (currentLang === 'en' ? 'TARGET ' : 'META ') + dmEnd.target;
+  }
+  if(!txt){ if(el.style.display !== 'none') el.style.display = 'none'; return; }
+  if(el.textContent !== txt) el.textContent = txt;
+  el.style.display = 'block';
+  el.classList.toggle('hot', hot);
+}
+
 function dmCheckWin(){
-  if(currentGameMode === 'soccer') return;   // Futebol: vitória decidida pelo relógio/gols
+  if(!isDmEndMode()) return;   // Futebol decide pelo relógio/gols; Gun Game não tem placar de equipes
   if(gameOver || NET.mode === 'client') return;
-  let tgtCT = DM_TARGET, tgtT = DM_TARGET;
-  if(currentGameMode === 'ctf'){ tgtCT = tgtT = CTF_TARGET; }
-  else if(currentGameMode === 'hostage'){ tgtCT = HR_COUNT; tgtT = HR_T_TARGET; }
-  if(dmScoreCT < tgtCT && dmScoreT < tgtT) return;
-  const myScore = dmPlayerTeam === 'CT' ? dmScoreCT : dmScoreT;
-  const won = myScore >= (dmPlayerTeam === 'CT' ? tgtCT : tgtT);
+  const tg = matchTargets();
+  if(dmScoreCT < tg.ct && dmScoreT < tg.t) return;
+  dmEndMatch(dmScoreCT >= tg.ct ? 'CT' : 'T', 'score');
+}
+
+// Acabou o tempo: vence quem tem mais pontos (no Resgate, compara o progresso de cada lado). Empate = EMPATE.
+function dmTimeUp(){
+  if(gameOver || NET.mode === 'client' || !isDmEndMode()) return;
+  let a = dmScoreCT, b = dmScoreT;
+  if(currentGameMode === 'hostage'){ a = dmScoreCT / HR_COUNT; b = dmScoreT / HR_T_TARGET; }
+  dmEndMatch(a > b ? 'CT' : (b > a ? 'T' : ''), 'time');
+}
+
+// winner: 'CT' | 'T' | '' (empate). Também usado pelos convidados online quando o host termina a partida.
+function dmEndMatch(winner, reason){
+  if(gameOver) return;
   const en = currentLang === 'en';
+  const draw = !winner;
+  const won = !draw && winner === dmPlayerTeam;
   gameOver = true;
+  dmEndInfo = { winner: winner || '', reason: reason || '' };
   SFX.stopMusic();
-  SFX.teamWin(dmScoreCT >= tgtCT ? 'CT' : 'T');   // anúncio do fim do modo + vitória do time vencedor
+  if(!draw) SFX.teamWin(winner);   // anúncio do fim do modo + vitória do time vencedor
   document.getElementById('damageFlash').style.opacity = '0';
   document.getElementById('countdownOverlay').style.display = 'none';
   const ov = document.getElementById('gameOverOverlay');
   ov.style.display = 'flex';
-  ov.querySelector('h1').textContent = won ? (en ? 'VICTORY!' : 'VITÓRIA!') : (en ? 'DEFEAT' : 'DERROTA');
+  ov.querySelector('h1').textContent = draw ? (en ? 'DRAW' : 'EMPATE') : (won ? (en ? 'VICTORY!' : 'VITÓRIA!') : (en ? 'DEFEAT' : 'DERROTA'));
   document.getElementById('ctfHud').style.display = 'none';
   document.getElementById('hrHud').style.display = 'none';
+  const mc = document.getElementById('matchClock'); if(mc) mc.style.display = 'none';
+  const hrLim = dmEnd.mode === 'score' ? '/' + dmEnd.target : '';
   document.getElementById('finalScore').textContent =
-    (currentGameMode === 'hostage' ? (en ? 'RESCUED ' : 'RESGATADOS ') + dmScoreCT + '/' + HR_COUNT + (en ? '  CT LOSSES ' : '  BAIXAS CT ') + dmScoreT + '/' + HR_T_TARGET + '  |  ' : (currentGameMode === 'ctf' ? (en ? 'CAPTURES  ' : 'CAPTURAS  ') : '') + 'CT ' + dmScoreCT + ' x ' + dmScoreT + ' T  |  ') + (en ? 'KILLS: ' : 'ABATES: ') + dmPlayerKills + '  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths;
+    (reason === 'time' ? (en ? 'TIME UP  |  ' : 'TEMPO ESGOTADO  |  ') : '') +
+    (currentGameMode === 'hostage' ? (en ? 'RESCUED ' : 'RESGATADOS ') + dmScoreCT + '/' + HR_COUNT + (en ? '  CT LOSSES ' : '  BAIXAS CT ') + dmScoreT + hrLim + '  |  ' : (currentGameMode === 'ctf' ? (en ? 'CAPTURES  ' : 'CAPTURAS  ') : '') + 'CT ' + dmScoreCT + ' x ' + dmScoreT + ' T  |  ') + (en ? 'KILLS: ' : 'ABATES: ') + dmPlayerKills + '  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths;
   if(document.pointerLockElement) document.exitPointerLock();
 }
 
@@ -9932,6 +10086,14 @@ function dmBotThink(b, dt, now){
 function updateDeathmatch(dt, now){
   if(!isTeamMode() || gameOver) return;
   if(isTestMapNow()) return;   // mapa de testes: alvos parados, sem IA de bots nem placar
+
+  if(isDmEndMode()){   // fim de partida por tempo: o host/solo conta; o convidado recebe o valor nos snapshots
+    if(dmEnd.mode === 'time' && NET.mode !== 'client' && !countdownActive){
+      dmTimeLeft -= dt;
+      if(dmTimeLeft <= 0){ dmTimeLeft = 0; matchClockUpdate(); dmTimeUp(); return; }
+    }
+    matchClockUpdate();
+  }
 
   if(dmPlayerDead){
     const left = Math.ceil((dmPlayerRespawnAt - now) / 1000);
@@ -12619,8 +12781,8 @@ function gpAdjustRange(el, dir){
   SFX.menuSelect();
 }
 
-// Esquerda/direita troca o valor direto, como nos jogos atuais: seletores (modo, lado,
-// idioma), abas e as setas do carrossel de mapas. Devolve false nas pontas p/ sair do grupo.
+// Esquerda/direita: setas do carrossel, campos de seleção e sliders trocam o valor direto;
+// opções e abas apenas movem o foco (A confirma). Devolve false nas pontas p/ sair do grupo.
 function gpStepOption(el, dx){
   if(el.id === 'carPrev' || el.id === 'carNext'){ gpClickId(dx > 0 ? 'carNext' : 'carPrev'); return true; }
   if(el.tagName === 'SELECT'){   // campo de seleção (ex.: céu / mapa do debug): esquerda/direita troca a opção
@@ -12631,17 +12793,9 @@ function gpStepOption(el, dx){
     SFX.menuSelect();
     return true;
   }
-  let group = null;
-  if(el.classList.contains('seg-btn')) group = el.parentElement;
-  else if(el.classList.contains('tab-btn')) group = el.parentElement;
-  if(!group) return false;
-  const list = Array.from(group.querySelectorAll(el.classList.contains('seg-btn') ? '.seg-btn' : '.tab-btn')).filter(gpElVisible);
-  const j = list.indexOf(el) + dx;
-  if(j < 0 || j >= list.length) return false;
-  list[j].click();
-  gpSetFocus(list[j], true);
-  SFX.menuSelect();
-  return true;
+  // Opções (seg-btn) e abas (tab-btn): esquerda/direita só MOVEM o foco; quem seleciona é o botão A.
+  // (Antes selecionava na hora, o que fazia o modo/lado/idioma mudar sem querer.)
+  return false;
 }
 
 function gpClickId(id){
@@ -13042,6 +13196,7 @@ document.getElementById('playSelectedLevelBtn').addEventListener('click', ()=>{
   debugOptions.freeRoam = false;
   let selectedLvl = parseInt(document.getElementById('mainLevelSelect').value);
   currentGameMode = document.getElementById('gameModeSelect').value;
+  matchEndLoadFromUI(currentGameMode);
   gunGameFoe = document.getElementById('gunFoeSelect').value;
   if (currentGameMode === 'soccer') {
     dmPlayerTeam = 'CT';
@@ -13099,6 +13254,7 @@ document.getElementById('playSelectedLevelBtn').addEventListener('click', ()=>{
     SFX.menuAccept(); netLeave();
     debugOptions.freeRoam = true; debugOptions.freeBots = document.getElementById('dbgMapBots').checked;
     currentGameMode = mode;
+    matchEndLoadFromUI(mode);
     dmPlayerTeam = 'CT';
     if (currentGameMode === 'soccer') socResolveClubs(); else if (isTeamMode()) dmResolveLoadout();
     settingsModal.style.display = 'none'; mainMenu.style.display = 'none';
@@ -13398,7 +13554,7 @@ function bindSegmented(segId, selectEl, onChange){
   seg.querySelectorAll('.seg-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
       if(b.classList.contains('active')) return;
-      if(NET.lobby && NET.mode === 'client' && (segId === 'modeSeg' || segId === 'gunFoeSeg')) return;
+      if(NET.lobby && NET.mode === 'client' && (segId === 'modeSeg' || segId === 'gunFoeSeg' || segId === 'matchEndSeg')) return;
       SFX.menuSelect();
       seg.querySelectorAll('.seg-btn').forEach(x=>x.classList.toggle('active', x === b));
       selectEl.value = b.getAttribute('data-val');
@@ -13444,10 +13600,18 @@ function updateCarouselUI(){
   const cur = curMapPos();
   Array.from(carDots.children).forEach((d, i)=> d.classList.toggle('active', i === cur));
   syncMapListSel();
+  mapPickerSync();
   const pad = n => String(n).padStart(2, '0');
   carCount.textContent = mapRandom
     ? I18N[currentLang].mapRandomPool.replace('{n}', visibleMaps.length)
     : pad(cur + 1) + ' / ' + pad(visibleMaps.length);
+}
+// Mapa único (FNAF Doom, Futebol): esconde a lista (caixa preta), o contador e o mapa aleatório.
+function mapPickerSync(){
+  const n = visibleMaps.length, single = n <= 1;
+  document.getElementById('mapPicker').classList.toggle('single-map', single);
+  ['mapRandomBtn', 'carCount'].forEach(id => { const e = document.getElementById(id); if(e) e.style.display = single ? 'none' : ''; });
+  if(single && mapRandom) setMapRandom(false);
 }
 function setMapIndex(pos, dir){
   if(NET.lobby && NET.mode === 'client') return;
@@ -13497,6 +13661,7 @@ function refreshMapsForMode(){
   const noSide = isNoSideModeSelected();
   document.getElementById('dmOptions').style.display = (dm || (NET.lobby && !noSide)) ? 'block' : 'none';
   document.getElementById('dmTeamGroup').style.display = (NET.lobby && noSide) ? 'none' : '';   // sala online: sem seletor de lado nos modos cooperativos
+  matchUISync();   // fim de partida (pontuação / tempo / sem limite): só nos modos Deathmatch, CTF e Resgate
   document.getElementById('dmLoadoutGroups').style.display = (dm && !isGun && !(function(){ const m = document.getElementById('gameModeSelect').value; return m === 'deathmatch' || m === 'ctf' || m === 'hostage'; })()) ? 'block' : 'none';   // Gun Game: só o lado, sem escolher armas
   document.getElementById('socOptions').style.display = document.getElementById('gameModeSelect').value === 'soccer' ? 'block' : 'none';
   { const hl = document.querySelector('#socOptions [data-i18n="socHomeLabel"]'), al = document.querySelector('#socOptions [data-i18n="socAwayLabel"]');
@@ -13569,6 +13734,7 @@ buildDmWeaponGrid('dmSecondaryGrid', DM_SECONDARY_WEAPONS, 'secondary');
 bindSegmented('dmTeamSeg', document.getElementById('dmTeamSelect'));
 bindSegmented('modeSeg', document.getElementById('gameModeSelect'), () => refreshMapsForMode());
 bindSegmented('gunFoeSeg', document.getElementById('gunFoeSelect'), () => refreshMapsForMode());
+bindSegmented('matchEndSeg', document.getElementById('matchEndSelect'), v => { matchUI.mode = v; matchUISync(); });
 buildSocGrids();
 mapUiReady = true;
 refreshMapsForMode();
@@ -13597,6 +13763,12 @@ window.addEventListener('keydown', e=>{
   if(e.target.tagName === 'INPUT') return;
   if(levelSelectModal.style.display === 'flex'){
     const cur = curMapPos();
+    const aeSeg = document.activeElement && document.activeElement.closest ? document.activeElement.closest('#matchEndSeg') : null;
+    if(aeSeg && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){   // foco nas opções de fim de partida: setas trocam a opção (não o mapa)
+      const segs = Array.from(aeSeg.querySelectorAll('.seg-btn')), i = segs.indexOf(document.activeElement), nx = segs[i + (e.key === 'ArrowRight' ? 1 : -1)];
+      if(nx){ nx.click(); nx.focus(); }
+      e.preventDefault(); e.stopPropagation(); return;
+    }
     if(e.key === 'ArrowLeft' || e.key === 'ArrowUp'){ setMapIndex(cur - 1, -1); e.preventDefault(); e.stopPropagation(); }
     else if(e.key === 'ArrowRight' || e.key === 'ArrowDown'){ setMapIndex(cur + 1, 1); e.preventDefault(); e.stopPropagation(); }
     else if(e.key === 'Escape'){ document.getElementById('closeLevelSelectBtn').click(); e.preventDefault(); e.stopPropagation(); }
@@ -15589,6 +15761,29 @@ function gameStep(now){
 }
 
 
+// ============ NOME DO JOGADOR (salvo em localStorage 'dz_name') ============
+let playerName = '';
+function nameClean(v){ return String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16); }
+function getPlayerName(){ return playerName; }
+function updateMenuPlayer(){
+  const el = document.getElementById('menuPlayer');
+  if(el) el.textContent = playerName ? '👤 ' + playerName : '';
+}
+(function(){
+  try{ playerName = nameClean(localStorage.getItem('dz_name')); }catch(e){}
+  const inp = document.getElementById('playerNameInput');
+  if(inp){
+    inp.value = playerName;
+    inp.addEventListener('input', () => {
+      playerName = nameClean(inp.value);
+      try{ localStorage.setItem('dz_name', playerName); }catch(e){}
+      updateMenuPlayer();
+    });
+    inp.addEventListener('keydown', e => e.stopPropagation());
+  }
+  updateMenuPlayer();
+})();
+
 // ============ MULTIPLAYER ONLINE (P2P via PeerJS) · TODOS OS MODOS ============
 // O HOST roda a partida inteira (bots, zumbis, animatronics, regras, placar) e manda snapshots ~15x/s.
 // Cada jogador remoto vira uma entidade (`remote:true`) com skin CT/T. O cliente move o próprio personagem,
@@ -15955,7 +16150,7 @@ function netBackToLobby(fromHost){
     netTimers.push(setInterval(() => { if(!NET.started) netRefreshHostLobby(); }, 500));
     if(wasStarted) uiToast(netT('De volta à sala', 'Back in the room'), 'ok');
   } else {
-    netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', team: document.getElementById('dmTeamSelect').value }); }, 500));
+    netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', n: getPlayerName(), team: document.getElementById('dmTeamSelect').value }); }, 500));
     if(fromHost) uiToast(netT('O host voltou para a sala', 'The host is back in the room'), 'ok');
   }
   return true;
@@ -16005,11 +16200,11 @@ function netRenderPlayers(list, me){
 }
 function netCfg(){
   const gm = document.getElementById('gameModeSelect').value, foe = document.getElementById('gunFoeSelect').value;
-  return { mx: netMaxPlayers(), mode: gm, foe, map: parseInt(mapSelect.value), rand: mapRandom, force: gm === 'gungame' && foe === 'bots', ht: document.getElementById('dmTeamSelect').value, sh: socPick.home, sa: socPick.away };
+  return { mx: netMaxPlayers(), mode: gm, foe, map: parseInt(mapSelect.value), rand: mapRandom, force: gm === 'gungame' && foe === 'bots', ht: document.getElementById('dmTeamSelect').value, sh: socPick.home, sa: socPick.away, em: matchUI.mode, es: matchUI.score[gm] || 0, et: matchUI.minutes };
 }
 function netPlayerList(){
-  const L = [{ n: 'HOST', t: document.getElementById('dmTeamSelect').value, h: 1 }];
-  netPeers.forEach((p, i) => L.push({ n: netT('JOGADOR ', 'PLAYER ') + (i + 2), t: p.pref.team }));
+  const L = [{ n: getPlayerName() || 'HOST', t: document.getElementById('dmTeamSelect').value, h: 1 }];
+  netPeers.forEach((p, i) => L.push({ n: p.name || (netT('JOGADOR ', 'PLAYER ') + (i + 2)), t: p.pref.team }));
   return L;
 }
 function netRefreshHostLobby(){
@@ -16031,6 +16226,7 @@ function netApplyCfg(cfg){
   if(cfg.sh){ socPick.home = cfg.sh; socPick.away = cfg.sa || 'random'; refreshSocGrids(); }   // clubes escolhidos pelo host (só exibição)
   refreshMapsForMode();
   if(visibleMaps.includes(cfg.map)) mapSelect.value = String(cfg.map);
+  matchUIApplyCfg(cfg);
   renderLevelPreview(parseInt(mapSelect.value));
   mapRandom = !!cfg.rand;
   const rb = document.getElementById('mapRandomBtn');
@@ -16187,9 +16383,10 @@ function netHostStart(){
   if(gm === 'soccer'){ socResolveClubs(); NET.socSlot = 0; }   // clubes sorteados uma vez e enviados a todos
   NET.started = true; NET.lobby = false;
   netTimers.forEach(clearInterval); netTimers = [];
+  matchEndLoadFromUI(gm);
   netBeginMatch(lvl, gm, foe, hostTeam, null, 0);
   const order = GUN_GAME_ORDER.slice();
-  netPeers.forEach(p => netSendTo(p, { t: 'start', map: lvl, mode: gm, foe, team: p.team, id: p.id, si: p.idx, order, sc: gm === 'soccer' ? { h: socMatch.home, a: socMatch.away } : null, sl: p.socSlot || 0 }));
+  netPeers.forEach(p => netSendTo(p, { t: 'start', map: lvl, mode: gm, foe, team: p.team, id: p.id, si: p.idx, order, sc: gm === 'soccer' ? { h: socMatch.home, a: socMatch.away } : null, sl: p.socSlot || 0, em: dmEnd.mode, es: dmEnd.target, et: dmEnd.minutes }));
   netTimers.push(setInterval(netHostSnapshot, 66));
   netTimers.push(setInterval(netCoopHostCheck, 400));
 }
@@ -16202,12 +16399,12 @@ const CHAT_COLORS = ['#9fe3ff', '#9fe3ff', '#7dff8a', '#ff9a6b'];
 var chatOpen = false, chatLastSent = 0;
 function chatClean(m){ return String(m == null ? '' : m).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX_LEN); }
 function chatMyNumber(){ return NET.mode === 'host' ? 1 : (NET.me || 1) + 1; }
-function chatAdd(i, text){
+function chatAdd(i, text, name){
   text = chatClean(text); if(!text) return;
   i = Math.max(1, Math.min(NET_MAX_GUESTS + 1, (+i) | 0 || 1));
   const log = document.getElementById('chatLog'); if(!log) return;
   const line = document.createElement('div'); line.className = 'chat-line';
-  const nm = document.createElement('b'); nm.textContent = netT('JOGADOR ', 'PLAYER ') + i + ':'; nm.style.color = CHAT_COLORS[(i - 1) % CHAT_COLORS.length];
+  const nm = document.createElement('b'); nm.textContent = (nameClean(name) || (netT('JOGADOR ', 'PLAYER ') + i)) + ': '; nm.style.color = CHAT_COLORS[(i - 1) % CHAT_COLORS.length];
   line.appendChild(nm); line.appendChild(document.createTextNode(text));   // textContent: nunca interpreta HTML
   log.appendChild(line);
   while(log.children.length > CHAT_MAX_LINES) log.removeChild(log.firstChild);
@@ -16220,8 +16417,8 @@ function chatHostReceive(p, m){
   const text = chatClean(m); if(!text) return;
   p.lastChat = now;
   const i = netPeers.indexOf(p) + 2;
-  netBroadcast({ t: 'chat', i, m: text });
-  chatAdd(i, text);
+  netBroadcast({ t: 'chat', i, m: text, n: p.name || '' });
+  chatAdd(i, text, p.name);
 }
 function chatInGame(){ return !!(NET.mode && NET.started && started && !gameOver); }
 function chatOpenInput(){
@@ -16256,7 +16453,7 @@ function chatSubmit(){
   const inp = document.getElementById('chatInput'), text = chatClean(inp.value);
   if(text && performance.now() - chatLastSent >= CHAT_COOLDOWN_MS){
     chatLastSent = performance.now();
-    if(NET.mode === 'host'){ chatAdd(1, text); netBroadcast({ t: 'chat', i: 1, m: text }); }
+    if(NET.mode === 'host'){ chatAdd(1, text, getPlayerName()); netBroadcast({ t: 'chat', i: 1, m: text, n: getPlayerName() }); }
     else if(NET.mode === 'client') netSend({ t: 'chat', m: text });
   }
   chatCloseInput();
@@ -16500,7 +16697,7 @@ function netHostOnData(p, d){
     }
     return;
   }
-  if(d.t === 'pref'){ p.pref.team = (d.team === 'CT' || d.team === 'T') ? d.team : 'RANDOM'; return; }
+  if(d.t === 'pref'){ p.name = nameClean(d.n); p.pref.team = (d.team === 'CT' || d.team === 'T') ? d.team : 'RANDOM'; return; }
   if(d.t === 'chat'){ if(netPeers.indexOf(p) >= 0) chatHostReceive(p, d.m); return; }
   if(d.t === 'away'){ netHostPeerAway(p); return; }
   const b = p.ent;
@@ -16606,6 +16803,8 @@ function netHostSnapshot(){
     e.push(o);
   });
   const d = { t: 'snap', e, c: dmScoreCT, r: dmScoreT, go: (gameOver && team) ? 1 : 0 };
+  if(gameOver && team){ d.gw = dmEndInfo.winner; d.gr = dmEndInfo.reason; }
+  if(dmEnd.mode === 'time' && isDmEndMode()) d.tl = +dmTimeLeft.toFixed(1);
   if(currentGameMode === 'waves') d.w = currentWave;
   if(currentGameMode === 'soccer' && soc){ const bl = soc.ball; d.sb = [netF(bl.x), netF(bl.y), netF(bl.z), netF(bl.vx), netF(bl.vy), netF(bl.vz)]; d.sp = soc.phase; d.sk = +soc.clock.toFixed(1); d.sg = soc.golden ? 1 : 0; d.sh = soc.half || 1; d.sa = soc.add || 0; }
   if(!team) d.p = pickups.map(k => [netF(k.x), netF(k.y), k.type, k.taken ? 1 : 0, k.weaponId || '', k.amount || 0]);
@@ -16648,7 +16847,7 @@ function netJoinRoom(code){
       levelSelectModal.style.display = 'flex';
       netSetLobbyUI(true, 'client');
       refreshMapsForMode();
-      netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', team: document.getElementById('dmTeamSelect').value }); }, 500));
+      netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', n: getPlayerName(), team: document.getElementById('dmTeamSelect').value }); }, 500));
     });
     netConn.on('data', netClientOnData);
     netConn.on('close', () => { if(NET.mode === 'client') netForceMenu(netT('O host saiu da sala', 'The host left the room')); });
@@ -16669,7 +16868,7 @@ function netClientOnData(d){
   else if(d.t === 'over') netOnOver(d);
   else if(d.t === 'sfx') netOnSfx(d);
   else if(d.t === 'shot') netPlayShot(netLookup(d.id), d.w);
-  else if(d.t === 'chat') chatAdd(d.i, d.m);
+  else if(d.t === 'chat') chatAdd(d.i, d.m, d.n);
   else if(d.t === 'socr'){ if(NET.started && soc && currentGameMode === 'soccer'){ soc.resetN = d.n; if(dmPlayerDead) dmRespawnPlayer(); else socPlaceMe(); } }   // reinício de posições após o gol
   else if(d.t === 'sg') socNetGoal(d);
   else if(d.t === 'sk'){ if(soc && started && !gameOver) SFX.socKick(Math.max(0.15, 1 - Math.hypot(d.x - player.x, d.y - player.y) / 16)); }
@@ -16681,6 +16880,7 @@ function netClientStart(d){
   netTimers.forEach(clearInterval); netTimers = [];
   if(d.sc){ socMatch.home = d.sc.h; socMatch.away = d.sc.a; }
   NET.socSlot = d.sl || 0;
+  dmEnd = { mode: (d.em === 'time' || d.em === 'none') ? d.em : 'score', target: (d.es | 0) || 25, minutes: (d.et | 0) || 5 };
   try { netBeginMatch(d.map, d.mode, d.foe, d.team, d.order, d.si); }
   catch(err){ console.error(err); netForceMenu(netT('Falha ao iniciar a partida', 'Failed to start the match')); return; }
   netTimers.push(setInterval(() => {
@@ -16795,7 +16995,8 @@ function netApplySnap(d){
   if(d.hs && hr) netApplyHostages(d.hs);
   if(d.fn && fnaf) netApplyFnaf(d.fn);
   if(team) updateHUDModeLabel();
-  if(d.go && !gameOver){ NET.mode = 'clientfinal'; dmCheckWin(); NET.mode = 'client'; }   // host terminou: mostra vitória/derrota
+  if(d.tl !== undefined) dmTimeLeft = d.tl;   // relógio da partida (modo por tempo) vem do host
+  if(d.go && !gameOver && isDmEndMode()) dmEndMatch(d.gw || '', d.gr || '');   // host terminou: mostra vitória/derrota/empate
 }
 function netApplyCtf(cf, prevScore, now){
   const nowScore = dmScoreCT + dmScoreT;
@@ -16886,7 +17087,7 @@ function netClientTick(dt){
     '.net-pl{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;margin-top:4px;background:rgba(0,0,0,.35);border:1px solid var(--cs-line);border-radius:2px;font-size:12px;letter-spacing:1px;color:var(--cs-txt)}' +
     '.net-pl.me{border-color:var(--cs-y);color:#fff}' +
     '.net-tag{font-weight:700;color:var(--cs-dim)} .net-tag.CT{color:#3aa0ff} .net-tag.T{color:#ff4a3a}' +
-    '#levelSelectModal.net-guest #modeSeg,#levelSelectModal.net-guest #gunFoeSeg,#levelSelectModal.net-guest #mapCarousel,#levelSelectModal.net-guest #mapPicker,#levelSelectModal.net-guest #carDots,#levelSelectModal.net-guest #mapRandomBtn,#levelSelectModal.net-guest #socHomeGrid,#levelSelectModal.net-lobby:not(.net-guest) #socAwayGrid{pointer-events:none;opacity:.6}' +
+    '#levelSelectModal.net-guest #modeSeg,#levelSelectModal.net-guest #gunFoeSeg,#levelSelectModal.net-guest #matchEndOptions,#levelSelectModal.net-guest #mapCarousel,#levelSelectModal.net-guest #mapPicker,#levelSelectModal.net-guest #carDots,#levelSelectModal.net-guest #mapRandomBtn,#levelSelectModal.net-guest #socHomeGrid,#levelSelectModal.net-lobby:not(.net-guest) #socAwayGrid{pointer-events:none;opacity:.6}' +
     '#levelSelectModal.net-side-lock #dmTeamSeg{pointer-events:none;opacity:.6}';
   document.head.appendChild(st);
 
@@ -17083,10 +17284,60 @@ setLanguage('pt');
   });
 })();
 
+window.addEventListener('pointerdown', e => {
+  if(e.pointerType === 'touch' && !usingTouch && gamepadIndex === null && !window.DZ_CONSOLE){
+    usingTouch = true; usingKeyboardMouse = false; applyControlScheme();
+  }
+}, true);
 applyControlScheme();
 checkOrientation();
 requestAnimationFrame(gameLoop);
 
+})();
+</script>
+
+<script>
+/* Barra lateral dos menus: acompanha a rolagem da janela (roda do mouse, toque, analógico direito do controle),
+   e dá para arrastar a barrinha ou tocar na trilha. Fica dentro do jogo, sobre a própria janela. */
+(function dzMenuScrollbars(){
+  const bars = new Map();
+  function place(o){
+    const box = o.box, bar = o.bar, th = o.th;
+    const over = box.scrollHeight - box.clientHeight;
+    if(!box.isConnected || box.getClientRects().length === 0 || over < 3){ if(bar.style.display !== 'none') bar.style.display = 'none'; return; }
+    const r = box.getBoundingClientRect(), w = bar.classList.contains('x') ? 24 : (parseInt(getComputedStyle(bar).width, 10) || 16);
+    bar.style.display = 'block';
+    const h = Math.max(20, r.height - 8);
+    bar.style.top = (r.top + 4) + 'px'; bar.style.height = h + 'px'; bar.style.left = (r.right - w - 3) + 'px';
+    const thH = Math.max(40, Math.min(h - 2, h * box.clientHeight / box.scrollHeight));
+    th.style.height = thH + 'px';
+    th.style.top = (over > 0 ? box.scrollTop / over * (h - 2 - thH) : 0) + 'px';
+  }
+  function make(box){
+    const bar = document.createElement('div'); bar.className = 'dz-sb';
+    const th = document.createElement('div'); th.className = 'dz-sb-thumb'; bar.appendChild(th);
+    (box.closest('.overlay-screen') || document.body).appendChild(bar);   // dentro da tela de menu: cliques aqui não contam como cliques do jogo
+    const o = { box, bar, th }; let drag = null;
+    th.addEventListener('pointerdown', e => { drag = { y: e.clientY, s: box.scrollTop, id: e.pointerId }; try{ th.setPointerCapture(e.pointerId); }catch(err){} th.classList.add('drag'); e.preventDefault(); e.stopPropagation(); });
+    th.addEventListener('pointermove', e => {
+      if(!drag || e.pointerId !== drag.id) return;
+      const room = bar.clientHeight - 2 - th.offsetHeight; if(room <= 0) return;
+      box.scrollTop = drag.s + (e.clientY - drag.y) * (box.scrollHeight - box.clientHeight) / room;
+    });
+    const end = e => { if(drag && e.pointerId === drag.id){ drag = null; th.classList.remove('drag'); } };
+    th.addEventListener('pointerup', end); th.addEventListener('pointercancel', end);
+    bar.addEventListener('pointerdown', e => { if(e.target !== bar) return; const tr = th.getBoundingClientRect(); box.scrollTop += (e.clientY < tr.top ? -1 : 1) * box.clientHeight * 0.85; e.preventDefault(); e.stopPropagation(); });
+    bar.addEventListener('wheel', e => { box.scrollTop += e.deltaY; e.preventDefault(); }, { passive: false });
+    box.addEventListener('scroll', () => place(o), { passive: true });
+    return o;
+  }
+  function tick(){
+    document.querySelectorAll('.modal-box').forEach(b => { if(!bars.has(b)) bars.set(b, make(b)); });
+    bars.forEach((o, b) => { if(!b.isConnected){ o.bar.remove(); bars.delete(b); } else place(o); });
+  }
+  setInterval(tick, 150);
+  window.addEventListener('resize', tick);
+  tick();
 })();
 </script>
 </body>
