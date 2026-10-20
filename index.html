@@ -13858,13 +13858,14 @@ document.querySelectorAll('#gfxStyleSeg .seg-btn').forEach(b => b.addEventListen
 document.querySelectorAll('#fxSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setFx(b.getAttribute('data-val')); }));
 document.querySelectorAll('#perfPresetSeg .seg-btn').forEach(b => b.addEventListener('click', () => {
   const P = {
-    eco: { q: '0.75', fps: 30, shadow: 'off',  hz: false, mm: true,  gfx: 'pixel'   },
-    bal: { q: '1',    fps: 0,  shadow: 'soft', hz: true,  mm: false, gfx: 'classic' },
-    hq:  { q: '1',    fps: 0,  shadow: 'soft', hz: true,  mm: false, gfx: 'smooth'  }
+    eco: { q: '0.75', fps: 30, shadow: 'off',  hz: false, mm: true,  gfx: 'pixel',   fog: 'near',   fx: 'off' },
+    bal: { q: '1',    fps: 0,  shadow: 'soft', hz: true,  mm: false, gfx: 'classic', fog: 'normal', fx: 'off' },
+    hq:  { q: '1.5',  fps: 0,  shadow: 'soft', hz: true,  mm: false, gfx: 'smooth',  fog: 'far',    fx: 'off' }
   }[b.getAttribute('data-val')];
   if(!P) return;
   const qb = document.querySelector('#renderQualitySeg .seg-btn[data-val="' + P.q + '"]'); if(qb) qb.click();
-  setFpsCap(P.fps); setShadowMode(P.shadow); setGfxStyle(P.gfx);
+  setFpsCap(P.fps); setShadowMode(P.shadow); setGfxStyle(P.gfx); setFogMode(P.fog); setFx(P.fx);
+  document.querySelectorAll('#perfPresetSeg .seg-btn').forEach(x => x.classList.toggle('active', x === b));
   [['optHorizon', P.hz], ['optMmEco', P.mm]].forEach(([id, v]) => {
     const el = document.getElementById(id); el.checked = v; el.dispatchEvent(new Event('change', { bubbles: true }));
   });
@@ -14051,6 +14052,14 @@ document.getElementById('resetSettingsBtn').addEventListener('click', ()=>{
     const b = document.querySelector('#'+segId+' .seg-btn[data-val="'+val+'"]');
     if(b && !b.classList.contains('active')) b.click();
   });
+  // cores: menu VERDE, HUD igual ao menu (e cor própria da HUD VERDE) e mira VERDE
+  [['menuThemeSeg','green'],['hudThemeSeg','green'],['crosshairColorSeg','green']].forEach(([segId,val])=>{
+    const b = document.querySelector('#'+segId+' .seg-btn[data-val="'+val+'"]');
+    if(b) b.click();
+  });
+  const hudSep = document.getElementById('optHudSeparate');
+  if(hudSep && hudSep.checked){ hudSep.checked = false; hudSep.dispatchEvent(new Event('change', {bubbles:true})); }
+  document.querySelectorAll('#perfPresetSeg .seg-btn').forEach(x => x.classList.remove('active'));
   uiToast(I18N[currentLang].resetSettingsDone, 'ok');
 });
 
