@@ -1206,6 +1206,7 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
   .shop-row{display:flex;flex-direction:column;gap:1px;}
   .shop-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 8px;background:transparent;border:none;border-left:2px solid transparent;color:#9fe3ff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;text-align:left;text-shadow:0 1px 2px #000;}
   .shop-item .shop-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .shop-item .shop-ico{height:18px;width:34px;object-fit:contain;vertical-align:middle;margin-right:8px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8));}
   .shop-item .shop-price{font-size:10px;font-weight:400;color:rgba(159,227,255,.55);white-space:nowrap;}
   .shop-item:hover,.shop-item.gp-focus{background:linear-gradient(90deg,rgba(70,185,255,.25),rgba(70,185,255,0) 95%);border-left-color:#9fe3ff;color:#fff;}
   .shop-item.poor{color:rgba(159,227,255,.4);}
@@ -1276,6 +1277,59 @@ html.console body:not(.touch-ui) #menuBtn, html.console body:not(.touch-ui) #cha
 html.console body:not(.touch-ui) #menuBtn{right:calc(8px + var(--sx));}
 html.console body:not(.touch-ui) #chatBtn{right:calc(52px + var(--sx));}
 html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx));}
+</style>
+
+<style id="v3Css">
+/* ===== v3: lista de mapas estilo CS:S ===== */
+#levelSelectModal .modal-box{max-width:640px;width:min(95vw,640px);}
+#mapListHead{display:grid;grid-template-columns:minmax(110px,34%) 1fr;gap:8px;padding:6px 10px;
+  background:linear-gradient(#34426a,#222c4b);border:1px solid var(--cs-line);border-bottom:0;
+  font:700 10.5px var(--cs-ui);letter-spacing:1.5px;color:var(--cs-dim);text-transform:uppercase;}
+#mapList{position:relative;height:clamp(140px,32vh,260px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+  background:rgba(0,0,0,.5);border:1px solid var(--cs-line);}
+.map-row{display:grid;grid-template-columns:minmax(110px,34%) 1fr;gap:8px;align-items:center;padding:8px 10px;cursor:pointer;
+  border-bottom:1px solid rgba(170,195,240,.12);color:var(--cs-txt);font:600 12px/1.25 var(--cs-ui);user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;}
+.map-row:hover{background:rgba(159,227,255,.08);}
+.map-row .mr-name{text-transform:lowercase;letter-spacing:.3px;word-break:break-word;}
+.map-row .mr-tag{color:var(--cs-dim);font-weight:400;font-size:11px;}
+.map-row.sel{background:linear-gradient(#4a63a8,#2c3f72);box-shadow:inset 0 0 0 1px var(--cs-y);color:#fff;}
+.map-row.sel .mr-tag{color:#dbe8ff;}
+#mapPicker.rand-on #mapList{opacity:.4;filter:grayscale(.8);}
+#mapInfo{margin-top:8px;padding:8px 10px;background:var(--cs-panel2);border:1px solid var(--cs-line);border-radius:2px;}
+#mapInfo .mi-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+#mapInfoName{color:#fff;font-size:13px;letter-spacing:1px;text-transform:lowercase;}
+#mapInfoText{color:var(--cs-txt);font-size:12px;margin-top:4px;line-height:1.35;}
+#mapInfoMeta{color:var(--cs-dim);font-size:11px;margin-top:3px;letter-spacing:.5px;}
+#mapList::-webkit-scrollbar{width:10px;} #mapList::-webkit-scrollbar-track{background:rgba(0,0,0,.4);}
+#mapList::-webkit-scrollbar-thumb{background:#3b4a6e;border:1px solid var(--cs-line);}
+@media (max-width:560px){
+  #mapListHead{display:none;}
+  .map-row{grid-template-columns:1fr;gap:2px;}
+}
+@media (max-height:520px){ #mapList{height:clamp(110px,40vh,200px);} }
+/* seletor de modo em lista (CS:S) */
+#levelSelectModal #modeSeg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0;border-radius:2px;}
+#levelSelectModal #modeSeg .seg-btn{flex-direction:row;justify-content:flex-start;gap:8px;padding:8px 10px;text-align:left;font-size:11px;
+  border-left:0;border-radius:0;border-bottom:1px solid rgba(170,195,240,.12);}
+#levelSelectModal #modeSeg .mode-icon{height:20px;width:20px;flex:0 0 auto;}
+/* ===== v3: tamanho da HUD ===== */
+body{--hud-s:1;}
+body.hud-small{--hud-s:.78;}
+body.hud-large{--hud-s:1.3;}
+#bottombar .cs-health{transform:scale(var(--hud-s));transform-origin:left bottom;}
+#bottombar .cs-right{transform:scale(var(--hud-s));transform-origin:right bottom;}
+.cs-mode{transform:translateX(-50%) scale(var(--hud-s));transform-origin:center bottom;}
+#minimapWrapper{transform:scale(var(--hud-s));transform-origin:left top;}
+#socHud{transform:translateX(-50%) scale(var(--hud-s));transform-origin:center top;}
+#weaponIconBar{transform:scale(var(--hud-s));transform-origin:right top;}
+html.console #weaponIconBar{transform-origin:left top;}
+html:not(.console) #ctfHud,html:not(.console) #hrHud,html:not(.console) #fnafHud{top:calc((clamp(90px,17vh,150px) + 24px) * var(--hud-s));}
+#ctfHud,#hrHud,#fnafHud{transform:scale(var(--hud-s));transform-origin:left top;}
+#msgFlash{bottom:calc(max(1.6%,10px) + clamp(40px,10vh,80px) * var(--hud-s));}
+/* ===== v3: texto de "criando sala" ===== */
+@keyframes netPulse{from{opacity:.5}to{opacity:1}}
+#netPanel .net-status.busy{font-size:14px;font-weight:700;letter-spacing:1.5px;animation:netPulse .9s infinite alternate;}
 </style>
 </head>
 <body>
@@ -1446,7 +1500,16 @@ html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx)
     </div>
     <div class="setting-group">
       <label data-i18n="levelLabel">MAPA:</label>
-      <div class="carousel" id="mapCarousel">
+      <div id="mapPicker">
+        <div id="mapListHead"><span data-i18n="mapColName">MAPA</span><span data-i18n="mapColStyle">ESTILO</span></div>
+        <div id="mapList" role="listbox" aria-label="Mapas"></div>
+        <div id="mapInfo">
+          <div class="mi-top"><b id="mapInfoName"></b><span class="diff-pips" id="mapInfoDiff"></span></div>
+          <div id="mapInfoText"></div>
+          <div id="mapInfoMeta"></div>
+        </div>
+      </div>
+      <div class="carousel" id="mapCarousel" style="display:none">
         <button type="button" class="car-arrow" id="carPrev" aria-label="Anterior">‹</button>
         <div class="car-stage" id="carStage">
           <div class="car-card" id="carCard">
@@ -1460,7 +1523,7 @@ html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx)
         </div>
         <button type="button" class="car-arrow" id="carNext" aria-label="Próximo">›</button>
       </div>
-      <div class="car-dots" id="carDots"></div>
+      <div class="car-dots" id="carDots" style="display:none"></div>
       <div class="car-count" id="carCount"></div>
       <button type="button" class="rand-toggle" id="mapRandomBtn" aria-pressed="false" data-i18n="mapRandom">🎲 MAPA ALEATÓRIO [R]</button>
       <select id="mainLevelSelect" style="display:none">
@@ -1634,6 +1697,25 @@ html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx)
           <button type="button" class="seg-btn" data-val="0.75" data-i18n="qLow">BAIXA</button>
           <button type="button" class="seg-btn active" data-val="1" data-i18n="qMid">NORMAL</button>
           <button type="button" class="seg-btn" data-val="1.5" data-i18n="qHigh">ALTA</button>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label data-i18n="fogLabel">NÉVOA (DISTÂNCIA DE VISÃO):</label>
+        <div class="seg" id="fogSeg">
+          <button type="button" class="seg-btn" data-val="near" data-i18n="fogNear">PRÓXIMA</button>
+          <button type="button" class="seg-btn active" data-val="normal" data-i18n="fogNormal">NORMAL</button>
+          <button type="button" class="seg-btn" data-val="far" data-i18n="fogFar">DISTANTE</button>
+          <button type="button" class="seg-btn" data-val="off" data-i18n="fogOff">DESLIGADA</button>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label data-i18n="hudSizeLabel">TAMANHO DA HUD:</label>
+        <div class="seg" id="hudSizeSeg">
+          <button type="button" class="seg-btn" data-val="small" data-i18n="hudSmall">PEQUENA</button>
+          <button type="button" class="seg-btn active" data-val="med" data-i18n="hudMed">MÉDIA</button>
+          <button type="button" class="seg-btn" data-val="large" data-i18n="hudLarge">GRANDE</button>
         </div>
       </div>
 
@@ -1840,10 +1922,20 @@ html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx)
             <option value="sg552">SG 552</option>
             <option value="sg550">SG 550 SR</option>
             <option value="g3sg1">G3SG/1</option>
+            <option value="gravgun">Gravity Gun (DEBUG)</option>
           </select>
         </div>
         <div class="setting-group">
           <label class="checkbox-label"><input type="checkbox" id="dbgOneShot"><span data-i18n="dbgOneShot">Matar com 1 tiro</span></label>
+        </div>
+        <div class="setting-group">
+          <label class="checkbox-label"><input type="checkbox" id="dbgFastReload"><span data-i18n="dbgFastReload">Recarga instantânea</span></label>
+        </div>
+        <div class="setting-group">
+          <label class="checkbox-label"><input type="checkbox" id="dbgRapidFire"><span data-i18n="dbgRapidFire">Tiro rápido (cadência 4x)</span></label>
+        </div>
+        <div class="setting-group">
+          <label class="checkbox-label"><input type="checkbox" id="dbgInfMoney"><span data-i18n="dbgInfMoney">Dinheiro infinito na loja</span></label>
         </div>
         <div class="setting-group">
           <label class="checkbox-label"><input type="checkbox" id="dbgTileInfo"><span data-i18n="dbgTileInfo">Info na tela (piso, teto, parede, alvo)</span></label>
@@ -1880,6 +1972,8 @@ html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx)
             <button type="button" id="dbgTpAudio" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="tpAudio">ÁUDIO / SONS</button>
             <button type="button" id="dbgTpSoc" class="btn btn-secondary" data-i18n="tpSoc">FUTEBOL</button>
             <button type="button" id="dbgTpWater" class="btn btn-secondary" data-i18n="tpWater">ÁGUA</button>
+            <button type="button" id="dbgTpCeil" class="btn btn-secondary" data-i18n="tpCeil">TETOS</button>
+            <button type="button" id="dbgTpRoof" class="btn btn-secondary" data-i18n="tpRoof">TELHADOS</button>
           </div>
         </div>
         <div class="setting-group">
@@ -1891,12 +1985,24 @@ html.console #shopBtn.icon{top:calc(7px + var(--sy));right:calc(96px + var(--sx)
             <button type="button" id="dbgHeal" class="btn btn-secondary" data-i18n="dbgHeal">CURAR + MUNIÇÃO</button>
             <button type="button" id="dbgSpawnT" class="btn btn-secondary" data-i18n="dbgSpawnT">+ BOT T</button>
             <button type="button" id="dbgSpawnCT" class="btn btn-secondary" data-i18n="dbgSpawnCT">+ BOT CT</button>
+            <button type="button" id="dbgMoney" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="dbgMoney">+ DINHEIRO MÁXIMO (LOJA)</button>
             <button type="button" id="dbgResetMap" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="dbgResetMap">REINICIAR MAPA</button>
           </div>
         </div>
         <div class="setting-group">
           <label style="color:#39ff14;">IR PARA QUALQUER MAPA (inclui o ESTÁDIO):</label>
           <select id="dbgMapSelect" style="width:100%;padding:8px;background:#000;color:#39ff14;border:1px solid #39ff14;font-family:inherit;"></select>
+          <label style="color:#39ff14;margin-top:6px;display:block;">MODO DE JOGO (para testar cada modo):</label>
+          <select id="dbgModeSelect" style="width:100%;padding:8px;background:#000;color:#39ff14;border:1px solid #39ff14;font-family:inherit;">
+            <option value="auto">AUTOMÁTICO (pelo mapa)</option>
+            <option value="waves">ZOMBIE SURVIVAL</option>
+            <option value="gungame">GUN GAME</option>
+            <option value="deathmatch">DEATHMATCH</option>
+            <option value="ctf">CAPTURE THE FLAG</option>
+            <option value="hostage">HOSTAGE RESCUE</option>
+            <option value="fnaf">FNAF DOOM</option>
+            <option value="soccer">FUTEBOL</option>
+          </select>
           <label class="checkbox-label"><input type="checkbox" id="dbgMapBots"><span>Com bots / inimigos (desmarcado = sem bots)</span></label>
           <button type="button" id="dbgGoMapBtn" class="btn btn-secondary" style="width:100%;margin-top:6px;border-color:#39ff14;color:#39ff14;">ENTRAR NO MAPA SELECIONADO</button>
         </div>
@@ -2049,7 +2155,10 @@ const debugOptions = {
   noCeiling: false,   // remove o teto (mostra o céu)
   speed: 1,           // multiplicador de velocidade do jogador
   fog: 1,             // multiplicador do alcance de visão (neblina)
-  sky: -1             // -1 = automático; 0-7 = skybox fixa
+  sky: -1,            // -1 = automático; 0-7 = skybox fixa
+  fastReload: false,  // recarga instantânea
+  rapidFire: false,   // cadência de tiro 4x mais rápida
+  infMoney: false     // loja sem gastar dinheiro
 };
 function dbgDmg(d){ return debugOptions.oneShot ? 99999 : d; }
 let viewBob = true;     // balanço da arma/câmera
@@ -3535,6 +3644,7 @@ function applyCustomLayout(ldef){
     ROOF_MAXZ = Math.max(ROOF_MAXZ, r.base + half * r.pitch);
   });
   levelHasLights = false;
+  if (ldef.isTestMap && debugOptions.noCeiling) ceilOnMap = new Uint8Array(W * H);   // debug: remover teto
 }
 // Camada interior/exterior dos mapas em ASCII (ver NM_ASCII_MAPS): `ldef.indoorOn[ti]` = 1 nos tiles com teto.
 // Cada construção (bloco conexo de tiles interiores) que seja um retângulo perfeito ganha telhado de duas águas, quatro águas ou plano.
@@ -4372,10 +4482,13 @@ const I18N = {
     debugMenuTitle: "MENU DEBUG", dbgGodMode: "Vida Infinita (God Mode)", dbgInfAmmo: "Munição Infinita", dbgPauseEnemies: "Pausar Inimigos",
     tabGeneral: "GERAL", tabControls: "CONTROLES", tabDebug: "DEBUG",
     fovLabel: "CAMPO DE VISÃO (FOV)", renderQualityLabel: "QUALIDADE DA RENDERIZAÇÃO:", qLow: "BAIXA", qMid: "NORMAL", qHigh: "ALTA",
+    fogLabel: "NÉVOA (DISTÂNCIA DE VISÃO):", fogNear: "PRÓXIMA", fogNormal: "NORMAL", fogFar: "DISTANTE", fogOff: "DESLIGADA",
+    hudSizeLabel: "TAMANHO DA HUD:", hudSmall: "PEQUENA", hudMed: "MÉDIA", hudLarge: "GRANDE",
+    mapColName: "MAPA", mapColStyle: "ESTILO",
     showFpsLabel: "MOSTRAR FPS", showMinimapLabel: "MOSTRAR MINIMAPA (RADAR)", viewBobLabel: "BALANÇO DA ARMA / CÂMERA",
-    dbgOneShot: "Matar com 1 tiro", dbgTileInfo: "Info na tela (piso, teto, parede, alvo)", dbgNoCeiling: "Remover teto (mostrar céu)",
+    dbgOneShot: "Matar com 1 tiro", dbgTileInfo: "Info na tela (piso, teto, parede, alvo)", dbgNoCeiling: "Remover teto (mostrar céu)", dbgFastReload: "Recarga instantânea", dbgRapidFire: "Tiro rápido (cadência 4x)", dbgInfMoney: "Dinheiro infinito na loja", dbgMoney: "+ DINHEIRO MÁXIMO (LOJA)",
     dbgSpeedLabel: "VELOCIDADE DO JOGADOR", dbgFogLabel: "ALCANCE DE VISÃO (NEBLINA)", dbgSkyLabel: "CÉU (SKYBOX):",
-    dbgTeleportLabel: "TELEPORTE (MAPA DE TESTES):", tpTex: "TEXTURAS", tpHub: "CORREDOR", tpElev: "ELEVAÇÃO", tpSkins: "SKINS / ALVOS", tpPick: "PICKUPS / ARMAS", tpInter: "INTERAÇÕES", tpAudio: "ÁUDIO / SONS", tpSoc: "FUTEBOL", tpWater: "ÁGUA",
+    dbgTeleportLabel: "TELEPORTE (MAPA DE TESTES):", tpTex: "TEXTURAS", tpHub: "CORREDOR", tpElev: "ELEVAÇÃO", tpSkins: "SKINS / ALVOS", tpPick: "PICKUPS / ARMAS", tpInter: "INTERAÇÕES", tpAudio: "ÁUDIO / SONS", tpSoc: "FUTEBOL", tpWater: "ÁGUA", tpCeil: "TETOS", tpRoof: "TELHADOS",
     dbgToolsLabel: "FERRAMENTAS:", dbgRespawn: "RENASCER ALVOS", dbgKillAll: "ELIMINAR TODOS", dbgSpawnZombie: "+ ZUMBI", dbgHeal: "CURAR + MUNIÇÃO", dbgSpawnT: "+ BOT T", dbgSpawnCT: "+ BOT CT", dbgResetMap: "REINICIAR MAPA",
     tabAudio: "ÁUDIO", sfxVolumeLabel: "VOLUME DOS EFEITOS", musicVolumeLabel: "VOLUME DA MÚSICA", musicOffLabel: "DESATIVAR MÚSICA (SEM MEXER NO VOLUME)", showCrosshairLabel: "MOSTRAR MIRA", damageFlashLabel: "FLASH VERMELHO AO LEVAR DANO", botGunLabel: "BOTS INIMIGOS", botEnemyLabel: "BOTS INIMIGOS", botAllyLabel: "BOTS ALIADOS",
     gamepadNone: "NENHUM CONTROLE CONECTADO", gamepadConnected: "CONTROLE CONECTADO",
@@ -4515,10 +4628,13 @@ const I18N = {
     debugMenuTitle: "DEBUG MENU", dbgGodMode: "Infinite Health (God Mode)", dbgInfAmmo: "Infinite Ammo", dbgPauseEnemies: "Pause Enemies",
     tabGeneral: "GENERAL", tabControls: "CONTROLS", tabDebug: "DEBUG",
     fovLabel: "FIELD OF VIEW (FOV)", renderQualityLabel: "RENDER QUALITY:", qLow: "LOW", qMid: "NORMAL", qHigh: "HIGH",
+    fogLabel: "FOG (VIEW DISTANCE):", fogNear: "CLOSE", fogNormal: "NORMAL", fogFar: "FAR", fogOff: "OFF",
+    hudSizeLabel: "HUD SIZE:", hudSmall: "SMALL", hudMed: "MEDIUM", hudLarge: "LARGE",
+    mapColName: "MAP", mapColStyle: "STYLE",
     showFpsLabel: "SHOW FPS", showMinimapLabel: "SHOW MINIMAP (RADAR)", viewBobLabel: "WEAPON / CAMERA BOB",
-    dbgOneShot: "One-shot kills", dbgTileInfo: "On-screen info (floor, ceiling, wall, target)", dbgNoCeiling: "Remove ceiling (show sky)",
+    dbgOneShot: "One-shot kills", dbgTileInfo: "On-screen info (floor, ceiling, wall, target)", dbgNoCeiling: "Remove ceiling (show sky)", dbgFastReload: "Instant reload", dbgRapidFire: "Rapid fire (4x rate)", dbgInfMoney: "Infinite shop money", dbgMoney: "+ MAX MONEY (SHOP)",
     dbgSpeedLabel: "PLAYER SPEED", dbgFogLabel: "VIEW DISTANCE (FOG)", dbgSkyLabel: "SKY (SKYBOX):",
-    dbgTeleportLabel: "TELEPORT (TEST MAP):", tpTex: "TEXTURES", tpHub: "HALL", tpElev: "ELEVATION", tpSkins: "SKINS / TARGETS", tpPick: "PICKUPS / WEAPONS", tpInter: "INTERACTIONS", tpAudio: "AUDIO / SOUNDS", tpSoc: "SOCCER", tpWater: "WATER",
+    dbgTeleportLabel: "TELEPORT (TEST MAP):", tpTex: "TEXTURES", tpHub: "HALL", tpElev: "ELEVATION", tpSkins: "SKINS / TARGETS", tpPick: "PICKUPS / WEAPONS", tpInter: "INTERACTIONS", tpAudio: "AUDIO / SOUNDS", tpSoc: "SOCCER", tpWater: "WATER", tpCeil: "CEILINGS", tpRoof: "ROOFS",
     dbgToolsLabel: "TOOLS:", dbgRespawn: "RESPAWN TARGETS", dbgKillAll: "KILL ALL", dbgSpawnZombie: "+ ZOMBIE", dbgHeal: "HEAL + AMMO", dbgSpawnT: "+ BOT T", dbgSpawnCT: "+ BOT CT", dbgResetMap: "RESTART MAP",
     tabAudio: "AUDIO", sfxVolumeLabel: "EFFECTS VOLUME", musicVolumeLabel: "MUSIC VOLUME", musicOffLabel: "TURN MUSIC OFF (KEEPS THE VOLUME)", showCrosshairLabel: "SHOW CROSSHAIR", damageFlashLabel: "RED FLASH WHEN HIT", botGunLabel: "ENEMY BOTS", botEnemyLabel: "ENEMY BOTS", botAllyLabel: "ALLY BOTS",
     gamepadNone: "NO CONTROLLER CONNECTED", gamepadConnected: "CONTROLLER CONNECTED",
@@ -4578,6 +4694,7 @@ function setLanguage(lang) {
     if (lvlSelect.options[li]) lvlSelect.options[li].text = I18N[lang]['lvl' + li];
   }
 
+  if (typeof buildMapList === 'function') buildMapList();
   if (typeof renderLevelPreview === 'function' && document.getElementById('levelSelectModal').style.display === 'flex') {
     renderLevelPreview(parseInt(lvlSelect.value));
   }
@@ -4615,13 +4732,51 @@ const WEAPON_CONFIG = {
   famas: { key: '\\', name: 'Famas F1', img: 'https://i.postimg.cc/mD5XRcDj/FUZIL6.png', dmg: 22, rate: 78, spreadCount: 1, spreadDeg: 2.0, range: 40, auto: true, ammoUse: 1, defaultAmmo: 120, maxAmmo: 120, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2100, moveMul: 1.0 },
   sg552: { key: '`', name: 'SG 552', img: 'https://i.postimg.cc/d1xHv71B/FUZIL4.png', dmg: 30, rate: 118, spreadCount: 1, spreadDeg: 0.9, range: 62, auto: true, ammoUse: 1, defaultAmmo: 60, maxAmmo: 60, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2400, moveMul: 0.97 },
   sg550: { key: 'x', name: 'SG 550 SR', img: 'https://i.postimg.cc/pr50d252/SNIPER4.png', dmg: 55, rate: 380, spreadCount: 1, spreadDeg: 0.2, range: 85, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 2800, moveMul: 0.92 },
-  g3sg1: { key: 'c', name: 'G3SG/1', img: 'https://i.postimg.cc/cCtDJstW/SNIPER3.png', dmg: 65, rate: 450, spreadCount: 1, spreadDeg: 0.0, range: 88, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3000, moveMul: 0.9 }
+  g3sg1: { key: 'c', name: 'G3SG/1', img: 'https://i.postimg.cc/cCtDJstW/SNIPER3.png', dmg: 65, rate: 450, spreadCount: 1, spreadDeg: 0.0, range: 88, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3000, moveMul: 0.9 },
+  // ===== Arma de DEBUG: Gravity Gun (agarra / empurra / lança inimigos, alvos, bola e pickups; só offline) =====
+  gravgun: { key: 'g', name: 'Gravity Gun', img: 'https://i.postimg.cc/cH78t4KX/GRAVITYGUN.png', dmg: 0, rate: 320, spreadCount: 0, spreadDeg: 0, range: 14, auto: false, ammoUse: 0, defaultAmmo: 999, maxAmmo: 999, sizeScale: 1.0, canReload: false, startMags: 0, maxMags: 0, reloadMs: 0, moveMul: 1.0, special: 'gravgun', debugOnly: true }
 };
 // reloadMs = tempo de recarga em ms · moveMul = multiplicador de velocidade ao andar com a arma
 // (armas pesadas/snipers deixam o jogador mais lento, pistolas e SMGs leves mais rápido).
 // startMags/maxMags = pentes de RESERVA (fora o que já está na arma). A metralhadora
 // é alimentada por correia (canReload:false) e não usa pente: pickups de munição
 // enchem o pool dela diretamente.
+
+// ===== Ícones de HUD das armas (barra de armas e loja). O campo img continua sendo o sprite do viewmodel. =====
+const WEAPON_ICONS = {
+  pistol2:    'https://i.postimg.cc/NGkgRKQ3/Icon-usp.webp',
+  pistol:     'https://i.postimg.cc/QNJXcFjw/Deserteagle.webp',
+  smg:        'https://i.postimg.cc/RCLMwWMq/Tmp-icon.webp',
+  mp5n:       'https://i.postimg.cc/v8tQ54QG/Mp5.webp',
+  shotgun:    'https://i.postimg.cc/h41SVXSR/Icon-m3-cso.webp',
+  shotgun2:   'https://i.postimg.cc/ryN85D8L/M4-icon.webp',
+  rifle:      'https://i.postimg.cc/jq4syDRF/Ak47-icon.webp',
+  aug:        'https://i.postimg.cc/RCLMwWvY/Aug-gfx.webp',
+  sniper:     'https://i.postimg.cc/G3xcv4c3/Scout-gfx.webp',
+  awsm:       'https://i.postimg.cc/zDFJTyqM/Awp.webp',
+  machinegun: 'https://i.postimg.cc/MZmW1nWw/Icon-m249-cso.webp',
+  m4a1:       'https://i.postimg.cc/59Sx8Xxb/M4a1-icon.webp',
+  mac10:      'https://i.postimg.cc/sf4V5MVV/Mac10.webp',
+  glock:      'https://i.postimg.cc/qBxk2Nk0/Icon-glock.webp',
+  fiveseven:  'https://i.postimg.cc/8km1L71Q/Fiveseven.webp',
+  ump45:      'https://i.postimg.cc/zDFJTyJf/Ump45.webp',
+  p90:        'https://i.postimg.cc/v8tQ54QY/P90.webp',
+  galil:      'https://i.postimg.cc/J751js1w/Galil-icon.webp',
+  famas:      'https://i.postimg.cc/2j7zn1CP/Famas-icon.webp',
+  sg552:      'https://i.postimg.cc/Wpw20d21/Sg552-gfx.webp',
+  sg550:      'https://i.postimg.cc/fWfwYVwT/Sg550-gfx.webp',
+  p228:       'https://i.postimg.cc/0Njf0KRk/P228.webp',
+  g3sg1:      'https://i.postimg.cc/R0hRLJ5M/G3sg1-icon.webp',
+  gravgun:    'https://i.postimg.cc/wMQLp987/gravityg-icon.png'
+};
+Object.keys(WEAPON_ICONS).forEach(id => {
+  if(!WEAPON_CONFIG[id]) return;
+  WEAPON_CONFIG[id].icon = WEAPON_ICONS[id];
+  const done = AssetLoader.track();
+  const im = new Image();
+  im.onload = done; im.onerror = done;
+  im.src = WEAPON_ICONS[id];
+});
 
 // Pré-carrega os sprites de viewmodel de todas as armas (normalmente só são
 // carregados sob demanda ao trocar de arma) para que entrem na tela de loading
@@ -4768,7 +4923,7 @@ const TEST_AUDIO_BANDS = (function(){
       items: [].concat(nums(WATER_JUMP_URLS, 'ENTRAR/SAIR DA ÁGUA', 'WATER ENTER/EXIT'), nums(WATER_RUN_URLS, 'CORRENDO NA ÁGUA', 'RUNNING IN WATER'), nums(WATER_SWIM_URLS, 'NADO', 'SWIM')) }
   ];
 })();
-const TEST_W = 56, TEST_SOC_Y0 = 44 + 4 * TEST_AUDIO_BANDS.length, TEST_H = TEST_SOC_Y0 + 41;
+const TEST_W = 56, TEST_SOC_Y0 = 44 + 4 * TEST_AUDIO_BANDS.length, TEST_H = TEST_SOC_Y0 + 74;
 // Clubes do Brasileirão: 12 alvos parados com a skin de cada time + escudo flutuando em cima (faixa y = TEST_SOC_Y0 + 15..18)
 const TEST_CLUB_SPOTS = SOC_CLUBS.map((c, i) => ({ k: c.k, n: c.n, x: 3.6 + i * 4.3, y: TEST_SOC_Y0 + 16.5 }));
 const TEST_ZONES = [
@@ -4783,6 +4938,8 @@ TEST_AUDIO_BANDS.forEach((b, k) => TEST_ZONES.push({ id: b.id, pt: b.pt, en: b.e
 TEST_ZONES.push(
   { id: 'soc',   pt: 'FUTEBOL · CAMPO / GOLS / BOLA (F = CHUTAR) / PATROCINADORES', en: 'SOCCER · PITCH / GOALS / BALL (F = KICK) / SPONSORS', x0: 1, y0: TEST_SOC_Y0, x1: 54, y1: TEST_SOC_Y0 + 13, tp: { x: 12.5, y: TEST_SOC_Y0 + 7.5, a: 0 } },
   { id: 'clubs', pt: 'FUTEBOL · CLUBES / ESCUDOS / SKINS DOS BOTS', en: 'SOCCER · CLUBS / SHIELDS / BOT SKINS', x0: 1, y0: TEST_SOC_Y0 + 15, x1: 54, y1: TEST_SOC_Y0 + 18, tp: { x: 28.5, y: TEST_SOC_Y0 + 15.6, a: Math.PI / 2 } },
+  { id: 'ceil',  pt: 'TETOS · SALÃO ABERTO COM OS 6 TETOS', en: 'CEILINGS · OPEN HALL WITH ALL 6 CEILINGS', x0: 1, y0: TEST_SOC_Y0 + 41, x1: 54, y1: TEST_SOC_Y0 + 49, tp: { x: 2.5, y: TEST_SOC_Y0 + 45.5, a: 0 } },
+  { id: 'roof',  pt: 'TELHADOS · CÉU ABERTO COM 8 TELHADOS (SEM TETO)', en: 'ROOFS · OPEN SKY WITH 8 ROOFS (NO CEILING)', x0: 1, y0: TEST_SOC_Y0 + 51, x1: 54, y1: TEST_SOC_Y0 + 72, tp: { x: 2.5, y: TEST_SOC_Y0 + 61.5, a: 0 } },
   { id: 'water', pt: 'ÁGUA · PISCINA ESTILO DE_BRIDGE / LAGOA RASA / PISCINA GRADUAL', en: 'WATER · DE_BRIDGE-STYLE POOL / SHALLOW LAGOON / GRADUAL POOL', x0: 1, y0: TEST_SOC_Y0 + 20, x1: 54, y1: TEST_SOC_Y0 + 39, tp: { x: 28.5, y: TEST_SOC_Y0 + 20.6, a: Math.PI / 2 } }
 );
 function buildTestMapData() {
@@ -4795,6 +4952,7 @@ function buildTestMapData() {
   }
   const floor = new Uint8Array(N).fill(3), wall = new Uint8Array(N).fill(7), ceil = new Uint8Array(N).fill(3);
   const door = new Int8Array(N).fill(-1), win = new Uint8Array(N);
+  const ceilOn = new Uint8Array(N).fill(1), roofs = [];   // ceilOn: 1 = tem teto · 0 = céu aberto; roofs: telhados vistos de fora
   const I = (x, y) => y * W + x;
   const rect = (x0, y0, x1, y1, fn) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) fn(x, y); };
   const solid = (x0, y0, x1, y1, wt) => rect(x0, y0, x1, y1, (x, y) => { grid[y][x] = 1; if (wt !== undefined) wall[I(x, y)] = wt; });
@@ -4816,11 +4974,13 @@ function buildTestMapData() {
   // ---------- TEXTURAS (y 1..12) ----------
   for (let x = 1; x <= 54; x++) setC(x, 1, x, 12, Math.min(5, Math.floor((x - 1) / 9)));   // 6 tetos em faixas
   for (let i = 0; i < 13; i++) setF(2 + 4 * i, 2, 5 + 4 * i, 4, i);                         // 13 pisos (o último é a água) em tapetes de 4x3
-  for (let i = 0; i < 11; i++) solid(3 + 4 * i, 6, 4 + 4 * i, 7, i);                        // 11 paredes em blocos 2x2
+  for (let i = 0; i < 13; i++) solid(3 + 4 * i, 6, 4 + 4 * i, 7, i);                        // 13 paredes em blocos 2x2 (inclui pano e concreto cinza)
+  setF(2, 11, 5, 12, 13);                                                                    // piso 13: asfalto (Underpass)
   for (let x = 3; x <= 52; x++) { solid(x, 10, x, 10, 4); wall[I(x, 10)] = (x >= 4 && ((x - 3) % 7) === 4) ? 4 : 7; }
   for (let i = 0; i < 6; i++) {
     door[I(4 + 7 * i, 10)] = i;                                   // 6 portas (texturas 0..5)
     win[I(7 + 7 * i, 10)] = 1; wall[I(7 + 7 * i, 10)] = 7;        // janelas entre elas
+    win[I(9 + 7 * i, 10)] = 2; wall[I(9 + 7 * i, 10)] = 5;        // grade metálica vazada (cerca do Underpass)
   }
   // ---------- divisórias ----------
   solid(1, 13, 54, 13, 6); open(2, 13, 3, 13); open(27, 13, 30, 13); open(52, 13, 53, 13);
@@ -4918,8 +5078,25 @@ function buildTestMapData() {
     { x0: poolA.x0, y0: poolA.y0, x1: poolA.x1, y1: poolA.y1, surf: -0.5, shallowRun: false },   // como o DE_BRIDGE: sem som de correr na água rasa
     { x0: poolB.x0, y0: poolB.y0, x1: poolB.x1, y1: poolB.y1, surf: -0.5, shallowRun: true }     // lagoa rasa: sons de correr na água
   ] };
+  // ---------- TETOS: salão aberto (sem paredes no meio) com os 6 tetos em blocos ----------
+  const SY = TEST_SOC_Y0;
+  solid(1, SY + 40, 54, SY + 40, 6); open(28, SY + 40, 29, SY + 40);   // divisor: a zona da água dá para o salão
+  setF(1, SY + 41, 54, SY + 49, 3);
+  for (let i = 0; i < 6; i++) setC(1 + 9 * i, SY + 41, 9 + 9 * i, SY + 49, i);   // 6 tetos em blocos de 9 tiles
+  solid(1, SY + 50, 54, SY + 50, 6); open(28, SY + 50, 29, SY + 50);
+  // ---------- TELHADOS: céu aberto com 8 casinhas, cada uma com um telhado diferente ----------
+  setF(1, SY + 51, 54, SY + 72, 0);
+  rect(1, SY + 51, 54, SY + 72, (x, y) => { ceilOn[I(x, y)] = 0; });
+  [['gable', 'x', 8], ['gable', 'y', 0], ['hip', 'x', 1], ['flat', 'x', 9], ['gable', 'x', 3], ['hip', 'x', 7], ['gable', 'y', 2], ['flat', 'x', 10]].forEach(([kind, axis, wt], k) => {
+    const x0 = 3 + 13 * (k % 4), y0 = SY + 53 + 10 * ((k / 4) | 0), x1 = x0 + 7, y1 = y0 + 7;
+    solid(x0, y0, x1, y1, wt); open(x0 + 1, y0 + 1, x1 - 1, y1 - 1); open(x0 + 3, y1, x0 + 4, y1);   // paredes + porta de 2 tiles ao sul
+    setF(x0 + 1, y0 + 1, x1 - 1, y1, 7); setC(x0 + 1, y0 + 1, x1 - 1, y1, 0);
+    rect(x0 + 1, y0 + 1, x1 - 1, y1 - 1, (x, y) => { ceilOn[I(x, y)] = 1; });   // dentro da casa tem teto
+    rect(x0 + 3, y1, x0 + 4, y1, (x, y) => { ceilOn[I(x, y)] = 1; });
+    roofs.push({ x0, y0, x1, y1, kind, axis, tex: k });
+  });
   const soccer = { x0: sx0, x1: sx1, cy: scy, gy0, gy1, lineL: sx0, lineR: sx1, pitchY0: PY0, pitchY1: PY1 };
-  return { w: W, h: H, grid, heights, slopes, layout: { floor, wall, ceil, door, win, props, lights }, soccer, water };
+  return { w: W, h: H, grid, heights, slopes, layout: { floor, wall, ceil, door, win, props, lights, ceilOn, roofs }, soccer, water };
 }
 const TEST_MAP_DATA = buildTestMapData();
 
@@ -7039,7 +7216,7 @@ const LEVEL_DEFINITIONS = [
   },
   {
     keyName: "lvlTest", w: TEST_MAP_DATA.w, h: TEST_MAP_DATA.h, spawn: { x: 28.5, y: 15.5, angle: -Math.PI/2 },
-    isTestMap: true,
+    isTestMap: true, noCeiling: true, sky: 0,   // noCeiling: ativa o céu nas áreas sem teto (ceilOn = 0)
     grid: TEST_MAP_DATA.grid,
     heights: TEST_MAP_DATA.heights,
     soccer: TEST_MAP_DATA.soccer,
@@ -8049,72 +8226,146 @@ const NM_ASCII_MAPS = [
 })();
 applyMapCategories();
 
+// Texto curto de cada mapa (estilo "descrição de mapa" de Call of Duty): [PT, EN]. A chave é o número do mapa.
+const MAP_TAGS = (function(){
+  const cache   = ['Área industrial com armazéns e um corredor central longo.', 'Industrial yard with warehouses and a long central lane.'];
+  const inferno = ['Vila de ruas curvas, apartamentos e vielas apertadas.', 'Village of curved streets, apartments and tight alleys.'];
+  const cbble   = ['Castelo murado com portões e um salão central.', 'Walled castle with gates and a central hall.'];
+  const mirage  = ['Cidade árida com palácio, apartamentos e meio aberto.', 'Arid town with a palace, apartments and an open middle.'];
+  const aztec   = ['Selva cortada por um rio com pontes.', 'Jungle split by a river with bridges.'];
+  const nuke    = ['Complexo industrial com silo e prédio de dois níveis.', 'Industrial plant with a silo and a two-level building.'];
+  const italy   = ['Vila italiana com praça rebaixada, barracas e casas.', 'Italian village with a sunken square, stalls and houses.'];
+  const office  = ['Escritórios e corredores fechados. Combate próximo.', 'Closed offices and corridors. Close-quarters combat.'];
+  const over    = ['Canal de água cortado por pontes, em área urbana.', 'Water canal crossed by bridges in an urban area.'];
+  const dust2   = ['Cidade árida de ruas largas, meio aberto e túneis.', 'Arid town with wide lanes, an open middle and tunnels.'];
+  const prison  = ['Presídio com celas, pátio e corredores.', 'Prison with cell blocks, a yard and corridors.'];
+  const crash   = ['Cruzamento urbano com posto de gasolina e prédios nos cantos.', 'Urban crossroads with a gas station and corner buildings.'];
+  const nuketown= ['Vilinha suburbana com duas casas, ônibus e quintais.', 'Small suburb with two houses, a bus and backyards.'];
+  const rust    = ['Arena no deserto com torre central e contêineres.', 'Desert arena with a central tower and containers.'];
+  const prodigy = ['Complexo de escritórios com saguão de pilares.', 'Office complex with a pillared lobby.'];
+  const oil     = ['Plataforma de petróleo com módulos e alojamento central.', 'Oil platform with modules and a central living quarters.'];
+  const village = ['Vila de casas de telhado, rio com ponte e colina.', 'Village of rooftop houses, a river with a bridge and a hill.'];
+  const dock    = ['Porto de becos estreitos, canal e casas atravessáveis.', 'Harbor of narrow alleys, a canal and walk-through houses.'];
+  const monast  = ['Mosteiro em platô com rampas, telhados e lago.', 'Hilltop monastery with ramps, rooftops and a lake.'];
+  const T = {
+    0:cache, 1:inferno, 2:cbble, 3:mirage, 4:aztec,
+    5:['Pátio de contêineres com um armazém central.', 'Container yard with a central warehouse.'],
+    6:nuke, 7:italy, 8:office,
+    9:['Pátio ferroviário com vagões em fileiras e passarelas.', 'Rail yard with rows of train cars and catwalks.'],
+    10:['Templo antigo em plataforma, com pilares e rampas.', 'Ancient temple on a platform, with pillars and ramps.'],
+    11:['Vila toscana com casas de telhado e praça rebaixada.', 'Tuscan village with rooftop houses and a sunken square.'],
+    12:['Canais com pontes, margens rasas e casas nos cantos.', 'Canals with bridges, shallow banks and corner houses.'],
+    13:['Castelo com fosso, pontes e torre interna.', 'Moated castle with bridges and an inner tower.'],
+    14:over,
+    15:['Topo de arranha-céu com plataformas e vãos abertos.', 'Skyscraper rooftop with platforms and open gaps.'],
+    16:['Lagoas rasas, píeres e casas nos cantos.', 'Shallow lagoons, piers and corner houses.'],
+    17:['Crista longa e elevada, com linhas de tiro longas.', 'Long raised ridge with long sightlines.'],
+    18:['Cidade com canal, pontes e casas de telhado.', 'Canal town with bridges and rooftop houses.'],
+    19:['Salão de bagagem com esteiras e pilares.', 'Baggage hall with conveyor belts and pillars.'],
+    20:['Escritório fechado com salas e saguão central.', 'Closed office with rooms and a central lobby.'],
+    21:['Fazenda com duas casas, muros baixos e quintal.', 'Farmstead with two houses, low walls and a yard.'],
+    22:['Ferro-velho com montes de sucata e galpão central.', 'Scrapyard with scrap piles and a central shed.'],
+    23:['Becos em cruz entre prédios de telhado.', 'Cross-shaped alleys between rooftop buildings.'],
+    24:['Abadia em platô com claustro e jardim aberto.', 'Hilltop abbey with a cloister and open garden.'],
+    25:['Saguão de terminal com colunas e balcões.', 'Terminal concourse with columns and counters.'],
+    26:['Pista de pouso com hangares e torre de controle.', 'Airstrip with hangars and a control tower.'],
+    27:prison,
+    28:['Casebres amontoados, vielas estreitas e encosta.', 'Crowded shacks, narrow alleys and a hillside.'],
+    29:['Ruas em ruínas, prédios abertos e muros quebrados.', 'Ruined streets, open buildings and broken walls.'],
+    30:['Pátio de contêineres com centro aberto.', 'Container yard with an open center.'],
+    31:['Mansão com jardim e piscina rasa.', 'Mansion with a garden and a shallow pool.'],
+    32:['Passagem sob viadutos, com grades e muros de tijolos.', 'Passage under overpasses, with fences and brick walls.'],
+    33:['Castelo com muralhas, torre e jardins rebaixados.', 'Château with walls, a tower and sunken gardens.'],
+    34:['Laboratório com câmaras de contenção.', 'Laboratory with containment chambers.'],
+    35:['Templo escalonado com pátio de pilares e pirâmide.', 'Stepped temple with a pillared court and a pyramid.'],
+    36:['Terreno arrasado com barracões e ferragens.', 'Devastated ground with sheds and scrap metal.'],
+    37:['Rio fundo com três pontes e cabanas.', 'Deep river with three bridges and huts.'],
+    38:dust2, 39:dust2, 40:inferno, 41:mirage, 42:aztec, 43:italy, 44:office, 45:cache, 46:cbble, 47:nuke, 48:over,
+    49:['Banco com saguão de pilares e cofre central.', 'Bank with a pillared lobby and a central vault.'],
+    50:['Depósito com pilhas de caixotes e escritório nos fundos.', 'Depot with crate stacks and a back office.'],
+    51:['Complexo murado com portões e prédio principal.', 'Walled compound with gates and a main building.'],
+    52:['Convés de cargueiro cheio de contêineres.', 'Cargo ship deck packed with containers.'],
+    53:['Mansão de vários cômodos com sala elevada.', 'Multi-room mansion with a raised room.'],
+    54:prison,
+    55:['Vilarejo de casas pequenas e ruas abertas.', 'Small village of little houses and open streets.'],
+    56:['Hotel com corredor longo, quartos e cobertura.', 'Hotel with a long hallway, rooms and a penthouse.'],
+    57:italy, 58:['Prédio comercial com corredores curtos.', 'Office building with short corridors.'], 59:dust2,
+    60:crash, 61:crash, 62:crash, 63:nuketown, 64:nuketown, 65:nuketown, 66:rust, 67:rust, 68:prodigy, 69:prodigy,
+    70:['Rua larga entre prédios em ruínas, com vãos para flanquear.', 'Wide street between ruined buildings, with gaps to flank.'],
+    71:['Vila com pátio murado e casa no centro.', 'Village with a walled courtyard and a central house.'],
+    72:oil, 73:oil,
+    74:['Pizzaria de salas fechadas e corredores escuros.', 'Pizzeria of closed rooms and dark corridors.'],
+    75:['Área plana: gramado com dois gols.', 'Flat ground: a grass pitch with two goals.'],
+    76:village, 77:village, 78:dock, 79:dock, 80:monast, 81:monast,
+    82:['Montanha longa em patamares ligados por rampas.', 'Long mountain in terraces linked by ramps.']
+  };
+  return T;
+})();
+function mapNameOf(idx){ const d = LEVEL_DEFINITIONS[idx]; return d ? (I18N[currentLang][d.keyName] || d.keyName) : ''; }
+function mapTagOf(idx){ const t = MAP_TAGS[idx]; return t ? t[currentLang === 'en' ? 1 : 0] : ''; }
+
+// Lista de mapas (estilo Counter-Strike: Source): uma linha por mapa, com nome e texto curto, sem preview.
+var mapUiReady = false;   // vira true quando a lista de mapas (visibleMaps etc.) já foi criada
+function buildMapList(){
+  const list = document.getElementById('mapList');
+  if(!mapUiReady || !list) return;
+  list.innerHTML = '';
+  visibleMaps.forEach((idx, p) => {
+    const row = document.createElement('div');
+    row.className = 'map-row';
+    row.setAttribute('role', 'option');
+    row.dataset.pos = String(p);
+    const nm = document.createElement('span'); nm.className = 'mr-name'; nm.textContent = mapNameOf(idx);
+    const tg = document.createElement('span'); tg.className = 'mr-tag'; tg.textContent = mapTagOf(idx);
+    row.appendChild(nm); row.appendChild(tg);
+    row.addEventListener('click', () => setMapIndex(p));
+    list.appendChild(row);
+  });
+  syncMapListSel();
+}
+function syncMapListSel(){
+  const list = document.getElementById('mapList');
+  if(!mapUiReady || !list) return;
+  const cur = curMapPos();
+  Array.from(list.children).forEach((r, i) => {
+    const on = i === cur;
+    r.classList.toggle('sel', on);
+    r.setAttribute('aria-selected', on ? 'true' : 'false');
+    if(on && list.clientHeight > 0){
+      // rola só a lista (não a janela inteira) para manter a linha escolhida visível
+      const top = r.offsetTop, bot = top + r.offsetHeight;
+      if(top < list.scrollTop) list.scrollTop = top;
+      else if(bot > list.scrollTop + list.clientHeight) list.scrollTop = bot - list.clientHeight;
+    }
+  });
+  const pk = document.getElementById('mapPicker');
+  if(pk) pk.classList.toggle('rand-on', !!mapRandom);
+}
+
 function renderLevelPreview(idx) {
   const ldef = LEVEL_DEFINITIONS[idx];
   if (!ldef) return;
 
-  const nameEl = document.getElementById('levelPreviewName');
-  const metaEl = document.getElementById('levelPreviewMeta');
-  const diffEl = document.getElementById('levelPreviewDiff');
-  if (!nameEl || !metaEl || !diffEl) return;
-
   const dict = I18N[currentLang];
-  nameEl.textContent = dict[ldef.keyName] || ldef.keyName;
-  metaEl.textContent = ldef.w + '×' + ldef.h + ' — ' + (dict[ldef.keyName + 'Desc'] || '');
+  const name = dict[ldef.keyName] || ldef.keyName;
+  const tag = mapTagOf(idx) || (dict[ldef.keyName + 'Desc'] || '');
 
-  const rating = LEVEL_DIFFICULTY[idx] || 1;
-  diffEl.innerHTML = '';
-  for (let i = 0; i < 5; i++) {
-    const pip = document.createElement('div');
-    pip.className = 'diff-pip' + (i < rating ? ' on' : '');
-    diffEl.appendChild(pip);
-  }
-
-  const cv = document.getElementById('levelPreviewCanvas');
-  const cctx = cv.getContext('2d');
-  cctx.clearRect(0, 0, cv.width, cv.height);
-  cctx.fillStyle = '#000';
-  cctx.fillRect(0, 0, cv.width, cv.height);
-  const cell = Math.min(cv.width / ldef.w, cv.height / ldef.h);
-  const offX = (cv.width - cell * ldef.w) / 2;
-  const offY = (cv.height - cell * ldef.h) / 2;
-  for (let y = 0; y < ldef.h; y++) {
-    for (let x = 0; x < ldef.w; x++) {
-      const tile = ldef.grid[y] ? ldef.grid[y][x] : 1;
-      if (tile === 1) {
-        cctx.fillStyle = '#2c4a78';
-      } else {
-        const lvl = (ldef.heights && ldef.heights[y]) ? (ldef.heights[y][x] || 0) : 0;
-        if (lvl > 1) cctx.fillStyle = '#5f9c3a';
-        else if (lvl > 0) cctx.fillStyle = '#3f6c28';
-        else if (lvl < 0) cctx.fillStyle = '#1f2f55';
-        else cctx.fillStyle = ldef.soccerOnly ? (((x >> 1) & 1) ? '#2f7d2a' : '#3b8f33') : '#0f1a2e';
-      }
-      cctx.fillRect(offX + x * cell, offY + y * cell, Math.ceil(cell), Math.ceil(cell));
+  // texto do mapa escolhido (sem preview desenhado)
+  const iName = document.getElementById('mapInfoName'), iText = document.getElementById('mapInfoText'),
+        iMeta = document.getElementById('mapInfoMeta'), iDiff = document.getElementById('mapInfoDiff');
+  if (iName) iName.textContent = name;
+  if (iText) iText.textContent = tag;
+  if (iMeta) iMeta.textContent = ldef.w + '×' + ldef.h;
+  if (iDiff) {
+    const rating = LEVEL_DIFFICULTY[idx] || 1;
+    iDiff.innerHTML = '';
+    for (let i = 0; i < 5; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'diff-pip' + (i < rating ? ' on' : '');
+      iDiff.appendChild(pip);
     }
   }
-  if (ldef.hrZones) {
-    [['H', '#9fe3ff'], ['R', '#39ff14']].forEach(([k, col]) => {
-      const z = ldef.hrZones[k];
-      cctx.globalAlpha = 0.5;
-      cctx.fillStyle = col;
-      cctx.fillRect(offX + z.x0 * cell, offY + z.y0 * cell, (z.x1 - z.x0 + 1) * cell, (z.y1 - z.y0 + 1) * cell);
-      cctx.globalAlpha = 1;
-    });
-  }
-  if (ldef.dmZones) {
-    [['T', '#ff4a3a'], ['CT', '#3aa0ff']].forEach(([team, col]) => {
-      const z = ldef.dmZones[team];
-      cctx.globalAlpha = 0.45;
-      cctx.fillStyle = col;
-      cctx.fillRect(offX + z.x0 * cell, offY + z.y0 * cell, (z.x1 - z.x0 + 1) * cell, (z.y1 - z.y0 + 1) * cell);
-      cctx.globalAlpha = 1;
-    });
-  } else {
-    cctx.fillStyle = '#39ff14';
-    const spawnCell = 3;
-    cctx.fillRect(offX + ldef.spawn.x * cell - spawnCell / 2, offY + ldef.spawn.y * cell - spawnCell / 2, spawnCell, spawnCell);
-  }
+  syncMapListSel();
 }
 
 const player = {
@@ -8368,6 +8619,7 @@ function gunGameWin() {
 }
 
 function resetGame(levelIdx) {
+  if(typeof ggReset === 'function') ggReset();
   AssetLoader.hold();   // texturas ainda carregando? mostra a barra e segura a partida
   gameOver = false;
   score = 0;
@@ -8443,6 +8695,12 @@ function updateHUD() {
   const w = WEAPON_CONFIG[player.weapon];
   const ammoVal = document.getElementById('ammoval');
   const ammoBar = document.getElementById('ammoBarFill');
+  if(w.special === 'gravgun'){   // arma de debug: sem munição
+    ammoVal.textContent = '∞'; ammoVal.classList.remove('low');
+    if(ammoBar){ ammoBar.style.width = '100%'; ammoBar.classList.remove('low'); }
+    document.getElementById('scoreval').textContent = score;
+    return;
+  }
   const ammoPct = Math.max(0, Math.min(100, (player.ammo[player.weapon] / w.maxAmmo) * 100));
   let ammoLow;
   if (w.canReload) {
@@ -8923,12 +9181,14 @@ function updateFps(now){
 }
 function applyDebugFog(){
   if(fnaf) return;
-  const want = (debugOptions.fog || 1) * ((isTestMapNow() && !testLightsOn) ? 0.35 : 1);
+  const bright = isTestMapNow() && ['ceil', 'roof'].indexOf((testZoneAt(player.x, player.y) || {}).id) >= 0;   // salão de tetos e telhados: sempre claros
+  const want = (debugOptions.fog || 1) * userFogMul * ((isTestMapNow() && !testLightsOn && !bright) ? 0.35 : 1);
   if(fogScale !== want) fogScale = want;
 }
 function applyDebugWorldOptions(){
   const ld = LEVEL_DEFINITIONS[currentLevelIndex];
   levelNoCeiling = !!(ld && ld.noCeiling) || !!debugOptions.noCeiling;
+  if(ld && ld.isTestMap && ld.testLayout) ceilOnMap = debugOptions.noCeiling ? new Uint8Array(MAP_W * MAP_H) : ld.testLayout.ceilOn;
   if(debugOptions.sky >= 0) currentSky = debugOptions.sky;
 }
 
@@ -9234,7 +9494,7 @@ function shopBuy(id){
     if(drop === 'pistol2'){ const other = Object.keys(player.unlockedWeapons).find(w => player.unlockedWeapons[w] && w !== 'pistol2'); if(other) drop = other; }
     delete player.unlockedWeapons[drop];
   }
-  shop.money -= price;
+  if(!debugOptions.infMoney) shop.money -= price;
   player.unlockedWeapons[id] = true;
   player.ammo[id] = cfg.defaultAmmo;
   player.reserveMags[id] = cfg.canReload ? (cfg.maxMags || cfg.startMags) : 0;
@@ -9251,7 +9511,7 @@ function shopBuyAmmo(id){
   const full = cfg.canReload ? (player.reserveMags[id] >= cfg.maxMags) : (player.ammo[id] >= cfg.maxAmmo);
   if(full){ shopNote(en ? 'AMMO ALREADY FULL' : 'MUNIÇÃO JÁ CHEIA', true); return; }
   if(shop.money < SHOP_AMMO_PRICE){ shopNote(en ? 'NOT ENOUGH MONEY' : 'DINHEIRO INSUFICIENTE', true); SFX.noAmmo(); return; }
-  shop.money -= SHOP_AMMO_PRICE;
+  if(!debugOptions.infMoney) shop.money -= SHOP_AMMO_PRICE;
   if(cfg.canReload) player.reserveMags[id] = Math.min(cfg.maxMags, player.reserveMags[id] + 2);
   else player.ammo[id] = Math.min(cfg.maxAmmo, player.ammo[id] + 40);
   SFX.pickupAmmo();
@@ -9275,7 +9535,7 @@ function shopBuild(){
       const w = WEAPON_CONFIG[id]; if(!w) return;
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'shop-item'; b.dataset.w = id;
-      b.innerHTML = '<span class="shop-name">' + w.name + '</span><span class="shop-price"></span>';
+      b.innerHTML = '<span class="shop-name">' + (w.icon ? '<img class="shop-ico" src="' + w.icon + '" alt="">' : '') + w.name + '</span><span class="shop-price"></span>';
       b.addEventListener('click', () => shopBuy(id));
       row.appendChild(b); shop.btns.push(b);
     });
@@ -10064,6 +10324,13 @@ function socTestInit(ldef){
     ].concat(TEST_CLUB_SPOTS.map(c => ({ kind: 'socshield', x: c.x, y: c.y, club: c.k })))
   };
 }
+// Troca de anúncios: os painéis em volta do campinho avançam para o próximo patrocinador a cada 4 s
+function socTestApplyAds(){
+  const d = soc.d, adN = SOC_AD_COUNT, sh = soc.adShift || 0, PY0 = d.pitchY0, PY1 = d.pitchY1;
+  const set = (x, y, b) => { doorTileMap[y * MAP_W + x] = DOOR_AD_FROM + ((b + sh) % adN); };
+  for(let x = d.x0; x < d.x1; x++){ if(x === 28 || x === 29) continue; set(x, PY0 - 1, x); set(x, PY1, x + 5); }
+  for(let y = PY0; y < PY1; y++){ if(y >= d.gy0 && y < d.gy1) continue; set(d.x0 - 1, y, y + 3); set(d.x1, y, y + 7); }
+}
 function socTestResetBall(){
   const b = soc.ball, d = soc.d;
   b.x = (d.x0 + d.x1) / 2; b.y = d.cy; b.z = 0; b.vx = b.vy = b.vz = 0; b.lastTouch = null;
@@ -10080,6 +10347,8 @@ function socTestUpdate(dt, now){
   if(dt > 0){ soc.pvx = (player.x - soc.ppx) / dt; soc.pvy = (player.y - soc.ppy) / dt; }
   soc.ppx = player.x; soc.ppy = player.y;
   soc.clock = (soc.clock + dt) % SOC_MATCH_SECONDS;
+  if(!soc.adNext) soc.adNext = now + 4000;
+  if(now >= soc.adNext){ soc.adNext = now + 4000; soc.adShift = ((soc.adShift || 0) + 1) % SOC_AD_COUNT; socTestApplyAds(); }
   const b = soc.ball;
   if(soc.phase === 'goal'){
     soc.phaseT -= dt; socMoveBall(dt);
@@ -10088,7 +10357,7 @@ function socTestUpdate(dt, now){
     if(!dmPlayerDead && inP) socCollideBall(player, soc.pvx, soc.pvy, false);
     enemies.forEach(e => { if(e.alive && Math.abs(e.y - b.y) < 2 && Math.abs(e.x - b.x) < 2) socCollideBall(e, 0, 0, false); });
     socMoveBall(dt);
-    if(b.y < soc.pitchY0 || b.y > soc.pitchY1 || b.x < 1.2 || b.x > MAP_W - 1.2) socTestResetBall();   // saiu do gramado
+    if(!(b.gg && b.gg.held) && (b.y < soc.pitchY0 || b.y > soc.pitchY1 || b.x < 1.2 || b.x > MAP_W - 1.2)) socTestResetBall();   // saiu do gramado
   }
   if(inP) socUpdateHud();
 }
@@ -11808,7 +12077,7 @@ function initWeaponUI(){
     btn.id = 'btn_' + wId;
     btn.setAttribute('data-w', wId);
     btn.style.display = player.unlockedWeapons[wId] ? 'flex' : 'none';
-    btn.innerHTML = `<img src="${w.img}" alt="${w.name}">`;
+    btn.innerHTML = `<img src="${w.icon || w.img}" alt="${w.name}">`;
     
     const triggerSelectAndFire = (e) => {
       e.preventDefault();
@@ -11826,6 +12095,7 @@ function reloadWeapon(){
   if(player.isReloading) return;
   const wId = player.weapon;
   const wConfig = WEAPON_CONFIG[wId];
+  if(wConfig.special === 'gravgun'){ ggSecondary(); return; }   // Gravity Gun: "recarregar" = agarrar / soltar
 
   if(!wConfig.canReload) {
     flashMsg(I18N[currentLang].noReload);
@@ -11853,7 +12123,7 @@ function reloadWeapon(){
   clearTimeout(switchAnimTimer2);
   vm.classList.remove('anim-reload', 'anim-shoot', 'anim-switch');
   void vm.offsetWidth;
-  const reloadMs = wConfig.reloadMs || 800;
+  const reloadMs = debugOptions.fastReload ? 120 : (wConfig.reloadMs || 800);
   vm.style.animationDuration = reloadMs + 'ms';
   vm.classList.add('anim-reload');
 
@@ -11951,7 +12221,11 @@ window.addEventListener('mousemove', e=>{
   if(Math.abs(mx) > MOUSE_SPIKE_PX || Math.abs(my) > MOUSE_SPIKE_PX) return;
   mouseDX += mx; mouseDY += my;
 });
+window.addEventListener('contextmenu', e=>{ if(started && player.weapon === 'gravgun') e.preventDefault(); });
 window.addEventListener('mousedown', e=>{
+  if(e.button === 2 && started && !gameOver && player.weapon === 'gravgun' && document.pointerLockElement === document.getElementById('screen')){
+    e.preventDefault(); ggSecondary(); return;   // botão direito = agarrar / soltar
+  }
   if(started && !gameOver && document.pointerLockElement===document.getElementById('screen')){
     fireHeld = true; tryFire();
   } else if(started && !gameOver && !e.target.closest('#weaponIconBar') && !e.target.closest('#menuBtn') && !e.target.closest('#shopBtn') && !e.target.closest('#shopModal') && !e.target.closest('#touchLayer') && !e.target.closest('#chatWrap') && !e.target.closest('#chatBtn') && !e.target.closest('#dzVk') && !e.target.closest('.overlay-screen')){
@@ -12162,6 +12436,7 @@ function pollGamepad(){
     gpTriggerWasHeld = gpFireHeld;
 
     if(btn(2) && !prev(2)) reloadWeapon();       // X / Square
+    if(btn(6) && !prev(6) && player.weapon === 'gravgun') ggSecondary();   // LT / L2: agarrar / soltar (Gravity Gun)
     if(btn(0) && !prev(0)){ if(soc && !soc.test) socPlayerJump(); else if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }
     if(btn(1) && !prev(1)){ if(soc && (!soc.test || socTestInPitch())) socPlayerKick(); else socPlayerJump(); }   // B / ○: chutar (Futebol) ou pular (demais modos)      // A / Cross: troca a arma da mão pela do chão
     if(btn(3) && !prev(3) && shopOn()){ shopOpenMenu(); }   // Y: abre a loja (DM/CTF)
@@ -12194,7 +12469,7 @@ let gpMenuRoot = null;      // tela de menu atualmente ativa
 let gpMenuEl = null;        // elemento com o foco do controle
 let gpMenuActive = false;   // true enquanto o jogador está usando o controle nos menus
 let gpNavKey = '', gpNavNext = 0;
-const GP_FOCUS_SEL = 'button, input[type="range"], input[type="checkbox"], input[type="text"]';
+const GP_FOCUS_SEL = 'button, select, input[type="range"], input[type="checkbox"], input[type="text"]';
 
 (function(){
   const hints = document.createElement('div');
@@ -12348,6 +12623,14 @@ function gpAdjustRange(el, dir){
 // idioma), abas e as setas do carrossel de mapas. Devolve false nas pontas p/ sair do grupo.
 function gpStepOption(el, dx){
   if(el.id === 'carPrev' || el.id === 'carNext'){ gpClickId(dx > 0 ? 'carNext' : 'carPrev'); return true; }
+  if(el.tagName === 'SELECT'){   // campo de seleção (ex.: céu / mapa do debug): esquerda/direita troca a opção
+    const j = el.selectedIndex + dx;
+    if(j < 0 || j >= el.options.length) return false;
+    el.selectedIndex = j;
+    el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
+    SFX.menuSelect();
+    return true;
+  }
   let group = null;
   if(el.classList.contains('seg-btn')) group = el.parentElement;
   else if(el.classList.contains('tab-btn')) group = el.parentElement;
@@ -12412,6 +12695,11 @@ function gpMenuUpdate(gp, root, btn, prev){
       if(window.dzVk && window.dzVk.wanted()) window.dzVk.forInput(el);   // console: teclado virtual do jogo
       else el.focus();
     }
+    else if(el.tagName === 'SELECT'){   // A: próxima opção (volta ao início no fim)
+      el.selectedIndex = (el.selectedIndex + 1) % el.options.length;
+      el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
+      SFX.menuSelect();
+    }
     else if(el.type !== 'range' && !(window.dzTrustedClickRecent && window.dzTrustedClickRecent(el))) el.click();
   }
 
@@ -12455,7 +12743,7 @@ function gpMenuUpdate(gp, root, btn, prev){
       const next = tabs[(i + bump + tabs.length) % tabs.length];
       if(next){ next.click(); gpSetFocus(next, true); }
     } else if(root.id === 'levelSelectModal'){
-      gpClickId(bump > 0 ? 'carNext' : 'carPrev');
+      setMapIndex(curMapPos() + bump, bump);
     }
   }
 
@@ -12793,11 +13081,24 @@ document.getElementById('playSelectedLevelBtn').addEventListener('click', ()=>{
   fill();
   sel.addEventListener('focus', fill);
   document.getElementById('dbgGoMapBtn').addEventListener('click', () => {
-    const idx = parseInt(sel.value, 10), ld = LEVEL_DEFINITIONS[idx];
+    let idx = parseInt(sel.value, 10), ld = LEVEL_DEFINITIONS[idx];
     if (!ld) return;
+    const pick = document.getElementById('dbgModeSelect').value;
+    let mode = ld.soccerOnly ? 'soccer' : ld.fnafOnly ? 'fnaf' : ld.hrOnly ? 'hostage' : ld.dmOnly ? 'deathmatch' : 'waves';
+    if (pick !== 'auto') {
+      mode = pick;
+      const own = pick === 'soccer' ? 'soccerOnly' : pick === 'fnaf' ? 'fnafOnly' : null;
+      if (own && !ld[own]) {   // Futebol e FNAF só existem no mapa próprio: vai direto para ele
+        const k = LEVEL_DEFINITIONS.findIndex(l => l && l[own]);
+        if (k >= 0) { idx = k; ld = LEVEL_DEFINITIONS[k]; }
+      } else if (!own && (ld.soccerOnly || ld.fnafOnly)) {
+        uiToast(currentLang === 'en' ? 'THIS MAP ONLY WORKS WITH ITS OWN MODE' : 'ESSE MAPA SÓ FUNCIONA COM O MODO DELE', 'err');
+        return;
+      }
+    }
     SFX.menuAccept(); netLeave();
     debugOptions.freeRoam = true; debugOptions.freeBots = document.getElementById('dbgMapBots').checked;
-    currentGameMode = ld.soccerOnly ? 'soccer' : ld.fnafOnly ? 'fnaf' : ld.hrOnly ? 'hostage' : ld.dmOnly ? 'deathmatch' : 'waves';
+    currentGameMode = mode;
     dmPlayerTeam = 'CT';
     if (currentGameMode === 'soccer') socResolveClubs(); else if (isTeamMode()) dmResolveLoadout();
     settingsModal.style.display = 'none'; mainMenu.style.display = 'none';
@@ -12899,6 +13200,22 @@ document.querySelectorAll('#renderQualitySeg .seg-btn').forEach(b => b.addEventL
   RENDER_SCALE = parseFloat(b.getAttribute('data-val'));
   resizeCanvas();
 }));
+// ----- Névoa e tamanho da HUD (opções do jogador) -----
+const FOG_MODES = { near: 0.55, normal: 1, far: 1.8, off: 40 };
+var userFogMul = 1;
+function setFogMode(v){
+  if(!(v in FOG_MODES)) v = 'normal';
+  userFogMul = FOG_MODES[v];
+  document.querySelectorAll('#fogSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === v));
+}
+function setHudSize(v){
+  if(v !== 'small' && v !== 'large') v = 'med';
+  document.body.classList.toggle('hud-small', v === 'small');
+  document.body.classList.toggle('hud-large', v === 'large');
+  document.querySelectorAll('#hudSizeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === v));
+}
+document.querySelectorAll('#fogSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setFogMode(b.getAttribute('data-val')); }));
+document.querySelectorAll('#hudSizeSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setHudSize(b.getAttribute('data-val')); }));
 document.getElementById('optShowMinimap').addEventListener('change', e => {
   document.getElementById('minimapWrapper').style.display = e.target.checked ? '' : 'none';
 });
@@ -12911,6 +13228,9 @@ document.getElementById('optShowFps').addEventListener('change', e => {
 });
 
 const dbgOneShot = document.getElementById('dbgOneShot');
+const dbgFastReload = document.getElementById('dbgFastReload');
+const dbgRapidFire = document.getElementById('dbgRapidFire');
+const dbgInfMoney = document.getElementById('dbgInfMoney');
 const dbgTileInfo = document.getElementById('dbgTileInfo');
 const dbgNoCeiling = document.getElementById('dbgNoCeiling');
 const dbgSpeedRange = document.getElementById('dbgSpeedRange');
@@ -12941,7 +13261,7 @@ function dbgTeleportZone(id){
   player.z = heightAt(player.x, player.y) * HEIGHT_UNIT; player.targetZ = player.z; waterReset();
   dbgCloseToGame();
 }
-[['dbgTpTex', 'tex'], ['dbgTpHub', 'hub'], ['dbgTpElev', 'elev'], ['dbgTpSkins', 'skins'], ['dbgTpPick', 'pick'], ['dbgTpInter', 'inter'], ['dbgTpAudio', 'aud0'], ['dbgTpSoc', 'soc'], ['dbgTpWater', 'water']]
+[['dbgTpTex', 'tex'], ['dbgTpHub', 'hub'], ['dbgTpElev', 'elev'], ['dbgTpSkins', 'skins'], ['dbgTpPick', 'pick'], ['dbgTpInter', 'inter'], ['dbgTpAudio', 'aud0'], ['dbgTpSoc', 'soc'], ['dbgTpWater', 'water'], ['dbgTpCeil', 'ceil'], ['dbgTpRoof', 'roof']]
   .forEach(([btnId, zone]) => document.getElementById(btnId).addEventListener('click', () => dbgTeleportZone(zone)));
 
 function dbgSpawnTarget(kind){
@@ -12968,6 +13288,7 @@ document.getElementById('dbgRespawn').addEventListener('click', () => {
   if(!dbgNeedTestMap()) return;
   SFX.menuSelect();
   enemies.forEach(en => { if(en.testDummy){ en.alive = true; en.health = en.maxHealth; en.respawnAt = 0; } });
+  ggRestoreAll();   // Gravity Gun: alvos, pickups e bola voltam ao lugar de origem
   uiToast(currentLang === 'en' ? 'TARGETS RESPAWNED' : 'ALVOS RENASCIDOS', 'ok');
 });
 document.getElementById('dbgKillAll').addEventListener('click', () => {
@@ -12984,6 +13305,12 @@ document.getElementById('dbgHeal').addEventListener('click', () => {
   updateHUD();
   uiToast(currentLang === 'en' ? 'HEALTH AND AMMO RESTORED' : 'VIDA E MUNIÇÃO RESTAURADAS', 'ok');
 });
+document.getElementById('dbgMoney').addEventListener('click', () => {
+  SFX.menuAccept();
+  shop.money = SHOP_MAX_MONEY;
+  if(started){ updateHUD(); shopRefresh(); }
+  uiToast(currentLang === 'en' ? 'SHOP MONEY MAXED' : 'DINHEIRO DA LOJA NO MÁXIMO', 'ok');
+});
 document.getElementById('dbgResetMap').addEventListener('click', () => {
   if(!started || NET.mode){ uiToast(currentLang === 'en' ? 'NOT AVAILABLE NOW' : 'INDISPONÍVEL AGORA', 'err'); return; }
   SFX.menuAccept();
@@ -12999,6 +13326,9 @@ document.getElementById('applySettingsBtn').addEventListener('click', ()=>{
   debugOptions.infAmmo = dbgInfAmmo.checked;
   debugOptions.pauseEnemies = dbgPauseEnemies.checked;
   debugOptions.oneShot = dbgOneShot.checked;
+  debugOptions.fastReload = dbgFastReload.checked;
+  debugOptions.rapidFire = dbgRapidFire.checked;
+  debugOptions.infMoney = dbgInfMoney.checked;
   debugOptions.tileInfo = dbgTileInfo.checked;
   debugOptions.noCeiling = dbgNoCeiling.checked;
   debugOptions.speed = parseFloat(dbgSpeedRange.value) || 1;
@@ -13046,7 +13376,7 @@ document.getElementById('resetSettingsBtn').addEventListener('click', ()=>{
   const gpv = document.getElementById('gpVibration');
   gpv.checked = gpv.defaultChecked; gpVibration = gpv.checked;
   // botões de opção: qualidade NORMAL e idioma PORTUGUÊS
-  [['renderQualitySeg','1'],['langSeg','pt']].forEach(([segId,val])=>{
+  [['renderQualitySeg','1'],['fogSeg','normal'],['hudSizeSeg','med'],['langSeg','pt']].forEach(([segId,val])=>{
     const b = document.querySelector('#'+segId+' .seg-btn[data-val="'+val+'"]');
     if(b && !b.classList.contains('active')) b.click();
   });
@@ -13113,6 +13443,7 @@ function curMapPos(){ return Math.max(0, visibleMaps.indexOf(parseInt(mapSelect.
 function updateCarouselUI(){
   const cur = curMapPos();
   Array.from(carDots.children).forEach((d, i)=> d.classList.toggle('active', i === cur));
+  syncMapListSel();
   const pad = n => String(n).padStart(2, '0');
   carCount.textContent = mapRandom
     ? I18N[currentLang].mapRandomPool.replace('{n}', visibleMaps.length)
@@ -13137,6 +13468,7 @@ function setMapIndex(pos, dir){
   }
 }
 function buildCarouselDots(){
+  buildMapList();
   carDots.innerHTML = '';
   visibleMaps.forEach((_, p) => {
     const dot = document.createElement('div');
@@ -13238,6 +13570,7 @@ bindSegmented('dmTeamSeg', document.getElementById('dmTeamSelect'));
 bindSegmented('modeSeg', document.getElementById('gameModeSelect'), () => refreshMapsForMode());
 bindSegmented('gunFoeSeg', document.getElementById('gunFoeSelect'), () => refreshMapsForMode());
 buildSocGrids();
+mapUiReady = true;
 refreshMapsForMode();
 
 // Grade de armas do menu debug
@@ -13249,7 +13582,7 @@ refreshMapsForMode();
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'weapon-chip' + (opt.value === dbgWeaponSelect.value ? ' active' : '');
-    b.innerHTML = '<img src="' + cfg.img + '" alt=""><span>' + cfg.name + '</span>';
+    b.innerHTML = '<img src="' + (cfg.icon || cfg.img) + '" alt=""><span>' + cfg.name + '</span>';
     b.addEventListener('click', ()=>{
       SFX.menuSelect();
       dbgWeaponSelect.value = opt.value;
@@ -13264,8 +13597,8 @@ window.addEventListener('keydown', e=>{
   if(e.target.tagName === 'INPUT') return;
   if(levelSelectModal.style.display === 'flex'){
     const cur = curMapPos();
-    if(e.key === 'ArrowLeft'){ setMapIndex(cur - 1, -1); e.preventDefault(); e.stopPropagation(); }
-    else if(e.key === 'ArrowRight'){ setMapIndex(cur + 1, 1); e.preventDefault(); e.stopPropagation(); }
+    if(e.key === 'ArrowLeft' || e.key === 'ArrowUp'){ setMapIndex(cur - 1, -1); e.preventDefault(); e.stopPropagation(); }
+    else if(e.key === 'ArrowRight' || e.key === 'ArrowDown'){ setMapIndex(cur + 1, 1); e.preventDefault(); e.stopPropagation(); }
     else if(e.key === 'Escape'){ document.getElementById('closeLevelSelectBtn').click(); e.preventDefault(); e.stopPropagation(); }
     else if(e.key === 'r' || e.key === 'R'){ document.getElementById('mapRandomBtn').click(); e.preventDefault(); e.stopPropagation(); }
     else if(e.key === 'Enter'){
@@ -14124,7 +14457,7 @@ function drawSprites(horizon){
 
     // Desloca o sprite verticalmente conforme a diferença de altura entre o
     // jogador e o tile onde o alvo está (mesmo sistema usado nas paredes).
-    const floorZ = ((s.kind === 'enemy' || s.kind === 'hostage') && s.obj.z !== undefined) ? s.obj.z : heightAt(s.x, s.y) * HEIGHT_UNIT;
+    const floorZ = ((s.kind === 'enemy' || s.kind === 'hostage' || s.kind === 'pickup') && s.obj.z !== undefined) ? s.obj.z : heightAt(s.x, s.y) * HEIGHT_UNIT;
     const zShift = (player.z - floorZ) * size;
 
     // Visível se alguma coluna não está bloqueada por parede nem por degrau/teto mais perto.
@@ -14700,6 +15033,7 @@ function updatePlayer(dt){
 
   pickups.forEach(p=>{
     if(p.taken) return;
+    if(p.gg && (p.gg.held || p.gg.fly)) return;   // Gravity Gun: item na mão / voando não é coletado
     if((p.x-player.x)**2+(p.y-player.y)**2 < 0.36){
       // Limite de 2 armas: com os slots cheios, a arma do chão só é pega pela troca manual (E / toque / A).
       if(p.type==='weapon' && !player.unlockedWeapons[p.weaponId] && ownedWeaponCount() >= MAX_WEAPON_SLOTS) return;
@@ -14819,7 +15153,8 @@ function tryFire(){
   const now = performance.now();
   const wConfig = WEAPON_CONFIG[player.weapon];
 
-  if(now - player.lastShot < wConfig.rate) return;
+  if(now - player.lastShot < (debugOptions.rapidFire ? wConfig.rate * 0.25 : wConfig.rate)) return;
+  if(wConfig.special === 'gravgun'){ player.lastShot = now; ggPrimary(); return; }
   
   if(player.ammo[player.weapon] <= 0 && !debugOptions.infAmmo){
     flashMsg(I18N[currentLang].noAmmo);
@@ -14916,6 +15251,233 @@ function tryFire(){
       }
     }
   }
+}
+
+
+// ===== GRAVITY GUN (arma de debug) =====
+// Para testar física e mover coisas no mapa. Funciona só offline (sem multiplayer).
+//   · AGARRAR / SOLTAR: R · botão direito do mouse · X/□ ou LT/L2 no controle · botão de recarga no toque
+//   · LANÇAR (com algo na mão) ou EMPURRAR (alvo mirado): clique · RT/R2 · botão de tiro no toque
+// Alvos: inimigos e alvos de teste, pickups e (só no mapa de testes) a bola do Futebol.
+// Cada alvo guarda seu estado em `o.gg` ({ held, fly, vx, vy, vz }). O jogo roda a IA normalmente e, depois dela,
+// ggUpdate() reescreve a posição de quem está na mão ou voando (assim nenhum modo de jogo precisa saber da arma).
+const GG = { held: null, active: [], hudKey: '', cand: null };
+const GG_RANGE = 14, GG_HOLD_DIST = 2.0, GG_PUNT = 12, GG_THROW = 18;
+function ggT(pt, en){ return currentLang === 'en' ? en : pt; }
+function ggFloor(o){ return heightAt(o.x, o.y) * HEIGHT_UNIT; }
+function ggState(o){ return o.gg || (o.gg = { held: false, fly: false, vx: 0, vy: 0, vz: 0, px: o.x, py: o.y }); }
+function ggCandidates(){
+  const L = [];
+  enemies.forEach(en => { if(en.alive && !en.remote && en.health > -999) L.push({ k: 'enemy', o: en }); });
+  if(soc && soc.test && soc.ball) L.push({ k: 'ball', o: soc.ball });
+  pickups.forEach(p => { if(!p.taken) L.push({ k: 'pickup', o: p }); });
+  return L;
+}
+function ggLabel(c){
+  const o = c.o;
+  if(c.k === 'ball') return ggT('BOLA', 'BALL');
+  if(c.k === 'pickup') return o.type === 'weapon' ? ((WEAPON_CONFIG[o.weaponId] && WEAPON_CONFIG[o.weaponId].name) || 'ARMA') : o.type === 'health' ? ggT('VIDA', 'HEALTH') : ggT('MUNIÇÃO', 'AMMO');
+  if(o.testLabel) return o.testLabel[currentLang === 'en' ? 'en' : 'pt'];
+  return o.fnaf ? 'FNAF' : o.team ? 'BOT · ' + o.team : ggT('INIMIGO', 'ENEMY');
+}
+// alvo mais próximo do centro da mira (cone horizontal + linha de visão)
+function ggAim(maxD){
+  let best = null, bs = Infinity;
+  ggCandidates().forEach(c => {
+    if(GG.held && GG.held.o === c.o) return;
+    const o = c.o, dx = o.x - player.x, dy = o.y - player.y, d = Math.hypot(dx, dy);
+    if(d > maxD || d < 0.25) return;
+    let a = Math.atan2(dy, dx) - player.angle;
+    while(a > Math.PI) a -= 2 * Math.PI;
+    while(a < -Math.PI) a += 2 * Math.PI;
+    if(Math.abs(a) > Math.atan2(c.k === 'enemy' ? 0.55 : 0.4, d) + 0.04) return;
+    if(!hasLineOfSight(player.x, player.y, o.x, o.y)) return;
+    const s = d * (1 + Math.abs(a) * 4);
+    if(s < bs){ bs = s; best = c; }
+  });
+  return best;
+}
+function ggSfx(n, a){ try{ if(SFX[n]) SFX[n](a); }catch(e){} }
+function ggKickAnim(){
+  const vm = document.getElementById('viewmodel');
+  vm.classList.remove('anim-shoot', 'anim-switch'); void vm.offsetWidth; vm.classList.add('anim-shoot');
+}
+function ggOnlineBlocked(){
+  if(!NET.mode) return false;
+  flashMsg(ggT('GRAVITY GUN: SÓ OFFLINE', 'GRAVITY GUN: OFFLINE ONLY'));
+  return true;
+}
+function ggActivate(c){
+  const g = ggState(c.o);
+  if(c.k !== 'ball' && !c.o.ggHome) c.o.ggHome = { x: c.o.x, y: c.o.y };
+  if(!GG.active.some(a => a.o === c.o)) GG.active.push(c);
+  return g;
+}
+function ggGrab(c){
+  const g = ggActivate(c), o = c.o;
+  g.held = true; g.fly = false; g.vx = g.vy = g.vz = 0; g.px = o.x; g.py = o.y;
+  if(c.k === 'enemy' && o.vz !== undefined) o.vz = 0;
+  GG.held = c;
+}
+// larga o que está na mão (mantém um pouco da inércia do movimento)
+function ggDrop(){
+  const c = GG.held; if(!c) return;
+  GG.held = null;
+  const g = ggState(c.o), o = c.o, cap = v => Math.max(-10, Math.min(10, v * 0.6));
+  g.held = false; g.vx = cap(g.vx); g.vy = cap(g.vy); g.vz = 0;
+  if(c.k === 'ball'){ o.vx = g.vx; o.vy = g.vy; o.vz = 0; ggForget(c.o); }
+  else g.fly = true;
+}
+function ggForget(o){
+  const i = GG.active.findIndex(a => a.o === o);
+  if(i >= 0) GG.active.splice(i, 1);
+  if(o.gg){ o.gg.held = false; o.gg.fly = false; }
+}
+function ggLaunch(c, speed){
+  const o = c.o, a = player.angle, vz = 1.2 + camPitch * 12, g = ggActivate(c);
+  g.held = false;
+  if(c.k === 'ball'){
+    o.vx = Math.cos(a) * speed * 0.8; o.vy = Math.sin(a) * speed * 0.8; o.vz = vz * 0.8; o.lastTouch = player;
+    ggForget(o);
+  } else { g.vx = Math.cos(a) * speed; g.vy = Math.sin(a) * speed; g.vz = vz; g.fly = true; }
+}
+function ggPrimary(){
+  if(ggOnlineBlocked()) return;
+  const held = GG.held;
+  if(held){ GG.held = null; ggLaunch(held, GG_THROW); flashMsg(ggT('LANÇADO: ', 'THROWN: ') + ggLabel(held)); }
+  else {
+    const c = ggAim(GG_RANGE);
+    if(!c){ ggSfx('noAmmo'); return; }
+    ggLaunch(c, GG_PUNT); flashMsg(ggT('EMPURRADO: ', 'PUSHED: ') + ggLabel(c));
+  }
+  ggSfx('socKick', 1); ggKickAnim(); gpRumble(0.4, 0.5, 90);
+}
+function ggSecondary(){
+  if(shopOpen || gameOver || countdownActive || dmPlayerDead || settingsModal.style.display === 'flex') return;   // (botão direito / LT chegam aqui sem passar pelo reloadWeapon)
+  if(ggOnlineBlocked()) return;
+  if(GG.held){ const l = ggLabel(GG.held); ggDrop(); flashMsg(ggT('SOLTO: ', 'DROPPED: ') + l); ggSfx('menuSelect'); return; }
+  const c = ggAim(GG_RANGE);
+  if(!c){ flashMsg(ggT('NADA NA MIRA', 'NOTHING IN SIGHT')); ggSfx('noAmmo'); return; }
+  ggGrab(c); flashMsg(ggT('SEGURANDO: ', 'HOLDING: ') + ggLabel(c)); ggSfx('pickupWeapon'); ggKickAnim(); gpRumble(0.25, 0.4, 70);
+}
+// ponto à frente do jogador onde o objeto fica preso (recua se houver parede no caminho)
+function ggHoldPoint(){
+  let hx = player.x + Math.cos(player.angle) * GG_HOLD_DIST, hy = player.y + Math.sin(player.angle) * GG_HOLD_DIST;
+  if(boxHitsWall(hx, hy, 0.2)){
+    let ok = false;
+    for(let t = 0.9; t >= 0.2; t -= 0.1){
+      const x = player.x + Math.cos(player.angle) * GG_HOLD_DIST * t, y = player.y + Math.sin(player.angle) * GG_HOLD_DIST * t;
+      if(!boxHitsWall(x, y, 0.2)){ hx = x; hy = y; ok = true; break; }
+    }
+    if(!ok){ hx = player.x; hy = player.y; }
+  }
+  const fz = heightAt(hx, hy) * HEIGHT_UNIT;
+  return { x: hx, y: hy, fz, z: Math.max(fz, player.z + 0.12 + camPitch * 1.6) };
+}
+function ggFollow(c, dt){
+  const o = c.o, g = o.gg, R = c.k === 'pickup' ? 0.15 : 0.25, H = ggHoldPoint();
+  const dx = H.x - o.x, dy = H.y - o.y, dist = Math.hypot(dx, dy);
+  if(dist > 9){ ggDrop(); return; }   // ficou preso do outro lado de uma parede: solta
+  if(dist > 1e-4){
+    const step = Math.min(dist, Math.max(14 * dt, dist * (1 - Math.exp(-16 * dt)))), sx = dx / dist * step, sy = dy / dist * step;
+    if(!boxHitsWall(o.x + sx, o.y, R)) o.x += sx;
+    if(!boxHitsWall(o.x, o.y + sy, R)) o.y += sy;
+  }
+  const k = 1 - Math.exp(-14 * dt);
+  if(c.k === 'ball'){
+    const bz = (o.z || 0) + (H.z - H.fz - (o.z || 0)) * k;
+    o.z = Math.max(0, bz); o.vx = o.vy = o.vz = 0; o.lastTouch = player;
+  } else {
+    if(o.z === undefined) o.z = ggFloor(o);
+    o.z += (H.z - o.z) * k;
+    if(c.k === 'enemy') o.vz = 0;
+  }
+  if(dt > 0){ g.vx = g.vx * 0.5 + (o.x - g.px) / dt * 0.5; g.vy = g.vy * 0.5 + (o.y - g.py) / dt * 0.5; }
+  g.px = o.x; g.py = o.y;
+}
+// degrau mais alto que o objeto (ele bate e volta, como numa parede)
+function ggStepBlocks(x, y, z){ return heightAt(x, y) * HEIGHT_UNIT > z + HEIGHT_UNIT * 0.6; }
+// voo livre: gravidade, quique no chão, rebate em paredes e degraus, atrito no chão. false = parou.
+function ggFly(c, dt){
+  const o = c.o, g = o.gg, R = c.k === 'pickup' ? 0.15 : 0.25;
+  if(o.z === undefined) o.z = ggFloor(o);
+  const n = Math.max(1, Math.ceil(Math.hypot(g.vx, g.vy) * dt / 0.15)), h = dt / n;
+  for(let i = 0; i < n; i++){
+    const nx = o.x + g.vx * h, ny = o.y + g.vy * h;
+    if(boxHitsWall(nx, o.y, R) || ggStepBlocks(nx, o.y, o.z)) g.vx *= -0.5; else o.x = nx;
+    if(boxHitsWall(o.x, ny, R) || ggStepBlocks(o.x, ny, o.z)) g.vy *= -0.5; else o.y = ny;
+  }
+  const fz = ggFloor(o);
+  g.vz -= GRAVITY * dt; o.z += g.vz * dt;
+  const ceil = levelNoCeiling ? 6 : fz + 1.0;
+  if(o.z > ceil){ o.z = ceil; if(g.vz > 0) g.vz = -g.vz * 0.3; }
+  let grounded = false;
+  if(o.z <= fz){ o.z = fz; if(g.vz < -2.2) g.vz = -g.vz * 0.38; else g.vz = 0; grounded = true; }
+  if(c.k === 'enemy') o.vz = 0;
+  if(grounded){ const f = Math.exp(-5 * dt); g.vx *= f; g.vy *= f; }
+  if(grounded && g.vz === 0 && Math.hypot(g.vx, g.vy) < 0.25){ g.vx = g.vy = 0; return false; }
+  return true;
+}
+function ggReset(){
+  GG.held = null; GG.active = []; GG.cand = null;
+  enemies.forEach(e => { e.gg = null; e.ggHome = null; });
+  pickups.forEach(p => { p.gg = null; p.ggHome = null; p.z = undefined; });
+  if(soc && soc.ball) soc.ball.gg = null;
+}
+// botão "respawn alvos" do debug: tudo volta ao lugar de origem
+function ggRestoreAll(){
+  GG.held = null;
+  GG.active.forEach(c => { if(c.o.gg){ c.o.gg.held = false; c.o.gg.fly = false; } });
+  GG.active = [];
+  enemies.forEach(e => {
+    if(e.ggHome){ e.x = e.ggHome.x; e.y = e.ggHome.y; e.z = heightAt(e.x, e.y) * HEIGHT_UNIT; e.vz = 0; }
+    if(e.gg){ e.gg.held = false; e.gg.fly = false; }
+  });
+  pickups.forEach(p => {
+    if(p.ggHome){ p.x = p.ggHome.x; p.y = p.ggHome.y; p.z = undefined; }
+    if(p.gg){ p.gg.held = false; p.gg.fly = false; }
+  });
+  if(soc && soc.test && soc.ball){ socTestResetBall(); soc.ball.gg = null; }
+}
+// textos de ajuda por plataforma
+function ggHudHtml(isG){
+  if(!isG) return '';
+  const touch = usingTouch, pad = !touch && usingGamepad && !usingKeyboardMouse;
+  const ps = gpIsPS;
+  const fire = touch ? ggT('TIRO', 'FIRE') : pad ? (ps ? 'R2' : 'RT') : ggT('CLIQUE', 'CLICK');
+  const grab = touch ? ggT('RECARREGAR', 'RELOAD') : pad ? (ps ? '□ / L2' : 'X / LT') : ggT('R / BOTÃO DIREITO', 'R / RIGHT BUTTON');
+  const c = GG.held ? ggLabel(GG.held) : (GG.cand ? ggLabel(GG.cand) : '');
+  const top = GG.held ? ggT('SEGURANDO: ', 'HOLDING: ') + c : c ? ggT('MIRA: ', 'AIM: ') + c : 'GRAVITY GUN';
+  return '<b>' + top + '</b><br><span>' + fire + ': ' + ggT('lançar', 'throw') + ' · ' + grab + ': ' + ggT('agarrar', 'grab') + '</span>';
+}
+function ggHud(isG){
+  let el = document.getElementById('ggHud');
+  if(!el){
+    el = document.createElement('div'); el.id = 'ggHud';
+    el.style.cssText = 'position:fixed;top:46px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:none;text-align:center;font:700 12px/1.35 monospace;color:#7df9ff;text-shadow:0 0 6px #000,0 1px 2px #000;background:rgba(0,0,0,.35);padding:4px 10px;border-radius:4px;max-width:92vw;display:none';
+    document.body.appendChild(el);
+  }
+  const show = isG && started && !gameOver && settingsModal.style.display !== 'flex';
+  if(!show){ if(el.style.display !== 'none') el.style.display = 'none'; GG.hudKey = ''; return; }
+  const html = ggHudHtml(true);
+  if(html !== GG.hudKey){ el.innerHTML = html; GG.hudKey = html; }
+  if(el.style.display !== 'block') el.style.display = 'block';
+}
+function ggUpdate(dt){
+  const isG = player.weapon === 'gravgun';
+  if(GG.held && (!isG || gameOver || dmPlayerDead || NET.mode)) ggDrop();   // largou a arma / morreu: solta o que estava na mão
+  for(let i = GG.active.length - 1; i >= 0; i--){
+    const c = GG.active[i], o = c.o;
+    if((c.k === 'enemy' && !o.alive) || (c.k === 'pickup' && o.taken)){
+      if(GG.held && GG.held.o === o) GG.held = null;
+      if(o.gg){ o.gg.held = false; o.gg.fly = false; }
+      GG.active.splice(i, 1); continue;
+    }
+    if(o.gg.held) ggFollow(c, dt);
+    else if(!ggFly(c, dt)){ o.gg.fly = false; GG.active.splice(i, 1); }
+  }
+  GG.cand = (isG && !GG.held && started && !gameOver) ? ggAim(GG_RANGE) : null;
+  ggHud(isG);
 }
 
 function updateEnemies(dt, now){
@@ -15015,6 +15577,7 @@ function gameStep(now){
     if(NET.mode !== 'client' && !dbgNoBots) updateFnaf(dt, now);
     if(NET.mode !== 'client' && !dbgNoBots) spawnWaveEnemies(now);
     if(NET.mode !== 'client') spawnPickupsLogic(now);
+    ggUpdate(dt);
     castAndDraw();
     drawMinimap();
   } else {
@@ -15135,7 +15698,16 @@ function netBroadcast(m){ netPeers.forEach(p => netSendTo(p, m)); }
 function netIsCoop(){ return !!NET.mode && NET.started && !isTeamMode(); }
 function netRemoteCount(){ return NET.mode === 'host' ? netPeers.length : 0; }
 function netLookup(id){ return (id === null || id === undefined) ? null : (id === netMyId ? player : (netEntMap[id] || null)); }
-function netStatus(msg){ if(netUI.status) netUI.status.textContent = msg || ''; }
+function netStatus(msg, busy){
+  if(netUI.status){ netUI.status.textContent = msg || ''; netUI.status.classList.toggle('busy', !!busy); }
+  // enquanto a sala é criada, o próprio botão mostra "CRIANDO SALA... AGUARDE" e fica travado
+  const cb = netUI.panel && netUI.panel.querySelector('#netCreate');
+  if(cb){
+    if(!cb.dataset.lbl) cb.dataset.lbl = cb.textContent;
+    cb.textContent = busy ? netT('CRIANDO SALA... AGUARDE', 'CREATING ROOM... PLEASE WAIT') : cb.dataset.lbl;
+    cb.disabled = !!busy;
+  }
+}
 
 // Quantos humanos há em cada lado (host incluído). Usado para completar as equipes com bots.
 function netHumanCounts(){
@@ -15475,10 +16047,22 @@ function netCreateRoom(){
   if(!netTransportOK()){ netStatus(netT('Rede não carregou (sem internet?)', 'Network failed to load (offline?)')); return; }
   netLeave();
   const code = Math.random().toString(36).slice(2, 6).toUpperCase();
-  netStatus(netT('Criando sala...', 'Creating room...'));
+  netStatus(netT('Criando sala... aguarde', 'Creating room... please wait'), true);
   netPeer = netMakePeer(NET_PREFIX + code);
   NET.mode = 'host';
+  // o servidor gratuito pode estar "dormindo": avisa que pode demorar e só desiste depois de 90 s
+  const hintTo = setTimeout(() => {
+    if(!NET.lobby && NET.mode === 'host') netStatus(netT('Criando sala... o servidor pode estar iniciando, aguarde até 1 minuto', 'Creating room... the server may be starting up, please wait up to 1 minute'), true);
+  }, 8000);
+  const createTo = setTimeout(() => {
+    clearTimeout(hintTo);
+    if(NET.lobby) return;
+    netLeave();
+    if(netUI.panel) netUI.panel.style.display = 'flex';
+    netStatus(netT('Tempo esgotado. Verifique a conexão e tente de novo.', 'Timed out. Check your connection and try again.'));
+  }, 90000);
   netPeer.on('open', () => {
+    clearTimeout(createTo); clearTimeout(hintTo);
     NET.lobby = true;
     netStatus('');
     netUI.panel.style.display = 'none';
@@ -15491,6 +16075,7 @@ function netCreateRoom(){
     netTimers.push(setInterval(() => { if(!NET.started) netRefreshHostLobby(); }, 500));
   });
   netPeer.on('error', e => {
+    clearTimeout(createTo); clearTimeout(hintTo);
     if(e.type === 'unavailable-id'){ netCreateRoom(); return; }
     netStatus(netT('Erro de rede: ', 'Network error: ') + (e.type || e));
     uiToast(netT('Erro de rede: ', 'Network error: ') + (e.type || e), 'err');
@@ -16301,7 +16886,7 @@ function netClientTick(dt){
     '.net-pl{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;margin-top:4px;background:rgba(0,0,0,.35);border:1px solid var(--cs-line);border-radius:2px;font-size:12px;letter-spacing:1px;color:var(--cs-txt)}' +
     '.net-pl.me{border-color:var(--cs-y);color:#fff}' +
     '.net-tag{font-weight:700;color:var(--cs-dim)} .net-tag.CT{color:#3aa0ff} .net-tag.T{color:#ff4a3a}' +
-    '#levelSelectModal.net-guest #modeSeg,#levelSelectModal.net-guest #gunFoeSeg,#levelSelectModal.net-guest #mapCarousel,#levelSelectModal.net-guest #carDots,#levelSelectModal.net-guest #mapRandomBtn,#levelSelectModal.net-guest #socHomeGrid,#levelSelectModal.net-lobby:not(.net-guest) #socAwayGrid{pointer-events:none;opacity:.6}' +
+    '#levelSelectModal.net-guest #modeSeg,#levelSelectModal.net-guest #gunFoeSeg,#levelSelectModal.net-guest #mapCarousel,#levelSelectModal.net-guest #mapPicker,#levelSelectModal.net-guest #carDots,#levelSelectModal.net-guest #mapRandomBtn,#levelSelectModal.net-guest #socHomeGrid,#levelSelectModal.net-lobby:not(.net-guest) #socAwayGrid{pointer-events:none;opacity:.6}' +
     '#levelSelectModal.net-side-lock #dmTeamSeg{pointer-events:none;opacity:.6}';
   document.head.appendChild(st);
 
@@ -16429,7 +17014,7 @@ setLanguage('pt');
 
   function save(){
     try {
-      const o = { range: {}, check: {}, quality: activeVal('renderQualitySeg'), lang: activeVal('langSeg') };
+      const o = { range: {}, check: {}, quality: activeVal('renderQualitySeg'), fog: activeVal('fogSeg'), hud: activeVal('hudSizeSeg'), lang: activeVal('langSeg') };
       RANGES.forEach(id => { const el = get(id); if(el) o.range[id] = el.value; });
       CHECKS.forEach(id => { const el = get(id); if(el) o.check[id] = el.checked; });
       localStorage.setItem(KEY, JSON.stringify(o));
@@ -16464,6 +17049,9 @@ setLanguage('pt');
         resizeCanvas();
       }
     }
+    // névoa e tamanho da HUD
+    if(o.fog) setFogMode(o.fog);
+    if(o.hud) setHudSize(o.hud);
     // idioma
     if(o.lang && (o.lang === 'pt' || o.lang === 'en')){
       const b = document.querySelector('#langSeg .seg-btn[data-val="' + o.lang + '"]');
@@ -16491,7 +17079,7 @@ setLanguage('pt');
   document.addEventListener('input', e => { if(e.target && RANGES.indexOf(e.target.id) >= 0) later(); });
   document.addEventListener('change', e => { if(e.target && CHECKS.indexOf(e.target.id) >= 0) later(); });
   document.addEventListener('click', e => {
-    if(e.target && e.target.closest && e.target.closest('#renderQualitySeg, #langSeg, #resetSettingsBtn')) later();
+    if(e.target && e.target.closest && e.target.closest('#renderQualitySeg, #fogSeg, #hudSizeSeg, #langSeg, #resetSettingsBtn')) later();
   });
 })();
 
