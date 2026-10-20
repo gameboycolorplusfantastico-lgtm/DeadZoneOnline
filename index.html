@@ -1458,6 +1458,81 @@ html:not(.console) #ctfHud,html:not(.console) #hrHud,html:not(.console) #fnafHud
 .dz-sb-thumb:hover,.dz-sb-thumb.drag{background:linear-gradient(#5a78c0,#3a5090);}
 html.console .dz-sb{width:24px;}
 </style>
+<style id="menuThemeCss">
+/* ===== Cor dos menus (azul = padrão, laranja, branco, preto). Tudo via variáveis, com contraste ajustado por tema. ===== */
+:root{
+  --mt-a:#4a63a8; --mt-b:#2c3f72; --mt-hdA:#3a4c78; --mt-hdB:#222f52; --mt-btA:#3b4a6e; --mt-btB:#26324f;
+  --mt-seA:#262f47; --mt-seB:#182036; --mt-tab:#2c3b62; --mt-sub:rgba(0,0,0,.4); --mt-input:rgba(0,0,0,.45);
+  --mt-strong:#fff; --mt-onfill:#fff; --mt-badge:#000; --mt-glow:rgba(159,227,255,.35); --mt-hov:rgba(159,227,255,.22);
+  --mt-v1:rgba(4,8,22,.72); --mt-v2:rgba(4,8,22,.28); --mt-v3:rgba(4,8,22,0);
+  --mt-fill:linear-gradient(115deg,#0a1840 0%,#1b3270 45%,#2b3f5c 70%,#13224a 100%);
+  --mt-icon:none; --mt-shadow:0 1px 3px #000;
+}
+html[data-menu="orange"]{
+  --cs-bg:#2a1608; --cs-panel:rgba(38,22,10,.93); --cs-panel2:rgba(22,12,5,.78); --cs-line:rgba(255,190,120,.42);
+  --cs-txt:#fdeede; --cs-dim:#d2ae84; --cs-y:#ffb347;
+  --mt-a:#d9772f; --mt-b:#8f3f12; --mt-hdA:#8a4a1f; --mt-hdB:#4d2511; --mt-btA:#74492a; --mt-btB:#4f2f19;
+  --mt-seA:#3b2412; --mt-seB:#25160a; --mt-tab:#6a3f1f; --mt-glow:rgba(255,179,71,.4); --mt-hov:rgba(255,179,71,.24);
+  --mt-v1:rgba(30,14,4,.74); --mt-v2:rgba(30,14,4,.3); --mt-v3:rgba(30,14,4,0);
+  --mt-fill:linear-gradient(115deg,#2a1204 0%,#6b3412 45%,#4a2a14 70%,#2a1406 100%);
+}
+html[data-menu="white"]{
+  --cs-bg:#e9edf5; --cs-panel:rgba(246,248,252,.97); --cs-panel2:rgba(228,233,242,.92); --cs-line:rgba(30,45,80,.42);
+  --cs-txt:#111827; --cs-dim:#44506a; --cs-y:#0b57d0;
+  --mt-a:#2f74e0; --mt-b:#1b4fb3; --mt-hdA:#e1e7f3; --mt-hdB:#bcc7dc; --mt-btA:#ffffff; --mt-btB:#d6dcea;
+  --mt-seA:#eef1f7; --mt-seB:#d0d7e6; --mt-tab:#ffffff; --mt-sub:rgba(255,255,255,.7); --mt-input:#ffffff;
+  --mt-strong:#0d1220; --mt-badge:#fff; --mt-glow:rgba(11,87,208,.35); --mt-hov:rgba(11,87,208,.14);
+  --mt-v1:rgba(236,240,248,.84); --mt-v2:rgba(236,240,248,.42); --mt-v3:rgba(236,240,248,0);
+  --mt-fill:linear-gradient(115deg,#dfe5f1,#eef1f7); --mt-icon:drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); --mt-shadow:none;
+}
+html[data-menu="black"]{
+  --cs-bg:#000; --cs-panel:rgba(10,10,12,.96); --cs-panel2:rgba(0,0,0,.8); --cs-line:rgba(255,255,255,.34);
+  --cs-txt:#f1f1f3; --cs-dim:#a6a6ae; --cs-y:#ffffff;
+  --mt-a:#5a5a62; --mt-b:#2e2e33; --mt-hdA:#2b2b30; --mt-hdB:#121214; --mt-btA:#2f2f34; --mt-btB:#1a1a1d;
+  --mt-seA:#1e1e21; --mt-seB:#101012; --mt-tab:#2b2b30; --mt-sub:rgba(255,255,255,.07); --mt-input:rgba(255,255,255,.09);
+  --mt-glow:rgba(255,255,255,.3); --mt-hov:rgba(255,255,255,.16);
+  --mt-v1:rgba(0,0,0,.84); --mt-v2:rgba(0,0,0,.42); --mt-v3:rgba(0,0,0,0);
+  --mt-fill:#050505; --mt-icon:drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+}
+.overlay-screen,#mainMenu,#gameOverOverlay,#loadingScreen{
+  background:linear-gradient(90deg,var(--mt-v1) 0%,var(--mt-v2) 42%,var(--mt-v3) 70%),
+    url('https://i.postimg.cc/280RcNP5/Menu-Background.jpg') center/cover no-repeat,var(--mt-fill);
+}
+.modal-box h2{color:var(--mt-strong);background:linear-gradient(var(--mt-hdA),var(--mt-hdB));}
+.setting-group select,.setting-group input[type=text],#playerNameInput{background:var(--mt-input) !important;color:var(--cs-txt) !important;border-color:var(--cs-line) !important;}
+.setting-group input[type=range]{background:linear-gradient(90deg,var(--mt-b),var(--mt-a));}
+.checkbox-label input[type=checkbox]:checked{background:var(--mt-b);}
+.modal-box .btn,#gameOverOverlay .btn{background:linear-gradient(var(--mt-btA),var(--mt-btB));color:var(--cs-txt);}
+.modal-box .btn-secondary,#gameOverOverlay .btn-secondary{background:linear-gradient(var(--mt-seA),var(--mt-seB));color:var(--cs-dim);}
+.overlay-screen .btn:hover,.overlay-screen .btn:focus-visible,.overlay-screen .btn.gp-focus,
+#gameOverOverlay .btn:hover,#gameOverOverlay .btn:focus-visible,#gameOverOverlay .btn.gp-focus{color:var(--mt-strong);box-shadow:0 0 0 1px var(--cs-y),0 0 14px var(--mt-glow);}
+.overlay-screen .gp-focus,#gameOverOverlay .gp-focus{box-shadow:0 0 14px var(--mt-glow) !important;}
+#mainMenu .btn{text-shadow:var(--mt-shadow);}
+#mainMenu .btn:hover,#mainMenu .btn:focus-visible,#mainMenu .btn.gp-focus{color:var(--mt-strong);background:linear-gradient(90deg,var(--mt-hov),rgba(0,0,0,0) 90%);box-shadow:none;}
+#mainMenu .btn.gp-focus{box-shadow:none !important;}
+.tab-btn:hover{color:var(--mt-strong);}
+.tab-btn.active{color:var(--mt-strong);background:var(--mt-tab);}
+.seg{background:var(--mt-sub);}
+.seg-btn.active{background:linear-gradient(var(--mt-a),var(--mt-b));color:var(--mt-onfill);}
+.car-arrow{background:linear-gradient(var(--mt-btA),var(--mt-btB));color:var(--mt-strong);}
+.car-dot.active{box-shadow:0 0 6px var(--mt-glow);}
+.weapon-chip,.rand-toggle{color:var(--cs-txt);}
+.weapon-chip.active,.rand-toggle.active{color:var(--cs-y);box-shadow:0 0 10px var(--mt-glow);}
+.controls-scheme-title,#levelPreviewName,#mapInfoName{color:var(--mt-strong);}
+.controls-keys{color:var(--cs-y);}
+.badge{color:var(--mt-badge);}
+#mapListHead{background:linear-gradient(var(--mt-hdA),var(--mt-hdB));color:var(--cs-dim);}
+#mapList{background:var(--mt-sub);}
+.map-row.sel{background:linear-gradient(var(--mt-a),var(--mt-b));color:var(--mt-onfill);}
+.map-row.sel .mr-tag{color:var(--mt-onfill);opacity:.85;}
+.map-row:hover{background:var(--mt-hov);}
+#gameOverOverlay h1,.title-header{color:var(--mt-strong);}
+#loadingBarFill{background:linear-gradient(90deg,var(--mt-b),var(--cs-y));}
+.dz-sb-thumb{background:linear-gradient(var(--mt-a),var(--mt-b));}
+.dz-sb{background:var(--mt-sub);}
+.mode-icon,#dmTeamSeg .seg-btn::before{filter:var(--mt-icon);}
+.seg-btn.active .mode-icon{filter:none;}
+</style>
 <div id="mainMenu" class="overlay-screen">
   <div id="menuLogo">DEAD ZONE<small>REMASTERED</small></div>
   <button id="startBtn" class="btn" data-i18n="selectLevel">JOGAR</button>
@@ -1728,6 +1803,15 @@ html.console .dz-sb{width:24px;}
           <option value="pt">Português</option>
           <option value="en">English</option>
         </select>
+      </div>
+      <div class="setting-group">
+        <label data-i18n="menuColorLabel">COR DO MENU:</label>
+        <div class="seg" id="menuThemeSeg">
+          <button type="button" class="seg-btn active" data-val="blue" data-i18n="mcBlue">AZUL</button>
+          <button type="button" class="seg-btn" data-val="orange" data-i18n="mcOrange">LARANJA</button>
+          <button type="button" class="seg-btn" data-val="white" data-i18n="mcWhite">BRANCO</button>
+          <button type="button" class="seg-btn" data-val="black" data-i18n="mcBlack">PRETO</button>
+        </div>
       </div>
 
       <div class="setting-group">
@@ -4527,7 +4611,7 @@ const I18N = {
     lvl82: "CS_DOWNHILL", lvl82Desc: "Estilo Counter-Strike: Montanha estreita e bem comprida, em 5 patamares ligados por rampas em zigue-zague. T no topo, CT na base. Dá para pular os penhascos e descer rápido (dano leve), mas para subir só pelas rampas. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
-    matchEndLabel: "FIM DA PARTIDA:", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
+    matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
     gunFoeLabel: "CONTRA:", gunFoeZombies: "ZUMBIS", gunFoeBots: "BOTS",
     dmPrimaryLabel: "ARMA PRINCIPAL (PESADA):", dmSecondaryLabel: "ARMA SECUNDÁRIA (LEVE):", dmRandomWeapon: "ALEATÓRIA",
     debugMenuTitle: "MENU DEBUG", dbgGodMode: "Vida Infinita (God Mode)", dbgInfAmmo: "Munição Infinita", dbgPauseEnemies: "Pausar Inimigos",
@@ -4675,7 +4759,7 @@ const I18N = {
     lvl82: "CS_DOWNHILL", lvl82Desc: "Counter-Strike style: A narrow, very long mountain in 5 terraces linked by zig-zag ramps. T on the summit, CT at the base. You can jump off the cliffs to go down fast (light damage), but climbing back is only by the ramps. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
-    matchEndLabel: "MATCH END:", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
+    matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
     gunFoeLabel: "VERSUS:", gunFoeZombies: "ZOMBIES", gunFoeBots: "BOTS",
     dmPrimaryLabel: "PRIMARY WEAPON (HEAVY):", dmSecondaryLabel: "SECONDARY WEAPON (LIGHT):", dmRandomWeapon: "RANDOM",
     debugMenuTitle: "DEBUG MENU", dbgGodMode: "Infinite Health (God Mode)", dbgInfAmmo: "Infinite Ammo", dbgPauseEnemies: "Pause Enemies",
@@ -15767,7 +15851,7 @@ function nameClean(v){ return String(v == null ? '' : v).replace(/[\u0000-\u001f
 function getPlayerName(){ return playerName; }
 function updateMenuPlayer(){
   const el = document.getElementById('menuPlayer');
-  if(el) el.textContent = playerName ? '👤 ' + playerName : '';
+  if(el) el.textContent = playerName || '';
 }
 (function(){
   try{ playerName = nameClean(localStorage.getItem('dz_name')); }catch(e){}
@@ -17338,6 +17422,27 @@ requestAnimationFrame(gameLoop);
   setInterval(tick, 150);
   window.addEventListener('resize', tick);
   tick();
+})();
+</script>
+
+<script>
+/* Cor dos menus: azul (padrão), laranja, branco ou preto. Salva no aparelho. */
+(function dzMenuTheme(){
+  const KEY = 'dz_menu_theme', OK = ['blue', 'orange', 'white', 'black'];
+  function apply(v){
+    if(OK.indexOf(v) < 0) v = 'blue';
+    document.documentElement.setAttribute('data-menu', v);
+    document.querySelectorAll('#menuThemeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === v));
+    return v;
+  }
+  let cur = 'blue';
+  try{ cur = localStorage.getItem(KEY) || 'blue'; }catch(e){}
+  apply(cur);
+  document.querySelectorAll('#menuThemeSeg .seg-btn').forEach(b => b.addEventListener('click', () => {
+    if(typeof SFX !== 'undefined' && SFX.menuSelect) SFX.menuSelect();
+    const v = apply(b.getAttribute('data-val'));
+    try{ localStorage.setItem(KEY, v); }catch(e){}
+  }));
 })();
 </script>
 </body>
