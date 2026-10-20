@@ -9766,8 +9766,26 @@ function shopTick(){
 function shopGamepad(btn, prev){
   const p = i => btn(i) && !prev(i);
   const n = shop.btns.length; if(!n) return;
-  if(p(13) || p(15)) shop.sel = (shop.sel + 1) % n;
-  if(p(12) || p(14)) shop.sel = (shop.sel - 1 + n) % n;
+  // D-pad: cima/baixo/esquerda/direita andam na direção certa da grade (busca espacial entre os itens)
+  const dx = p(15) ? 1 : (p(14) ? -1 : 0), dy = p(13) ? 1 : (p(12) ? -1 : 0);
+  if(dx || dy){
+    const cur = shop.btns[shop.sel];
+    let best = -1, bestScore = Infinity;
+    if(cur){
+      const cr = cur.getBoundingClientRect(), cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2;
+      shop.btns.forEach((b, i) => {
+        if(i === shop.sel || !b.offsetParent) return;
+        const r = b.getBoundingClientRect(), vx = r.left + r.width / 2 - cx, vy = r.top + r.height / 2 - cy;
+        const along = dx ? vx * dx : vy * dy; if(along <= 1) return;
+        const gap = dx ? Math.max(0, Math.max(r.top, cr.top) - Math.min(r.bottom, cr.bottom)) : Math.max(0, Math.max(r.left, cr.left) - Math.min(r.right, cr.right));
+        const off = dx ? Math.abs(vy) : Math.abs(vx);
+        const sc = along + gap * 3 + off * 0.25;
+        if(sc < bestScore){ bestScore = sc; best = i; }
+      });
+    }
+    if(best >= 0) shop.sel = best;
+    else if(dy) shop.sel = (shop.sel + dy + n) % n;   // sem item naquela direção: cima/baixo dão a volta na lista
+  }
   if(p(5)) shop.sel = Math.min(n - 1, shop.sel + 5);
   if(p(4)) shop.sel = Math.max(0, shop.sel - 5);
   if(p(0)) shopBuy(shop.btns[shop.sel].dataset.w);
@@ -12877,8 +12895,18 @@ function gpStepOption(el, dx){
     SFX.menuSelect();
     return true;
   }
-  // Opções (seg-btn) e abas (tab-btn): esquerda/direita só MOVEM o foco; quem seleciona é o botão A.
-  // (Antes selecionava na hora, o que fazia o modo/lado/idioma mudar sem querer.)
+  // Opções (seg-btn) e abas (tab-btn): esquerda/direita só MOVEM o foco para o vizinho da MESMA linha;
+  // quem seleciona é o botão A. (Antes selecionava na hora; e a busca espacial podia pular para o slider
+  // logo abaixo, deixando a última opção — ex.: SEM LIMITE — inalcançável.)
+  if(el.classList.contains('seg-btn') || el.classList.contains('tab-btn')){
+    const sel = el.classList.contains('seg-btn') ? '.seg-btn' : '.tab-btn';
+    const list = Array.from(el.parentElement.querySelectorAll(sel)).filter(gpElVisible);
+    const nx = list[list.indexOf(el) + dx];
+    if(nx){
+      const a = el.getBoundingClientRect(), b = nx.getBoundingClientRect();
+      if(Math.abs((a.top + a.height / 2) - (b.top + b.height / 2)) < a.height / 2){ gpSetFocus(nx); return true; }
+    }
+  }
   return false;
 }
 
