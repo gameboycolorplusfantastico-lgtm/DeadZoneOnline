@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-menu="green">
+<html lang="pt-BR" data-menu="green" data-hud="green">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -96,6 +96,7 @@ window.addEventListener('keydown', function(e){
     image-rendering:pixelated;image-rendering:crisp-edges;
     display:block;
   }
+  body.smooth-px canvas#screen{ image-rendering:auto; }
   /* CRT-style scanlines + vignette, sits above everything (menus included) for a cohesive look */
   #crtOverlay{
     position:fixed;inset:0;pointer-events:none;z-index:200;
@@ -1333,6 +1334,27 @@ html:not(.console) #ctfHud,html:not(.console) #hrHud,html:not(.console) #fnafHud
 @keyframes netPulse{from{opacity:.5}to{opacity:1}}
 #netPanel .net-status.busy{font-size:14px;font-weight:700;letter-spacing:1.5px;animation:netPulse .9s infinite alternate;}
 </style>
+<style id="gfxCss">
+/* ===== Sistema de gráficos: estilos visuais + efeitos de tela ===== */
+#game{overflow:hidden;}
+body.gfx-pixel canvas#screen, body.gfx-classic canvas#screen{image-rendering:pixelated;image-rendering:crisp-edges;}
+body.gfx-smooth canvas#screen{image-rendering:auto;filter:contrast(1.04) saturate(1.08);}
+html.console body.gfx-smooth canvas#screen{filter:none;}
+body.gfx-smooth #viewmodel{image-rendering:auto;}
+body.fx-vig #crtOverlay, body.fx-crt #crtOverlay{display:block;}
+body.fx-vig #crtOverlay{background:radial-gradient(ellipse at center, rgba(0,0,0,0) 58%, rgba(0,0,0,.5) 100%);opacity:.7;}
+body.fx-crt #crtOverlay{opacity:.6;}
+
+/* ===== Menu de configurações organizado em seções ===== */
+.set-sec{
+  margin:26px 0 2px;padding:0 0 6px;text-align:left;
+  border-bottom:1px solid var(--panel-border);
+  font-size:12px;font-weight:bold;letter-spacing:2.5px;color:var(--amber,#e8b93a);
+}
+.tab-panel > .set-sec:first-child{margin-top:2px;}
+.set-hint{margin-top:6px;font-size:11px;line-height:1.4;letter-spacing:.3px;color:#8f8f8f;}
+#settingsTabRow .tab-btn{min-width:72px;padding:9px 4px;}
+</style>
 </head>
 <body>
 <div id="loadingScreen">
@@ -1554,25 +1576,25 @@ html[data-menu="pink"]{
   --hud-line:rgba(159,227,255,.55); --hud-panel:rgba(0,0,0,.4); --hud-hover:rgba(40,90,120,.5);
   --hud-edge:#000; --hud-shadow:0 0 10px var(--cs-hud-glow),0 1px 2px #000; --hud-ico:drop-shadow(0 0 6px var(--cs-hud-glow));
 }
-html[data-menu="orange"]{
+html[data-hud="orange"]{
   --cs-hud:#ffb347; --cs-hud-glow:rgba(255,150,40,.6); --cs-hud-dim:rgba(255,200,130,.8); --cs-msg:#ffb347;
   --hud-line:rgba(255,179,71,.6); --hud-hover:rgba(120,60,10,.55);
 }
-html[data-menu="green"]{
+html[data-hud="green"]{
   --cs-hud:#4dff7a; --cs-hud-glow:rgba(57,255,106,.55); --cs-hud-dim:rgba(150,255,180,.8); --cs-msg:#4dff7a;
   --hud-line:rgba(77,255,122,.6); --hud-hover:rgba(10,90,35,.55);
 }
-html[data-menu="pink"]{
+html[data-hud="pink"]{
   --cs-hud:#ff4db2; --cs-hud-glow:rgba(255,45,155,.6); --cs-hud-dim:rgba(255,160,215,.82); --cs-msg:#ff4db2;
   --hud-line:rgba(255,77,178,.65); --hud-hover:rgba(110,10,65,.55);
 }
-html[data-menu="white"]{
+html[data-hud="white"]{
   --cs-hud:#ffffff; --cs-hud-glow:rgba(0,0,0,.95); --cs-hud-dim:rgba(255,255,255,.9); --cs-msg:#ffffff;
   --hud-line:rgba(255,255,255,.85); --hud-panel:rgba(0,0,0,.55); --hud-hover:rgba(0,0,0,.7); --hud-edge:#000;
   --hud-shadow:0 0 2px #000,0 0 2px #000,0 1px 3px #000,0 0 8px rgba(0,0,0,.7);
   --hud-ico:drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000) drop-shadow(0 0 4px #000);
 }
-html[data-menu="black"]{
+html[data-hud="black"]{
   --cs-hud:#000000; --cs-hud-glow:rgba(255,255,255,.95); --cs-hud-dim:rgba(0,0,0,.85); --cs-msg:#000000;
   --hud-line:rgba(0,0,0,.9); --hud-panel:rgba(255,255,255,.6); --hud-hover:rgba(255,255,255,.8); --hud-edge:#fff;
   --hud-shadow:0 0 2px #fff,0 0 2px #fff,0 1px 3px #fff,0 0 8px rgba(255,255,255,.8);
@@ -1598,6 +1620,77 @@ html[data-menu="black"]{
 #menuThemeSeg .seg-btn{flex:1 1 30%;padding:10px 4px;}
 #bottombar .hud-icon:has(img){overflow:hidden;padding:5px;margin:-5px;}
 #bottombar .hud-icon img{transform:translateX(-600px);filter:drop-shadow(600px 0 0 var(--cs-hud)) drop-shadow(0 0 2px var(--hud-edge));}
+
+/* ===== COR DA HUD x COR DO MENU (separadas) + menus que antes ficavam sempre azuis ===== */
+:root{
+  --ui-rgb:159,227,255;
+  --hud-rgb:159,227,255; --hud-rgb2:70,185,255;
+  --hud-btn:rgba(20,60,90,.45); --hud-act:rgba(70,185,255,.45); --hud-dark:rgba(0,10,22,.7); --hud-send:rgba(20,60,90,.8);
+  --hud-shopbg:rgba(6,16,30,.62); --hud-modalbg:rgba(0,6,16,.55); --hud-strong:#fff; --hud-ts:0 1px 2px #000;
+}
+html[data-menu="orange"]{--ui-rgb:255,179,71;}
+html[data-menu="white"]{--ui-rgb:11,87,208;}
+html[data-menu="black"]{--ui-rgb:255,255,255;}
+html[data-menu="green"]{--ui-rgb:57,255,106;}
+html[data-menu="pink"]{--ui-rgb:255,77,178;}
+html[data-hud="orange"]{--hud-rgb:255,179,71;--hud-rgb2:255,150,40;--hud-btn:rgba(90,50,15,.5);--hud-act:rgba(255,150,40,.45);--hud-dark:rgba(22,12,0,.7);--hud-send:rgba(90,50,15,.8);--hud-shopbg:rgba(30,16,6,.66);--hud-modalbg:rgba(16,8,0,.55);}
+html[data-hud="green"]{--hud-rgb:77,255,122;--hud-rgb2:57,255,106;--hud-btn:rgba(15,80,35,.5);--hud-act:rgba(57,255,106,.45);--hud-dark:rgba(0,18,6,.7);--hud-send:rgba(15,80,35,.8);--hud-shopbg:rgba(4,24,10,.66);--hud-modalbg:rgba(0,14,4,.55);}
+html[data-hud="pink"]{--hud-rgb:255,77,178;--hud-rgb2:255,45,155;--hud-btn:rgba(90,15,55,.5);--hud-act:rgba(255,45,155,.45);--hud-dark:rgba(22,0,12,.7);--hud-send:rgba(90,15,55,.8);--hud-shopbg:rgba(30,6,18,.66);--hud-modalbg:rgba(16,0,8,.55);}
+html[data-hud="white"]{--hud-rgb:255,255,255;--hud-rgb2:255,255,255;--hud-btn:rgba(0,0,0,.55);--hud-act:rgba(255,255,255,.35);--hud-dark:rgba(0,0,0,.7);--hud-send:rgba(0,0,0,.7);--hud-shopbg:rgba(0,0,0,.7);--hud-modalbg:rgba(0,0,0,.55);--hud-ts:0 0 2px #000,0 1px 3px #000;}
+html[data-hud="black"]{--hud-rgb:0,0,0;--hud-rgb2:0,0,0;--hud-btn:rgba(120,120,120,.55);--hud-act:rgba(0,0,0,.35);--hud-dark:rgba(255,255,255,.7);--hud-send:rgba(255,255,255,.8);--hud-shopbg:rgba(255,255,255,.74);--hud-modalbg:rgba(255,255,255,.35);--hud-strong:#000;--hud-ts:0 0 2px #fff,0 1px 2px #fff;}
+
+/* --- HUD: loja (menu de compra), chat, avisos, placar do futebol e botões do celular --- */
+html #shopBtn:not(.icon){border-color:var(--hud-line);text-shadow:var(--hud-shadow);}
+html #shopBtn:not(.icon):hover{background:var(--hud-hover);border-color:var(--cs-hud);}
+html #shopModal{background:var(--hud-modalbg);}
+html .shop-box{background:var(--hud-shopbg);border-color:rgba(var(--hud-rgb),.45);color:var(--cs-hud);text-shadow:var(--hud-ts);}
+html #shopMoney{color:var(--cs-hud);text-shadow:var(--hud-shadow);}
+html #shopTimer{color:rgba(var(--hud-rgb),.8);}
+html #shopMsg{color:var(--cs-hud);}
+html .shop-cat{color:rgba(var(--hud-rgb),.65);border-bottom-color:rgba(var(--hud-rgb),.28);}
+html .shop-item{color:var(--cs-hud);text-shadow:var(--hud-ts);}
+html .shop-item .shop-price{color:rgba(var(--hud-rgb),.6);}
+html .shop-item:hover,html .shop-item.gp-focus{background:linear-gradient(90deg,rgba(var(--hud-rgb2),.25),rgba(var(--hud-rgb2),0) 95%);border-left-color:var(--cs-hud);color:var(--hud-strong);}
+html .shop-item.poor{color:rgba(var(--hud-rgb),.4);}
+html .shop-item.owned{border-left-color:rgb(var(--hud-rgb2));color:var(--hud-strong);text-shadow:0 0 8px rgba(var(--hud-rgb2),.7),var(--hud-ts);}
+html #shopHint{color:rgba(var(--hud-rgb),.55);}
+html #shopCloseBtn{background:var(--hud-panel) !important;border-color:var(--hud-line) !important;color:var(--cs-hud) !important;}
+html #shopCloseBtn:hover{background:var(--hud-hover) !important;color:var(--hud-strong) !important;}
+html body:not(.touch-ui) #chatBtn,html body:not(.touch-ui) #menuBtn{border-color:var(--hud-line);background:var(--hud-panel);}
+html body:not(.touch-ui) #menuBtn:hover,html body:not(.touch-ui) #chatBtn:hover{background:var(--hud-hover);border-color:var(--cs-hud);}
+html body:not(.touch-ui) #menuBtn:active,html body:not(.touch-ui) #chatBtn:active{background:var(--hud-act);}
+html #chatInput{border-color:rgba(var(--hud-rgb),.7);}
+html #chatSend{background:var(--hud-send);border-color:rgba(var(--hud-rgb),.7);}
+html #swapPrompt,html #usePrompt{background:var(--hud-dark);border-color:rgba(var(--hud-rgb),.55);color:var(--cs-hud);}
+html #fpsCounter{color:var(--cs-hud);}
+html #socHud .soc-board{border-color:rgba(var(--hud-rgb),.55);}
+html #socHud .soc-clock.golden{color:var(--cs-hud);}
+html #fireBtn,html #reloadBtn,html #swapBtn,html #useBtn,html #kickBtn,html #jumpBtn,html #shopBtn.icon,html body.touch-ui #menuBtn,html body.touch-ui #chatBtn{background-color:var(--hud-btn);}
+html #fireBtn:active,html #reloadBtn:active,html #swapBtn:active,html #useBtn:active,html #kickBtn:active,html #jumpBtn:active,html #shopBtn.icon:active,html body.touch-ui #menuBtn:active,html body.touch-ui #chatBtn:active{background-color:var(--hud-act);}
+
+/* --- MENUS: itens que ainda tinham azul fixo --- */
+html #menuLogo{color:var(--mt-strong);text-shadow:0 3px 0 var(--mt-hdB),0 0 26px var(--mt-glow);}
+html #levelPreviewCanvas{border-color:var(--cs-line);}
+html .diff-pip{background:rgba(var(--ui-rgb),.12);border-color:rgba(var(--ui-rgb),.35);}
+html .diff-pip.on{background:var(--cs-y);border-color:var(--cs-y);}
+html .seg-btn:hover:not(.active){box-shadow:inset 0 0 0 2px rgba(var(--ui-rgb),.75);color:var(--cs-y);}
+html .weapon-chip:hover,html .weapon-chip:focus-visible,html .rand-toggle:hover,html .rand-toggle:focus-visible,html .club-chip:hover,html .club-chip:focus-visible{border-color:var(--cs-y);color:var(--cs-y);box-shadow:0 0 10px var(--mt-glow);}
+html .weapon-chip.active,html .rand-toggle.active{background:rgba(var(--ui-rgb),.1);}
+html .tab-btn:focus-visible,html .checkbox-label input[type="checkbox"]:focus-visible,html .setting-group input[type="range"]:focus-visible{outline-color:var(--cs-y);}
+html .car-arrow:focus-visible{border-color:var(--cs-y);box-shadow:0 0 12px var(--mt-glow);}
+html .car-arrow:hover{box-shadow:0 0 12px var(--mt-glow);}
+html .car-dot:hover{border-color:var(--cs-y);}
+html .controls-keys{background:rgba(var(--ui-rgb),.08);border-color:rgba(var(--ui-rgb),.35);}
+html #netPanel input:focus{box-shadow:0 0 8px var(--mt-glow);}
+html #netRoomCode{text-shadow:0 0 10px var(--mt-glow);}
+html #dzVk{border-color:rgba(var(--ui-rgb),.65);}
+html #dzVkTitle{color:var(--cs-y);}
+html #dzVkText{border-color:rgba(var(--ui-rgb),.5);}
+html #dzVkCaret{background:var(--cs-y);}
+html .dzVkKey{border-color:rgba(var(--ui-rgb),.35);}
+html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10px var(--mt-glow);}
+#hudThemeSeg{flex-wrap:wrap;}
+#hudThemeSeg .seg-btn{flex:1 1 30%;padding:10px 4px;}
 </style>
 <div id="mainMenu" class="overlay-screen">
   <div id="menuLogo">DEAD ZONE<small>REMASTERED</small></div>
@@ -1845,16 +1938,19 @@ html[data-menu="black"]{
   <div class="modal-box modal-box-wide">
     <h2 data-i18n="settingsTitle">CONFIGURAÇÕES DE JOGO</h2>
 
-    <button id="resumeGameBtn" class="btn" style="display:none; margin-bottom:15px; width:100%;">VOLTAR AO JOGO</button>
+    <button id="resumeGameBtn" class="btn" data-i18n="resumeGame" style="display:none; margin-bottom:15px; width:100%;">VOLTAR AO JOGO</button>
 
     <div class="tab-row" id="settingsTabRow">
       <button class="tab-btn active" data-tab="tabGeneral" data-i18n="tabGeneral">GERAL</button>
+      <button class="tab-btn" data-tab="tabGraphics" data-i18n="tabGraphics">GRÁFICOS</button>
+      <button class="tab-btn" data-tab="tabInterface" data-i18n="tabInterface">INTERFACE</button>
       <button class="tab-btn" data-tab="tabAudio" data-i18n="tabAudio">ÁUDIO</button>
       <button class="tab-btn" data-tab="tabControls" data-i18n="tabControls">CONTROLES</button>
       <button class="tab-btn" data-tab="tabDebug" data-i18n="tabDebug">DEBUG</button>
     </div>
 
     <div class="tab-panel active" id="tabGeneral">
+      <div class="set-sec" data-i18n="secPlayer">JOGADOR</div>
       <div class="setting-group">
         <label data-i18n="playerNameLabel">NOME DO JOGADOR:</label>
         <input type="text" id="playerNameInput" maxlength="16" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;padding:8px;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(159,227,255,.55);border-radius:5px;font:inherit">
@@ -1870,6 +1966,111 @@ html[data-menu="black"]{
           <option value="en">English</option>
         </select>
       </div>
+      <div class="set-sec" data-i18n="secGameplay">JOGABILIDADE</div>
+      <div class="setting-group">
+        <label for="sensRange"><span data-i18n="sensLabel">SENSIBILIDADE DA MIRA</span>: <span id="sensVal">1.0</span></label>
+        <input type="range" id="sensRange" min="0.2" max="3.0" step="0.1" value="1.0">
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optViewBob" checked>
+          <span data-i18n="viewBobLabel">BALANÇO DA ARMA / CÂMERA</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tabGraphics">
+      <div class="set-sec" data-i18n="secPreset">PREDEFINIÇÃO RÁPIDA</div>
+      <div class="setting-group">
+        <label data-i18n="perfPresetLabel">PRESET DE DESEMPENHO:</label>
+        <div class="seg" id="perfPresetSeg">
+          <button type="button" class="seg-btn" data-val="eco" data-i18n="perfEco">ECONOMIA</button>
+          <button type="button" class="seg-btn" data-val="bal" data-i18n="perfBal">EQUILIBRADO</button>
+          <button type="button" class="seg-btn" data-val="hq" data-i18n="perfHq">QUALIDADE</button>
+        </div>
+      </div>
+      <div class="set-sec" data-i18n="secStyle">ESTILO VISUAL</div>
+      <div class="setting-group">
+        <label data-i18n="gfxStyleLabel">ESTILO GRÁFICO:</label>
+        <div class="seg" id="gfxStyleSeg">
+          <button type="button" class="seg-btn" data-val="pixel" data-i18n="gfxPixel">PIXELADO</button>
+          <button type="button" class="seg-btn active" data-val="classic" data-i18n="gfxClassic">CLÁSSICO</button>
+          <button type="button" class="seg-btn" data-val="smooth" data-i18n="gfxSmooth">SUAVE</button>
+        </div>
+        <div class="set-hint" id="gfxStyleHint" data-i18n="gfxHint_classic">Equilíbrio: pixels nítidos, como no jogo original.</div>
+      </div>
+      <div class="set-sec" data-i18n="secImage">IMAGEM</div>
+      <div class="setting-group">
+        <label data-i18n="renderQualityLabel">RESOLUÇÃO DA IMAGEM:</label>
+        <div class="seg" id="renderQualitySeg">
+          <button type="button" class="seg-btn" data-val="0.5" data-i18n="qMin">MÍNIMA</button>
+          <button type="button" class="seg-btn" data-val="0.75" data-i18n="qLow">BAIXA</button>
+          <button type="button" class="seg-btn active" data-val="1" data-i18n="qMid">NORMAL</button>
+          <button type="button" class="seg-btn" data-val="1.5" data-i18n="qHigh">ALTA</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label for="fovRange"><span data-i18n="fovLabel">CAMPO DE VISÃO (FOV)</span>: <span id="fovVal">66°</span></label>
+        <input type="range" id="fovRange" min="60" max="110" step="1" value="66">
+      </div>
+      <div class="setting-group">
+        <label data-i18n="fogLabel">NÉVOA (DISTÂNCIA DE VISÃO):</label>
+        <div class="seg" id="fogSeg">
+          <button type="button" class="seg-btn" data-val="near" data-i18n="fogNear">PRÓXIMA</button>
+          <button type="button" class="seg-btn active" data-val="normal" data-i18n="fogNormal">NORMAL</button>
+          <button type="button" class="seg-btn" data-val="far" data-i18n="fogFar">DISTANTE</button>
+          <button type="button" class="seg-btn" data-val="off" data-i18n="fogOff">DESLIGADA</button>
+        </div>
+      </div>
+      <div class="set-sec" data-i18n="secEffects">EFEITOS</div>
+      <div class="setting-group">
+        <label data-i18n="fxLabel">EFEITO DE TELA:</label>
+        <div class="seg" id="fxSeg">
+          <button type="button" class="seg-btn active" data-val="off" data-i18n="fxOff">NENHUM</button>
+          <button type="button" class="seg-btn" data-val="vig" data-i18n="fxVig">VINHETA</button>
+          <button type="button" class="seg-btn" data-val="crt" data-i18n="fxCrt">CRT (LINHAS)</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label data-i18n="shadowLabel">SOMBRA DOS PERSONAGENS:</label>
+        <div class="seg" id="shadowSeg">
+          <button type="button" class="seg-btn" data-val="off" data-i18n="shadowOff">DESLIGADA</button>
+          <button type="button" class="seg-btn" data-val="simple" data-i18n="shadowSimple">SIMPLES</button>
+          <button type="button" class="seg-btn active" data-val="soft" data-i18n="shadowSoft">SUAVE</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optHorizon" checked>
+          <span data-i18n="horizonLabel">HORIZONTE ESTÁTICO (CASAS, PRÉDIOS E ÁRVORES)</span>
+        </label>
+      </div>
+      <div class="set-sec" data-i18n="secPerf">DESEMPENHO</div>
+      <div class="setting-group">
+        <label data-i18n="fpsCapLabel">LIMITE DE FPS:</label>
+        <div class="seg" id="fpsCapSeg">
+          <button type="button" class="seg-btn active" data-val="0" data-i18n="fpsUnl">SEM LIMITE</button>
+          <button type="button" class="seg-btn" data-val="60">60</button>
+          <button type="button" class="seg-btn" data-val="45">45</button>
+          <button type="button" class="seg-btn" data-val="30">30</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optShowFps">
+          <span data-i18n="showFpsLabel">MOSTRAR FPS</span>
+        </label>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optMmEco">
+          <span data-i18n="mmEcoLabel">MINIMAPA ECONÔMICO (ATUALIZA MENOS)</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tabInterface">
+      <div class="set-sec" data-i18n="secMenuHud">CORES E TAMANHO</div>
       <div class="setting-group">
         <label data-i18n="menuColorLabel">COR DO MENU:</label>
         <div class="seg" id="menuThemeSeg">
@@ -1881,36 +2082,23 @@ html[data-menu="black"]{
           <button type="button" class="seg-btn" data-val="pink" data-i18n="mcPink">ROSA CHOQUE</button>
         </div>
       </div>
-
       <div class="setting-group">
-        <label for="sensRange"><span data-i18n="sensLabel">SENSIBILIDADE DA MIRA</span>: <span id="sensVal">1.0</span></label>
-        <input type="range" id="sensRange" min="0.2" max="3.0" step="0.1" value="1.0">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optHudSeparate">
+          <span data-i18n="hudSeparateLabel">COR DA HUD DIFERENTE DO MENU</span>
+        </label>
       </div>
-
-      <div class="setting-group">
-        <label for="fovRange"><span data-i18n="fovLabel">CAMPO DE VISÃO (FOV)</span>: <span id="fovVal">66°</span></label>
-        <input type="range" id="fovRange" min="60" max="110" step="1" value="66">
-      </div>
-
-      <div class="setting-group">
-        <label data-i18n="renderQualityLabel">QUALIDADE DA RENDERIZAÇÃO:</label>
-        <div class="seg" id="renderQualitySeg">
-          <button type="button" class="seg-btn" data-val="0.75" data-i18n="qLow">BAIXA</button>
-          <button type="button" class="seg-btn active" data-val="1" data-i18n="qMid">NORMAL</button>
-          <button type="button" class="seg-btn" data-val="1.5" data-i18n="qHigh">ALTA</button>
+      <div class="setting-group" id="hudColorGroup" style="display:none">
+        <label data-i18n="hudColorLabel">COR DA HUD:</label>
+        <div class="seg" id="hudThemeSeg">
+          <button type="button" class="seg-btn active" data-val="green" data-i18n="mcGreen">VERDE</button>
+          <button type="button" class="seg-btn" data-val="orange" data-i18n="mcOrange">LARANJA</button>
+          <button type="button" class="seg-btn" data-val="white" data-i18n="mcWhite">BRANCO</button>
+          <button type="button" class="seg-btn" data-val="black" data-i18n="mcBlack">PRETO</button>
+          <button type="button" class="seg-btn" data-val="blue" data-i18n="mcBlue">AZUL</button>
+          <button type="button" class="seg-btn" data-val="pink" data-i18n="mcPink">ROSA CHOQUE</button>
         </div>
       </div>
-
-      <div class="setting-group">
-        <label data-i18n="fogLabel">NÉVOA (DISTÂNCIA DE VISÃO):</label>
-        <div class="seg" id="fogSeg">
-          <button type="button" class="seg-btn" data-val="near" data-i18n="fogNear">PRÓXIMA</button>
-          <button type="button" class="seg-btn active" data-val="normal" data-i18n="fogNormal">NORMAL</button>
-          <button type="button" class="seg-btn" data-val="far" data-i18n="fogFar">DISTANTE</button>
-          <button type="button" class="seg-btn" data-val="off" data-i18n="fogOff">DESLIGADA</button>
-        </div>
-      </div>
-
       <div class="setting-group">
         <label data-i18n="hudSizeLabel">TAMANHO DA HUD:</label>
         <div class="seg" id="hudSizeSeg">
@@ -1919,23 +2107,11 @@ html[data-menu="black"]{
           <button type="button" class="seg-btn" data-val="large" data-i18n="hudLarge">GRANDE</button>
         </div>
       </div>
-
+      <div class="set-sec" data-i18n="secRadarAim">RADAR E MIRA</div>
       <div class="setting-group">
         <label class="checkbox-label">
           <input type="checkbox" id="optShowMinimap" checked>
           <span data-i18n="showMinimapLabel">MOSTRAR MINIMAPA (RADAR)</span>
-        </label>
-      </div>
-      <div class="setting-group">
-        <label class="checkbox-label">
-          <input type="checkbox" id="optViewBob" checked>
-          <span data-i18n="viewBobLabel">BALANÇO DA ARMA / CÂMERA</span>
-        </label>
-      </div>
-      <div class="setting-group">
-        <label class="checkbox-label">
-          <input type="checkbox" id="optShowFps">
-          <span data-i18n="showFpsLabel">MOSTRAR FPS</span>
         </label>
       </div>
       <div class="setting-group">
@@ -1961,6 +2137,7 @@ html[data-menu="black"]{
           <button type="button" class="seg-btn ch-sw" data-val="black" data-col="#000000" style="--sw:#000000" data-i18n="chc_black">PRETO</button>
         </div>
       </div>
+      <div class="set-sec" data-i18n="secFeedback">FEEDBACK</div>
       <div class="setting-group">
         <label class="checkbox-label">
           <input type="checkbox" id="optDamageFlash" checked>
@@ -1999,6 +2176,13 @@ html[data-menu="black"]{
           <input type="checkbox" id="gpVibration" checked>
           <span data-i18n="gpVibLabel">VIBRAÇÃO DO CONTROLE</span>
         </label>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optTouchVibration" checked>
+          <span data-i18n="touchVibLabel">VIBRAÇÃO DO CELULAR (TOQUE)</span>
+        </label>
+        <div id="touchVibNote" data-i18n="touchVibNA" style="display:none;font-size:11px;opacity:.7;margin-top:4px">INDISPONÍVEL NESTE APARELHO/NAVEGADOR</div>
       </div>
       <div class="setting-group">
         <label for="gpDeadRange"><span data-i18n="gpDeadLabel">ZONA MORTA DOS ANALÓGICOS</span>: <span id="gpDeadVal">0.18</span></label>
@@ -2082,39 +2266,44 @@ html[data-menu="black"]{
 
     <div class="tab-panel" id="tabDebug">
       <div id="debugLockContainer" class="setting-group">
-        <label for="debugPassInput" style="color:#c94b2c;">SENHA MENU DEBUG:</label>
-        <input type="text" id="debugPassInput" placeholder="Insira a senha...">
-        <button id="unlockDebugBtn" class="btn btn-secondary" style="width:100%;margin-top:6px;">DESBLOQUEAR DEBUG</button>
+        <label for="debugPassInput" style="color:#c94b2c;" data-i18n="dbgLockLabel">SENHA MENU DEBUG:</label>
+        <input type="text" id="debugPassInput" placeholder="Insira a senha..." data-i18n-ph="dbgPassPh">
+        <button id="unlockDebugBtn" class="btn btn-secondary" style="width:100%;margin-top:6px;" data-i18n="dbgUnlockBtn">DESBLOQUEAR DEBUG</button>
       </div>
 
       <div id="debugSection" class="debug-section" style="display:none;">
         <h3 data-i18n="debugMenuTitle">MENU DEBUG</h3>
+        <div class="set-hint" data-i18n="dbgHint">Interruptores e controles deslizantes só valem ao clicar em APLICAR. Os botões agem na hora.</div>
+
+        <div class="set-sec" data-i18n="dbgSecPlayer">JOGADOR</div>
         <div class="setting-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="dbgGodMode">
-            <span data-i18n="dbgGodMode">Vida Infinita (God Mode)</span>
-          </label>
+          <label class="checkbox-label"><input type="checkbox" id="dbgGodMode"><span data-i18n="dbgGodMode">Vida Infinita (God Mode)</span></label>
         </div>
         <div class="setting-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="dbgNoClip">
-            <span>Noclip (Atravessar Paredes)</span>
-          </label>
+          <label class="checkbox-label"><input type="checkbox" id="dbgNoClip"><span data-i18n="dbgNoClip">Noclip (Atravessar Paredes)</span></label>
         </div>
         <div class="setting-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="dbgInfAmmo">
-            <span data-i18n="dbgInfAmmo">Munição Infinita</span>
-          </label>
+          <label class="checkbox-label"><input type="checkbox" id="dbgInfAmmo"><span data-i18n="dbgInfAmmo">Munição Infinita</span></label>
         </div>
         <div class="setting-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="dbgPauseEnemies">
-            <span data-i18n="dbgPauseEnemies">Pausar Inimigos (Freezar)</span>
-          </label>
+          <label class="checkbox-label"><input type="checkbox" id="dbgOneShot"><span data-i18n="dbgOneShot">Matar com 1 tiro</span></label>
         </div>
         <div class="setting-group">
-          <label for="dbgWeaponSelect" style="color:#39ff14;">SELECIONAR ARMA (EQUIPAR):</label>
+          <label class="checkbox-label"><input type="checkbox" id="dbgFastReload"><span data-i18n="dbgFastReload">Recarga instantânea</span></label>
+        </div>
+        <div class="setting-group">
+          <label class="checkbox-label"><input type="checkbox" id="dbgRapidFire"><span data-i18n="dbgRapidFire">Tiro rápido (cadência 4x)</span></label>
+        </div>
+        <div class="setting-group">
+          <label class="checkbox-label"><input type="checkbox" id="dbgInfMoney"><span data-i18n="dbgInfMoney">Dinheiro infinito na loja</span></label>
+        </div>
+        <div class="setting-group">
+          <label for="dbgSpeedRange"><span data-i18n="dbgSpeedLabel">VELOCIDADE DO JOGADOR</span>: <span id="dbgSpeedVal">1.0x</span></label>
+          <input type="range" id="dbgSpeedRange" min="0.5" max="4" step="0.1" value="1">
+        </div>
+
+        <div class="set-sec" data-i18n="dbgSecWeapon">ARMA (EQUIPA AO APLICAR)</div>
+        <div class="setting-group">
           <div class="weapon-grid" id="dbgWeaponGrid"></div>
           <select id="dbgWeaponSelect" style="display:none">
             <option value="pistol2">USP45 Tactical</option>
@@ -2143,27 +2332,37 @@ html[data-menu="black"]{
             <option value="gravgun">Gravity Gun (DEBUG)</option>
           </select>
         </div>
+
+        <div class="set-sec" data-i18n="dbgSecEnemies">INIMIGOS E ALVOS</div>
         <div class="setting-group">
-          <label class="checkbox-label"><input type="checkbox" id="dbgOneShot"><span data-i18n="dbgOneShot">Matar com 1 tiro</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="dbgPauseEnemies"><span data-i18n="dbgPauseEnemies">Pausar Inimigos (Freezar)</span></label>
         </div>
         <div class="setting-group">
-          <label class="checkbox-label"><input type="checkbox" id="dbgFastReload"><span data-i18n="dbgFastReload">Recarga instantânea</span></label>
+          <div class="set-hint" style="margin:0 0 6px;" data-i18n="dbgTestOnly">Os botões abaixo só funcionam no MAPA DE TESTES.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <button type="button" id="dbgRespawn" class="btn btn-secondary" data-i18n="dbgRespawn">RENASCER ALVOS</button>
+            <button type="button" id="dbgKillAll" class="btn btn-secondary" data-i18n="dbgKillAll">ELIMINAR TODOS</button>
+            <button type="button" id="dbgSpawnZombie" class="btn btn-secondary" data-i18n="dbgSpawnZombie">+ ZUMBI</button>
+            <button type="button" id="dbgSpawnT" class="btn btn-secondary" data-i18n="dbgSpawnT">+ BOT T</button>
+            <button type="button" id="dbgSpawnCT" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="dbgSpawnCT">+ BOT CT</button>
+          </div>
         </div>
+
+        <div class="set-sec" data-i18n="dbgSecMatch">PARTIDA</div>
         <div class="setting-group">
-          <label class="checkbox-label"><input type="checkbox" id="dbgRapidFire"><span data-i18n="dbgRapidFire">Tiro rápido (cadência 4x)</span></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <button type="button" id="dbgHeal" class="btn btn-secondary" data-i18n="dbgHeal">CURAR + MUNIÇÃO</button>
+            <button type="button" id="dbgResetMap" class="btn btn-secondary" data-i18n="dbgResetMap">REINICIAR MAPA</button>
+            <button type="button" id="dbgMoney" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="dbgMoney">+ DINHEIRO MÁXIMO (LOJA)</button>
+          </div>
         </div>
-        <div class="setting-group">
-          <label class="checkbox-label"><input type="checkbox" id="dbgInfMoney"><span data-i18n="dbgInfMoney">Dinheiro infinito na loja</span></label>
-        </div>
-        <div class="setting-group">
-          <label class="checkbox-label"><input type="checkbox" id="dbgTileInfo"><span data-i18n="dbgTileInfo">Info na tela (piso, teto, parede, alvo)</span></label>
-        </div>
+
+        <div class="set-sec" data-i18n="dbgSecWorld">MUNDO E VISUAL</div>
         <div class="setting-group">
           <label class="checkbox-label"><input type="checkbox" id="dbgNoCeiling"><span data-i18n="dbgNoCeiling">Remover teto (mostrar céu)</span></label>
         </div>
         <div class="setting-group">
-          <label for="dbgSpeedRange"><span data-i18n="dbgSpeedLabel">VELOCIDADE DO JOGADOR</span>: <span id="dbgSpeedVal">1.0x</span></label>
-          <input type="range" id="dbgSpeedRange" min="0.5" max="4" step="0.1" value="1">
+          <label class="checkbox-label"><input type="checkbox" id="dbgTileInfo"><span data-i18n="dbgTileInfo">Info na tela (piso, teto, parede, alvo)</span></label>
         </div>
         <div class="setting-group">
           <label for="dbgFogRange"><span data-i18n="dbgFogLabel">ALCANCE DE VISÃO (NEBLINA)</span>: <span id="dbgFogVal">1.0x</span></label>
@@ -2178,8 +2377,29 @@ html[data-menu="black"]{
             <option value="6">Pôr do sol / Sunset 1</option><option value="7">Pôr do sol / Sunset 2</option>
           </select>
         </div>
+
+        <div class="set-sec" data-i18n="dbgSecMaps">MAPAS E MODOS</div>
         <div class="setting-group">
-          <label style="color:#39ff14;" data-i18n="dbgTeleportLabel">TELEPORTE (MAPA DE TESTES):</label>
+          <label for="dbgMapSelect" style="color:#39ff14;" data-i18n="dbgMapLabel">IR PARA QUALQUER MAPA (inclui o ESTÁDIO):</label>
+          <select id="dbgMapSelect" style="width:100%;padding:8px;background:#000;color:#39ff14;border:1px solid #39ff14;font-family:inherit;"></select>
+          <label for="dbgModeSelect" style="color:#39ff14;margin-top:6px;display:block;" data-i18n="dbgModeLabel">MODO DE JOGO (para testar cada modo):</label>
+          <select id="dbgModeSelect" style="width:100%;padding:8px;background:#000;color:#39ff14;border:1px solid #39ff14;font-family:inherit;">
+            <option value="auto" data-i18n="dbgModeAuto">AUTOMÁTICO (pelo mapa)</option>
+            <option value="waves">ZOMBIE SURVIVAL</option>
+            <option value="gungame">GUN GAME</option>
+            <option value="deathmatch">DEATHMATCH</option>
+            <option value="ctf">CAPTURE THE FLAG</option>
+            <option value="hostage">HOSTAGE RESCUE</option>
+            <option value="fnaf">FNAF DOOM</option>
+            <option value="soccer">FUTEBOL</option>
+          </select>
+          <label class="checkbox-label"><input type="checkbox" id="dbgMapBots"><span data-i18n="dbgMapBots">Com bots / inimigos (desmarcado = sem bots)</span></label>
+          <button type="button" id="dbgGoMapBtn" class="btn btn-secondary" style="width:100%;margin-top:6px;border-color:#39ff14;color:#39ff14;" data-i18n="dbgGoMap">ENTRAR NO MAPA SELECIONADO</button>
+          <button id="dbgTestLevelBtn" class="btn btn-secondary" style="width:100%;margin-top:6px;border-color:#39ff14;color:#39ff14;" data-i18n="dbgTestLevel">ENTRAR NO MAPA DE TESTES</button>
+        </div>
+
+        <div class="set-sec" data-i18n="dbgSecTeleport">TELEPORTE (MAPA DE TESTES)</div>
+        <div class="setting-group">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
             <button type="button" id="dbgTpTex" class="btn btn-secondary" data-i18n="tpTex">TEXTURAS</button>
             <button type="button" id="dbgTpHub" class="btn btn-secondary" data-i18n="tpHub">CORREDOR</button>
@@ -2194,37 +2414,6 @@ html[data-menu="black"]{
             <button type="button" id="dbgTpRoof" class="btn btn-secondary" data-i18n="tpRoof">TELHADOS</button>
           </div>
         </div>
-        <div class="setting-group">
-          <label style="color:#39ff14;" data-i18n="dbgToolsLabel">FERRAMENTAS:</label>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-            <button type="button" id="dbgRespawn" class="btn btn-secondary" data-i18n="dbgRespawn">RENASCER ALVOS</button>
-            <button type="button" id="dbgKillAll" class="btn btn-secondary" data-i18n="dbgKillAll">ELIMINAR TODOS</button>
-            <button type="button" id="dbgSpawnZombie" class="btn btn-secondary" data-i18n="dbgSpawnZombie">+ ZUMBI</button>
-            <button type="button" id="dbgHeal" class="btn btn-secondary" data-i18n="dbgHeal">CURAR + MUNIÇÃO</button>
-            <button type="button" id="dbgSpawnT" class="btn btn-secondary" data-i18n="dbgSpawnT">+ BOT T</button>
-            <button type="button" id="dbgSpawnCT" class="btn btn-secondary" data-i18n="dbgSpawnCT">+ BOT CT</button>
-            <button type="button" id="dbgMoney" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="dbgMoney">+ DINHEIRO MÁXIMO (LOJA)</button>
-            <button type="button" id="dbgResetMap" class="btn btn-secondary" style="grid-column:1/3;" data-i18n="dbgResetMap">REINICIAR MAPA</button>
-          </div>
-        </div>
-        <div class="setting-group">
-          <label style="color:#39ff14;">IR PARA QUALQUER MAPA (inclui o ESTÁDIO):</label>
-          <select id="dbgMapSelect" style="width:100%;padding:8px;background:#000;color:#39ff14;border:1px solid #39ff14;font-family:inherit;"></select>
-          <label style="color:#39ff14;margin-top:6px;display:block;">MODO DE JOGO (para testar cada modo):</label>
-          <select id="dbgModeSelect" style="width:100%;padding:8px;background:#000;color:#39ff14;border:1px solid #39ff14;font-family:inherit;">
-            <option value="auto">AUTOMÁTICO (pelo mapa)</option>
-            <option value="waves">ZOMBIE SURVIVAL</option>
-            <option value="gungame">GUN GAME</option>
-            <option value="deathmatch">DEATHMATCH</option>
-            <option value="ctf">CAPTURE THE FLAG</option>
-            <option value="hostage">HOSTAGE RESCUE</option>
-            <option value="fnaf">FNAF DOOM</option>
-            <option value="soccer">FUTEBOL</option>
-          </select>
-          <label class="checkbox-label"><input type="checkbox" id="dbgMapBots"><span>Com bots / inimigos (desmarcado = sem bots)</span></label>
-          <button type="button" id="dbgGoMapBtn" class="btn btn-secondary" style="width:100%;margin-top:6px;border-color:#39ff14;color:#39ff14;">ENTRAR NO MAPA SELECIONADO</button>
-        </div>
-        <button id="dbgTestLevelBtn" class="btn btn-secondary" style="width:100%;margin-top:8px;border-color:#39ff14;color:#39ff14;">ENTRAR NO MAPA DE TESTES</button>
       </div>
     </div>
 
@@ -2381,6 +2570,13 @@ const debugOptions = {
 function dbgDmg(d){ return debugOptions.oneShot ? 99999 : d; }
 let viewBob = true;     // balanço da arma/câmera
 let showFps = false;    // contador de FPS
+var touchVibration = true;   // vibração do celular (navigator.vibrate)
+var _vibeUntil = 0, _vibeStr = 0;
+var fpsCap = 0;              // 0 = sem limite; 30 / 45 / 60
+var shadowMode = 'soft';     // off | simple | soft
+var hzEnabled = true;        // horizonte estático (casas/prédios/árvores)
+var mmEco = false, mmTick = 0;   // minimapa econômico
+var _imgCache = null, _imgBuf32 = null;   // ImageData reaproveitado entre quadros
 
 // ============ SISTEMA DE ÁUDIO (100% sintetizado via Web Audio API, sem arquivos externos) ============
 // URLs dos áudios reais das armas (arquivos .wav enviados pelo usuário)
@@ -4696,12 +4892,19 @@ const I18N = {
     lvl82: "CS_DOWNHILL", lvl82Desc: "Estilo Counter-Strike: Montanha estreita e bem comprida, em 5 patamares ligados por rampas em zigue-zague. T no topo, CT na base. Dá para pular os penhascos e descer rápido (dano leve), mas para subir só pelas rampas. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
-    matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", mcGreen: "VERDE", mcPink: "ROSA CHOQUE", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
+    matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", hudSeparateLabel: "COR DA HUD DIFERENTE DO MENU", hudColorLabel: "COR DA HUD:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", mcGreen: "VERDE", mcPink: "ROSA CHOQUE", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
     gunFoeLabel: "CONTRA:", gunFoeZombies: "ZUMBIS", gunFoeBots: "BOTS",
     dmPrimaryLabel: "ARMA PRINCIPAL (PESADA):", dmSecondaryLabel: "ARMA SECUNDÁRIA (LEVE):", dmRandomWeapon: "ALEATÓRIA",
-    debugMenuTitle: "MENU DEBUG", dbgGodMode: "Vida Infinita (God Mode)", dbgInfAmmo: "Munição Infinita", dbgPauseEnemies: "Pausar Inimigos",
+    debugMenuTitle: "MENU DEBUG", resumeGame: "VOLTAR AO JOGO", dbgLockLabel: "SENHA MENU DEBUG:", dbgPassPh: "Insira a senha...", dbgUnlockBtn: "DESBLOQUEAR DEBUG", dbgHint: "Interruptores e controles deslizantes só valem ao clicar em APLICAR. Os botões agem na hora.", dbgNoClip: "Noclip (Atravessar Paredes)", dbgSecPlayer: "JOGADOR", dbgSecWeapon: "ARMA (EQUIPA AO APLICAR)", dbgSecEnemies: "INIMIGOS E ALVOS", dbgTestOnly: "Os botões abaixo só funcionam no MAPA DE TESTES.", dbgSecMatch: "PARTIDA", dbgSecWorld: "MUNDO E VISUAL", dbgSecMaps: "MAPAS E MODOS", dbgSecTeleport: "TELEPORTE (MAPA DE TESTES)", dbgMapLabel: "IR PARA QUALQUER MAPA (inclui o ESTÁDIO):", dbgModeLabel: "MODO DE JOGO (para testar cada modo):", dbgModeAuto: "AUTOMÁTICO (pelo mapa)", dbgMapBots: "Com bots / inimigos (desmarcado = sem bots)", dbgGoMap: "ENTRAR NO MAPA SELECIONADO", dbgTestLevel: "ENTRAR NO MAPA DE TESTES", dbgGodMode: "Vida Infinita (God Mode)", dbgInfAmmo: "Munição Infinita", dbgPauseEnemies: "Pausar Inimigos",
     tabGeneral: "GERAL", tabControls: "CONTROLES", tabDebug: "DEBUG",
-    fovLabel: "CAMPO DE VISÃO (FOV)", renderQualityLabel: "QUALIDADE DA RENDERIZAÇÃO:", qLow: "BAIXA", qMid: "NORMAL", qHigh: "ALTA",
+    tabGraphics: "GRÁFICOS", tabInterface: "INTERFACE",
+    secPlayer: "JOGADOR", secGameplay: "JOGABILIDADE", secPreset: "PREDEFINIÇÃO RÁPIDA", secStyle: "ESTILO VISUAL", secImage: "IMAGEM", secEffects: "EFEITOS", secPerf: "DESEMPENHO", secMenuHud: "CORES E TAMANHO", secRadarAim: "RADAR E MIRA", secFeedback: "FEEDBACK",
+    gfxStyleLabel: "ESTILO GRÁFICO:", gfxPixel: "PIXELADO", gfxClassic: "CLÁSSICO", gfxSmooth: "SUAVE",
+    gfxHint_pixel: "Visual retrô: blocos grandes, poucas cores e pontilhado. Leve e com poucos detalhes.",
+    gfxHint_classic: "Equilíbrio: pixels nítidos, como no jogo original.",
+    gfxHint_smooth: "Imagem mais suave e detalhada, sem pixels aparentes. Pesa mais no aparelho.",
+    fxLabel: "EFEITO DE TELA:", fxOff: "NENHUM", fxVig: "VINHETA", fxCrt: "CRT (LINHAS)",
+    fovLabel: "CAMPO DE VISÃO (FOV)", renderQualityLabel: "RESOLUÇÃO DA IMAGEM:", qLow: "BAIXA", qMid: "NORMAL", qHigh: "ALTA",
     fogLabel: "NÉVOA (DISTÂNCIA DE VISÃO):", fogNear: "PRÓXIMA", fogNormal: "NORMAL", fogFar: "DISTANTE", fogOff: "DESLIGADA",
     hudSizeLabel: "TAMANHO DA HUD:", hudSmall: "PEQUENA", hudMed: "MÉDIA", hudLarge: "GRANDE",
     mapColName: "MAPA", mapColStyle: "ESTILO",
@@ -4726,7 +4929,7 @@ const I18N = {
     gpConfirm: "CONFIRMAR", gpBack: "VOLTAR", gpNav: "NAVEGAR", gpTabs: "ABAS", gpMap: "MAPA", gpMode: "MODO", gpPlay: "JOGAR",
     gpClose: "FECHAR", gpRandomMap: "MAPA ALEATÓRIO", gpSide: "LADO", gpSettings: "CONFIG.", gpFullscreen: "TELA CHEIA",
     gpRetry: "TENTAR DE NOVO", gpMenu: "MENU", gpChange: "TROCAR",
-    gpVibLabel: "VIBRAÇÃO DO CONTROLE", gpDeadLabel: "ZONA MORTA DOS ANALÓGICOS", gpDisconnected: "CONTROLE DESCONECTADO – JOGO PAUSADO",
+    gpVibLabel: "VIBRAÇÃO DO CONTROLE", touchVibLabel: "VIBRAÇÃO DO CELULAR (TOQUE)", touchVibNA: "INDISPONÍVEL NESTE APARELHO/NAVEGADOR (O SAFARI DO IPHONE NÃO SUPORTA VIBRAÇÃO)", qMin: "MÍNIMA", perfPresetLabel: "PRESET DE DESEMPENHO:", perfEco: "ECONOMIA", perfBal: "EQUILIBRADO", perfHq: "QUALIDADE", fpsCapLabel: "LIMITE DE FPS:", fpsUnl: "SEM LIMITE", shadowLabel: "SOMBRA DOS PERSONAGENS:", shadowOff: "DESLIGADA", shadowSimple: "SIMPLES", shadowSoft: "SUAVE", horizonLabel: "HORIZONTE ESTÁTICO (CASAS, PRÉDIOS E ÁRVORES)", mmEcoLabel: "MINIMAPA ECONÔMICO (ATUALIZA MENOS)", smoothPxLabel: "SUAVIZAR PIXELS DA IMAGEM", gpDeadLabel: "ZONA MORTA DOS ANALÓGICOS", gpDisconnected: "CONTROLE DESCONECTADO – JOGO PAUSADO",
     ctlQuick: "Arma anterior", ctlMenuRandom: "Mapa aleatório", ctlMenuSide: "Lado (Deathmatch)", ctlMenuChange: "Trocar opção", ctlInUse: "EM USO", pitchSensLabel: "SENSIBILIDADE VERTICAL (CÂMERA)", invertYLabel: "INVERTER EIXO VERTICAL (OLHAR)",
     ctlLookH: "Girar (esquerda/direita)", ctlLookV: "Olhar (cima/baixo)", ctlCamCenter: "Centralizar câmera", ctlUse: "Usar (portas/luzes)",
     ctlKbLookH: "MOUSE ↔ / ← →", ctlKbLookV: "MOUSE ↕ / PGUP PGDN", ctlKbCenter: "C / HOME",
@@ -4844,12 +5047,19 @@ const I18N = {
     lvl82: "CS_DOWNHILL", lvl82Desc: "Counter-Strike style: A narrow, very long mountain in 5 terraces linked by zig-zag ramps. T on the summit, CT at the base. You can jump off the cliffs to go down fast (light damage), but climbing back is only by the ramps. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
-    matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", mcGreen: "GREEN", mcPink: "HOT PINK", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
+    matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", hudSeparateLabel: "HUD COLOR DIFFERENT FROM MENU", hudColorLabel: "HUD COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", mcGreen: "GREEN", mcPink: "HOT PINK", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
     gunFoeLabel: "VERSUS:", gunFoeZombies: "ZOMBIES", gunFoeBots: "BOTS",
     dmPrimaryLabel: "PRIMARY WEAPON (HEAVY):", dmSecondaryLabel: "SECONDARY WEAPON (LIGHT):", dmRandomWeapon: "RANDOM",
-    debugMenuTitle: "DEBUG MENU", dbgGodMode: "Infinite Health (God Mode)", dbgInfAmmo: "Infinite Ammo", dbgPauseEnemies: "Pause Enemies",
+    debugMenuTitle: "DEBUG MENU", resumeGame: "BACK TO GAME", dbgLockLabel: "DEBUG MENU PASSWORD:", dbgPassPh: "Enter the password...", dbgUnlockBtn: "UNLOCK DEBUG", dbgHint: "Switches and sliders only take effect when you click APPLY. Buttons act right away.", dbgNoClip: "Noclip (Walk Through Walls)", dbgSecPlayer: "PLAYER", dbgSecWeapon: "WEAPON (EQUIPS ON APPLY)", dbgSecEnemies: "ENEMIES AND TARGETS", dbgTestOnly: "The buttons below only work on the TEST MAP.", dbgSecMatch: "MATCH", dbgSecWorld: "WORLD AND VISUALS", dbgSecMaps: "MAPS AND MODES", dbgSecTeleport: "TELEPORT (TEST MAP)", dbgMapLabel: "GO TO ANY MAP (includes the STADIUM):", dbgModeLabel: "GAME MODE (to test each mode):", dbgModeAuto: "AUTOMATIC (by map)", dbgMapBots: "With bots / enemies (unchecked = no bots)", dbgGoMap: "ENTER SELECTED MAP", dbgTestLevel: "ENTER THE TEST MAP", dbgGodMode: "Infinite Health (God Mode)", dbgInfAmmo: "Infinite Ammo", dbgPauseEnemies: "Pause Enemies",
     tabGeneral: "GENERAL", tabControls: "CONTROLS", tabDebug: "DEBUG",
-    fovLabel: "FIELD OF VIEW (FOV)", renderQualityLabel: "RENDER QUALITY:", qLow: "LOW", qMid: "NORMAL", qHigh: "HIGH",
+    tabGraphics: "GRAPHICS", tabInterface: "INTERFACE",
+    secPlayer: "PLAYER", secGameplay: "GAMEPLAY", secPreset: "QUICK PRESET", secStyle: "VISUAL STYLE", secImage: "IMAGE", secEffects: "EFFECTS", secPerf: "PERFORMANCE", secMenuHud: "COLORS AND SIZE", secRadarAim: "RADAR AND CROSSHAIR", secFeedback: "FEEDBACK",
+    gfxStyleLabel: "GRAPHICS STYLE:", gfxPixel: "PIXELATED", gfxClassic: "CLASSIC", gfxSmooth: "SMOOTH",
+    gfxHint_pixel: "Retro look: big blocks, few colors and dithering. Light and low on detail.",
+    gfxHint_classic: "Balanced: sharp pixels, like the original game.",
+    gfxHint_smooth: "Smoother, more detailed image with no visible pixels. Heavier on your device.",
+    fxLabel: "SCREEN EFFECT:", fxOff: "NONE", fxVig: "VIGNETTE", fxCrt: "CRT (LINES)",
+    fovLabel: "FIELD OF VIEW (FOV)", renderQualityLabel: "IMAGE RESOLUTION:", qLow: "LOW", qMid: "NORMAL", qHigh: "HIGH",
     fogLabel: "FOG (VIEW DISTANCE):", fogNear: "CLOSE", fogNormal: "NORMAL", fogFar: "FAR", fogOff: "OFF",
     hudSizeLabel: "HUD SIZE:", hudSmall: "SMALL", hudMed: "MEDIUM", hudLarge: "LARGE",
     mapColName: "MAP", mapColStyle: "STYLE",
@@ -4874,7 +5084,7 @@ const I18N = {
     gpConfirm: "CONFIRM", gpBack: "BACK", gpNav: "NAVIGATE", gpTabs: "TABS", gpMap: "MAP", gpMode: "MODE", gpPlay: "PLAY",
     gpClose: "CLOSE", gpRandomMap: "RANDOM MAP", gpSide: "SIDE", gpSettings: "SETTINGS", gpFullscreen: "FULLSCREEN",
     gpRetry: "TRY AGAIN", gpMenu: "MENU", gpChange: "CHANGE",
-    gpVibLabel: "CONTROLLER VIBRATION", gpDeadLabel: "STICK DEADZONE", gpDisconnected: "CONTROLLER DISCONNECTED – GAME PAUSED",
+    gpVibLabel: "CONTROLLER VIBRATION", touchVibLabel: "PHONE VIBRATION (TOUCH)", touchVibNA: "NOT AVAILABLE ON THIS DEVICE/BROWSER (IPHONE SAFARI DOES NOT SUPPORT VIBRATION)", qMin: "MINIMUM", perfPresetLabel: "PERFORMANCE PRESET:", perfEco: "BATTERY SAVER", perfBal: "BALANCED", perfHq: "QUALITY", fpsCapLabel: "FPS LIMIT:", fpsUnl: "UNLIMITED", shadowLabel: "CHARACTER SHADOWS:", shadowOff: "OFF", shadowSimple: "SIMPLE", shadowSoft: "SOFT", horizonLabel: "STATIC HORIZON (HOUSES, BUILDINGS AND TREES)", mmEcoLabel: "LIGHT MINIMAP (UPDATES LESS OFTEN)", smoothPxLabel: "SMOOTH IMAGE PIXELS", gpDeadLabel: "STICK DEADZONE", gpDisconnected: "CONTROLLER DISCONNECTED – GAME PAUSED",
     ctlQuick: "Previous weapon", ctlMenuRandom: "Random map", ctlMenuSide: "Side (Deathmatch)", ctlMenuChange: "Change option", ctlInUse: "IN USE", pitchSensLabel: "VERTICAL SENSITIVITY (CAMERA)", invertYLabel: "INVERT VERTICAL AXIS (LOOK)",
     ctlLookH: "Turn (left/right)", ctlLookV: "Look (up/down)", ctlCamCenter: "Center camera", ctlUse: "Use (doors/lights)",
     ctlKbLookH: "MOUSE ↔ / ← →", ctlKbLookV: "MOUSE ↕ / PGUP PGDN", ctlKbCenter: "C / HOME",
@@ -4891,6 +5101,10 @@ function setLanguage(lang) {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (I18N[lang][key]) el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const t = I18N[lang][el.getAttribute('data-i18n-ph')];
+    if (t) el.placeholder = t;
   });
   
   const lvlSelect = document.getElementById('mainLevelSelect');
@@ -12691,7 +12905,17 @@ window.addEventListener('gamepaddisconnected', (e)=>{
 });
 
 // Vibração (Xbox Series X: motores dual-rumble). Respeita a opção nas configurações.
+// Vibração do celular (Android/Chrome). Reaproveita os mesmos pontos do jogo onde o controle vibra.
+function touchVibe(strong, weak, ms, force){
+  if(!touchVibration || !navigator.vibrate) return;
+  if(!force && !usingTouch) return;
+  const now = performance.now(), power = Math.max(strong, weak);
+  if(now < _vibeUntil && power <= _vibeStr) return;   // não corta uma vibração mais forte em andamento
+  const d = Math.max(15, Math.min(500, Math.round(ms * (0.55 + 0.45 * power))));
+  try{ if(navigator.vibrate(d)){ _vibeUntil = now + d; _vibeStr = power; } }catch(err){}
+}
 function gpRumble(strong, weak, ms){
+  touchVibe(strong, weak, ms);
   if(!gpVibration || gamepadIndex === null || !usingGamepad || !navigator.getGamepads) return;
   const pad = navigator.getGamepads()[gamepadIndex];
   const act = pad && (pad.vibrationActuator || (pad.hapticActuators && pad.hapticActuators[0]));
@@ -13242,6 +13466,7 @@ const dbgNoClip = document.getElementById('dbgNoClip');
 const dbgInfAmmo = document.getElementById('dbgInfAmmo');
 const dbgPauseEnemies = document.getElementById('dbgPauseEnemies');
 const dbgWeaponSelect = document.getElementById('dbgWeaponSelect');
+let dbgPickedWeapon = null;   // arma escolhida na grade do debug (só equipa se o jogador realmente escolher uma)
 const dbgTestLevelBtn = document.getElementById('dbgTestLevelBtn');
 
 // --- Tabbed pause menu ---
@@ -13264,6 +13489,7 @@ function openSettingsMenu() {
   } else {
     resumeGameBtn.style.display = 'none';
   }
+  dbgSyncUI();
   settingsModal.style.display = 'flex';
   refreshGamepadStatusUI();
   updateControlsActive();
@@ -13280,6 +13506,9 @@ function resumeGame() {
 
 resumeGameBtn.addEventListener('click', resumeGame);
 
+document.getElementById('debugPassInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('unlockDebugBtn').click(); }
+});
 document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   const inputPass = document.getElementById('debugPassInput').value.trim();
   if (inputPass === '31082007') {
@@ -13464,7 +13693,7 @@ document.getElementById('playSelectedLevelBtn').addEventListener('click', ()=>{
 
 dbgTestLevelBtn.addEventListener('click', ()=>{
   debugOptions.freeRoam = false;
-  SFX.menuAccept();
+  SFX.menuAccept(); netLeave();
   settingsModal.style.display = 'none';
   mainMenu.style.display = 'none';
   SFX.stopMenuMusic();
@@ -13580,6 +13809,68 @@ document.getElementById('optShowFps').addEventListener('change', e => {
   if(showFps){ fpsFrames = 0; fpsLast = performance.now(); el.textContent = '… FPS'; }
 });
 
+// ----- Vibração do celular + opções de desempenho -----
+const optTouchVib = document.getElementById('optTouchVibration');
+if(!navigator.vibrate){
+  optTouchVib.checked = false; optTouchVib.disabled = true; touchVibration = false;
+  document.getElementById('touchVibNote').style.display = '';
+}
+optTouchVib.addEventListener('change', e => {
+  touchVibration = e.target.checked;
+  if(touchVibration) touchVibe(0.6, 0.6, 120, true);          // teste rápido ao ligar
+  else if(navigator.vibrate) navigator.vibrate(0);
+});
+function setFpsCap(v){
+  v = parseInt(v, 10) || 0;
+  if([0, 30, 45, 60].indexOf(v) < 0) v = 0;
+  fpsCap = v;
+  document.querySelectorAll('#fpsCapSeg .seg-btn').forEach(b => b.classList.toggle('active', parseInt(b.getAttribute('data-val'), 10) === v));
+}
+function setShadowMode(v){
+  if(v !== 'off' && v !== 'simple') v = 'soft';
+  shadowMode = v;
+  document.querySelectorAll('#shadowSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === v));
+}
+document.querySelectorAll('#fpsCapSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setFpsCap(b.getAttribute('data-val')); }));
+document.querySelectorAll('#shadowSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setShadowMode(b.getAttribute('data-val')); }));
+document.getElementById('optHorizon').addEventListener('change', e => { hzEnabled = e.target.checked; });
+document.getElementById('optMmEco').addEventListener('change', e => { mmEco = e.target.checked; });
+// ----- Estilo gráfico e efeito de tela -----
+function setGfxStyle(v){
+  if(!GFX_STYLES[v]) v = GFX_DEFAULT;
+  gfxStyle = v;
+  Object.keys(GFX_STYLES).forEach(k => document.body.classList.toggle('gfx-' + k, k === v));
+  document.querySelectorAll('#gfxStyleSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === v));
+  const hint = document.getElementById('gfxStyleHint');
+  if(hint){
+    const k = 'gfxHint_' + v; hint.setAttribute('data-i18n', k);
+    const t = I18N[currentLang] && I18N[currentLang][k]; if(t) hint.textContent = t;
+  }
+  resizeCanvas();
+}
+function setFx(v){
+  if(v !== 'vig' && v !== 'crt') v = 'off';
+  document.body.classList.toggle('fx-vig', v === 'vig');
+  document.body.classList.toggle('fx-crt', v === 'crt');
+  document.querySelectorAll('#fxSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === v));
+}
+document.querySelectorAll('#gfxStyleSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setGfxStyle(b.getAttribute('data-val')); }));
+document.querySelectorAll('#fxSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setFx(b.getAttribute('data-val')); }));
+document.querySelectorAll('#perfPresetSeg .seg-btn').forEach(b => b.addEventListener('click', () => {
+  const P = {
+    eco: { q: '0.75', fps: 30, shadow: 'off',  hz: false, mm: true,  gfx: 'pixel'   },
+    bal: { q: '1',    fps: 0,  shadow: 'soft', hz: true,  mm: false, gfx: 'classic' },
+    hq:  { q: '1',    fps: 0,  shadow: 'soft', hz: true,  mm: false, gfx: 'smooth'  }
+  }[b.getAttribute('data-val')];
+  if(!P) return;
+  const qb = document.querySelector('#renderQualitySeg .seg-btn[data-val="' + P.q + '"]'); if(qb) qb.click();
+  setFpsCap(P.fps); setShadowMode(P.shadow); setGfxStyle(P.gfx);
+  [['optHorizon', P.hz], ['optMmEco', P.mm]].forEach(([id, v]) => {
+    const el = document.getElementById(id); el.checked = v; el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  uiToast(currentLang === 'en' ? 'Preset applied' : 'Preset aplicado', 'ok');
+}));
+
 const dbgOneShot = document.getElementById('dbgOneShot');
 const dbgFastReload = document.getElementById('dbgFastReload');
 const dbgRapidFire = document.getElementById('dbgRapidFire');
@@ -13591,6 +13882,26 @@ const dbgFogRange = document.getElementById('dbgFogRange');
 const dbgSkySelect = document.getElementById('dbgSkySelect');
 dbgSpeedRange.addEventListener('input', e => { document.getElementById('dbgSpeedVal').textContent = parseFloat(e.target.value).toFixed(1) + 'x'; });
 dbgFogRange.addEventListener('input', e => { document.getElementById('dbgFogVal').textContent = parseFloat(e.target.value).toFixed(1) + 'x'; });
+
+// Reflete no menu o que está realmente ativo (o que foi marcado e não aplicado volta ao estado real ao reabrir)
+function dbgSyncUI(){
+  dbgGodMode.checked = !!debugOptions.godMode;
+  dbgNoClip.checked = !!debugOptions.noClip;
+  dbgInfAmmo.checked = !!debugOptions.infAmmo;
+  dbgPauseEnemies.checked = !!debugOptions.pauseEnemies;
+  dbgOneShot.checked = !!debugOptions.oneShot;
+  dbgFastReload.checked = !!debugOptions.fastReload;
+  dbgRapidFire.checked = !!debugOptions.rapidFire;
+  dbgInfMoney.checked = !!debugOptions.infMoney;
+  dbgTileInfo.checked = !!debugOptions.tileInfo;
+  dbgNoCeiling.checked = !!debugOptions.noCeiling;
+  dbgSpeedRange.value = debugOptions.speed; document.getElementById('dbgSpeedVal').textContent = debugOptions.speed.toFixed(1) + 'x';
+  dbgFogRange.value = debugOptions.fog; document.getElementById('dbgFogVal').textContent = debugOptions.fog.toFixed(1) + 'x';
+  dbgSkySelect.value = String(debugOptions.sky);
+  dbgPickedWeapon = null;
+  const cur = (typeof started !== 'undefined' && started && player) ? player.weapon : null;
+  document.querySelectorAll('#dbgWeaponGrid .weapon-chip').forEach(c => c.classList.toggle('active', c.dataset.w === cur));
+}
 
 function dbgNeedTestMap(){
   if(started && isTestMapNow()) return true;
@@ -13689,12 +14000,17 @@ document.getElementById('applySettingsBtn').addEventListener('click', ()=>{
   debugOptions.sky = parseInt(dbgSkySelect.value, 10);
   applyDebugWorldOptions();
 
-  if (document.getElementById('debugSection').style.display !== 'none') {
-    const chosenW = dbgWeaponSelect.value;
-    if(!player.unlockedWeapons[chosenW] && ownedWeaponCount() >= MAX_WEAPON_SLOTS) delete player.unlockedWeapons[player.weapon];   // limite de 2 armas
-    player.unlockedWeapons[chosenW] = true;
-    initWeaponUI();
-    switchWeapon(chosenW);
+  if (dbgPickedWeapon) {
+    if (started && !gameOver) {
+      const chosenW = dbgPickedWeapon;
+      if(!player.unlockedWeapons[chosenW] && ownedWeaponCount() >= MAX_WEAPON_SLOTS) delete player.unlockedWeapons[player.weapon];   // limite de 2 armas
+      player.unlockedWeapons[chosenW] = true;
+      initWeaponUI();
+      switchWeapon(chosenW);
+    } else {
+      uiToast(currentLang === 'en' ? 'START A MATCH TO EQUIP A WEAPON' : 'INICIE UMA PARTIDA PARA EQUIPAR A ARMA', 'err');
+    }
+    dbgPickedWeapon = null;
   }
 
   if (debugOptions.godMode) player.health = player.maxHealth;
@@ -13721,13 +14037,15 @@ document.getElementById('resetSettingsBtn').addEventListener('click', ()=>{
     el.dispatchEvent(new Event('input', {bubbles:true}));
   });
   // caixas de marcar (a vibração é ajustada direto, para não vibrar o controle ao restaurar)
-  ['optShowMinimap','optViewBob','optShowFps','optInvertY','optShowCrosshair','optDamageFlash','optMusicOff'].forEach(id=>{
+  ['optShowMinimap','optViewBob','optShowFps','optInvertY','optShowCrosshair','optDamageFlash','optMusicOff','optHorizon','optMmEco'].forEach(id=>{
     const el = document.getElementById(id);
     el.checked = el.defaultChecked;
     el.dispatchEvent(new Event('change', {bubbles:true}));
   });
   const gpv = document.getElementById('gpVibration');
   gpv.checked = gpv.defaultChecked; gpVibration = gpv.checked;
+  if(!optTouchVib.disabled){ optTouchVib.checked = optTouchVib.defaultChecked; touchVibration = optTouchVib.checked; }
+  setFpsCap(0); setShadowMode('soft'); setGfxStyle(GFX_DEFAULT); setFx('off');
   // botões de opção: qualidade NORMAL e idioma PORTUGUÊS
   [['renderQualitySeg','1'],['fogSeg','normal'],['hudSizeSeg','med'],['langSeg','pt']].forEach(([segId,val])=>{
     const b = document.querySelector('#'+segId+' .seg-btn[data-val="'+val+'"]');
@@ -13944,11 +14262,13 @@ refreshMapsForMode();
     if(!cfg) return;
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'weapon-chip' + (opt.value === dbgWeaponSelect.value ? ' active' : '');
+    b.className = 'weapon-chip';
+    b.dataset.w = opt.value;
     b.innerHTML = '<img src="' + (cfg.icon || cfg.img) + '" alt=""><span>' + cfg.name + '</span>';
     b.addEventListener('click', ()=>{
       SFX.menuSelect();
       dbgWeaponSelect.value = opt.value;
+      dbgPickedWeapon = opt.value;
       grid.querySelectorAll('.weapon-chip').forEach(x=>x.classList.toggle('active', x === b));
     });
     grid.appendChild(b);
@@ -14040,15 +14360,61 @@ window.addEventListener('orientationchange', ()=> setTimeout(()=>{ resizeCanvas(
 setInterval(()=>{ try{ checkOrientation(); }catch(e){} }, 400);
 
 const canvas = document.getElementById('screen');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
 let SCREEN_W=240, SCREEN_H=135;
-let RENDER_SCALE = 1;   // qualidade de renderização (0.75 baixa · 1 normal · 1.5 alta)
+let RENDER_SCALE = 1;   // resolução da imagem (0.5 mínima · 0.75 baixa · 1 normal · 1.5 alta) — multiplica a base do estilo
+
+// ===== SISTEMA DE GRÁFICOS =====
+// Estilo gráfico = quão grande é a imagem interna (max/min/div), como ela é ampliada na tela e se há pós-processamento.
+//   pixel   : blocos grandes de tamanho INTEIRO (sem pixels tortos), poucas cores + pontilhado ordenado (visual retrô, poucos detalhes)
+//   classic : o visual original do jogo
+//   smooth  : imagem interna maior + ampliação suave (bilinear) + leve realce de cor, sem pixels aparentes
+// Para mudar o estilo padrão do jogo, altere GFX_DEFAULT.
+const GFX_DEFAULT = 'classic';
+const GFX_STYLES = {
+  pixel:   { max: 280, min: 140, div: 4.2, snap: true,  post: true,  smooth: false },
+  classic: { max: 320, min: 160, div: 3.5, snap: false, post: false, smooth: false },
+  smooth:  { max: 480, min: 240, div: 2.4, snap: false, post: false, smooth: true  }
+};
+let gfxStyle = GFX_DEFAULT;
+document.body.classList.add('gfx-' + gfxStyle);
 
 function resizeCanvas(){
-  const ww = window.innerWidth, wh = window.innerHeight;
-  SCREEN_W = Math.round(Math.min(320 * RENDER_SCALE, Math.max(160 * RENDER_SCALE, ww / (3.5 / RENDER_SCALE))));
-  SCREEN_H = Math.round(SCREEN_W * (wh/ww));
-  canvas.width = SCREEN_W; canvas.height = SCREEN_H;
+  const ww = window.innerWidth, wh = window.innerHeight, S = GFX_STYLES[gfxStyle] || GFX_STYLES[GFX_DEFAULT];
+  let w = Math.round(Math.min(S.max * RENDER_SCALE, Math.max(S.min * RENDER_SCALE, ww / (S.div / RENDER_SCALE)))), h;
+  if(S.snap){
+    // cada pixel interno ocupa um número INTEIRO de pixels da tela → blocos uniformes, sem "tremor" nas bordas
+    const ps = Math.max(2, Math.round(ww / w));
+    w = Math.ceil(ww / ps); h = Math.ceil(wh / ps);
+    canvas.style.width = (w * ps) + 'px'; canvas.style.height = (h * ps) + 'px';
+  } else {
+    h = Math.round(w * (wh / ww));
+    canvas.style.width = ''; canvas.style.height = '';
+  }
+  SCREEN_W = w; SCREEN_H = h;
+  canvas.width = SCREEN_W; canvas.height = SCREEN_H;   // (redimensionar zera o estado do contexto)
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = S.smooth ? 'high' : 'low';
+}
+
+// Pós-processamento do estilo PIXELADO: 16 níveis por canal + pontilhado ordenado (Bayer 4x4)
+const _bayer4 = [0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+const _pxLut = (() => { const t = new Uint8Array(256); for(let i = 0; i < 256; i++) t[i] = Math.round(i / 255 * 15) * 17; return t; })();
+function gfxPost(){
+  if(!(GFX_STYLES[gfxStyle] || {}).post) return;
+  const w = SCREEN_W, h = SCREEN_H;
+  let id; try { id = ctx.getImageData(0, 0, w, h); } catch(e) { return; }
+  const b = new Uint32Array(id.data.buffer), lut = _pxLut;
+  for(let y = 0; y < h; y++){
+    const row = (y & 3) << 2, o = y * w;
+    for(let x = 0; x < w; x++){
+      const t = (_bayer4[row + (x & 3)] - 7.5) * 0.7, p = b[o + x];
+      let r = (p & 255) + t, g = ((p >> 8) & 255) + t, bl = ((p >> 16) & 255) + t;
+      r = r < 0 ? 0 : (r > 255 ? 255 : (r | 0)); g = g < 0 ? 0 : (g > 255 ? 255 : (g | 0)); bl = bl < 0 ? 0 : (bl > 255 ? 255 : (bl | 0));
+      b[o + x] = 0xFF000000 | (lut[bl] << 16) | (lut[g] << 8) | lut[r];
+    }
+  }
+  ctx.putImageData(id, 0, 0);
 }
 resizeCanvas();
 
@@ -14139,8 +14505,9 @@ function castAndDraw(){
   const mixedC = !!ceilOnMap, roofsOn = !!(roofMap && ROOFS.length);   // mapas mistos: teto só nos tiles com ceilOn; telhados por cima
   const cOn = ti => mixedC ? ceilOnMap[ti] === 1 : hasCeil;
 
-  const imgData = ctx.createImageData(w, h);
-  const buf32 = new Uint32Array(imgData.data.buffer);
+  if(!_imgCache || _imgCache.width !== w || _imgCache.height !== h){ _imgCache = ctx.createImageData(w, h); _imgBuf32 = new Uint32Array(_imgCache.data.buffer); }
+  else _imgBuf32.fill(0);
+  const imgData = _imgCache, buf32 = _imgBuf32;
 
   const dirX = Math.cos(player.angle), dirY = Math.sin(player.angle);
   const planeX = -Math.sin(player.angle) * Math.tan(HALF_FOV);
@@ -14152,8 +14519,8 @@ function castAndDraw(){
   const sky = skies[currentSky];
   HZ.on = false;
   if (levelNoCeiling) {
-    hzEnsure(sky);
-    if (HZ.pan) { HZ.on = true; hzRowTable(h, horizon); }
+    if (hzEnabled) hzEnsure(sky);
+    if (hzEnabled && HZ.pan) { HZ.on = true; hzRowTable(h, horizon); }
     if (skyColAng.length !== w) {
       skyColAng = new Array(w);
       const tf = Math.tan(HALF_FOV);
@@ -14787,6 +15154,7 @@ function castAndDraw(){
 
   ctx.putImageData(imgData, 0, 0);
   drawSprites(horizon);
+  gfxPost();
 }
 
 function drawSprites(horizon){
@@ -14853,12 +15221,12 @@ function drawSprites(horizon){
 function drawGroundShadow(sx, groundY, radiusX, fog){
   // Sombra elíptica achatada no chão, sob o sprite — some gradualmente com a
   // distância (fog) para não "flutuar" sobre inimigos/pickups muito longe.
-  if(radiusX <= 0) return;
+  if(radiusX <= 0 || shadowMode === 'off') return;
   ctx.save();
   ctx.beginPath();
   ctx.ellipse(sx, groundY, radiusX, radiusX * 0.32, 0, 0, Math.PI*2);
   ctx.fillStyle = `rgba(0,0,0,${(0.45*fog).toFixed(3)})`;
-  ctx.filter = 'blur(1px)';
+  if(shadowMode === 'soft') ctx.filter = 'blur(1px)';
   ctx.fill();
   ctx.restore();
 }
@@ -15906,7 +16274,13 @@ function updateEnemies(dt, now){
 
 let lastTime = performance.now();
 let loopErrs = 0;
+let lastFrameAt = 0;
 function gameLoop(now){
+  if(fpsCap > 0){
+    const iv = 1000 / fpsCap, el = now - lastFrameAt;
+    if(el < iv - 1){ requestAnimationFrame(gameLoop); return; }
+    lastFrameAt = el > iv * 3 ? now : now - (el % iv);
+  }
   try { gameStep(now); loopErrs = 0; }
   catch(err){
     console.error('gameLoop', err);
@@ -15948,7 +16322,7 @@ function gameStep(now){
     if(NET.mode !== 'client') spawnPickupsLogic(now);
     ggUpdate(dt);
     castAndDraw();
-    drawMinimap();
+    if(!mmEco || ((mmTick++ & 1) === 0)) drawMinimap();
   } else {
     if(swapCandidate) updateSwapPrompt();   // pausa / fim de jogo: esconde o aviso de troca
     if(soc && (!started || gameOver)) socHideUi();
@@ -16592,7 +16966,7 @@ function netHostStart(){
 // Convidado -> host: { t:'chat', m }. O host limpa o texto, descobre quem mandou e reenvia a todos:
 // { t:'chat', i: número do jogador, m }. Assim ninguém consegue falsificar o nome de outro jogador.
 const CHAT_MAX_LEN = 100, CHAT_MAX_LINES = 6, CHAT_SHOW_MS = 8000, CHAT_COOLDOWN_MS = 700;
-const CHAT_COLORS = ['#9fe3ff', '#9fe3ff', '#7dff8a', '#ff9a6b'];
+const CHAT_COLORS = ['var(--cs-hud)', 'var(--cs-hud)', '#7dff8a', '#ff9a6b'];
 var chatOpen = false, chatLastSent = 0;
 function chatClean(m){ return String(m == null ? '' : m).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX_LEN); }
 function chatMyNumber(){ return NET.mode === 'host' ? 1 : (NET.me || 1) + 1; }
@@ -17382,6 +17756,7 @@ function netClientTick(dt){
     if(fps >= 26){ q.low = 0; return; }
     if(++q.low < 2) return;
     q.low = 0;
+    if(RENDER_SCALE <= 0.75){ q.done = true; return; }
     const target = RENDER_SCALE > 1 ? '1' : '0.75';
     setQuality(target);
     uiToast(T('Qualidade reduzida para manter a fluidez', 'Quality lowered to keep it smooth'));
@@ -17406,13 +17781,13 @@ setLanguage('pt');
 (function(){
   const KEY = 'dz_settings';
   const RANGES = ['sensRange','fovRange','pitchSensRange','gpDeadRange','sfxVolumeRange','musicVolumeRange','gunBotRange','dmEnemyBotRange','dmAllyBotRange'];
-  const CHECKS = ['optShowMinimap','optViewBob','optShowFps','optInvertY','gpVibration','optShowCrosshair','optDamageFlash','optMusicOff'];
+  const CHECKS = ['optShowMinimap','optViewBob','optShowFps','optInvertY','gpVibration','optShowCrosshair','optDamageFlash','optMusicOff','optTouchVibration','optHorizon','optMmEco'];
   const get = id => document.getElementById(id);
   const activeVal = segId => { const b = document.querySelector('#' + segId + ' .seg-btn.active'); return b ? b.getAttribute('data-val') : null; };
 
   function save(){
     try {
-      const o = { range: {}, check: {}, quality: activeVal('renderQualitySeg'), fog: activeVal('fogSeg'), hud: activeVal('hudSizeSeg'), lang: activeVal('langSeg') };
+      const o = { range: {}, check: {}, quality: activeVal('renderQualitySeg'), fog: activeVal('fogSeg'), hud: activeVal('hudSizeSeg'), lang: activeVal('langSeg'), fps: activeVal('fpsCapSeg'), shadow: activeVal('shadowSeg'), gfx: activeVal('gfxStyleSeg'), fx: activeVal('fxSeg') };
       RANGES.forEach(id => { const el = get(id); if(el) o.range[id] = el.value; });
       CHECKS.forEach(id => { const el = get(id); if(el) o.check[id] = el.checked; });
       localStorage.setItem(KEY, JSON.stringify(o));
@@ -17436,6 +17811,7 @@ setLanguage('pt');
       if(!el || typeof v !== 'boolean') return;
       el.checked = v;
       if(id === 'gpVibration') gpVibration = v;
+      else if(id === 'optTouchVibration'){ touchVibration = v && !!navigator.vibrate; el.checked = touchVibration; }
       else el.dispatchEvent(new Event('change', { bubbles: true }));
     });
     // qualidade da renderização
@@ -17450,6 +17826,10 @@ setLanguage('pt');
     // névoa e tamanho da HUD
     if(o.fog) setFogMode(o.fog);
     if(o.hud) setHudSize(o.hud);
+    if(o.fps != null) setFpsCap(o.fps);
+    if(o.shadow) setShadowMode(o.shadow);
+    if(o.gfx) setGfxStyle(o.gfx); else if(o.check && o.check.optSmoothPx) setGfxStyle('smooth');   // migra o antigo "suavizar pixels"
+    if(o.fx) setFx(o.fx);
     // idioma
     if(o.lang && (o.lang === 'pt' || o.lang === 'en')){
       const b = document.querySelector('#langSeg .seg-btn[data-val="' + o.lang + '"]');
@@ -17477,7 +17857,7 @@ setLanguage('pt');
   document.addEventListener('input', e => { if(e.target && RANGES.indexOf(e.target.id) >= 0) later(); });
   document.addEventListener('change', e => { if(e.target && CHECKS.indexOf(e.target.id) >= 0) later(); });
   document.addEventListener('click', e => {
-    if(e.target && e.target.closest && e.target.closest('#renderQualitySeg, #fogSeg, #hudSizeSeg, #langSeg, #resetSettingsBtn')) later();
+    if(e.target && e.target.closest && e.target.closest('#renderQualitySeg, #gfxStyleSeg, #fxSeg, #fogSeg, #hudSizeSeg, #langSeg, #fpsCapSeg, #shadowSeg, #perfPresetSeg, #resetSettingsBtn')) later();
   });
 })();
 
@@ -17546,6 +17926,7 @@ requestAnimationFrame(gameLoop);
     if(OK.indexOf(v) < 0) v = 'green';
     document.documentElement.setAttribute('data-menu', v);
     document.querySelectorAll('#menuThemeSeg .seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === v));
+    try{ document.dispatchEvent(new Event('dz-menu-theme')); }catch(e){}
     return v;
   }
   let cur = 'green';
@@ -17556,6 +17937,40 @@ requestAnimationFrame(gameLoop);
     const v = apply(b.getAttribute('data-val'));
     try{ localStorage.setItem(KEY, v); }catch(e){}
   }));
+})();
+</script>
+<script>
+/* Cor da HUD: igual ao menu (padrão) ou própria. A escolha fica escondida enquanto "diferente" estiver desligado. */
+(function dzHudTheme(){
+  const K_SEP = 'dz_hud_sep_v1', K_COL = 'dz_hud_theme_v1', OK = ['blue', 'orange', 'white', 'black', 'green', 'pink'];
+  const root = document.documentElement, cb = document.getElementById('optHudSeparate'),
+        grp = document.getElementById('hudColorGroup'), seg = document.getElementById('hudThemeSeg');
+  if(!cb || !grp || !seg) return;
+  let sep = false, col = null;
+  try{ sep = localStorage.getItem(K_SEP) === '1'; const c = localStorage.getItem(K_COL); if(OK.indexOf(c) >= 0) col = c; }catch(e){}
+  const menuVal = () => root.getAttribute('data-menu') || 'green';
+  function apply(){
+    const shown = (sep && col) ? col : menuVal();
+    root.setAttribute('data-hud', shown);
+    cb.checked = sep;
+    grp.style.display = sep ? '' : 'none';
+    seg.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-val') === shown));
+  }
+  document.addEventListener('dz-menu-theme', apply);
+  cb.addEventListener('change', () => {
+    if(typeof SFX !== 'undefined' && SFX.menuSelect) SFX.menuSelect();
+    sep = cb.checked;
+    if(sep && !col) col = menuVal();
+    try{ localStorage.setItem(K_SEP, sep ? '1' : '0'); if(col) localStorage.setItem(K_COL, col); }catch(e){}
+    apply();
+  });
+  seg.querySelectorAll('.seg-btn').forEach(b => b.addEventListener('click', () => {
+    if(typeof SFX !== 'undefined' && SFX.menuSelect) SFX.menuSelect();
+    col = b.getAttribute('data-val');
+    try{ localStorage.setItem(K_COL, col); }catch(e){}
+    apply();
+  }));
+  apply();
 })();
 </script>
 <script>
