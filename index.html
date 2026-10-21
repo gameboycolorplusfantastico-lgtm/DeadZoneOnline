@@ -65,7 +65,7 @@ window.addEventListener('keydown', function(e){
   if(window.dzVk && window.dzVk.isOpen() && window.dzVk.key(e)){ e.preventDefault(); e.stopImmediatePropagation(); }
 }, true);
 </script>
-<title>Dead Zone - REMASTERED</title>
+<title>Dead Zone</title>
 <style>
   :root{
     --amber:#e8b93a;
@@ -260,25 +260,25 @@ window.addEventListener('keydown', function(e){
     transition:filter 0.05s ease-out;
   }
 
-  .anim-shoot { animation: shootAnim 0.18s cubic-bezier(.2,.8,.3,1); }
+  .anim-shoot { animation: shootAnim var(--vm-shoot-ms,180ms) cubic-bezier(.2,.8,.3,1); }
   .anim-reload { animation: reloadAnim 0.8s ease-in-out; }
   .anim-switch { animation: switchAnim 0.34s ease-in-out; }
 
   @keyframes shootAnim {
     0%   { transform: translateY(0) translateX(0) scale(1) rotate(0deg); filter: brightness(1) drop-shadow(3px 3px 4px rgba(0,0,0,.6)); }
-    12%  { transform: translateY(17px) translateX(-11px) scale(1.06) rotate(-6deg); filter: brightness(1.7) drop-shadow(3px 3px 4px rgba(0,0,0,.6)); }
-    35%  { transform: translateY(9px) translateX(-4px) scale(1.02) rotate(-2deg); filter: brightness(1.1) drop-shadow(3px 3px 4px rgba(0,0,0,.6)); }
-    65%  { transform: translateY(-3px) translateX(1px) scale(0.99) rotate(1deg); filter: brightness(1) drop-shadow(3px 3px 4px rgba(0,0,0,.6)); }
+    12%  { transform: translateY(calc(17px * var(--vm-kick,1))) translateX(calc(-11px * var(--vm-kick,1))) scale(calc(1 + 0.06 * var(--vm-kick,1))) rotate(calc(-6deg * var(--vm-kick,1))); filter: brightness(1.7) drop-shadow(3px 3px 4px rgba(0,0,0,.6)); }
+    35%  { transform: translateY(calc(9px * var(--vm-kick,1))) translateX(calc(-4px * var(--vm-kick,1))) scale(calc(1 + 0.02 * var(--vm-kick,1))) rotate(calc(-2deg * var(--vm-kick,1))); filter: brightness(1.1) drop-shadow(3px 3px 4px rgba(0,0,0,.6)); }
+    65%  { transform: translateY(calc(-3px * var(--vm-kick,1))) translateX(calc(1px * var(--vm-kick,1))) scale(calc(1 - 0.01 * var(--vm-kick,1))) rotate(calc(1deg * var(--vm-kick,1))); filter: brightness(1) drop-shadow(3px 3px 4px rgba(0,0,0,.6)); }
     100% { transform: translateY(0) translateX(0) scale(1) rotate(0deg); filter: brightness(1) drop-shadow(3px 3px 4px rgba(0,0,0,.6)); }
   }
 
   @keyframes reloadAnim {
     0%   { transform: translateY(0) rotate(0deg); }
-    22%  { transform: translateY(85px) rotate(-16deg); }
-    42%  { transform: translateY(148px) rotate(-27deg); }
-    54%  { transform: translateY(150px) rotate(-20deg); }
-    68%  { transform: translateY(142px) rotate(-25deg); }
-    84%  { transform: translateY(35px) rotate(-7deg); }
+    22%  { transform: translateY(calc(85px * var(--vm-reload,1))) rotate(-16deg); }
+    42%  { transform: translateY(calc(148px * var(--vm-reload,1))) rotate(-27deg); }
+    54%  { transform: translateY(calc(150px * var(--vm-reload,1))) rotate(-20deg); }
+    68%  { transform: translateY(calc(142px * var(--vm-reload,1))) rotate(-25deg); }
+    84%  { transform: translateY(calc(35px * var(--vm-reload,1))) rotate(-7deg); }
     92%  { transform: translateY(-12px) rotate(4deg); }
     100% { transform: translateY(0) rotate(0deg); }
   }
@@ -783,6 +783,13 @@ window.addEventListener('keydown', function(e){
   transition:border-color .15s,box-shadow .15s,color .15s;
 }
 .weapon-chip img{height:28px;max-width:100%;object-fit:contain;}
+
+/* Menu debug: armas agrupadas por categoria */
+.dbg-wcat{display:flex;align-items:baseline;gap:8px;margin:14px 0 6px;padding:0 0 4px;border-bottom:1px solid var(--cs-line,rgba(170,195,240,.4));
+  font-size:10.5px;font-weight:bold;letter-spacing:2px;color:var(--cs-dim,#8fa4cb);}
+.dbg-wcat:first-child{margin-top:4px;}
+.dbg-wcat small{font-weight:normal;letter-spacing:.5px;opacity:.7;}
+.dbg-weapon-groups .weapon-chip .chip-stat{font-size:8.5px;letter-spacing:.3px;opacity:.65;line-height:1;}
 
 #uiToast{
   position:fixed;left:50%;bottom:8%;transform:translate(-50%,20px);padding:10px 20px;
@@ -2304,33 +2311,8 @@ html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10p
 
         <div class="set-sec" data-i18n="dbgSecWeapon">ARMA (EQUIPA AO APLICAR)</div>
         <div class="setting-group">
-          <div class="weapon-grid" id="dbgWeaponGrid"></div>
-          <select id="dbgWeaponSelect" style="display:none">
-            <option value="pistol2">USP45 Tactical</option>
-            <option value="pistol">Desert Eagle Mark XIX</option>
-            <option value="smg">TMP</option>
-            <option value="mp5n">MP5N</option>
-            <option value="shotgun">M3 Super 90</option>
-            <option value="shotgun2">M4 Super 90</option>
-            <option value="rifle">AK-47</option>
-            <option value="aug">AUG A1</option>
-            <option value="sniper">Scout</option>
-            <option value="awsm">AWSM</option>
-            <option value="machinegun">M249-E2 SAW (Rara)</option>
-            <option value="m4a1">M4A1</option>
-            <option value="mac10">Mac 10</option>
-            <option value="glock">Glock 19</option>
-            <option value="p228">P228</option>
-            <option value="fiveseven">Five-seveN</option>
-            <option value="ump45">UMP45</option>
-            <option value="p90">P90</option>
-            <option value="galil">Galil ARM</option>
-            <option value="famas">Famas F1</option>
-            <option value="sg552">SG 552</option>
-            <option value="sg550">SG 550 SR</option>
-            <option value="g3sg1">G3SG/1</option>
-            <option value="gravgun">Gravity Gun (DEBUG)</option>
-          </select>
+          <div class="dbg-weapon-groups" id="dbgWeaponGrid"></div>
+          <select id="dbgWeaponSelect" style="display:none"></select>
         </div>
 
         <div class="set-sec" data-i18n="dbgSecEnemies">INIMIGOS E ALVOS</div>
@@ -2599,6 +2581,12 @@ const WEAPON_SOUND_URLS = {
   fiveseven:  'https://file.garden/aoj4oJPXcy0zW16k/FiveseveN.wav',          // Five-seveN
   ump45:      'https://file.garden/aoj4oJPXcy0zW16k/UMP45.wav',              // UMP45
   p90:        'https://file.garden/aoj4oJPXcy0zW16k/P90.wav',                // P90
+  dbarrel:    'https://file.garden/aoj4oJPXcy0zW16k/Dbarrel.wav',      // Double Barrel
+  usas:       'https://file.garden/aoj4oJPXcy0zW16k/Usas12.wav',    // USAS-12
+  luger:      'https://file.garden/aoj4oJPXcy0zW16k/Luger.wav',        // Luger
+  minigun:    'https://file.garden/aoj4oJPXcy0zW16k/M134.wav',           // M134 Minigun
+  bizon:      'https://file.garden/aoj4oJPXcy0zW16k/Bison.wav',        // PP-19 Bizon
+  uzi:        'https://file.garden/aoj4oJPXcy0zW16k/Uzi.wav',          // Uzi
   galil:      'https://file.garden/aoj4oJPXcy0zW16k/GalilARM.wav',           // Galil ARM
   famas:      'https://file.garden/aoj4oJPXcy0zW16k/F1.wav',                 // F1
   sg552:      'https://file.garden/aoj4oJPXcy0zW16k/SG552.wav',              // SG 552
@@ -5098,6 +5086,7 @@ const I18N = {
 
 function setLanguage(lang) {
   currentLang = lang;
+  document.querySelectorAll('.dbg-wcat').forEach(h => { const t = h.querySelector('.dbg-wcat-t'); if(t) t.textContent = lang === 'en' ? h.dataset.en : h.dataset.pt; });
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (I18N[lang][key]) el.textContent = I18N[lang][key];
@@ -5138,45 +5127,92 @@ function setLanguage(lang) {
 }
 
 const WEAPON_CONFIG = {
+  // ===== COMO ADICIONAR UMA ARMA NOVA (guia rapido) =====
+  // 1) Copie uma linha de arma parecida e troque o id (ex.: 'minhaarma').
+  // 2) name = nome CURTO mostrado no jogo (HUD, loja, trocas) - so o nome da arma, sem fabricante (ex.: 'AK-47', 'Bizon').
+  //    fullName = nome real completo com fabricante, so para uso interno/documentacao (ex.: 'Izhmash PP-19 Bizon-2').
+  // 3) key = tecla de atalho (unica). img = sprite do viewmodel. dmg = dano por tiro/balim. rate = ms entre tiros (menor = mais rapido).
+  //    spreadCount = balins por tiro (1 = bala unica; shotgun > 1). spreadDeg = dispersao. range = alcance. auto = tiro automatico.
+  // 4) defaultAmmo = maxAmmo = tamanho do PENTE. startMags/maxMags = pentes de RESERVA (inicial/maximo). reloadMs = tempo de recarga em ms.
+  //    moveMul = velocidade ao andar (1.0 normal, <1 mais lenta). sizeScale = tamanho do viewmodel. viewPos = (opcional) alinhamento do sprite, ex.: 'right bottom' para imagem larga. desc = nota interna (opcional).
+  // 5) Registre tambem o id em: WEAPON_ANIM (coice/recarga, opcional), WEAPON_SOUND_URLS (som .wav), WEAPON_ICONS (icone HUD) e, se quiser, na loja (SHOP_CATS),
+  //    no sorteio (generateRandomWeapons), no Gun Game (entra sozinha no sorteio, nao precisa registrar) e em DM_PRIMARY_WEAPONS / DM_SECONDARY_WEAPONS.
+  // Nomes reais (IMFDB) e atributos baseados no Counter-Strike: Source / Online: dano, tamanho do pente (defaultAmmo = maxAmmo),
+  // cadencia (rate, ms entre tiros), tempo de recarga e pentes de reserva. Ajustes realistas: Glock 19 = 15 tiros, AWM = 5 tiros, Mini Uzi = 32.
   // ===== REBALANCEAMENTO =====
   // Tier 1 - Pistolas (backup): DPS baixo/médio, sempre disponíveis.
   // Tier 2 - SMGs/Shotguns: DPS médio-alto, curto/médio alcance, munição farta.
-  // Tier 3 - Metralhadora: DPS alto sustentado (sem reload), mas abaixo dos rifles.
+  // Tier 3 - Metralhadora: DPS alto sustentado, caixa grande de 200 mas recarga LENTA (pesada), abaixo dos rifles.
   // Tier 4 - Rifles: melhor DPS sustentado do jogo, alcance longo.
   // Tier 5 - Snipers: DPS sustentado baixo, mas dano por tiro altíssimo (one-shot).
-  pistol2: { key: '1', name: 'USP45 Tactical', img: 'https://i.postimg.cc/RFCHJnDc/PISTOLA2.png', dmg: 18, rate: 240, spreadCount: 1, spreadDeg: 0.8, range: 24, auto: false, ammoUse: 1, defaultAmmo: 36, maxAmmo: 36, sizeScale: 0.8, canReload: true, startMags: 3, maxMags: 6, reloadMs: 1000, moveMul: 1.0 },
-  pistol: { key: '2', name: 'Desert Eagle Mark XIX', img: 'https://i.postimg.cc/0jtcFsLf/PISTOLA.png', dmg: 45, rate: 480, spreadCount: 1, spreadDeg: 0.0, range: 42, auto: false, ammoUse: 1, defaultAmmo: 14, maxAmmo: 14, sizeScale: 0.85, canReload: true, startMags: 3, maxMags: 6, reloadMs: 1500, moveMul: 0.97 },
-  smg: { key: '3', name: 'TMP', img: 'https://i.postimg.cc/C1vfGL37/SMG.png', dmg: 12, rate: 70, spreadCount: 1, spreadDeg: 4.0, range: 20, auto: true, ammoUse: 1, defaultAmmo: 120, maxAmmo: 120, sizeScale: 0.85, canReload: true, startMags: 2, maxMags: 5, reloadMs: 1500, moveMul: 1.04 },
-  mp5n: { key: '4', name: 'MP5N', img: 'https://i.postimg.cc/Kc3yHDcB/SMG2.png', dmg: 15, rate: 85, spreadCount: 1, spreadDeg: 2.0, range: 30, auto: true, ammoUse: 1, defaultAmmo: 90, maxAmmo: 90, sizeScale: 0.95, canReload: true, startMags: 2, maxMags: 5, reloadMs: 1700, moveMul: 1.0 },
-  shotgun: { key: '5', name: 'M3 Super 90', img: 'https://i.postimg.cc/NFGddMPt/SHOTGUN.png', dmg: 20, rate: 850, spreadCount: 8, spreadDeg: 12, range: 10, auto: false, ammoUse: 1, defaultAmmo: 8, maxAmmo: 8, sizeScale: 1.0, canReload: true, startMags: 3, maxMags: 6, reloadMs: 2400, moveMul: 0.95 },
-  shotgun2: { key: '6', name: 'M4 Super 90', img: 'https://i.postimg.cc/L4gMb343/SHOTGUN2.png', dmg: 14, rate: 420, spreadCount: 6, spreadDeg: 14, range: 11, auto: false, ammoUse: 1, defaultAmmo: 12, maxAmmo: 12, sizeScale: 1.0, canReload: true, startMags: 3, maxMags: 6, reloadMs: 2200, moveMul: 0.97 },
-  rifle: { key: '7', name: 'AK-47', img: 'https://i.postimg.cc/L54xxX05/FUZIL.png', dmg: 32, rate: 120, spreadCount: 1, spreadDeg: 2.6, range: 46, auto: true, ammoUse: 1, defaultAmmo: 75, maxAmmo: 75, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2200, moveMul: 0.97 },
-  aug: { key: '8', name: 'AUG A1', img: 'https://i.postimg.cc/j2f0ntkC/FUZIL2.png', dmg: 26, rate: 105, spreadCount: 1, spreadDeg: 0.6, range: 60, auto: true, ammoUse: 1, defaultAmmo: 90, maxAmmo: 90, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2300, moveMul: 0.98 },
-  sniper: { key: '9', name: 'Scout', img: 'https://i.postimg.cc/0Q5wKJBV/SNIPER.png', dmg: 85, rate: 800, spreadCount: 1, spreadDeg: 0.0, range: 75, auto: false, ammoUse: 1, defaultAmmo: 10, maxAmmo: 10, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 2000, moveMul: 1.0 },
-  awsm: { key: '0', name: 'AWSM', img: 'https://i.postimg.cc/Mp3hKnd7/SNIPER2.png', dmg: 150, rate: 1300, spreadCount: 1, spreadDeg: 0.0, range: 100, auto: false, ammoUse: 1, defaultAmmo: 5, maxAmmo: 5, sizeScale: 1.1, canReload: true, startMags: 1, maxMags: 3, reloadMs: 3200, moveMul: 0.88 },
-  machinegun: { key: '=', name: 'M249-E2 SAW', img: 'https://i.postimg.cc/6qPbYtdY/MACHINEGUN.png', dmg: 22, rate: 90, spreadCount: 1, spreadDeg: 4.5, range: 45, auto: true, ammoUse: 1, defaultAmmo: 200, maxAmmo: 200, sizeScale: 1.1, canReload: false, startMags: 0, maxMags: 0, reloadMs: 0, moveMul: 0.88 },
+  pistol2: { key: '1', name: 'USP45', fullName: 'HK USP45 Tactical', img: 'https://i.postimg.cc/RFCHJnDc/PISTOLA2.png', dmg: 34, rate: 150, spreadCount: 1, spreadDeg: 0.8, range: 24, auto: false, ammoUse: 1, defaultAmmo: 12, maxAmmo: 12, sizeScale: 0.8, canReload: true, startMags: 4, maxMags: 8, reloadMs: 2700, moveMul: 1.0 },
+  pistol: { key: '2', name: 'Desert Eagle', fullName: 'IMI Desert Eagle Mk XIX', img: 'https://i.postimg.cc/0jtcFsLf/PISTOLA.png', dmg: 54, rate: 225, spreadCount: 1, spreadDeg: 0.0, range: 42, auto: false, ammoUse: 1, defaultAmmo: 7, maxAmmo: 7, sizeScale: 0.85, canReload: true, startMags: 3, maxMags: 5, reloadMs: 2200, moveMul: 0.97 },
+  smg: { key: '3', name: 'TMP', fullName: 'Steyr TMP', img: 'https://i.postimg.cc/C1vfGL37/SMG.png', dmg: 26, rate: 70, spreadCount: 1, spreadDeg: 4.0, range: 20, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 0.85, canReload: true, startMags: 2, maxMags: 4, reloadMs: 2100, moveMul: 1.04 },
+  mp5n: { key: '4', name: 'MP5N', fullName: 'HK MP5N', img: 'https://i.postimg.cc/Kc3yHDcB/SMG2.png', dmg: 26, rate: 75, spreadCount: 1, spreadDeg: 2.0, range: 30, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 0.95, canReload: true, startMags: 2, maxMags: 4, reloadMs: 2600, moveMul: 1.0 },
+  shotgun: { key: '5', name: 'M3 Super 90', fullName: 'Benelli M3 Super 90', img: 'https://i.postimg.cc/NFGddMPt/SHOTGUN.png', dmg: 26, rate: 880, spreadCount: 9, spreadDeg: 12, range: 10, auto: false, ammoUse: 1, defaultAmmo: 8, maxAmmo: 8, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3500, moveMul: 0.95 },
+  shotgun2: { key: '6', name: 'M4 Super 90', fullName: 'Benelli M4 Super 90', img: 'https://i.postimg.cc/L4gMb343/SHOTGUN2.png', dmg: 20, rate: 250, spreadCount: 6, spreadDeg: 14, range: 11, auto: false, ammoUse: 1, defaultAmmo: 7, maxAmmo: 7, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3000, moveMul: 0.97 },
+  rifle: { key: '7', name: 'AK-47', fullName: 'AK-47', img: 'https://i.postimg.cc/L54xxX05/FUZIL.png', dmg: 36, rate: 100, spreadCount: 1, spreadDeg: 2.6, range: 46, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 3, reloadMs: 2450, moveMul: 0.97 },
+  aug: { key: '8', name: 'AUG', fullName: 'Steyr AUG A1', img: 'https://i.postimg.cc/j2f0ntkC/FUZIL2.png', dmg: 32, rate: 82, spreadCount: 1, spreadDeg: 0.6, range: 60, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3300, moveMul: 0.98 },
+  sniper: { key: '9', name: 'Scout', fullName: 'Steyr Scout', img: 'https://i.postimg.cc/0Q5wKJBV/SNIPER.png', dmg: 75, rate: 1250, spreadCount: 1, spreadDeg: 0.0, range: 75, auto: false, ammoUse: 1, defaultAmmo: 10, maxAmmo: 10, sizeScale: 1.05, canReload: true, startMags: 3, maxMags: 9, reloadMs: 2000, moveMul: 1.0 },
+  awsm: { key: '0', name: 'AWSM', fullName: 'AI Arctic Warfare Magnum', img: 'https://i.postimg.cc/Mp3hKnd7/SNIPER2.png', dmg: 115, rate: 1500, spreadCount: 1, spreadDeg: 0.0, range: 100, auto: false, ammoUse: 1, defaultAmmo: 5, maxAmmo: 5, sizeScale: 1.1, canReload: true, startMags: 3, maxMags: 6, reloadMs: 3700, moveMul: 0.88 },
+  machinegun: { key: '=', name: 'M249', fullName: 'FN M249-E2 SAW', img: 'https://i.postimg.cc/6qPbYtdY/MACHINEGUN.png', dmg: 32, rate: 80, spreadCount: 1, spreadDeg: 4.5, range: 45, auto: true, ammoUse: 1, defaultAmmo: 100, maxAmmo: 100, sizeScale: 1.1, canReload: true, startMags: 1, maxMags: 2, reloadMs: 5700, moveMul: 0.88,
+    // [INTERNO - nao exibido ao jogador] M249-E2 SAW: metralhadora leve 5.56mm, pente de 100 tiros (como no CS:S) com 200 de reserva.
+    // Arma RARA (peso 0.5 em generateRandomWeapons). Recarregavel: 1 pente reserva inicial, max 2, recarga 5.7s.
+    // Cadencia alta, dano 32 (CS:S), dispersao 4.5deg, penaliza movimento (0.88).
+    desc: 'INTERNAL: FN M249-E2 SAW - rara, pesada, pente 100, reserva 200 (2 pentes), recarga lenta 5.7s.' },
   // ===== Novas armas =====
-  m4a1: { key: '-', name: 'M4A1', img: 'https://i.postimg.cc/x8mDNnFc/FUZIL3.png', dmg: 27, rate: 95, spreadCount: 1, spreadDeg: 1.2, range: 52, auto: true, ammoUse: 1, defaultAmmo: 90, maxAmmo: 90, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2000, moveMul: 1.0 },
-  mac10: { key: '[', name: 'Mac 10', img: 'https://i.postimg.cc/wxRdGQxX/SMG3.png', dmg: 11, rate: 60, spreadCount: 1, spreadDeg: 6.0, range: 15, auto: true, ammoUse: 1, defaultAmmo: 100, maxAmmo: 100, sizeScale: 0.8, canReload: true, startMags: 2, maxMags: 5, reloadMs: 1600, moveMul: 1.05 },
-  glock: { key: ']', name: 'Glock 19', img: 'https://i.postimg.cc/hvmWQc3v/PISTOLA3.png', dmg: 11, rate: 110, spreadCount: 1, spreadDeg: 2.2, range: 18, auto: false, ammoUse: 1, defaultAmmo: 50, maxAmmo: 50, sizeScale: 0.8, canReload: true, startMags: 3, maxMags: 6, reloadMs: 850, moveMul: 1.03 },
+  m4a1: { key: '-', name: 'M4A1', fullName: 'Colt M4A1 Carbine', img: 'https://i.postimg.cc/x8mDNnFc/FUZIL3.png', dmg: 33, rate: 90, spreadCount: 1, spreadDeg: 1.2, range: 52, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3000, moveMul: 1.0 },
+  mac10: { key: '[', name: 'MAC-10', fullName: 'Ingram MAC-10', img: 'https://i.postimg.cc/wxRdGQxX/SMG3.png', dmg: 29, rate: 75, spreadCount: 1, spreadDeg: 6.0, range: 15, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 0.8, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3100, moveMul: 1.05 },
+  glock: { key: ']', name: 'Glock 19', fullName: 'Glock 19', img: 'https://i.postimg.cc/hvmWQc3v/PISTOLA3.png', dmg: 25, rate: 150, spreadCount: 1, spreadDeg: 2.2, range: 18, auto: false, ammoUse: 1, defaultAmmo: 15, maxAmmo: 15, sizeScale: 0.8, canReload: true, startMags: 3, maxMags: 6, reloadMs: 2200, moveMul: 1.03 },
   // ===== Armas adicionais (sem tecla própria nos números: usam ; ' , . / \ ` x c; também LB/RB no controle) =====
-  p228: { key: ';', name: 'P228', img: 'https://i.postimg.cc/L54xzzbV/PISTOLA5.png', dmg: 20, rate: 300, spreadCount: 1, spreadDeg: 0.6, range: 28, auto: false, ammoUse: 1, defaultAmmo: 26, maxAmmo: 26, sizeScale: 0.8, canReload: true, startMags: 3, maxMags: 6, reloadMs: 1100, moveMul: 1.0 },
-  fiveseven: { key: "'", name: 'Five-seveN', img: 'https://i.postimg.cc/0QBWx6Qp/PISTOLA4.png', dmg: 14, rate: 160, spreadCount: 1, spreadDeg: 1.4, range: 26, auto: false, ammoUse: 1, defaultAmmo: 40, maxAmmo: 40, sizeScale: 0.8, canReload: true, startMags: 3, maxMags: 6, reloadMs: 1150, moveMul: 1.0 },
-  ump45: { key: ',', name: 'UMP45', img: 'https://i.postimg.cc/vTxPmQgJ/SMG4.png', dmg: 22, rate: 110, spreadCount: 1, spreadDeg: 2.6, range: 26, auto: true, ammoUse: 1, defaultAmmo: 75, maxAmmo: 75, sizeScale: 0.9, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2000, moveMul: 0.98 },
-  p90: { key: '.', name: 'P90', img: 'https://i.postimg.cc/Y0LXSpLH/SMG5.png', dmg: 13, rate: 58, spreadCount: 1, spreadDeg: 3.2, range: 28, auto: true, ammoUse: 1, defaultAmmo: 150, maxAmmo: 150, sizeScale: 0.9, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2300, moveMul: 1.02 },
-  galil: { key: '/', name: 'Galil ARM', img: 'https://i.postimg.cc/FRBWmfRd/FUZIL5.png', dmg: 28, rate: 110, spreadCount: 1, spreadDeg: 2.8, range: 44, auto: true, ammoUse: 1, defaultAmmo: 105, maxAmmo: 105, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2500, moveMul: 0.97 },
-  famas: { key: '\\', name: 'Famas F1', img: 'https://i.postimg.cc/mD5XRcDj/FUZIL6.png', dmg: 22, rate: 78, spreadCount: 1, spreadDeg: 2.0, range: 40, auto: true, ammoUse: 1, defaultAmmo: 120, maxAmmo: 120, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2100, moveMul: 1.0 },
-  sg552: { key: '`', name: 'SG 552', img: 'https://i.postimg.cc/d1xHv71B/FUZIL4.png', dmg: 30, rate: 118, spreadCount: 1, spreadDeg: 0.9, range: 62, auto: true, ammoUse: 1, defaultAmmo: 60, maxAmmo: 60, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 5, reloadMs: 2400, moveMul: 0.97 },
-  sg550: { key: 'x', name: 'SG 550 SR', img: 'https://i.postimg.cc/pr50d252/SNIPER4.png', dmg: 55, rate: 380, spreadCount: 1, spreadDeg: 0.2, range: 85, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 2800, moveMul: 0.92 },
-  g3sg1: { key: 'c', name: 'G3SG/1', img: 'https://i.postimg.cc/cCtDJstW/SNIPER3.png', dmg: 65, rate: 450, spreadCount: 1, spreadDeg: 0.0, range: 88, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3000, moveMul: 0.9 },
+  p228: { key: ';', name: 'P228', fullName: 'SIG Sauer P228', img: 'https://i.postimg.cc/L54xzzbV/PISTOLA5.png', dmg: 32, rate: 150, spreadCount: 1, spreadDeg: 0.6, range: 28, auto: false, ammoUse: 1, defaultAmmo: 13, maxAmmo: 13, sizeScale: 0.8, canReload: true, startMags: 2, maxMags: 4, reloadMs: 2700, moveMul: 1.0 },
+  fiveseven: { key: "'", name: 'Five-seveN', fullName: 'FN Five-seveN', img: 'https://i.postimg.cc/0QBWx6Qp/PISTOLA4.png', dmg: 25, rate: 150, spreadCount: 1, spreadDeg: 1.4, range: 26, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 0.8, canReload: true, startMags: 3, maxMags: 5, reloadMs: 2700, moveMul: 1.0 },
+  ump45: { key: ',', name: 'UMP45', fullName: 'HK UMP45', img: 'https://i.postimg.cc/vTxPmQgJ/SMG4.png', dmg: 30, rate: 105, spreadCount: 1, spreadDeg: 2.6, range: 26, auto: true, ammoUse: 1, defaultAmmo: 25, maxAmmo: 25, sizeScale: 0.9, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3500, moveMul: 0.98 },
+  p90: { key: '.', name: 'P90', fullName: 'FN P90', img: 'https://i.postimg.cc/Y0LXSpLH/SMG5.png', dmg: 26, rate: 70, spreadCount: 1, spreadDeg: 3.2, range: 28, auto: true, ammoUse: 1, defaultAmmo: 50, maxAmmo: 50, sizeScale: 0.9, canReload: true, startMags: 1, maxMags: 2, reloadMs: 3400, moveMul: 1.02 },
+  // [INTERNO - nao exibido] PP-19 Bizon: SMG russa, carregador helicoidal de 64 tiros, cadencia media, boa capacidade, dano baixo/medio.
+  bizon: { key: 'v', name: 'Bizon', fullName: 'PP-19 Bizon-2', img: 'https://i.postimg.cc/LXqxXD37/SMG7.webp', dmg: 24, rate: 75, spreadCount: 1, spreadDeg: 3.0, range: 26, auto: true, ammoUse: 1, defaultAmmo: 64, maxAmmo: 64, sizeScale: 0.95, canReload: true, startMags: 1, maxMags: 3, reloadMs: 2900, moveMul: 1.0, desc: 'INTERNAL: PP-19 Bizon-2 - SMG de 64 tiros (helicoidal), recarga 2.9s, dano 24.' },
+  // [INTERNO - nao exibido] Uzi: SMG israelense compacta, cadencia alta, dano baixo, muito movel, alcance curto, dispersao alta.
+  uzi: { key: 'n', name: 'Uzi', fullName: 'IMI Mini Uzi', img: 'https://i.postimg.cc/SsXgsdfH/SMG6.webp', dmg: 24, rate: 70, spreadCount: 1, spreadDeg: 4.2, range: 20, auto: true, ammoUse: 1, defaultAmmo: 32, maxAmmo: 32, sizeScale: 0.85, canReload: true, startMags: 2, maxMags: 4, reloadMs: 2400, moveMul: 1.04, desc: 'INTERNAL: IMI Mini Uzi - SMG compacta de 32 tiros, cadencia alta, recarga 2.4s, dano 24.' },
+  // [INTERNO - nao exibido] Double Barrel: shotgun de 2 tiros, funciona como arma SECUNDARIA (slot de pistola/SMG). Dano alto a curta distancia, recarga lenta.
+  dbarrel: { key: 'z', name: 'Double Barrel', fullName: 'Sawed-off Double Barrel', img: 'https://i.postimg.cc/sXBTXmJF/SHOTGUN3.webp', dmg: 24, rate: 500, spreadCount: 8, spreadDeg: 11, range: 9, auto: false, ammoUse: 1, defaultAmmo: 2, maxAmmo: 2, sizeScale: 0.95, canReload: true, startMags: 4, maxMags: 8, reloadMs: 1800, moveMul: 1.0, desc: 'INTERNAL: Double Barrel - shotgun secundaria, 2 cartuchos, 8 bagos, curto alcance.' },
+  // [INTERNO - nao exibido] USAS-12: shotgun automatica de tambor, 20 cartuchos, cadencia alta, dano por bago baixo, dispersao larga.
+  usas: { key: 'm', name: 'USAS-12', fullName: 'Daewoo USAS-12', img: 'https://i.postimg.cc/9M4LMbYv/SHOTGUN4.webp', dmg: 16, rate: 260, spreadCount: 7, spreadDeg: 13, range: 11, auto: true, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.0, viewPos: 'right bottom', canReload: true, startMags: 1, maxMags: 3, reloadMs: 3500, moveMul: 0.93, desc: 'INTERNAL: Daewoo USAS-12 - shotgun automatica, 20 cartuchos, recarga 3.5s.' },
+  // [INTERNO - nao exibido] Luger P08: pistola classica, 8 tiros, dano medio, precisa, semi-auto.
+  luger: { key: 'y', name: 'Luger', fullName: 'Luger P08', img: 'https://i.postimg.cc/DyC5qRY3/PISTOLA6.webp', dmg: 33, rate: 170, spreadCount: 1, spreadDeg: 0.9, range: 26, auto: false, ammoUse: 1, defaultAmmo: 8, maxAmmo: 8, sizeScale: 0.8, canReload: true, startMags: 3, maxMags: 6, reloadMs: 2000, moveMul: 1.0, desc: 'INTERNAL: Luger P08 - pistola semi-auto, 8 tiros por pente.' },
+  // [INTERNO - nao exibido] M134 Minigun: metralhadora rotativa RARA e pesadissima, cadencia altissima, cinto de 200, recarga muito lenta, quase imovel ao andar.
+  minigun: { key: 'u', name: 'Minigun', fullName: 'GE M134 Minigun', img: 'https://i.postimg.cc/pT9sTCBM/MACHINEGUN2.webp', dmg: 22, rate: 40, spreadCount: 1, spreadDeg: 5.5, range: 40, auto: true, ammoUse: 1, defaultAmmo: 200, maxAmmo: 200, sizeScale: 1.15, viewPos: 'right bottom', canReload: true, startMags: 1, maxMags: 1, reloadMs: 5500, moveMul: 0.78, desc: 'INTERNAL: GE M134 Minigun - rara, 200 tiros, recarga 5.5s, movimento 0.78.' },
+  galil: { key: '/', name: 'Galil', fullName: 'IMI Galil ARM', img: 'https://i.postimg.cc/FRBWmfRd/FUZIL5.png', dmg: 30, rate: 90, spreadCount: 1, spreadDeg: 2.8, range: 44, auto: true, ammoUse: 1, defaultAmmo: 35, maxAmmo: 35, sizeScale: 1.0, canReload: true, startMags: 1, maxMags: 2, reloadMs: 2450, moveMul: 0.97 },
+  famas: { key: '\\', name: 'FAMAS', fullName: 'GIAT FAMAS F1', img: 'https://i.postimg.cc/mD5XRcDj/FUZIL6.png', dmg: 30, rate: 90, spreadCount: 1, spreadDeg: 2.0, range: 40, auto: true, ammoUse: 1, defaultAmmo: 25, maxAmmo: 25, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3300, moveMul: 1.0 },
+  sg552: { key: '`', name: 'SG 552', fullName: 'SIG SG 552 Commando', img: 'https://i.postimg.cc/d1xHv71B/FUZIL4.png', dmg: 33, rate: 90, spreadCount: 1, spreadDeg: 0.9, range: 62, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3000, moveMul: 0.97 },
+  sg550: { key: 'x', name: 'SG 550', fullName: 'SIG SG 550 SR', img: 'https://i.postimg.cc/pr50d252/SNIPER4.png', dmg: 70, rate: 250, spreadCount: 1, spreadDeg: 0.2, range: 85, auto: false, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3350, moveMul: 0.92 },
+  g3sg1: { key: 'c', name: 'G3SG/1', fullName: 'HK G3SG/1', img: 'https://i.postimg.cc/cCtDJstW/SNIPER3.png', dmg: 80, rate: 250, spreadCount: 1, spreadDeg: 0.0, range: 88, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3500, moveMul: 0.9 },
   // ===== Arma de DEBUG: Gravity Gun (agarra / empurra / lança inimigos, alvos, bola e pickups; só offline) =====
   gravgun: { key: 'g', name: 'Gravity Gun', img: 'https://i.postimg.cc/cH78t4KX/GRAVITYGUN.png', dmg: 0, rate: 320, spreadCount: 0, spreadDeg: 0, range: 14, auto: false, ammoUse: 0, defaultAmmo: 999, maxAmmo: 999, sizeScale: 1.0, canReload: false, startMags: 0, maxMags: 0, reloadMs: 0, moveMul: 1.0, special: 'gravgun', debugOnly: true }
 };
 // reloadMs = tempo de recarga em ms · moveMul = multiplicador de velocidade ao andar com a arma
 // (armas pesadas/snipers deixam o jogador mais lento, pistolas e SMGs leves mais rápido).
 // startMags/maxMags = pentes de RESERVA (fora o que já está na arma). A metralhadora
-// é alimentada por correia (canReload:false) e não usa pente: pickups de munição
-// enchem o pool dela diretamente.
+// agora é recarregável (canReload:true) como as demais; só awsm/rifle/etc. seguem a mesma lógica de pentes.
+
+// ===== ANIMACAO DAS ARMAS (viewmodel) =====
+// [coice do tiro, profundidade da recarga]  ->  1 = animacao padrao. Maior = mexe mais. Arma que nao esta na lista usa [1, 1].
+// Coice: pistola leve/shotgun/sniper mexem mais; SMG e metralhadora mexem menos; minigun quase parada (cadencia altissima).
+// Recarga: arma pequena desce menos, arma pesada desce mais. A duracao do tiro acompanha a cadencia (rate) da arma.
+const WEAPON_ANIM = {
+  pistol2:[1.1,0.75], glock:[1.0,0.75], p228:[1.1,0.75], fiveseven:[1.0,0.75], luger:[1.1,0.75], pistol:[1.6,0.8],
+  smg:[0.7,0.85], mp5n:[0.75,0.85], mac10:[0.6,0.8], ump45:[0.8,0.9], p90:[0.6,0.9], bizon:[0.7,0.9], uzi:[0.6,0.8],
+  shotgun:[1.6,0.95], shotgun2:[1.1,0.95], dbarrel:[1.7,0.85], usas:[1.0,1.0],
+  rifle:[0.9,1.0], m4a1:[0.85,1.0], aug:[0.8,1.0], sg552:[0.85,1.0], galil:[0.9,1.0], famas:[0.8,1.0],
+  sniper:[1.4,1.0], awsm:[1.8,1.0], sg550:[1.0,1.0], g3sg1:[1.1,1.0],
+  machinegun:[0.55,1.1], minigun:[0.25,1.1]
+};
+function applyWeaponAnim(wId, vm){
+  const a = WEAPON_ANIM[wId] || [1, 1];
+  const cfg = WEAPON_CONFIG[wId] || {};
+  vm.style.setProperty('--vm-kick', a[0]);
+  vm.style.setProperty('--vm-reload', a[1]);
+  vm.style.setProperty('--vm-shoot-ms', Math.max(70, Math.min(200, Math.round((cfg.rate || 200) * 0.9))) + 'ms');
+}
 
 // ===== Ícones de HUD das armas (barra de armas e loja). O campo img continua sendo o sprite do viewmodel. =====
 const WEAPON_ICONS = {
@@ -5190,13 +5226,19 @@ const WEAPON_ICONS = {
   aug:        'https://i.postimg.cc/RCLMwWvY/Aug-gfx.webp',
   sniper:     'https://i.postimg.cc/G3xcv4c3/Scout-gfx.webp',
   awsm:       'https://i.postimg.cc/zDFJTyqM/Awp.webp',
-  machinegun: 'https://i.postimg.cc/MZmW1nWw/Icon-m249-cso.webp',
+  machinegun: 'https://i.postimg.cc/MZmW1nWw/Icon-m249-cso.webp', // icone interno: silhueta M249 SAW (estilo CSO), caixa de municao embaixo, bipé recolhido
   m4a1:       'https://i.postimg.cc/59Sx8Xxb/M4a1-icon.webp',
   mac10:      'https://i.postimg.cc/sf4V5MVV/Mac10.webp',
   glock:      'https://i.postimg.cc/qBxk2Nk0/Icon-glock.webp',
   fiveseven:  'https://i.postimg.cc/8km1L71Q/Fiveseven.webp',
   ump45:      'https://i.postimg.cc/zDFJTyJf/Ump45.webp',
   p90:        'https://i.postimg.cc/v8tQ54QY/P90.webp',
+  dbarrel:    'https://i.postimg.cc/HxJ6xz9P/Dbarrel-gfx.webp',  // icone interno: espingarda de cano duplo (double barrel)
+  usas:       'https://i.postimg.cc/7LtBwdSk/Icon-usas-cso.webp', // icone interno: USAS-12, shotgun automatica com tambor/carregador
+  luger:      'https://i.postimg.cc/5tKPbT8J/Luger.webp',        // icone interno: Luger P08, pistola classica de ferrolho articulado
+  minigun:    'https://i.postimg.cc/k4VT4svH/M134-gfx.webp',     // icone interno: M134 Minigun, feixe de 6 canos rotativos
+  bizon:      'https://i.postimg.cc/vm2Pbk5d/Bison.webp',   // icone interno: PP-19 Bizon, carregador helicoidal sob o cano
+  uzi:        'https://i.postimg.cc/LXqxXD3w/Uzi.webp',     // icone interno: Uzi, silhueta compacta com empunhadura no carregador
   galil:      'https://i.postimg.cc/J751js1w/Galil-icon.webp',
   famas:      'https://i.postimg.cc/2j7zn1CP/Famas-icon.webp',
   sg552:      'https://i.postimg.cc/Wpw20d21/Sg552-gfx.webp',
@@ -5225,11 +5267,14 @@ Object.values(WEAPON_CONFIG).forEach(cfg => {
   im.src = cfg.img;
 });
 
-// Gun Game: 1 abate = próxima arma. Ordem das mais fracas para as mais fortes.
-const GUN_GAME_ORDER = ['glock', 'p228', 'fiveseven', 'pistol2', 'pistol', 'mac10', 'smg', 'mp5n', 'ump45', 'p90',
-                        'shotgun', 'shotgun2', 'galil', 'famas', 'rifle', 'm4a1', 'aug', 'sg552', 'sg550', 'g3sg1',
-                        'sniper', 'awsm', 'machinegun'];
+// Gun Game 100% ALEATORIO: cada abate (e cada vez que voce entra ou renasce) sorteia uma arma nova entre TODAS as armas jogaveis
+// (todas do WEAPON_CONFIG exceto as debugOnly). Sorteio com reposicao: pode repetir a mesma arma. Nao existe ordem nem nivel.
+// GUN_GAME_ORDER fica so como lista de referencia (nao e mais usada para sortear).
+const GUN_GAME_ORDER = ['glock', 'p228', 'fiveseven', 'luger', 'pistol2', 'pistol', 'mac10', 'uzi', 'smg', 'mp5n', 'bizon', 'ump45', 'p90',
+                        'dbarrel', 'shotgun', 'shotgun2', 'usas', 'galil', 'famas', 'rifle', 'm4a1', 'aug', 'sg552', 'sg550', 'g3sg1',
+                        'sniper', 'awsm', 'machinegun', 'minigun'];
 const GUN_GAME_KILLS_PER_WEAPON = 1;
+const GUN_GAME_WIN_KILLS = 29;   // contra bots / online: vence quem chegar a esta quantidade de abates (contra zumbis e infinito)
 
 let currentLevelIndex = 0;
 let currentGameMode = 'waves';
@@ -8883,7 +8928,6 @@ function loadLevel(idx){
   enemiesKilledInWave = 0;
   gunGameKills = 0;
   gunGameWeaponIdx = 0;
-  gunGameShuffle();
   gunGameCycle = 0;
   gunGameTotalKills = 0;
   dmScoreT = 0; dmScoreCT = 0; dmPlayerKills = 0; dmDeaths = 0;
@@ -8910,7 +8954,7 @@ function loadLevel(idx){
     } else {
       setupGunGamePickups();
     }
-    gunGameEquip(0);
+    gunGameEquip();
   } else if (isTeamMode()) {
     if (ldef.isTestMap) {
       // mapa de testes (debug) continua como sempre
@@ -8975,31 +9019,25 @@ function dmMusicWanted() {
   return isTeamMode() && !(l && l.isTestMap);
 }
 
-// Equipa a arma da vez no Gun Game: só UMA arma por vez, com munição e pentes cheios.
-// Embaralha a lista de armas (Fisher-Yates com gerador criptográfico): cada partida e cada volta
-// tem uma ordem diferente; a 1ª arma nunca repete a última da ordem anterior.
-function gunGameShuffle() {
-  const rnd = (n) => {
-    if (window.crypto && crypto.getRandomValues) {
-      const u = new Uint32Array(1);
-      crypto.getRandomValues(u);
-      return u[0] % n;
-    }
-    return Math.floor(Math.random() * n);
-  };
-  const prevLast = GUN_GAME_ORDER[GUN_GAME_ORDER.length - 1];
-  for (let i = GUN_GAME_ORDER.length - 1; i > 0; i--) {
-    const j = rnd(i + 1);
-    const t = GUN_GAME_ORDER[i]; GUN_GAME_ORDER[i] = GUN_GAME_ORDER[j]; GUN_GAME_ORDER[j] = t;
+// Sorteia uma arma 100% aleatoria (gerador criptografico, com reposicao: a mesma arma pode sair de novo).
+// A lista e todas as armas jogaveis do WEAPON_CONFIG, entao arma nova adicionada ja entra no sorteio sozinha.
+function gunGameRandomWeapon() {
+  const pool = Object.keys(WEAPON_CONFIG).filter(id => !WEAPON_CONFIG[id].debugOnly);
+  let n;
+  if (window.crypto && crypto.getRandomValues) {
+    const u = new Uint32Array(1);
+    crypto.getRandomValues(u);
+    n = u[0] % pool.length;
+  } else {
+    n = Math.floor(Math.random() * pool.length);
   }
-  if (GUN_GAME_ORDER.length > 1 && GUN_GAME_ORDER[0] === prevLast) {
-    const k = 1 + rnd(GUN_GAME_ORDER.length - 1);
-    const t = GUN_GAME_ORDER[0]; GUN_GAME_ORDER[0] = GUN_GAME_ORDER[k]; GUN_GAME_ORDER[k] = t;
-  }
+  return pool[n];
 }
 
-function gunGameEquip(idx) {
-  const wId = GUN_GAME_ORDER[idx];
+// Equipa uma arma ALEATORIA no Gun Game: so UMA arma por vez, com municao e pentes cheios.
+// Chamado ao entrar na partida, a cada abate e ao renascer (o argumento antigo de indice e ignorado).
+function gunGameEquip() {
+  const wId = gunGameRandomWeapon();
   const cfg = WEAPON_CONFIG[wId];
   if (!cfg) return;
   player.isReloading = false;
@@ -9012,33 +9050,20 @@ function gunGameEquip(idx) {
   updateHUD();
 }
 
-// Chamado a cada abate do jogador no Gun Game: 1 kill = próxima arma.
+// Chamado a cada abate do jogador no Gun Game: 1 kill = nova arma aleatoria (sem dizer qual nem o nivel).
 function gunGameOnPlayerKill() {
   gunGameKills++;
   gunGameTotalKills++;
   if (gunGameKills >= GUN_GAME_KILLS_PER_WEAPON) {
     gunGameKills = 0;
-    gunGameWeaponIdx++;
-    const en = currentLang === 'en';
-    if (gunGameWeaponIdx >= GUN_GAME_ORDER.length) {
-      if (isGunBots()) {            // contra bots: terminou a lista = vitória
-        gunGameWeaponIdx = GUN_GAME_ORDER.length - 1;
-        updateHUDModeLabel();
-        gunGameWin();
-        return;
-      }
-      gunGameWeaponIdx = 0;         // contra zumbis: modo infinito, recomeça a lista (em nova ordem aleatória)
-      gunGameShuffle();
-      gunGameCycle++;
+    if (isGunBots() && gunGameTotalKills >= GUN_GAME_WIN_KILLS) {   // contra bots: meta de abates = vitoria
+      updateHUDModeLabel();
+      gunGameWin();
+      return;
     }
-    gunGameEquip(gunGameWeaponIdx);
+    gunGameEquip();
     SFX.pickupWeapon();
-    const wName = WEAPON_CONFIG[GUN_GAME_ORDER[gunGameWeaponIdx]].name;
-    if (gunGameCycle > 0 && gunGameWeaponIdx === 0) {
-      flashMsg((en ? "LAP " : "VOLTA ") + (gunGameCycle + 1) + "! " + wName);
-    } else {
-      flashMsg((en ? "NEXT WEAPON: " : "PRÓXIMA ARMA: ") + wName);
-    }
+    flashMsg(currentLang === 'en' ? "NEW WEAPON!" : "NOVA ARMA!");
   }
   updateHUDModeLabel();
 }
@@ -9115,8 +9140,8 @@ function updateHUDModeLabel() {
       ' x ' + dmScoreT + '<img class="dm-team-ico" src="' + DM_HUD_ICONS.T + '" alt="T">';
   } else if (currentGameMode === 'gungame') {
     const en = currentLang === 'en';
-    lvlLbl.textContent = en ? "WEAPON" : "ARMA";
-    lvlVal.textContent = (gunGameWeaponIdx + 1) + "/" + GUN_GAME_ORDER.length + (gunGameCycle > 0 ? (en ? " (LAP " : " (VOLTA ") + (gunGameCycle + 1) + ")" : "");
+    lvlLbl.textContent = en ? "KILLS" : "ABATES";   // sem nivel/nome da arma: so a contagem de abates
+    lvlVal.textContent = isGunBots() ? (gunGameTotalKills + "/" + GUN_GAME_WIN_KILLS) : String(gunGameTotalKills);
   } else {
     lvlLbl.textContent = "WAVE";
     lvlVal.textContent = "WAVE " + currentWave;
@@ -9212,6 +9237,8 @@ function generateRandomWeapons() {
     { id: 'fiveseven', weight: 14 },
     { id: 'ump45', weight: 12 },
     { id: 'p90', weight: 8 },
+    { id: 'bizon', weight: 11 },
+    { id: 'uzi', weight: 14 },
     { id: 'galil', weight: 7 },
     { id: 'famas', weight: 6 },
     { id: 'sg552', weight: 4 },
@@ -9219,7 +9246,11 @@ function generateRandomWeapons() {
     { id: 'g3sg1', weight: 1.5 },
     { id: 'sniper', weight: 3 },
     { id: 'awsm', weight: 1.5 },
-    { id: 'machinegun', weight: 0.5 }
+    { id: 'machinegun', weight: 0.5 },
+    { id: 'minigun', weight: 0.4 },
+    { id: 'dbarrel', weight: 12 },
+    { id: 'usas', weight: 6 },
+    { id: 'luger', weight: 16 }
   ];
 
   function getWeightedRandomWeapon() {
@@ -9764,8 +9795,8 @@ let GUN_GAME_BOTS = 5;                 // bots inimigos no Gun Game contra bots 
 let DM_ENEMY_BOTS = 4, DM_ALLY_BOTS = 3; // padrão: 3 aliados + você = 4 x 4 (inimigos 1-10, aliados 0-9, escolhidos no menu)
 // Loadout do Deathmatch: uma PESADA (principal) e uma LEVE (secundária).
 // Cada slot também aceita 'random' (sorteia dentro da própria lista ao iniciar).
-const DM_PRIMARY_WEAPONS   = ['shotgun', 'shotgun2', 'rifle', 'm4a1', 'aug', 'galil', 'famas', 'sg552', 'sniper', 'sg550', 'g3sg1', 'awsm', 'machinegun'];
-const DM_SECONDARY_WEAPONS = ['pistol2', 'pistol', 'glock', 'p228', 'fiveseven', 'smg', 'mp5n', 'mac10', 'ump45', 'p90'];
+const DM_PRIMARY_WEAPONS   = ['shotgun', 'shotgun2', 'rifle', 'm4a1', 'aug', 'galil', 'famas', 'sg552', 'sniper', 'sg550', 'g3sg1', 'awsm', 'machinegun', 'minigun', 'usas'];
+const DM_SECONDARY_WEAPONS = ['pistol2', 'pistol', 'glock', 'p228', 'fiveseven', 'luger', 'dbarrel', 'smg', 'mp5n', 'mac10', 'uzi', 'bizon', 'ump45', 'p90'];
 
 // Converte a escolha do menu (`dmPick`) no loadout real, sorteando os slots 'random'.
 function dmResolveLoadout(){
@@ -9863,12 +9894,12 @@ const SHOP_START_MONEY = 800, SHOP_MAX_MONEY = 16000, SHOP_KILL_REWARD = 300, SH
 const SHOP_RESCUE_REWARD = 600, SHOP_RESCUE_TEAM_REWARD = 200;   // resgate de refém: quem escolta / resto do time CT
 const SHOP_AMMO_PRICE = 100, SHOP_BUY_TIME_MS = 20000, SHOP_RESPAWN_MIN = 1000;
 const SHOP_CATS = [
-  { pt:'PISTOLAS', en:'PISTOLS', items:[['pistol2',0],['glock',200],['p228',300],['fiveseven',400],['pistol',650]] },
-  { pt:'SUBMETRALHADORAS', en:'SMGs', items:[['mac10',1000],['smg',1100],['mp5n',1500],['ump45',1700],['p90',2350]] },
-  { pt:'SHOTGUNS', en:'SHOTGUNS', items:[['shotgun',1400],['shotgun2',1800]] },
+  { pt:'PISTOLAS', en:'PISTOLS', items:[['pistol2',0],['glock',200],['p228',300],['fiveseven',400],['luger',500],['pistol',650]] },
+  { pt:'SUBMETRALHADORAS', en:'SMGs', items:[['mac10',1000],['uzi',1050],['smg',1100],['mp5n',1500],['bizon',1600],['ump45',1700],['p90',2350]] },
+  { pt:'SHOTGUNS', en:'SHOTGUNS', items:[['dbarrel',900],['shotgun',1400],['shotgun2',1800],['usas',2300]] },
   { pt:'RIFLES', en:'RIFLES', items:[['galil',2000],['famas',2250],['rifle',2500],['m4a1',3100],['aug',3500],['sg552',3600]] },
   { pt:'SNIPERS', en:'SNIPERS', items:[['sniper',2750],['sg550',4000],['g3sg1',4750],['awsm',5500]] },
-  { pt:'PESADA', en:'HEAVY', items:[['machinegun',6000]] }
+  { pt:'PESADA', en:'HEAVY', items:[['machinegun',6000],['minigun',7500]] }
 ];
 const shop = { money: SHOP_START_MONEY, spawnAt: 0, fresh: true, sel: 0, btns: [] };
 let shopOpen = false;
@@ -9892,7 +9923,7 @@ function shopCanBuyNow(){
   return (performance.now() - shop.spawnAt < SHOP_BUY_TIME_MS) || shopInZone();
 }
 function shopPrice(id){ for(const c of SHOP_CATS) for(const it of c.items) if(it[0] === id) return it[1]; return 0; }
-function shopIsSecondary(id){ for(const c of SHOP_CATS){ if(c.pt === 'PISTOLAS' || c.pt === 'SUBMETRALHADORAS'){ if(c.items.some(it => it[0] === id)) return true; } } return false; }
+function shopIsSecondary(id){ if(id === 'dbarrel') return true; for(const c of SHOP_CATS){ if(c.pt === 'PISTOLAS' || c.pt === 'SUBMETRALHADORAS'){ if(c.items.some(it => it[0] === id)) return true; } } return false; }
 function shopWeaponName(id){ return WEAPON_CONFIG[id] ? WEAPON_CONFIG[id].name : id; }
 
 function shopApplyLoadout(){
@@ -10276,7 +10307,7 @@ function dmKillPlayer(){
   dmDeaths++;
   if(currentGameMode === 'hostage'){ hrDropFollowers(player); if(dmPlayerTeam === 'CT') dmScoreT++; }
   else if(currentGameMode === 'ctf') ctfDropFlag(player);
-  else if(currentGameMode === 'gungame'){ /* morrer não rebaixa a arma, só renasce */ }
+  else if(currentGameMode === 'gungame'){ /* morrer não rebaixa nada: só renasce com outra arma aleatória */ }
   else if(currentGameMode === 'soccer'){ /* Futebol: morrer não pontua */ }
   else if(dmPlayerTeam === 'CT') dmScoreT++; else dmScoreCT++;   // ponto para a equipe adversária
   dmPlayerRespawnAt = performance.now() + DM_PLAYER_RESPAWN_MS;
@@ -10307,7 +10338,7 @@ function dmRespawnPlayer(){
   player.health = player.maxHealth;
   dmPlayerDead = false;
   NET.lastRespawn = performance.now();
-  if(currentGameMode === 'gungame') gunGameEquip(gunGameWeaponIdx); else if(currentGameMode === 'soccer') socApplyLoadout(); else dmApplyLoadout();
+  if(currentGameMode === 'gungame') gunGameEquip(); else if(currentGameMode === 'soccer') socApplyLoadout(); else dmApplyLoadout();
   document.getElementById('damageFlash').style.opacity = '0';
   document.getElementById('countdownOverlay').style.display = 'none';
   updateHUD();
@@ -14263,24 +14294,55 @@ buildSocGrids();
 mapUiReady = true;
 refreshMapsForMode();
 
-// Grade de armas do menu debug
+// Grade de armas do menu debug (agrupada por categoria; mostra dano e tamanho do pente)
+const DBG_WEAPON_GROUPS = [
+  { pt:'PISTOLAS',          en:'PISTOLS',   ids:['glock','pistol2','p228','fiveseven','luger','pistol'] },
+  { pt:'SUBMETRALHADORAS',  en:'SMGs',      ids:['smg','mac10','uzi','mp5n','bizon','ump45','p90'] },
+  { pt:'ESPINGARDAS',       en:'SHOTGUNS',  ids:['dbarrel','shotgun','shotgun2','usas'] },
+  { pt:'FUZIS',             en:'RIFLES',    ids:['galil','famas','rifle','m4a1','aug','sg552'] },
+  { pt:'SNIPERS',           en:'SNIPERS',   ids:['sniper','sg550','g3sg1','awsm'] },
+  { pt:'PESADAS',           en:'HEAVY',     ids:['machinegun','minigun'] },
+  { pt:'DEBUG',             en:'DEBUG',     ids:['gravgun'] }
+];
+// Arma nova: coloque o id na categoria certa acima para ela aparecer organizada no menu debug.
 (function(){
   const grid = document.getElementById('dbgWeaponGrid');
-  Array.from(dbgWeaponSelect.options).forEach(opt=>{
-    const cfg = WEAPON_CONFIG[opt.value];
-    if(!cfg) return;
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'weapon-chip';
-    b.dataset.w = opt.value;
-    b.innerHTML = '<img src="' + (cfg.icon || cfg.img) + '" alt=""><span>' + cfg.name + '</span>';
-    b.addEventListener('click', ()=>{
-      SFX.menuSelect();
-      dbgWeaponSelect.value = opt.value;
-      dbgPickedWeapon = opt.value;
-      grid.querySelectorAll('.weapon-chip').forEach(x=>x.classList.toggle('active', x === b));
+  const sel = document.getElementById('dbgWeaponSelect');
+  const used = {};
+  const groups = DBG_WEAPON_GROUPS.map(g => ({ pt:g.pt, en:g.en, ids:g.ids.filter(id => WEAPON_CONFIG[id]) }));
+  groups.forEach(g => g.ids.forEach(id => used[id] = true));
+  const extra = Object.keys(WEAPON_CONFIG).filter(id => !used[id]);      // armas fora das categorias caem em OUTRAS
+  if(extra.length) groups.push({ pt:'OUTRAS', en:'OTHER', ids:extra });
+  groups.forEach(g => {
+    if(!g.ids.length) return;
+    const h = document.createElement('div');
+    h.className = 'dbg-wcat';
+    h.dataset.pt = g.pt; h.dataset.en = g.en;
+    h.innerHTML = '<span class="dbg-wcat-t"></span><small>' + g.ids.length + '</small>';
+    h.firstChild.textContent = currentLang === 'en' ? g.en : g.pt;
+    grid.appendChild(h);
+    const row = document.createElement('div');
+    row.className = 'weapon-grid';
+    grid.appendChild(row);
+    g.ids.forEach(id => {
+      const cfg = WEAPON_CONFIG[id];
+      const o = document.createElement('option'); o.value = id; o.textContent = cfg.name; sel.appendChild(o);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'weapon-chip';
+      b.dataset.w = id;
+      const stat = cfg.dmg ? (cfg.dmg + (cfg.spreadCount > 1 ? 'x' + cfg.spreadCount : '') + ' · ' + cfg.maxAmmo) : '';
+      b.innerHTML = '<img src="' + (WEAPON_ICONS[id] || cfg.icon || cfg.img) + '" alt=""><span></span><span class="chip-stat"></span>';
+      b.children[1].textContent = cfg.name;
+      b.children[2].textContent = stat;
+      b.addEventListener('click', ()=>{
+        SFX.menuSelect();
+        dbgWeaponSelect.value = id;
+        dbgPickedWeapon = id;
+        grid.querySelectorAll('.weapon-chip').forEach(x=>x.classList.toggle('active', x === b));
+      });
+      row.appendChild(b);
     });
-    grid.appendChild(b);
   });
 })();
 
@@ -14337,6 +14399,8 @@ function switchWeapon(wId){
     vm.src = WEAPON_CONFIG[wId].img;
     vm.style.width = (scale * 100) + '%';
     vm.style.height = (scale * 100) + '%';
+    vm.style.objectPosition = WEAPON_CONFIG[wId].viewPos || '';
+    applyWeaponAnim(wId, vm);   // coice/recarga/duracao do tiro por arma (ver WEAPON_ANIM)   // opcional por arma (ex.: 'right bottom' para sprites largos)
   };
 
   if(changingWeapon){
@@ -16582,7 +16646,7 @@ function netCoopRespawn(){
   NET.lastRespawn = performance.now();
   document.getElementById('damageFlash').style.opacity = '0';
   document.getElementById('countdownOverlay').style.display = 'none';
-  if(currentGameMode === 'gungame') gunGameEquip(gunGameWeaponIdx);
+  if(currentGameMode === 'gungame') gunGameEquip();
   else { player.unlockedWeapons = { pistol2: true }; resetAmmoToDefaults(); initWeaponUI(); switchWeapon('pistol2'); }
   updateHUD();
 }
@@ -16915,10 +16979,7 @@ function netBeginMatch(map, mode, foe, team, order, si){
   if(NET.mode === 'client'){
     enemies = []; netEntMap = {};
     if(fnaf) fnaf.anims = [];
-    if(order && order.length){
-      GUN_GAME_ORDER.splice(0, GUN_GAME_ORDER.length, ...order);
-      if(currentGameMode === 'gungame') gunGameEquip(0);
-    }
+    // Gun Game 100% aleatorio: cada jogador sorteia as proprias armas, entao a ordem enviada pelo host (order) e ignorada.
     if(!isTeamMode()){ const pos = netSpawnPos(player, NET.si); player.x = pos.x; player.y = pos.y; }
   }
   startMatchAudio();
