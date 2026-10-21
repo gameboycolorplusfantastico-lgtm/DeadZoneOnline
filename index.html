@@ -1896,6 +1896,7 @@ html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10p
         <option value="80">CS_MONASTERY</option>
         <option value="81">CS_MONASTERY</option>
         <option value="82">CS_DOWNHILL</option>
+        <option value="83">CS_POOL_DAY</option>
       </select>
     </div>
 
@@ -2435,6 +2436,7 @@ const texLoaded = { wall: false, floor: false, ceiling: false };
 let loadingTipTimer = null;
 const AssetLoader = (function(){
   let total = 0, settled = 0, finished = false, holding = false, holdSafety = null, hideTimer = null;
+  const afterQ = new Set();
   const el = () => document.getElementById('loadingScreen');
 
   function updateUI(){
@@ -2480,6 +2482,13 @@ const AssetLoader = (function(){
     const bar = document.getElementById('loadingBarFill');
     if(bar) bar.style.width = '100%';
     hideScreen();
+    // só agora o áudio do jogo (música, voz do modo etc.) pode começar
+    const fns = Array.from(afterQ); afterQ.clear();
+    fns.forEach(f => { try { f(); } catch(e) { console.error(e); } });
+  }
+  // Roda fn quando o loading de entrada no mapa/modo terminar (na hora, se não houver loading). Mesma fn repetida entra uma vez só.
+  function afterRelease(fn){
+    if(holding) afterQ.add(fn); else fn();
   }
 
   // Cada chamador registra um asset e recebe de volta a função que deve
@@ -2498,7 +2507,7 @@ const AssetLoader = (function(){
   }
 
   setTimeout(finish, 14000);
-  return { track, finish, updateUI, hold, isHolding: () => holding };
+  return { track, finish, updateUI, hold, afterRelease, isHolding: () => holding };
 })();
 
 // Ícones dos modos de jogo (menu de seleção e HUD). Entram na contagem do loading.
@@ -2711,6 +2720,7 @@ const SFX = (function(){
     if(!enabled || !url) return null;
     cat = cat || 'game';
     if((cat === 'game' || cat === 'dmg') && endLock) return null;   // partida acabou: sem áudio ingame
+    if((cat === 'game' || cat === 'dmg') && AssetLoader.isHolding()) return null;   // tela de loading: nenhum som do jogo
     if(cat === 'ui' && endLock) stopEnd();                           // clique na tela final: corta a sequência final
     if(cat === 'game'){
       const pr = pri || 2;
@@ -3252,6 +3262,7 @@ const SFX = (function(){
   // playMusic(true) = música do Deathmatch; playMusic() = música normal do jogo.
   function playMusic(deathmatch){
     if(!enabled) return;
+    if(AssetLoader.isHolding()){ AssetLoader.afterRelease(() => playMusic(deathmatch)); return; }   // espera o loading acabar
     releaseEnd();
     const m = deathmatch ? ensureDmMusic() : ensureMusic();
     const other = deathmatch ? musicEl : dmMusicEl;
@@ -3939,7 +3950,7 @@ const MAP_CATEGORY = {
   INDUSTRIAL: [0, 5, 6, 17, 22, 26, 27, 30, 34, 36, 45, 47, 50, 52, 54, 66, 67, 72, 73],
   URBAN:      [1, 3, 7, 8, 14, 15, 18, 20, 23, 28, 29, 38, 39, 40, 41, 43, 44, 48, 49, 51, 57, 58, 59, 60, 61, 62, 68, 69, 70, 71, 78, 79],
   HOUSE:      [21, 31, 53, 56],
-  METRO:      [9, 19, 25, 32],
+  METRO:      [9, 19, 25, 32, 83],
   FOREST:     [82]            // CS_DOWNHILL (a montanha). Novos mapas de floresta entram aqui.
 };
 // Variações de textura DENTRO da mesma categoria (mapas de deserto: chão de terra e paredes de barro/tijolo)
@@ -4878,6 +4889,7 @@ const I18N = {
     lvl80: "CS_MONASTERY", lvl80Desc: "Estilo Counter-Strike: Mosteiro no alto de um platô com quatro rampas, corredor interno estreito, casas de telhado e lago ao sudoeste.",
     lvl81: "CS_MONASTERY", lvl81Desc: "Estilo Counter-Strike: Mosteiro no platô com quatro rampas (uma em escada), telhados e lago. T ao sul, CT ao norte. (Deathmatch / CTF)",
     lvl82: "CS_DOWNHILL", lvl82Desc: "Estilo Counter-Strike: Montanha estreita e bem comprida, em 5 patamares ligados por rampas em zigue-zague. T no topo, CT na base. Dá para pular os penhascos e descer rápido (dano leve), mas para subir só pelas rampas. (Deathmatch / CTF)",
+    lvl83: "CS_POOL_DAY", lvl83Desc: "Estilo Counter-Strike: Piscinão interno minúsculo, inspirado em Pool Day. Lado vermelho (T) a oeste, azul (CT) a leste e uma piscina grande no salão do meio. Tiroteio curto e frenético. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
     matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", hudSeparateLabel: "COR DA HUD DIFERENTE DO MENU", hudColorLabel: "COR DA HUD:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", mcGreen: "VERDE", mcPink: "ROSA CHOQUE", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
@@ -5033,6 +5045,7 @@ const I18N = {
     lvl80: "CS_MONASTERY", lvl80Desc: "Counter-Strike style: Monastery on top of a plateau with four ramps, a narrow inner corridor, roofed houses and a lake in the southwest.",
     lvl81: "CS_MONASTERY", lvl81Desc: "Counter-Strike style: Monastery on the plateau with four ramps (one is a stair), roofs and a lake. T in the south, CT in the north. (Deathmatch / CTF)",
     lvl82: "CS_DOWNHILL", lvl82Desc: "Counter-Strike style: A narrow, very long mountain in 5 terraces linked by zig-zag ramps. T on the summit, CT at the base. You can jump off the cliffs to go down fast (light damage), but climbing back is only by the ramps. (Deathmatch / CTF)",
+    lvl83: "CS_POOL_DAY", lvl83Desc: "Counter-Strike style: A tiny indoor swimming hall inspired by Pool Day. Red side (T) in the west, blue side (CT) in the east and a big pool in the middle hall. Short, frantic fights. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
     matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", hudSeparateLabel: "HUD COLOR DIFFERENT FROM MENU", hudColorLabel: "HUD COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", mcGreen: "GREEN", mcPink: "HOT PINK", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
@@ -8372,6 +8385,7 @@ function nmBuild(W, H, fn) {
     W, H, g, hs,
     fl: (x0, y0, x1, y1, t) => rect(x0, y0, x1, y1, (x, y) => { floor[I(x, y)] = t; }),
     cl: (x0, y0, x1, y1, t) => rect(x0, y0, x1, y1, (x, y) => { ceil[I(x, y)] = t; }),
+    open: (x0, y0, x1, y1) => rect(x0, y0, x1, y1, (x, y) => { ceilOn[I(x, y)] = 0; }),   // céu aberto (sem teto) nesses tiles
     h: (x0, y0, x1, y1, v) => rect(x0, y0, x1, y1, (x, y) => { hs[y][x] = v; }),
     ring: wt => rect(0, 0, W - 1, H - 1, (x, y) => { if (x === 0 || y === 0 || x === W - 1 || y === H - 1) { g[y][x] = 1; wall[I(x, y)] = wt; } }),
     block: (x0, y0, x1, y1, wt) => rect(x0, y0, x1, y1, (x, y) => { g[y][x] = 1; wall[I(x, y)] = wt; thin[I(x, y)] = 0; }),
@@ -8589,6 +8603,54 @@ function nmMontanha() {
 })();
 
 
+// ---------- 5) POOL DAY (CS_POOL_DAY): mapa MUITO pequeno, inspirado em fy_pool_day ----------
+// Piscinão todo de azulejo (salão da piscina a céu aberto; laterais cobertas): lado vermelho (T, oeste) · salão branco com a piscina grande no meio · lado azul (CT, leste).
+// Nicho ao norte com uma banheira rasa, muretas de cobertura, câmaras com "chuveiros" nas laterais e uma trave (trampolim) ao sul da piscina.
+// Legenda interna: # parede · D parede escura grossa · T mureta fina · . piso · = água rasa · ~ água funda. Espelhado em X (col c <-> 26-c).
+function nmPiscina() {
+  const W = 27, H = 25;
+  return nmBuild(W, H, B => {
+    const c = Array.from({ length: H }, () => Array(W).fill('#'));
+    const R = (x0, y0, x1, y1, ch) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) c[y][x] = ch; };
+    const M = (x0, y0, x1, y1, ch) => { R(x0, y0, x1, y1, ch); R(W - 1 - x1, y0, W - 1 - x0, y1, ch); };   // espelha no eixo X
+    B.house(0, 0, W - 1, H - 1, { wall: 7, floor: 3, ceil: 4, doors: [] });   // teto em TUDO (é um prédio fechado)
+    R(1, 5, 25, 23, '.');           // salão principal
+    R(9, 1, 17, 4, '.');            // nicho norte
+    R(10, 2, 12, 3, '=');           // banheira do nicho
+    R(11, 10, 15, 17, '=');         // piscina grande (rasa nas bordas)
+    R(12, 12, 14, 15, '~');         // miolo fundo
+    R(15, 3, 15, 5, 'T');           // bancada fina do nicho
+    M(8, 6, 8, 6, 'D'); M(9, 6, 11, 6, 'T');          // muretas do topo (abertura central de 3 tiles)
+    M(4, 5, 4, 6, 'D');                                // batentes nos cantos de cima
+    M(4, 9, 4, 16, 'D'); M(8, 9, 8, 15, 'D');          // câmara dos chuveiros (entradas ao norte e ao sul)
+    M(5, 11, 6, 11, 'T'); M(6, 14, 7, 14, 'T');        // divisórias baixas dentro da câmara
+    M(8, 18, 8, 22, 'D'); M(4, 20, 8, 20, 'D');        // cantinho no canto de baixo
+    R(12, 21, 14, 21, 'D');                            // muro baixo do centro-sul
+    R(13, 18, 13, 18, 'T');                            // trampolim
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const ch = c[y][x];
+      if (ch === '#' || ch === 'D') { B.gap(x, y, x, y); B.block(x, y, x, y, ch === 'D' ? 12 : 7); continue; }   // gap limpa as janelas do house()
+      B.fl(x, y, x, y, x <= 7 ? 4 : (x >= 19 ? 5 : 3));        // vermelho · branco · azul
+      if (ch === 'T') B.thin(x, y, x, y, 7, true);
+      else if (ch === '=') { B.h(x, y, x, y, -1); B.fl(x, y, x, y, 6); }
+      else if (ch === '~') { B.h(x, y, x, y, -2); B.fl(x, y, x, y, 6); }
+    }
+    B.water(11, 10, 15, 17, -0.5, true);
+    B.water(10, 2, 12, 3, -0.5, true);
+    B.open(9, 1, 17, 23);            // salão da piscina (nicho + piscina grande) SEM teto: céu aberto. Os lados vermelho e azul continuam cobertos.
+  });
+}
+(function nmRegisterPiscina(){
+  const m = nmPiscina();
+  const ldef = { keyName: 'lvl83', w: m.w, h: m.h, grid: m.grid, heights: m.heights, slopes: m.slopes, water: m.water, layout: m.layout,
+    noCeiling: true, sky: 2, spawn: { x: 2.5, y: 12.5, angle: 0 }, dmOnly: true,
+    dmZones: { T: { x0: 1, y0: 8, x1: 3, y1: 17 }, CT: { x0: 23, y0: 8, x1: 25, y1: 17 } } };
+  LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, ldef);
+  LEVEL_THEMES[LEVEL_DEFINITIONS.length - 2] = STYLES.METRO;
+  LEVEL_DIFFICULTY.splice(LEVEL_DIFFICULTY.length - 1, 0, 2);
+})();
+
+
 // ===== MAPAS EM ASCII (estilo Counter-Strike / Call of Duty) — arenas 18–37 refeitas com o terreno novo =====
 // Legenda: # parede (vira lâmina fina) · b caixote/coluna · . chão ao ar livre · , chão INTERIOR (teto + telhado por fora) · d porta/passagem
 //          = água rasa · ~ água funda · `hr` = nível do piso (0-9; rampas lisas nascem sozinhas). Mapas sem "," são totalmente fechados (teto em tudo).
@@ -8784,7 +8846,8 @@ const MAP_TAGS = (function(){
     74:['Pizzaria de salas fechadas e corredores escuros.', 'Pizzeria of closed rooms and dark corridors.'],
     75:['Área plana: gramado com dois gols.', 'Flat ground: a grass pitch with two goals.'],
     76:village, 77:village, 78:dock, 79:dock, 80:monast, 81:monast,
-    82:['Montanha longa em patamares ligados por rampas.', 'Long mountain in terraces linked by ramps.']
+    82:['Montanha longa em patamares ligados por rampas.', 'Long mountain in terraces linked by ramps.'],
+    83:['Piscinão minúsculo: lado vermelho, lado azul e piscina no meio.', 'Tiny pool hall: red side, blue side and a pool in the middle.']
   };
   return T;
 })();
@@ -9003,6 +9066,7 @@ function loadLevel(idx){
 // Áudio de abertura de partida: Zumbi = música completa com fade in da música de fundo;
 // demais modos = anúncio do modo + música do jogo.
 function startMatchAudio() {
+  if (AssetLoader.isHolding()) { AssetLoader.afterRelease(startMatchAudio); return; }   // tela de loading ativa: o áudio do jogo espera ela acabar
   const l = LEVEL_DEFINITIONS[currentLevelIndex];
   const test = !!(l && l.isTestMap);
   SFX.stopModeOver();
@@ -9371,7 +9435,7 @@ function startScoreTracker() {
   if (scoreInterval) clearInterval(scoreInterval);
   scoreInterval = setInterval(() => {
     // Deathmatch: pontos SÓ por abate, nada de pontos por tempo.
-    if (!isTeamMode() && !fnaf && started && !gameOver && !countdownActive && settingsModal.style.display !== 'flex') {
+    if (!isTeamMode() && !fnaf && started && !gameOver && !countdownActive && !AssetLoader.isHolding() && settingsModal.style.display !== 'flex') {
       score += 10;
       updateHUD();
     }
@@ -9388,6 +9452,7 @@ function startCountdown(){
   flashMsg(I18N[currentLang].prepare);
 
   countdownInterval = setInterval(() => {
+    if(AssetLoader.isHolding()) return;   // tela de loading: a contagem fica parada até ela acabar
     countdownTimer--;
     if(countdownTimer > 0){
       cdEl.textContent = countdownTimer;
@@ -12685,6 +12750,7 @@ function initWeaponUI(){
 }
 
 function reloadWeapon(){
+  if(AssetLoader.isHolding()) return;   // tela de loading: o jogo inteiro fica em pausa
   if(gameOver || countdownActive || settingsModal.style.display === 'flex') return;
   if(player.isReloading) return;
   const wId = player.weapon;
@@ -14384,6 +14450,7 @@ window.addEventListener('keydown', e=>{
 
 let switchAnimTimer1 = null, switchAnimTimer2 = null;
 function switchWeapon(wId){
+  if(AssetLoader.isHolding()) return;   // tela de loading: o jogo inteiro fica em pausa
   if(!WEAPON_CONFIG[wId] || !player.unlockedWeapons[wId]) return;
   if(player.isReloading) return;
   const changingWeapon = player.weapon !== wId;
@@ -15958,6 +16025,7 @@ function addAmmoAll(pentes) {
 }
 
 function tryFire(){
+  if(AssetLoader.isHolding()) return;   // tela de loading: o jogo inteiro fica em pausa
   if(shopOpen) return;
   if(gameOver || countdownActive || dmPlayerDead || player.isReloading || settingsModal.style.display === 'flex') return;
   const now = performance.now();
