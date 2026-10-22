@@ -717,6 +717,10 @@ window.addEventListener('keydown', function(e){
   cursor:pointer;transition:background .15s,color .15s;
 }
 .seg-btn+.seg-btn{border-left:1px solid var(--panel-border);}
+#langSeg{flex-wrap:wrap;}
+#langSeg .seg-btn{flex:1 1 30%;}
+#langSeg .seg-btn:nth-child(n+4){border-top:1px solid var(--panel-border);}
+#langSeg .seg-btn:nth-child(4){border-left:0;}
 .seg-btn:hover{color:var(--amber);}
 .seg-btn.active{background:linear-gradient(#d95a3a,#a5391f);color:#fff;text-shadow:1px 1px 0 #000;}
 
@@ -1413,6 +1417,23 @@ html.console #killFeed{top:calc(8px + var(--sy,0px));right:calc(8px + var(--sx,0
 #levelSelectModal.net-lobby #netPlist>*,#levelSelectModal.net-lobby .net-pl{margin-top:0;padding:4px 8px;}
 @media (max-width:560px){#levelSelectModal.net-lobby #netPlist{grid-template-columns:1fr;}}
 </style>
+<style id="dzFeedDeathCss">
+.kf-row.kf-event{border-color:rgba(255,255,255,.14);}
+.kf-ev-txt{max-width:30ch;overflow:hidden;text-overflow:ellipsis;}
+.kf-ev-txt.CT{color:#9cc8ff;} .kf-ev-txt.T{color:#ff6a55;}
+/* tela de morte (modos com respawn) */
+#deathFx{position:absolute;inset:0;z-index:34;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  opacity:0;visibility:hidden;transition:opacity .4s,visibility 0s .4s;font-family:'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;
+  background:radial-gradient(ellipse at center,rgba(40,0,0,.25) 0%,rgba(100,0,0,.5) 55%,rgba(8,0,0,.92) 100%);
+  -webkit-backdrop-filter:grayscale(.85) brightness(.7);backdrop-filter:grayscale(.85) brightness(.7);}
+html.console #deathFx,#deathFx.noblur{-webkit-backdrop-filter:none;backdrop-filter:none;}
+#deathFx.on{opacity:1;visibility:visible;transition:opacity .4s,visibility 0s;}
+#deathFx .df-title{font-size:clamp(28px,8vh,70px);font-weight:900;letter-spacing:.18em;color:#ff4a3a;text-shadow:0 0 22px rgba(255,40,20,.75),0 3px 0 #000;
+  animation:dfIn .55s ease-out both,dfPulse 1.6s .55s ease-in-out infinite;}
+#deathFx .df-sub{font-size:clamp(10px,2vh,15px);font-weight:700;letter-spacing:.2em;color:#ffd6d0;text-shadow:0 2px 4px #000;opacity:.9;}
+@keyframes dfIn{from{transform:scale(1.6);opacity:0;letter-spacing:.5em;}to{transform:none;opacity:1;letter-spacing:.18em;}}
+@keyframes dfPulse{0%,100%{opacity:1;}50%{opacity:.72;}}
+</style>
 </head>
 <body>
 <div id="loadingScreen">
@@ -2053,7 +2074,7 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
       <div class="setting-group" id="socSameTeamGroup" style="display:none">
         <label class="checkbox-label">
           <input type="checkbox" id="optSocSameTeam">
-          <span id="socSameTeamTxt">JOGAR NO MESMO TIME DO ANFITRIÃO</span>
+          <span id="socSameTeamTxt" data-i18n="socSameTeamLabel">JOGAR NO MESMO TIME DO ANFITRIÃO</span>
         </label>
       </div>
     </div>
@@ -2089,10 +2110,18 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
         <div class="seg" id="langSeg">
           <button type="button" class="seg-btn active" data-val="pt">PORTUGUÊS</button>
           <button type="button" class="seg-btn" data-val="en">ENGLISH</button>
+          <button type="button" class="seg-btn" data-val="es">ESPAÑOL</button>
+          <button type="button" class="seg-btn" data-val="fr">FRANÇAIS</button>
+          <button type="button" class="seg-btn" data-val="it">ITALIANO</button>
+          <button type="button" class="seg-btn" data-val="ja">日本語</button>
         </div>
         <select id="langSelect" style="display:none">
           <option value="pt">Português</option>
           <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
         </select>
       </div>
       <div class="set-sec" data-i18n="secGameplay">JOGABILIDADE</div>
@@ -2159,6 +2188,12 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
           <button type="button" class="seg-btn" data-val="vig" data-i18n="fxVig">VINHETA</button>
           <button type="button" class="seg-btn" data-val="crt" data-i18n="fxCrt">CRT (LINHAS)</button>
         </div>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optDeathBlur" checked>
+          <span data-i18n="deathBlurLabel">DESFOQUE NA TELA DE MORTE</span>
+        </label>
       </div>
       <div class="setting-group">
         <label data-i18n="shadowLabel">SOMBRA DOS PERSONAGENS:</label>
@@ -5055,7 +5090,7 @@ const I18N = {
     gfxHint_pixel: "Visual retrô: blocos grandes, poucas cores e pontilhado. Leve e com poucos detalhes.",
     gfxHint_classic: "Equilíbrio: pixels nítidos, como no jogo original.",
     gfxHint_smooth: "Imagem mais suave e detalhada, sem pixels aparentes. Pesa mais no aparelho.",
-    fxLabel: "EFEITO DE TELA:", fxOff: "NENHUM", fxVig: "VINHETA", fxCrt: "CRT (LINHAS)",
+    fxLabel: "EFEITO DE TELA:", deathBlurLabel: "DESFOQUE NA TELA DE MORTE", socSameTeamLabel: "JOGAR NO MESMO TIME DO ANFITRIÃO", fxOff: "NENHUM", fxVig: "VINHETA", fxCrt: "CRT (LINHAS)",
     fovLabel: "CAMPO DE VISÃO (FOV)", renderQualityLabel: "RESOLUÇÃO DA IMAGEM:", qLow: "BAIXA", qMid: "NORMAL", qHigh: "ALTA",
     fogLabel: "NÉVOA (DISTÂNCIA DE VISÃO):", fogNear: "PRÓXIMA", fogNormal: "NORMAL", fogFar: "DISTANTE", fogOff: "DESLIGADA",
     hudSizeLabel: "TAMANHO DA HUD:", hudSmall: "PEQUENA", hudMed: "MÉDIA", hudLarge: "GRANDE",
@@ -5211,7 +5246,7 @@ const I18N = {
     gfxHint_pixel: "Retro look: big blocks, few colors and dithering. Light and low on detail.",
     gfxHint_classic: "Balanced: sharp pixels, like the original game.",
     gfxHint_smooth: "Smoother, more detailed image with no visible pixels. Heavier on your device.",
-    fxLabel: "SCREEN EFFECT:", fxOff: "NONE", fxVig: "VIGNETTE", fxCrt: "CRT (LINES)",
+    fxLabel: "SCREEN EFFECT:", deathBlurLabel: "BLUR ON DEATH SCREEN", socSameTeamLabel: "PLAY ON THE HOST'S TEAM", fxOff: "NONE", fxVig: "VIGNETTE", fxCrt: "CRT (LINES)",
     fovLabel: "FIELD OF VIEW (FOV)", renderQualityLabel: "IMAGE RESOLUTION:", qLow: "LOW", qMid: "NORMAL", qHigh: "HIGH",
     fogLabel: "FOG (VIEW DISTANCE):", fogNear: "CLOSE", fogNormal: "NORMAL", fogFar: "FAR", fogOff: "OFF",
     hudSizeLabel: "HUD SIZE:", hudSmall: "SMALL", hudMed: "MEDIUM", hudLarge: "LARGE",
@@ -5249,9 +5284,39 @@ const I18N = {
   }
 };
 
+
+// ===== Idiomas extras (ES / FR / IT / JA) =====
+// Tabela: texto em INGLÊS -> [espanhol, francês, italiano, japonês]. Texto sem tradução cai no inglês.
+const XTR = {"⏸ PAUSE":["⏸ PAUSA","⏸ PAUSE","⏸ PAUSA","⏸ 一時停止"],"HEALTH":["VIDA","SANTÉ","SALUTE","体力"],"WAVE":["OLEADA","VAGUE","ONDATA","ウェーブ"],"AMMO":["MUNICIÓN","MUNITIONS","MUNIZIONI","弾薬"],"SCORE":["PUNTOS","SCORE","PUNTI","スコア"],"Rotate your device to LANDSCAPE mode to play":["Gira el dispositivo a modo HORIZONTAL para jugar","Tournez votre appareil en mode PAYSAGE pour jouer","Ruota il dispositivo in modalità ORIZZONTALE per giocare","プレイするには端末を横向き（横画面）にしてください"],"SELECT AN OPTION TO START":["SELECCIONA UNA OPCIÓN PARA EMPEZAR","CHOISISSEZ UNE OPTION POUR COMMENCER","SCEGLI UN'OPZIONE PER INIZIARE","オプションを選んで開始"],"PLAY":["JUGAR","JOUER","GIOCA","プレイ"],"FULLSCREEN":["PANTALLA COMPLETA","PLEIN ÉCRAN","SCHERMO INTERO","フルスクリーン"],"SETUP GAME":["CONFIGURAR PARTIDA","CONFIGURER LA PARTIE","IMPOSTA PARTITA","ゲーム設定"],"GAME MODE:":["MODO DE JUEGO:","MODE DE JEU :","MODALITÀ DI GIOCO:","ゲームモード："],"MAIN MENU":["MENÚ PRINCIPAL","MENU PRINCIPAL","MENU PRINCIPALE","メインメニュー"],"PLAYER NAME:":["NOMBRE DEL JUGADOR:","NOM DU JOUEUR :","NOME GIOCATORE:","プレイヤー名："],"SETTINGS":["AJUSTES","PARAMÈTRES","IMPOSTAZIONI","設定"],"GAME SETTINGS":["AJUSTES DEL JUEGO","PARAMÈTRES DU JEU","IMPOSTAZIONI DI GIOCO","ゲーム設定"],"LANGUAGE / IDIOMA:":["IDIOMA / LANGUAGE:","LANGUE / LANGUAGE :","LINGUA / LANGUAGE:","言語 / LANGUAGE："],"SELECT MAP:":["SELECCIONAR MAPA:","CHOISIR LA CARTE :","SELEZIONA MAPPA:","マップ選択："],"AIM SENSITIVITY":["SENSIBILIDAD DE PUNTERÍA","SENSIBILITÉ DE VISÉE","SENSIBILITÀ DI MIRA","エイム感度"],"✓ APPLY":["✓ APLICAR","✓ APPLIQUER","✓ APPLICA","✓ 適用"],"← BACK":["← VOLVER","← RETOUR","← INDIETRO","← 戻る"],"↺ RESET TO DEFAULT":["↺ RESTABLECER VALORES","↺ RÉINITIALISER","↺ RIPRISTINA PREDEFINITI","↺ 初期設定に戻す"],"SETTINGS RESET TO DEFAULT":["AJUSTES RESTABLECIDOS","PARAMÈTRES RÉINITIALISÉS","IMPOSTAZIONI RIPRISTINATE","設定を初期化しました"],"YOU DIED":["HAS MUERTO","VOUS ÊTES MORT","SEI MORTO","やられた"],"TRY AGAIN":["REINTENTAR","RÉESSAYER","RIPROVA","もう一度"],"AMMO FULL":["MUNICIÓN LLENA","MUNITIONS PLEINES","MUNIZIONI PIENE","弾薬満タン"],"RELOADING...":["RECARGANDO...","RECHARGEMENT...","RICARICA...","リロード中..."],"RELOADED":["RECARGADA","RECHARGÉ","RICARICATA","リロード完了"],"THIS WEAPON CANNOT BE RELOADED!":["¡ESTA ARMA NO SE PUEDE RECARGAR!","CETTE ARME NE SE RECHARGE PAS !","QUESTA ARMA NON SI PUÒ RICARICARE!","この武器はリロードできません！"],"OUT OF AMMO!":["¡SIN MUNICIÓN!","PLUS DE MUNITIONS !","MUNIZIONI ESAURITE!","弾切れ！"],"NO SPARE MAGS!":["¡SIN CARGADORES!","PLUS DE CHARGEURS !","NESSUN CARICATORE DI RISERVA!","予備マガジンなし！"],"ENEMY ELIMINATED (+150 PTS)":["ENEMIGO ELIMINADO (+150 PTS)","ENNEMI ÉLIMINÉ (+150 PTS)","NEMICO ELIMINATO (+150 PUNTI)","敵を倒した（+150点）"],"+AMMO":["+MUNICIÓN","+MUNITIONS","+MUNIZIONI","+弾薬"],"+HEALTH":["+VIDA","+SANTÉ","+SALUTE","+体力"],"GET READY!":["¡PREPÁRATE!","PRÉPAREZ-VOUS !","PREPARATI!","準備しろ！"],"Cache style: A site to the west, B site to the east and a long Mid linking both. CT north, T south.":["Estilo Cache: sitio A al oeste, sitio B al este y un Mid largo que conecta ambos. CT al norte, T al sur.","Style Cache : site A à l'ouest, site B à l'est et un long Mid qui relie les deux. CT au nord, T au sud.","Stile Cache: sito A a ovest, sito B a est e un lungo Mid che li collega. CT a nord, T a sud.","Cache風：西にAサイト、東にBサイト、両方をつなぐ長いミッド。CTは北、Tは南。"],"Inferno style: curved Banana to the west, Mid in the center, Apartments to the east. B site NW, A site east.":["Estilo Inferno: Banana curva al oeste, Mid en el centro, Apartamentos al este. Sitio B al NO, sitio A al este.","Style Inferno : Banana courbe à l'ouest, Mid au centre, Appartements à l'est. Site B au NO, site A à l'est.","Stile Inferno: Banana curva a ovest, Mid al centro, Appartamenti a est. Sito B a NO, sito A a est.","Inferno風：西にカーブしたバナナ、中央にミッド、東にアパートメント。Bサイトは北西、Aサイトは東。"],"Cobblestone style: a walled castle to the north with three gates, a central hall and A/B sites inside.":["Estilo Cobblestone: un castillo amurallado al norte con tres puertas, un salón central y sitios A/B en el interior.","Style Cobblestone : un château fortifié au nord avec trois portes, une salle centrale et les sites A/B à l'intérieur.","Stile Cobblestone: un castello fortificato a nord con tre porte, una sala centrale e i siti A/B all'interno.","Cobblestone風：北に3つの門を持つ城壁の城、中央のホール、内部にA/Bサイト。"],"Mirage style: A Ramp, Palace, Jungle, B Apartments and an open Mid with connectors.":["Estilo Mirage: Rampa A, Palacio, Jungla, Apartamentos B y un Mid abierto con conectores.","Style Mirage : Rampe A, Palais, Jungle, Appartements B et un Mid ouvert avec des connecteurs.","Stile Mirage: Rampa A, Palazzo, Giungla, Appartamenti B e un Mid aperto con connettori.","Mirage風：Aランプ、パレス、ジャングル、Bアパートメント、連絡路のある開けたミッド。"],"Aztec style: a real river splits the map (shallow banks, deep middle you can swim in), crossed by bridges. Sites to the south, T to the north.":["Estilo Aztec: un río de verdad divide el mapa (orillas poco profundas, centro profundo donde se puede nadar), cruzado por puentes. Sitios al sur, T al norte.","Style Aztec : une vraie rivière coupe la carte (berges peu profondes, centre profond où l'on peut nager), traversée par des ponts. Sites au sud, T au nord.","Stile Aztec: un vero fiume divide la mappa (sponde basse, centro profondo dove si può nuotare), attraversato da ponti. Siti a sud, T a nord.","Aztec風：本物の川がマップを分断（浅い岸と泳げる深い中央）、橋が架かっている。サイトは南、Tは北。"],"Industrial container yard of thin walls with a roofed central warehouse and four entrances.":["Patio industrial de contenedores con muros finos, un almacén central techado y cuatro entradas.","Cour industrielle de conteneurs aux murs fins, avec un entrepôt central couvert et quatre entrées.","Piazzale industriale di container con muri sottili, un magazzino centrale coperto e quattro ingressi.","薄い壁のコンテナヤード。中央に屋根付きの倉庫があり、入口は4つ。"],"Nuke style: outdoor yard with a silo, a building with a lobby, an upper A site and a sunken B site.":["Estilo Nuke: patio exterior con un silo, un edificio con vestíbulo, un sitio A elevado y un sitio B hundido.","Style Nuke : cour extérieure avec un silo, un bâtiment avec hall, un site A en hauteur et un site B en contrebas.","Stile Nuke: cortile esterno con un silo, un edificio con atrio, un sito A rialzato e un sito B incassato.","Nuke風：サイロのある屋外ヤード、ロビー付きの建物、高い位置のAサイトと低く沈んだBサイト。"],"Italy style: Italian village with streets, a sunken central plaza with ramps (dry slope), market stalls and buildings with doors.":["Estilo Italy: pueblo italiano con calles, una plaza central hundida con rampas (pendiente seca), puestos de mercado y edificios con puertas.","Style Italy : village italien avec des rues, une place centrale en contrebas avec des rampes (pente sèche), des étals de marché et des bâtiments avec portes.","Stile Italy: borgo italiano con strade, una piazza centrale incassata con rampe (pendio asciutto), bancarelle e edifici con porte.","Italy風：通りのあるイタリアの村、スロープ（乾いた斜面）付きの中央の窪んだ広場、市場の屋台、扉のある建物。"],"Office style: corridors, offices with doors and a central hall. Lots of close-quarters fights.":["Estilo Office: pasillos, oficinas con puertas y un salón central. Muchos combates cuerpo a cuerpo.","Style Office : couloirs, bureaux avec portes et une salle centrale. Beaucoup de combats rapprochés.","Stile Office: corridoi, uffici con porte e una sala centrale. Molti scontri ravvicinati.","Office風：廊下、扉付きのオフィス、中央のホール。接近戦が多い。"],"Train style: rail yard with rows of train cars, corner buildings and raised walkways.":["Estilo Train: patio ferroviario con filas de vagones, edificios en las esquinas y pasarelas elevadas.","Style Train : gare de triage avec des rangées de wagons, des bâtiments dans les coins et des passerelles surélevées.","Stile Train: scalo ferroviario con file di vagoni, edifici agli angoli e passerelle sopraelevate.","Train風：貨車が並ぶ操車場、角の建物、高架の通路。"],"Platform temple with a four-door central house, smooth ramps and pillars in the corners.":["Templo en plataforma con una casa central de cuatro puertas, rampas suaves y pilares en las esquinas.","Temple sur plateforme avec une maison centrale à quatre portes, des rampes douces et des piliers dans les coins.","Tempio su piattaforma con una casa centrale a quattro porte, rampe dolci e pilastri agli angoli.","4つの扉を持つ中央の家、なだらかなスロープ、四隅の柱がある台地の神殿。"],"Tuscan village: roofed houses at both ends and a sunken plaza in the middle, with ramps (dry slope).":["Pueblo toscano: casas techadas en ambos extremos y una plaza hundida en el medio, con rampas (pendiente seca).","Village toscan : maisons couvertes aux deux extrémités et place en contrebas au milieu, avec des rampes (pente sèche).","Borgo toscano: case con tetto ai due estremi e una piazza incassata al centro, con rampe (pendio asciutto).","トスカーナの村：両端に屋根付きの家、中央に窪んだ広場とスロープ（乾いた斜面）。"],"Cross of canals with bridges, shallow banks, a deep centre to swim in and four houses in the corners.":["Cruz de canales con puentes, orillas poco profundas, un centro profundo para nadar y cuatro casas en las esquinas.","Croix de canaux avec ponts, berges peu profondes, un centre profond pour nager et quatre maisons dans les coins.","Croce di canali con ponti, sponde basse, un centro profondo dove nuotare e quattro case agli angoli.","橋の架かった十字の運河。浅い岸、泳げる深い中央、四隅に4軒の家。"],"Castle with a shallow moat, four entrance bridges, a covered hall and an inner tower.":["Castillo con un foso poco profundo, cuatro puentes de entrada, un salón cubierto y una torre interior.","Château avec un fossé peu profond, quatre ponts d'entrée, une salle couverte et une tour intérieure.","Castello con un fossato poco profondo, quattro ponti d'ingresso, una sala coperta e una torre interna.","浅い堀、4つの入口の橋、屋根付きのホール、内側の塔がある城。"],"Overpass style: a water canal in the middle (shallow banks, deep channel) with bridges, Long A to the west and Bathrooms to the east.":["Estilo Overpass: un canal de agua en el medio (orillas poco profundas, canal profundo) con puentes, Long A al oeste y Baños al este.","Style Overpass : un canal d'eau au milieu (berges peu profondes, chenal profond) avec des ponts, Long A à l'ouest et Toilettes à l'est.","Stile Overpass: un canale d'acqua al centro (sponde basse, canale profondo) con ponti, Long A a ovest e Bagni a est.","Overpass風：中央に水路（浅い岸と深い水路）と橋、西にロングA、東にバスルーム。"],"Vertigo style: skyscraper rooftop with raised sites, a stepped central platform and drops in the corners.":["Estilo Vertigo: azotea de rascacielos con sitios elevados, una plataforma central escalonada y caídas en las esquinas.","Style Vertigo : toit de gratte-ciel avec des sites surélevés, une plateforme centrale en gradins et des vides dans les coins.","Stile Vertigo: tetto di un grattacielo con siti rialzati, una piattaforma centrale a gradoni e dislivelli agli angoli.","Vertigo風：高所のサイトがある超高層ビルの屋上、段状の中央プラットフォーム、四隅の落下ポイント。"],"Four shallow ponds with deep centres, crossing piers and roofed houses in the four corners.":["Cuatro estanques poco profundos con centros profundos, muelles que los cruzan y casas techadas en las cuatro esquinas.","Quatre étangs peu profonds au centre profond, des pontons qui les traversent et des maisons couvertes dans les quatre coins.","Quattro stagni poco profondi con centri profondi, pontili che li attraversano e case con tetto nei quattro angoli.","中央が深い4つの浅い池、それを横切る桟橋、四隅に屋根付きの家。"],"Long raised ridge with smooth ramps, thin walls and long sight lines.":["Cresta larga y elevada con rampas suaves, muros finos y largas líneas de visión.","Longue crête surélevée avec des rampes douces, des murs fins et de longues lignes de vue.","Lunga cresta rialzata con rampe dolci, muri sottili e lunghe linee di tiro.","なだらかなスロープ、薄い壁、長い視線が通る細長い高台。"],"Venetian town: a deep canal down the middle with two bridges, roofed houses with doors and market stalls. T in the west, CT in the east.":["Ciudad veneciana: un canal profundo por el centro con dos puentes, casas techadas con puertas y puestos de mercado. T al oeste, CT al este.","Ville vénitienne : un canal profond au centre avec deux ponts, maisons couvertes avec portes et étals de marché. T à l'ouest, CT à l'est.","Città veneziana: un canale profondo al centro con due ponti, case con tetto e porte e bancarelle. T a ovest, CT a est.","ヴェネチア風の街：中央を走る深い運河と2本の橋、扉付きの屋根の家、市場の屋台。Tは西、CTは東。"],"Metro baggage hall: thin-walled conveyor belts make parallel lanes, with pillars and side rooms. Lots of crossfire.":["Sala de equipajes del metro: cintas transportadoras de muros finos forman carriles paralelos, con pilares y salas laterales. Mucho fuego cruzado.","Hall à bagages du métro : des tapis roulants aux murs fins forment des couloirs parallèles, avec piliers et salles latérales. Beaucoup de tirs croisés.","Sala bagagli della metro: nastri trasportatori con muri sottili formano corsie parallele, con pilastri e sale laterali. Molto fuoco incrociato.","地下鉄の手荷物ホール：薄い壁のコンベアが平行なレーンを作り、柱と脇部屋がある。十字砲火が多い。"],"Enclosed office floor: narrow-door rooms around corridors and a central lobby. Close-quarters combat.":["Planta de oficinas cerrada: salas de puertas estrechas alrededor de pasillos y un vestíbulo central. Combate cuerpo a cuerpo.","Étage de bureaux fermé : pièces à portes étroites autour de couloirs et un hall central. Combat rapproché.","Piano uffici chiuso: stanze con porte strette attorno ai corridoi e un atrio centrale. Combattimento ravvicinato.","閉鎖されたオフィスフロア：廊下を囲む狭い扉の部屋と中央ロビー。接近戦。"],"Farmhouse with a yard: two roofed houses with rooms, low walls and crates in the yard.":["Casa de campo con patio: dos casas techadas con habitaciones, muros bajos y cajas en el patio.","Ferme avec cour : deux maisons couvertes avec pièces, murets et caisses dans la cour.","Casale con cortile: due case con tetto e stanze, muretti e casse nel cortile.","庭付きの農家：部屋のある屋根付きの家が2軒、低い壁、庭に木箱。"],"Scrapyard: thin-walled scrap piles, a central shed with two doors and alleys between the heaps.":["Chatarrería: montones de chatarra de muros finos, un cobertizo central con dos puertas y callejones entre los montones.","Casse auto : tas de ferraille aux parois fines, un hangar central à deux portes et des ruelles entre les tas.","Autodemolizione: cumuli di rottami con pareti sottili, un capannone centrale con due porte e vicoli tra i cumuli.","スクラップ置き場：薄い壁のスクラップの山、扉が2つある中央の小屋、山の間の路地。"],"Crossing alleys between four roofed buildings, with entrances on both sides and crates at the corners.":["Callejones que se cruzan entre cuatro edificios techados, con entradas en ambos lados y cajas en las esquinas.","Ruelles qui se croisent entre quatre bâtiments couverts, avec des entrées de chaque côté et des caisses aux coins.","Vicoli che si incrociano tra quattro edifici con tetto, con ingressi su entrambi i lati e casse agli angoli.","屋根付きの建物4棟の間を交差する路地。両側に入口があり、角に木箱がある。"],"Abbey on a low plateau: a cloister of several rooms, smooth ramps on all four sides and an open garden around it.":["Abadía en una meseta baja: un claustro de varias salas, rampas suaves en los cuatro lados y un jardín abierto alrededor.","Abbaye sur un plateau bas : un cloître de plusieurs salles, des rampes douces sur les quatre côtés et un jardin ouvert autour.","Abbazia su un altopiano basso: un chiostro con più sale, rampe dolci sui quattro lati e un giardino aperto intorno.","低い台地の修道院：複数の部屋からなる回廊、四方のなだらかなスロープ、周囲の開けた庭。"],"Terminal concourse: grid of columns, thin-walled counters and side corridors. Lots of crossfire.":["Vestíbulo de terminal: cuadrícula de columnas, mostradores de muros finos y pasillos laterales. Mucho fuego cruzado.","Hall de terminal : grille de colonnes, comptoirs aux parois fines et couloirs latéraux. Beaucoup de tirs croisés.","Atrio del terminal: griglia di colonne, banconi con pareti sottili e corridoi laterali. Molto fuoco incrociato.","ターミナルの大ホール：柱の格子、薄い壁のカウンター、脇の通路。十字砲火が多い。"],"Airstrip with two roofed hangars, a control tower in the middle and long sight lines between them.":["Pista de aterrizaje con dos hangares techados, una torre de control en el medio y largas líneas de visión entre ellos.","Piste d'atterrissage avec deux hangars couverts, une tour de contrôle au milieu et de longues lignes de vue entre eux.","Pista di atterraggio con due hangar coperti, una torre di controllo al centro e lunghe linee di tiro tra loro.","屋根付きの格納庫が2つ、中央に管制塔があり、その間に長い視線が通る滑走路。"],"Cell blocks with narrow doors, a central yard and guard corridors. Close-quarters combat.":["Bloques de celdas con puertas estrechas, un patio central y pasillos de guardia. Combate cuerpo a cuerpo.","Blocs de cellules aux portes étroites, une cour centrale et des couloirs de garde. Combat rapproché.","Blocchi di celle con porte strette, un cortile centrale e corridoi di guardia. Combattimento ravvicinato.","狭い扉の独房棟、中央の中庭、看守用の通路。接近戦。"],"Packed shacks, narrow lanes and a hillside with a smooth ramp in the middle. Tight doors and lots of corners.":["Chabolas apiñadas, callejones estrechos y una ladera con una rampa suave en el medio. Puertas estrechas y muchas esquinas.","Taudis serrés, ruelles étroites et une colline avec une rampe douce au milieu. Portes étroites et beaucoup de coins.","Baracche ammassate, vicoli stretti e un pendio con una rampa dolce al centro. Porte strette e molti angoli.","密集したバラック、狭い路地、中央になだらかなスロープのある丘の斜面。狭い扉と多くの曲がり角。"],"Ruined streets: open buildings, broken walls and a raised patch in the centre with smooth ramps.":["Calles en ruinas: edificios abiertos, muros rotos y una zona elevada en el centro con rampas suaves.","Rues en ruines : bâtiments ouverts, murs brisés et une zone surélevée au centre avec des rampes douces.","Strade in rovina: edifici aperti, muri crollati e una zona rialzata al centro con rampe dolci.","廃墟の街路：開放された建物、崩れた壁、中央になだらかなスロープのある高台。"],"Container yard: long thin walls form lanes. Watch out for the open centre.":["Patio de contenedores: largos muros finos forman carriles. Cuidado con el centro abierto.","Cour de conteneurs : de longs murs fins forment des couloirs. Attention au centre ouvert.","Piazzale di container: lunghi muri sottili formano corsie. Attenzione al centro aperto.","コンテナヤード：長い薄壁がレーンを作る。開けた中央に注意。"],"Mansion with a six-door central hall, a garden with a shallow pool to wade through and open flanks.":["Mansión con un salón central de seis puertas, un jardín con una piscina poco profunda para vadear y flancos abiertos.","Manoir avec un hall central à six portes, un jardin avec un bassin peu profond à traverser et des flancs ouverts.","Villa con una sala centrale a sei porte, un giardino con una piscina bassa da guadare e fianchi aperti.","6つの扉がある中央ホールの屋敷、歩いて渡れる浅いプールのある庭、開けた側面。"],"Underpass beneath two viaducts: asphalt ground fenced by metal grids and a brick outer wall, with open sky on the sides and in the middle. Dropping down is easy, climbing back costs a step.":["Paso inferior bajo dos viaductos: suelo de asfalto cercado por rejas metálicas y un muro exterior de ladrillo, con cielo abierto a los lados y en el medio. Bajar es fácil, volver a subir cuesta un escalón.","Passage souterrain sous deux viaducs : sol en asphalte clôturé de grilles métalliques et d'un mur extérieur en brique, avec le ciel ouvert sur les côtés et au milieu. Descendre est facile, remonter coûte une marche.","Sottopassaggio sotto due viadotti: suolo d'asfalto recintato da griglie metalliche e un muro esterno di mattoni, con cielo aperto ai lati e al centro. Scendere è facile, risalire costa un gradino.","2本の高架下の地下道：金属の格子とレンガの外壁で囲まれたアスファルトの地面。両側と中央は空が開けている。降りるのは簡単だが、戻るには段差を登る必要がある。"],"Chateau: inner walls, a stepped central tower and sunken gardens with ramps on the sides.":["Château: muros interiores, una torre central escalonada y jardines hundidos con rampas a los lados.","Château : murs intérieurs, une tour centrale en gradins et des jardins en contrebas avec des rampes sur les côtés.","Castello: mura interne, una torre centrale a gradoni e giardini incassati con rampe ai lati.","シャトー：内壁、段状の中央塔、側面にスロープのある沈んだ庭園。"],"Laboratory with containment chambers, a long corridor and a central room. Short and medium range combat.":["Laboratorio con cámaras de contención, un pasillo largo y una sala central. Combate a corta y media distancia.","Laboratoire avec chambres de confinement, un long couloir et une salle centrale. Combat à courte et moyenne portée.","Laboratorio con camere di contenimento, un lungo corridoio e una sala centrale. Combattimento a corta e media distanza.","隔離室、長い廊下、中央の部屋がある研究所。近・中距離戦。"],"Stepped temple with a pillared courtyard and a two-level pyramid in the middle. Fight for the high ground.":["Templo escalonado con un patio de pilares y una pirámide de dos niveles en el medio. Lucha por el terreno alto.","Temple en gradins avec une cour à piliers et une pyramide à deux niveaux au milieu. Battez-vous pour la position en hauteur.","Tempio a gradoni con un cortile a pilastri e una piramide a due livelli al centro. Combatti per il terreno alto.","柱のある中庭と、中央に2段のピラミッドがある段状の神殿。高所を巡る戦い。"],"Razed ground: two roofed sheds, low walls and scattered scrap. Cover everywhere.":["Terreno arrasado: dos cobertizos techados, muros bajos y chatarra dispersa. Cobertura por todas partes.","Terrain rasé : deux hangars couverts, des murets et de la ferraille éparpillée. Des couvertures partout.","Terreno raso al suolo: due capannoni coperti, muretti e rottami sparsi. Ripari ovunque.","更地になった土地：屋根付きの小屋が2つ、低い壁、散らばったスクラップ。至る所に遮蔽物。"],"A deep river in the middle crossed by 3 bridges, with huts on the banks. You can swim, but coming back takes time.":["Un río profundo en el medio cruzado por 3 puentes, con cabañas en las orillas. Se puede nadar, pero volver lleva tiempo.","Une rivière profonde au milieu traversée par 3 ponts, avec des cabanes sur les berges. On peut nager, mais le retour prend du temps.","Un fiume profondo al centro attraversato da 3 ponti, con capanne sulle sponde. Si può nuotare, ma tornare indietro richiede tempo.","3本の橋が架かる中央の深い川と、岸辺の小屋。泳げるが、戻るのに時間がかかる。"],"Dust 2 replica: Long A to the east, Mid in the center, B Tunnels to the west. T south, CT north.":["Réplica de Dust 2: Long A al este, Mid en el centro, Túneles B al oeste. T al sur, CT al norte.","Réplique de Dust 2 : Long A à l'est, Mid au centre, Tunnels B à l'ouest. T au sud, CT au nord.","Replica di Dust 2: Long A a est, Mid al centro, Tunnel B a ovest. T a sud, CT a nord.","Dust 2のレプリカ：東にロングA、中央にミッド、西にBトンネル。Tは南、CTは北。"],"Dust 2 for Zombie Survival and Gun Game. Start at T spawn and explore Long, Mid and Tunnels.":["Dust 2 para Supervivencia Zombi y Gun Game. Empieza en el spawn T y explora Long, Mid y Túneles.","Dust 2 pour Survie Zombie et Gun Game. Commencez au spawn T et explorez Long, Mid et les Tunnels.","Dust 2 per Sopravvivenza Zombie e Gun Game. Parti dallo spawn T ed esplora Long, Mid e i Tunnel.","ゾンビサバイバルとガンゲーム用のDust 2。Tスポーンから開始し、ロング、ミッド、トンネルを探索しよう。"],"Bank heist: the hostages are in the vault at the heart of the building. Pillared lobby, entrances on both sides.":["Atraco al banco: los rehenes están en la cámara acorazada en el corazón del edificio. Vestíbulo de pilares, entradas a ambos lados.","Braquage de banque : les otages sont dans la chambre forte au cœur du bâtiment. Hall à piliers, entrées de chaque côté.","Rapina in banca: gli ostaggi sono nel caveau al centro dell'edificio. Atrio a pilastri, ingressi su entrambi i lati.","銀行強盗：人質は建物の中心にある金庫室にいる。柱のあるロビー、両側に入口。"],"Depot with crate stacks. The hostages are in the back office; use the stacks for cover.":["Depósito con pilas de cajas. Los rehenes están en la oficina del fondo; usa las pilas como cobertura.","Dépôt avec des piles de caisses. Les otages sont dans le bureau du fond ; utilisez les piles comme couverture.","Deposito con pile di casse. Gli ostaggi sono nell'ufficio sul retro; usa le pile come riparo.","木箱の山が積まれた倉庫。人質は奥の事務所にいる。木箱を遮蔽物にしよう。"],"Walled compound with two gates. The main building keeps the hostages in an inner room.":["Recinto amurallado con dos puertas. El edificio principal mantiene a los rehenes en una sala interior.","Enceinte fortifiée avec deux portes. Le bâtiment principal garde les otages dans une pièce intérieure.","Complesso fortificato con due cancelli. L'edificio principale tiene gli ostaggi in una stanza interna.","門が2つある城壁の敷地。本館の奥の部屋に人質がいる。"],"Long cargo deck stacked with containers. The hostages are in the stern hold; push along the lanes.":["Cubierta de carga larga repleta de contenedores. Los rehenes están en la bodega de popa; avanza por los carriles.","Long pont de cargaison empilé de conteneurs. Les otages sont dans la cale arrière ; avancez le long des couloirs.","Lungo ponte di carico pieno di container. Gli ostaggi sono nella stiva di poppa; avanza lungo le corsie.","コンテナが積まれた長い貨物甲板。人質は船尾の船倉にいる。レーンに沿って進もう。"],"Multi-room mansion. The hostages are in the raised room at the top, with a back-door entrance.":["Mansión de varias habitaciones. Los rehenes están en la sala elevada de arriba, con una entrada por la puerta trasera.","Manoir à plusieurs pièces. Les otages sont dans la pièce en hauteur tout en haut, avec une entrée par la porte de derrière.","Villa con più stanze. Gli ostaggi sono nella stanza rialzata in alto, con un ingresso dalla porta sul retro.","部屋の多い屋敷。人質は最上階の高い部屋にいて、裏口からも入れる。"],"Prison with cells on both sides. The hostages are in the central block, ringed by corridors.":["Prisión con celdas a ambos lados. Los rehenes están en el bloque central, rodeado de pasillos.","Prison avec cellules des deux côtés. Les otages sont dans le bloc central, entouré de couloirs.","Prigione con celle su entrambi i lati. Gli ostaggi sono nel blocco centrale, circondato da corridoi.","両側に独房がある刑務所。人質は廊下に囲まれた中央の棟にいる。"],"Hamlet of small houses and open streets. The hostages are in the big house on the east side.":["Aldea de casas pequeñas y calles abiertas. Los rehenes están en la casa grande del lado este.","Hameau de petites maisons et de rues ouvertes. Les otages sont dans la grande maison du côté est.","Borgo di piccole case e strade aperte. Gli ostaggi sono nella casa grande sul lato est.","小さな家と開けた通りの集落。人質は東側の大きな家にいる。"],"Hotel built around one long corridor. Fight up from the lobby to the penthouse where the hostages are.":["Hotel construido alrededor de un largo pasillo. Lucha desde el vestíbulo hasta el ático donde están los rehenes.","Hôtel construit autour d'un long couloir. Battez-vous du hall jusqu'au penthouse où se trouvent les otages.","Hotel costruito attorno a un lungo corridoio. Combatti dall'atrio fino all'attico dove si trovano gli ostaggi.","1本の長い廊下を中心に造られたホテル。ロビーから人質のいる最上階のペントハウスまで戦い抜こう。"],"Italian village: the hostages are in the north-east building. CT rescue in the north-west.":["Pueblo italiano: los rehenes están en el edificio del noreste. Rescate CT en el noroeste.","Village italien : les otages sont dans le bâtiment au nord-est. Point de sauvetage CT au nord-ouest.","Borgo italiano: gli ostaggi sono nell'edificio a nord-est. Salvataggio CT a nord-ovest.","イタリアの村：人質は北東の建物にいる。CTの救出地点は北西。"],"Office block: the hostages are in the north-west corner room. Tight corridor fights.":["Bloque de oficinas: los rehenes están en la sala de la esquina noroeste. Combates en pasillos estrechos.","Immeuble de bureaux : les otages sont dans la pièce d'angle au nord-ouest. Combats serrés dans les couloirs.","Blocco uffici: gli ostaggi sono nella stanza d'angolo a nord-ovest. Scontri stretti nei corridoi.","オフィスビル：人質は北西の角の部屋にいる。狭い廊下での戦い。"],"Dust 2 replica: the hostages sit on B Site. Bring them through Mid to the CT base in the north.":["Réplica de Dust 2: los rehenes están en el sitio B. Llévalos por Mid hasta la base CT en el norte.","Réplique de Dust 2 : les otages sont sur le site B. Amenez-les par le Mid jusqu'à la base CT au nord.","Replica di Dust 2: gli ostaggi sono nel sito B. Portali attraverso il Mid fino alla base CT a nord.","Dust 2のレプリカ：人質はBサイトにいる。ミッド経由で北のCT拠点まで連れて行こう。"],"Crash style (CoD): urban crossroads with a gas station in the middle and buildings in all four corners. Zombies pour in from every street.":["Estilo Crash (CoD): cruce urbano con una gasolinera en el medio y edificios en las cuatro esquinas. Los zombis llegan por todas las calles.","Style Crash (CoD) : carrefour urbain avec une station-service au milieu et des bâtiments aux quatre coins. Les zombies affluent de toutes les rues.","Stile Crash (CoD): incrocio urbano con un distributore di benzina al centro e edifici nei quattro angoli. Gli zombie arrivano da ogni strada.","Crash風（CoD）：中央にガソリンスタンドがあり、四隅に建物がある都会の交差点。ゾンビがすべての通りから押し寄せる。"],"Crash style (CoD): crossroads with a gas station in the middle and corner buildings. T in the west, CT in the east.":["Estilo Crash (CoD): cruce con una gasolinera en el medio y edificios en las esquinas. T al oeste, CT al este.","Style Crash (CoD) : carrefour avec une station-service au milieu et des bâtiments aux coins. T à l'ouest, CT à l'est.","Stile Crash (CoD): incrocio con un distributore di benzina al centro e edifici agli angoli. T a ovest, CT a est.","Crash風（CoD）：中央にガソリンスタンド、角に建物がある交差点。Tは西、CTは東。"],"Crash style (CoD): the hostages are in the street north of the gas station. CT rescue at the base on the east side.":["Estilo Crash (CoD): los rehenes están en la calle al norte de la gasolinera. Rescate CT en la base del lado este.","Style Crash (CoD) : les otages sont dans la rue au nord de la station-service. Sauvetage CT à la base côté est.","Stile Crash (CoD): gli ostaggi sono nella strada a nord del distributore. Salvataggio CT alla base sul lato est.","Crash風（CoD）：人質はガソリンスタンドの北の通りにいる。CTの救出地点は東側の拠点。"],"Nuketown style (CoD): tiny suburb with two houses, a bus in the middle and yards full of cars. Small and frantic.":["Estilo Nuketown (CoD): suburbio diminuto con dos casas, un autobús en el medio y patios llenos de coches. Pequeño y frenético.","Style Nuketown (CoD) : minuscule banlieue avec deux maisons, un bus au milieu et des jardins remplis de voitures. Petit et frénétique.","Stile Nuketown (CoD): minuscolo sobborgo con due case, un autobus al centro e cortili pieni di auto. Piccolo e frenetico.","Nuketown風（CoD）：2軒の家、中央のバス、車でいっぱいの庭がある小さな郊外。狭くて慌ただしい。"],"Nuketown style (CoD): T house in the west, CT house in the east and a bus in between.":["Estilo Nuketown (CoD): casa T al oeste, casa CT al este y un autobús en medio.","Style Nuketown (CoD) : maison T à l'ouest, maison CT à l'est et un bus entre les deux.","Stile Nuketown (CoD): casa T a ovest, casa CT a est e un autobus in mezzo.","Nuketown風（CoD）：西にTの家、東にCTの家、その間にバス。"],"Nuketown style (CoD): the hostages are in the west house, guarded by the T. Bring them to the CT house in the east.":["Estilo Nuketown (CoD): los rehenes están en la casa del oeste, custodiados por los T. Llévalos a la casa CT del este.","Style Nuketown (CoD) : les otages sont dans la maison de l'ouest, gardés par les T. Amenez-les à la maison CT à l'est.","Stile Nuketown (CoD): gli ostaggi sono nella casa a ovest, sorvegliati dai T. Portali alla casa CT a est.","Nuketown風（CoD）：人質は西の家でTに見張られている。東のCTの家まで連れて行こう。"],"Rust style (CoD): desert arena with a stepped central tower and containers in the corners. The tower covers all four lanes.":["Estilo Rust (CoD): arena desértica con una torre central escalonada y contenedores en las esquinas. La torre cubre los cuatro carriles.","Style Rust (CoD) : arène désertique avec une tour centrale en gradins et des conteneurs aux coins. La tour couvre les quatre couloirs.","Stile Rust (CoD): arena desertica con una torre centrale a gradoni e container agli angoli. La torre copre tutte e quattro le corsie.","Rust風（CoD）：段状の中央塔と四隅のコンテナがある砂漠のアリーナ。塔は4つのレーンすべてを見渡せる。"],"Rust style (CoD): stepped central tower and corner containers. T in the west, CT in the east.":["Estilo Rust (CoD): torre central escalonada y contenedores en las esquinas. T al oeste, CT al este.","Style Rust (CoD) : tour centrale en gradins et conteneurs aux coins. T à l'ouest, CT à l'est.","Stile Rust (CoD): torre centrale a gradoni e container agli angoli. T a ovest, CT a est.","Rust風（CoD）：段状の中央塔と四隅のコンテナ。Tは西、CTは東。"],"Prodigy style (CS): office complex with wide-door rooms, corridors and a central pillared lobby.":["Estilo Prodigy (CS): complejo de oficinas con salas de puertas anchas, pasillos y un vestíbulo central con pilares.","Style Prodigy (CS) : complexe de bureaux avec pièces à larges portes, couloirs et un hall central à piliers.","Stile Prodigy (CS): complesso di uffici con stanze dalle porte larghe, corridoi e un atrio centrale a pilastri.","Prodigy風（CS）：広い扉の部屋、廊下、柱のある中央ロビーがあるオフィス複合施設。"],"Prodigy style (CS): offices north and south, pillared lobby in the middle. T in the west, CT in the east.":["Estilo Prodigy (CS): oficinas al norte y al sur, vestíbulo de pilares en el medio. T al oeste, CT al este.","Style Prodigy (CS) : bureaux au nord et au sud, hall à piliers au milieu. T à l'ouest, CT à l'est.","Stile Prodigy (CS): uffici a nord e a sud, atrio a pilastri al centro. T a ovest, CT a est.","Prodigy風（CS）：北と南にオフィス、中央に柱のあるロビー。Tは西、CTは東。"],"Crossfire style (CoD): wide street between ruined buildings with gaps to flank through. Lots of crossfire.":["Estilo Crossfire (CoD): calle ancha entre edificios en ruinas con huecos para flanquear. Mucho fuego cruzado.","Style Crossfire (CoD) : large rue entre des bâtiments en ruines avec des brèches pour contourner. Beaucoup de tirs croisés.","Stile Crossfire (CoD): strada larga tra edifici in rovina con varchi per aggirare. Molto fuoco incrociato.","Crossfire風（CoD）：廃墟の建物の間の広い通りと、回り込める隙間。十字砲火が多い。"],"Havana style (CS): villa with a walled courtyard and the hostage room in the middle. Go in through the gates and bring them to the CT base in the west.":["Estilo Havana (CS): villa con un patio amurallado y la sala de los rehenes en el medio. Entra por las puertas y llévalos a la base CT en el oeste.","Style Havana (CS) : villa avec une cour fortifiée et la pièce des otages au milieu. Entrez par les portes et amenez-les à la base CT à l'ouest.","Stile Havana (CS): villa con un cortile fortificato e la stanza degli ostaggi al centro. Entra dai cancelli e portali alla base CT a ovest.","Havana風（CS）：城壁に囲まれた中庭と、中央に人質の部屋があるヴィラ。門から侵入し、西のCT拠点まで人質を連れて行こう。"],"Oilrig style (CS): oil platform. The hostages are in the central quarters on the raised deck. CT rescue at the west dock.":["Estilo Oilrig (CS): plataforma petrolífera. Los rehenes están en los camarotes centrales de la cubierta elevada. Rescate CT en el muelle oeste.","Style Oilrig (CS) : plateforme pétrolière. Les otages sont dans les quartiers centraux sur le pont surélevé. Sauvetage CT au quai ouest.","Stile Oilrig (CS): piattaforma petrolifera. Gli ostaggi sono negli alloggi centrali sul ponte rialzato. Salvataggio CT al molo ovest.","Oilrig風（CS）：石油プラットフォーム。人質は高い甲板の中央の居住区にいる。CTの救出地点は西の桟橋。"],"Oilrig style (CS): platform with corner modules and central quarters on a raised deck. T in the west, CT in the east.":["Estilo Oilrig (CS): plataforma con módulos en las esquinas y camarotes centrales en una cubierta elevada. T al oeste, CT al este.","Style Oilrig (CS) : plateforme avec modules aux coins et quartiers centraux sur un pont surélevé. T à l'ouest, CT à l'est.","Stile Oilrig (CS): piattaforma con moduli agli angoli e alloggi centrali su un ponte rialzato. T a ovest, CT a est.","Oilrig風（CS）：四隅にモジュール、高い甲板の中央に居住区があるプラットフォーム。Tは西、CTは東。"],"Freddy's pizzeria, more open: stage with side wings, canvas Pirate Cove, restroom, backstage, kitchen, Parts & Service and Game Area rooms, service corridors and ONE secret passage. Survive from midnight to 6 AM; close the doors, use the hall lights and save power. Scarce weapons and ammo.":["Pizzería de Freddy, más abierta: escenario con alas laterales, Cala Pirata de lona, baños, backstage, cocina, salas de Partes y Servicio y de Juegos, pasillos de servicio y UN pasadizo secreto. Sobrevive de medianoche a las 6 AM; cierra las puertas, usa las luces del pasillo y ahorra energía. Armas y munición escasas.","La pizzeria de Freddy, plus ouverte : scène avec ailes latérales, Pirate Cove en toile, toilettes, coulisses, cuisine, salles Parts & Service et Game Area, couloirs de service et UN passage secret. Survivez de minuit à 6 h ; fermez les portes, utilisez les lumières du couloir et économisez l'énergie. Armes et munitions rares.","La pizzeria di Freddy, più aperta: palco con ali laterali, Pirate Cove di tela, bagno, backstage, cucina, sale Parts & Service e Game Area, corridoi di servizio e UN passaggio segreto. Sopravvivi da mezzanotte alle 6; chiudi le porte, usa le luci del corridoio e risparmia energia. Armi e munizioni scarse.","フレディのピザ店（より開放的）：両脇に翼のあるステージ、布製のパイレーツコーブ、トイレ、舞台裏、キッチン、パーツ＆サービス室、ゲームエリア、サービス通路、そして隠し通路が1つ。真夜中から午前6時まで生き延びよう。ドアを閉め、廊下のライトを使い、電力を節約すること。武器と弾薬は乏しい。"],"Exclusive Soccer-mode stadium: a pitch with two goals. Kick the ball (F) and score — everyone carries the Desert Eagle.":["Estadio exclusivo del modo Fútbol: un campo con dos porterías. Patea el balón (F) y marca: todos llevan la Desert Eagle.","Stade exclusif du mode Football : un terrain avec deux buts. Frappez le ballon (F) et marquez — tout le monde porte le Desert Eagle.","Stadio esclusivo della modalità Calcio: un campo con due porte. Calcia il pallone (F) e segna — tutti hanno la Desert Eagle.","サッカーモード専用スタジアム：ゴールが2つあるピッチ。ボールを蹴って（F）得点しよう。全員がデザートイーグルを持っている。"],"Counter-Strike style: Village of gable and hip-roofed houses, thin walls with windows on every side, a river with bridge and ford, a hill with a smooth ramp and stairs.":["Estilo Counter-Strike: pueblo de casas con tejado a dos aguas y a cuatro aguas, muros finos con ventanas en todos los lados, un río con puente y vado, una colina con rampa suave y escaleras.","Style Counter-Strike : village de maisons à toit à deux pans et à quatre pans, murs fins avec fenêtres de tous côtés, une rivière avec pont et gué, une colline avec rampe douce et escaliers.","Stile Counter-Strike: villaggio di case con tetto a due e a quattro falde, muri sottili con finestre su ogni lato, un fiume con ponte e guado, una collina con rampa dolce e scale.","Counter-Strike風：切妻屋根と寄棟屋根の家が並ぶ村。四方に窓のある薄い壁、橋と浅瀬のある川、なだらかなスロープと階段のある丘。"],"Counter-Strike style: Village of gable and hip-roofed houses, river with bridge and ford, a hill with ramp and stairs. T in the north, CT in the south.":["Estilo Counter-Strike: pueblo de casas con tejado a dos aguas y a cuatro aguas, río con puente y vado, una colina con rampa y escaleras. T al norte, CT al sur.","Style Counter-Strike : village de maisons à toit à deux pans et à quatre pans, rivière avec pont et gué, colline avec rampe et escaliers. T au nord, CT au sud.","Stile Counter-Strike: villaggio di case con tetto a due e a quattro falde, fiume con ponte e guado, collina con rampa e scale. T a nord, CT a sud.","Counter-Strike風：切妻屋根と寄棟屋根の家が並ぶ村、橋と浅瀬のある川、スロープと階段のある丘。Tは北、CTは南。"],"Call of Duty style: Harbor of narrow alleys: thin-walled blocks, varied roofs, a canal with arched bridges and paths through the houses.":["Estilo Call of Duty: puerto de callejones estrechos: manzanas de muros finos, tejados variados, un canal con puentes arqueados y caminos a través de las casas.","Style Call of Duty : port aux ruelles étroites : pâtés de maisons aux murs fins, toits variés, un canal avec ponts en arc et des passages à travers les maisons.","Stile Call of Duty: porto di vicoli stretti: isolati con muri sottili, tetti vari, un canale con ponti ad arco e passaggi attraverso le case.","Call of Duty風：狭い路地の港。薄い壁の区画、さまざまな屋根、アーチ橋のかかる運河、家の中を通り抜ける道。"],"Call of Duty style: Narrow-alley harbor, canal with arched bridges and walk-through houses. T in the west, CT in the east.":["Estilo Call of Duty: puerto de callejones estrechos, canal con puentes arqueados y casas atravesables. T al oeste, CT al este.","Style Call of Duty : port aux ruelles étroites, canal avec ponts en arc et maisons traversables. T à l'ouest, CT à l'est.","Stile Call of Duty: porto di vicoli stretti, canale con ponti ad arco e case attraversabili. T a ovest, CT a est.","Call of Duty風：狭い路地の港、アーチ橋のかかる運河、通り抜けられる家。Tは西、CTは東。"],"Counter-Strike style: Monastery on top of a plateau with four ramps, a narrow inner corridor, roofed houses and a lake in the southwest.":["Estilo Counter-Strike: monasterio sobre una meseta con cuatro rampas, un pasillo interior estrecho, casas techadas y un lago al suroeste.","Style Counter-Strike : monastère au sommet d'un plateau avec quatre rampes, un couloir intérieur étroit, des maisons couvertes et un lac au sud-ouest.","Stile Counter-Strike: monastero in cima a un altopiano con quattro rampe, uno stretto corridoio interno, case coperte e un lago a sud-ovest.","Counter-Strike風：4つのスロープがある台地の上の修道院、狭い内部通路、屋根付きの家、南西に湖。"],"Counter-Strike style: Monastery on the plateau with four ramps (one is a stair), roofs and a lake. T in the south, CT in the north.":["Estilo Counter-Strike: monasterio en la meseta con cuatro rampas (una es una escalera), tejados y un lago. T al sur, CT al norte.","Style Counter-Strike : monastère sur le plateau avec quatre rampes (dont un escalier), toits et un lac. T au sud, CT au nord.","Stile Counter-Strike: monastero sull'altopiano con quattro rampe (una è una scala), tetti e un lago. T a sud, CT a nord.","Counter-Strike風：4つのスロープ（1つは階段）、屋根、湖がある台地の修道院。Tは南、CTは北。"],"Counter-Strike style: A narrow, very long mountain in 5 terraces linked by zig-zag ramps. T on the summit, CT at the base. You can jump off the cliffs to go down fast (light damage), but climbing back is only by the ramps.":["Estilo Counter-Strike: una montaña estrecha y muy larga en 5 terrazas unidas por rampas en zigzag. T en la cumbre, CT en la base. Puedes saltar los acantilados para bajar rápido (daño leve), pero solo se sube por las rampas.","Style Counter-Strike : une montagne étroite et très longue en 5 terrasses reliées par des rampes en zigzag. T au sommet, CT à la base. Vous pouvez sauter des falaises pour descendre vite (dégâts légers), mais on ne remonte que par les rampes.","Stile Counter-Strike: una montagna stretta e lunghissima su 5 terrazze collegate da rampe a zigzag. T in cima, CT alla base. Puoi saltare dalle scogliere per scendere in fretta (danni lievi), ma si risale solo dalle rampe.","Counter-Strike風：ジグザグのスロープでつながれた5段のテラスを持つ、細長い山。Tは山頂、CTは麓。崖から飛び降りれば素早く降りられる（軽いダメージ）が、登るにはスロープしか使えない。"],"Counter-Strike style: A tiny indoor swimming hall inspired by Pool Day. Red side (T) in the west, blue side (CT) in the east and a big pool in the middle hall. Short, frantic fights.":["Estilo Counter-Strike: un pequeño pabellón de piscina cubierto inspirado en Pool Day. Lado rojo (T) al oeste, lado azul (CT) al este y una gran piscina en el salón central. Combates cortos y frenéticos.","Style Counter-Strike : une minuscule piscine couverte inspirée de Pool Day. Côté rouge (T) à l'ouest, côté bleu (CT) à l'est et un grand bassin dans la salle centrale. Combats courts et frénétiques.","Stile Counter-Strike: una minuscola piscina coperta ispirata a Pool Day. Lato rosso (T) a ovest, lato blu (CT) a est e una grande vasca nella sala centrale. Scontri brevi e frenetici.","Counter-Strike風：Pool Dayにインスパイアされた小さな屋内プール。西が赤チーム（T）、東が青チーム（CT）、中央のホールに大きなプール。短くて慌ただしい戦い。"],"YOUR TEAM (BRASILEIRÃO):":["TU EQUIPO (BRASILEIRÃO):","VOTRE ÉQUIPE (BRASILEIRÃO) :","LA TUA SQUADRA (BRASILEIRÃO):","あなたのチーム（ブラジレイロン）："],"OPPONENT:":["RIVAL:","ADVERSAIRE :","AVVERSARIO:","対戦相手："],"Kick (Soccer)":["Patear (Fútbol)","Frapper (Football)","Calcia (Calcio)","キック（サッカー）"],"Jump":["Saltar","Sauter","Salta","ジャンプ"],"KICK BUTTON":["BOTÓN DE PATADA","BOUTON DE TIR","PULSANTE CALCIO","キックボタン"],"JUMP BUTTON":["BOTÓN DE SALTO","BOUTON DE SAUT","PULSANTE SALTO","ジャンプボタン"],"YOUR SIDE:":["TU BANDO:","VOTRE CAMP :","IL TUO SCHIERAMENTO:","あなたの陣営："],"COUNTER-TERRORISTS":["ANTITERRORISTAS","ANTITERRORISTES","ANTITERRORISTI","対テロ部隊"],"TERRORISTS":["TERRORISTAS","TERRORISTES","TERRORISTI","テロリスト"],"🎲 RANDOM":["🎲 ALEATORIO","🎲 ALÉATOIRE","🎲 CASUALE","🎲 ランダム"],"MATCH END:":["FIN DE LA PARTIDA:","FIN DE LA PARTIE :","FINE PARTITA:","試合終了条件："],"MENU COLOR:":["COLOR DEL MENÚ:","COULEUR DU MENU :","COLORE DEL MENU:","メニューの色："],"HUD COLOR DIFFERENT FROM MENU":["COLOR DEL HUD DIFERENTE AL DEL MENÚ","COULEUR DU HUD DIFFÉRENTE DU MENU","COLORE HUD DIVERSO DAL MENU","HUDの色をメニューと別にする"],"HUD COLOR:":["COLOR DEL HUD:","COULEUR DU HUD :","COLORE HUD:","HUDの色："],"BLUE":["AZUL","BLEU","BLU","青"],"ORANGE":["NARANJA","ORANGE","ARANCIONE","オレンジ"],"WHITE":["BLANCO","BLANC","BIANCO","白"],"BLACK":["NEGRO","NOIR","NERO","黒"],"GREEN":["VERDE","VERT","VERDE","緑"],"HOT PINK":["ROSA FUERTE","ROSE VIF","ROSA SHOCKING","ホットピンク"],"RED":["ROJO","ROUGE","ROSSO","赤"],"PURPLE":["MORADO","VIOLET","VIOLA","紫"],"CYAN":["CIAN","CYAN","CIANO","シアン"],"YELLOW":["AMARILLO","JAUNE","GIALLO","黄"],"OLIVE (CS:S)":["OLIVA (CS:S)","OLIVE (CS:S)","OLIVA (CS:S)","オリーブ（CS:S）"],"NEON LIME":["LIMA NEÓN","VERT LIME FLUO","LIME NEON","ネオンライム"],"BY SCORE":["POR PUNTUACIÓN","AU SCORE","A PUNTEGGIO","スコア制"],"BY TIME":["POR TIEMPO","AU TEMPS","A TEMPO","時間制"],"NO LIMIT":["SIN LÍMITE","SANS LIMITE","SENZA LIMITE","制限なし"],"KILL TARGET":["META DE BAJAS","OBJECTIF D'ÉLIMINATIONS","OBIETTIVO UCCISIONI","キル目標"],"CAPTURE TARGET":["META DE CAPTURAS","OBJECTIF DE CAPTURES","OBIETTIVO CATTURE","キャプチャー目標"],"CT LOSSES FOR T TO WIN":["BAJAS CT PARA QUE GANEN LOS T","PERTES CT POUR LA VICTOIRE DES T","PERDITE CT PER LA VITTORIA DEI T","Tが勝つためのCTの犠牲者数"],"MATCH TIME":["TIEMPO DE PARTIDA","DURÉE DE LA PARTIE","DURATA PARTITA","試合時間"],"MIN":["MIN","MIN","MIN","分"],"VERSUS:":["CONTRA:","CONTRE :","CONTRO:","対戦相手："],"ZOMBIES":["ZOMBIS","ZOMBIES","ZOMBIE","ゾンビ"],"BOTS":["BOTS","BOTS","BOT","ボット"],"PRIMARY WEAPON (HEAVY):":["ARMA PRIMARIA (PESADA):","ARME PRINCIPALE (LOURDE) :","ARMA PRIMARIA (PESANTE):","メイン武器（重）："],"SECONDARY WEAPON (LIGHT):":["ARMA SECUNDARIA (LIGERA):","ARME SECONDAIRE (LÉGÈRE) :","ARMA SECONDARIA (LEGGERA):","サブ武器（軽）："],"RANDOM":["ALEATORIA","ALÉATOIRE","CASUALE","ランダム"],"BACK TO GAME":["VOLVER AL JUEGO","RETOUR AU JEU","TORNA AL GIOCO","ゲームに戻る"],"GENERAL":["GENERAL","GÉNÉRAL","GENERALE","全般"],"CONTROLS":["CONTROLES","COMMANDES","CONTROLLI","操作"],"DEBUG":["DEPURACIÓN","DÉBOGAGE","DEBUG","デバッグ"],"GRAPHICS":["GRÁFICOS","GRAPHISMES","GRAFICA","グラフィック"],"INTERFACE":["INTERFAZ","INTERFACE","INTERFACCIA","インターフェース"],"PLAYER":["JUGADOR","JOUEUR","GIOCATORE","プレイヤー"],"GAMEPLAY":["JUGABILIDAD","JOUABILITÉ","GIOCABILITÀ","ゲームプレイ"],"QUICK PRESET":["AJUSTE RÁPIDO","PRÉRÉGLAGE RAPIDE","PRESET RAPIDO","クイックプリセット"],"VISUAL STYLE":["ESTILO VISUAL","STYLE VISUEL","STILE VISIVO","ビジュアルスタイル"],"IMAGE":["IMAGEN","IMAGE","IMMAGINE","画像"],"EFFECTS":["EFECTOS","EFFETS","EFFETTI","エフェクト"],"PERFORMANCE":["RENDIMIENTO","PERFORMANCE","PRESTAZIONI","パフォーマンス"],"COLORS AND SIZE":["COLORES Y TAMAÑO","COULEURS ET TAILLE","COLORI E DIMENSIONI","色とサイズ"],"RADAR AND CROSSHAIR":["RADAR Y MIRILLA","RADAR ET VISEUR","RADAR E MIRINO","レーダーと照準"],"FEEDBACK":["RETROALIMENTACIÓN","RETOURS VISUELS ET SONORES","FEEDBACK","フィードバック"],"GRAPHICS STYLE:":["ESTILO GRÁFICO:","STYLE GRAPHIQUE :","STILE GRAFICO:","グラフィックスタイル："],"PIXELATED":["PIXELADO","PIXELLISÉ","PIXELATO","ピクセル調"],"CLASSIC":["CLÁSICO","CLASSIQUE","CLASSICO","クラシック"],"SMOOTH":["SUAVE","LISSE","MORBIDO","スムーズ"],"Retro look: big blocks, few colors and dithering. Light and low on detail.":["Aspecto retro: bloques grandes, pocos colores y tramado. Ligero y con poco detalle.","Look rétro : gros blocs, peu de couleurs et tramage. Léger et peu détaillé.","Aspetto retrò: blocchi grandi, pochi colori e dithering. Leggero e poco dettagliato.","レトロな見た目：大きなブロック、少ない色数、ディザリング。軽くてディテールは控えめ。"],"Balanced: sharp pixels, like the original game.":["Equilibrado: píxeles nítidos, como en el juego original.","Équilibré : pixels nets, comme dans le jeu original.","Bilanciato: pixel nitidi, come nel gioco originale.","バランス型：元のゲームのようなくっきりしたピクセル。"],"Smoother, more detailed image with no visible pixels. Heavier on your device.":["Imagen más suave y detallada, sin píxeles visibles. Más pesada para tu dispositivo.","Image plus lisse et détaillée, sans pixels visibles. Plus lourde pour votre appareil.","Immagine più morbida e dettagliata, senza pixel visibili. Più pesante per il dispositivo.","ピクセルが見えない、より滑らかで精細な映像。端末への負荷は大きくなります。"],"SCREEN EFFECT:":["EFECTO DE PANTALLA:","EFFET D'ÉCRAN :","EFFETTO SCHERMO:","画面エフェクト："],"BLUR ON DEATH SCREEN":["DESENFOQUE EN LA PANTALLA DE MUERTE","FLOU SUR L'ÉCRAN DE MORT","SFOCATURA NELLA SCHERMATA DI MORTE","やられた時の画面ぼかし"],"PLAY ON THE HOST'S TEAM":["JUGAR EN EL EQUIPO DEL ANFITRIÓN","JOUER DANS L'ÉQUIPE DE L'HÔTE","GIOCA NELLA SQUADRA DELL'HOST","ホストと同じチームでプレイ"],"NONE":["NINGUNO","AUCUN","NESSUNO","なし"],"VIGNETTE":["VIÑETA","VIGNETTAGE","VIGNETTATURA","ビネット"],"CRT (LINES)":["CRT (LÍNEAS)","CRT (LIGNES)","CRT (LINEE)","CRT（走査線）"],"FIELD OF VIEW (FOV)":["CAMPO DE VISIÓN (FOV)","CHAMP DE VISION (FOV)","CAMPO VISIVO (FOV)","視野角（FOV）"],"IMAGE RESOLUTION:":["RESOLUCIÓN DE IMAGEN:","RÉSOLUTION D'IMAGE :","RISOLUZIONE IMMAGINE:","画像解像度："],"LOW":["BAJA","BASSE","BASSA","低"],"NORMAL":["NORMAL","NORMALE","NORMALE","標準"],"HIGH":["ALTA","HAUTE","ALTA","高"],"FOG (VIEW DISTANCE):":["NIEBLA (DISTANCIA DE VISIÓN):","BROUILLARD (DISTANCE DE VUE) :","NEBBIA (DISTANZA DI VISUALE):","霧（視界距離）："],"CLOSE":["CERCA","PROCHE","VICINA","近い"],"FAR":["LEJOS","LOIN","LONTANA","遠い"],"OFF":["DESACTIVADA","DÉSACTIVÉ","DISATTIVATA","オフ"],"HUD SIZE:":["TAMAÑO DEL HUD:","TAILLE DU HUD :","DIMENSIONE HUD:","HUDサイズ："],"SMALL":["PEQUEÑO","PETIT","PICCOLO","小"],"MEDIUM":["MEDIANO","MOYEN","MEDIO","中"],"LARGE":["GRANDE","GRAND","GRANDE","大"],"MAP":["MAPA","CARTE","MAPPA","マップ"],"STYLE":["ESTILO","STYLE","STILE","スタイル"],"SHOW FPS":["MOSTRAR FPS","AFFICHER LES FPS","MOSTRA FPS","FPSを表示"],"SHOW MINIMAP (RADAR)":["MOSTRAR MINIMAPA (RADAR)","AFFICHER LA MINICARTE (RADAR)","MOSTRA MINIMAPPA (RADAR)","ミニマップ（レーダー）を表示"],"WEAPON / CAMERA BOB":["BALANCEO DEL ARMA / CÁMARA","BALANCEMENT ARME / CAMÉRA","OSCILLAZIONE ARMA / CAMERA","武器／カメラの揺れ"],"AUDIO":["AUDIO","AUDIO","AUDIO","オーディオ"],"EFFECTS VOLUME":["VOLUMEN DE EFECTOS","VOLUME DES EFFETS","VOLUME EFFETTI","効果音の音量"],"MUSIC VOLUME":["VOLUMEN DE MÚSICA","VOLUME DE LA MUSIQUE","VOLUME MUSICA","音楽の音量"],"TURN MUSIC OFF (KEEPS THE VOLUME)":["APAGAR LA MÚSICA (MANTIENE EL VOLUMEN)","COUPER LA MUSIQUE (GARDE LE VOLUME)","SPEGNI LA MUSICA (MANTIENE IL VOLUME)","音楽をオフにする（音量は保持）"],"SHOW CROSSHAIR":["MOSTRAR MIRILLA","AFFICHER LE VISEUR","MOSTRA MIRINO","照準を表示"],"SHOW BOT NAMES":["MOSTRAR NOMBRES DE BOTS","AFFICHER LES NOMS DES BOTS","MOSTRA NOMI DEI BOT","ボットの名前を表示"],"CROSSHAIR COLOR:":["COLOR DE LA MIRILLA:","COULEUR DU VISEUR :","COLORE DEL MIRINO:","照準の色："],"LIME":["LIMA","VERT LIME","LIME","ライム"],"MAGENTA":["MAGENTA","MAGENTA","MAGENTA","マゼンタ"],"RED FLASH WHEN HIT":["DESTELLO ROJO AL RECIBIR DAÑO","FLASH ROUGE EN CAS DE DÉGÂTS","LAMPEGGIO ROSSO QUANDO COLPITO","被弾時に赤く点滅"],"ENEMY BOTS":["BOTS ENEMIGOS","BOTS ENNEMIS","BOT NEMICI","敵ボット"],"ALLY BOTS":["BOTS ALIADOS","BOTS ALLIÉS","BOT ALLEATI","味方ボット"],"NO CONTROLLER CONNECTED":["NINGÚN MANDO CONECTADO","AUCUNE MANETTE CONNECTÉE","NESSUN CONTROLLER COLLEGATO","コントローラー未接続"],"CONTROLLER CONNECTED":["MANDO CONECTADO","MANETTE CONNECTÉE","CONTROLLER COLLEGATO","コントローラー接続済み"],"KEYBOARD / MOUSE":["TECLADO / RATÓN","CLAVIER / SOURIS","TASTIERA / MOUSE","キーボード / マウス"],"TOUCH (MOBILE)":["TÁCTIL (MÓVIL)","TACTILE (MOBILE)","TOUCH (CELLULARE)","タッチ（スマホ）"],"XBOX SERIES X / PS4 / PS5":["XBOX SERIES X / PS4 / PS5","XBOX SERIES X / PS4 / PS5","XBOX SERIES X / PS4 / PS5","XBOX SERIES X / PS4 / PS5"],"Move":["Moverse","Se déplacer","Muoversi","移動"],"Look / aim":["Mirar / apuntar","Regarder / viser","Guardare / mirare","見回す／照準"],"Fire":["Disparar","Tirer","Sparare","発射"],"Reload":["Recargar","Recharger","Ricaricare","リロード"],"Switch weapon":["Cambiar de arma","Changer d'arme","Cambia arma","武器切り替え"],"Pause":["Pausa","Pause","Pausa","一時停止"],"Swap with floor weapon":["Cambiar por el arma del suelo","Échanger avec l'arme au sol","Scambia con l'arma a terra","床の武器と交換"],"MOUSE":["RATÓN","SOURIS","MOUSE","マウス"],"LEFT CLICK":["CLIC IZQUIERDO","CLIC GAUCHE","CLIC SINISTRO","左クリック"],"LEFT STICK":["STICK IZQUIERDO","STICK GAUCHE","STICK SINISTRO","左スティック"],"DRAG ON THE RIGHT":["ARRASTRAR A LA DERECHA","GLISSER À DROITE","TRASCINA A DESTRA","右側をドラッグ"],"FIRE BUTTON":["BOTÓN DE DISPARO","BOUTON DE TIR","PULSANTE DI FUOCO","発射ボタン"],"Open chat (online)":["Abrir chat (en línea)","Ouvrir le chat (en ligne)","Apri chat (online)","チャットを開く（オンライン）"],"RIGHT STICK":["STICK DERECHO","STICK DROIT","STICK DESTRO","右スティック"],"RT / R2":["RT / R2","RT / R2","RT / R2","RT / R2"],"X / □":["X / □","X / □","X / □","X / □"],"LB/RB · L1/R1":["LB/RB · L1/R1","LB/RB · L1/R1","LB/RB · L1/R1","LB/RB · L1/R1"],"MENU ☰ / OPTIONS":["MENÚ ☰ / OPTIONS","MENU ☰ / OPTIONS","MENU ☰ / OPTIONS","メニュー ☰ / OPTIONS"],"Navigate menus":["Navegar por los menús","Naviguer dans les menus","Naviga nei menu","メニュー操作"],"Confirm":["Confirmar","Confirmer","Conferma","決定"],"Back (menus)":["Atrás (menús)","Retour (menus)","Indietro (menu)","戻る（メニュー）"],"Tabs / maps":["Pestañas / mapas","Onglets / cartes","Schede / mappe","タブ／マップ"],"<b>A</b> CONFIRM   <b>B</b> BACK   <b>D-PAD/STICK</b> NAVIGATE":["<b>A</b> CONFIRMAR   <b>B</b> ATRÁS   <b>CRUCETA/STICK</b> NAVEGAR","<b>A</b> CONFIRMER   <b>B</b> RETOUR   <b>CROIX/STICK</b> NAVIGUER","<b>A</b> CONFERMA   <b>B</b> INDIETRO   <b>CROCE/STICK</b> NAVIGA","<b>A</b> 決定   <b>B</b> 戻る   <b>十字キー/スティック</b> 移動"],"<b>LB/RB</b> TABS   <b>START</b> CLOSE":["<b>LB/RB</b> PESTAÑAS   <b>START</b> CERRAR","<b>LB/RB</b> ONGLETS   <b>START</b> FERMER","<b>LB/RB</b> SCHEDE   <b>START</b> CHIUDI","<b>LB/RB</b> タブ   <b>START</b> 閉じる"],"<b>LB/RB</b> MAP   <b>LT/RT</b> MODE   <b>START</b> PLAY":["<b>LB/RB</b> MAPA   <b>LT/RT</b> MODO   <b>START</b> JUGAR","<b>LB/RB</b> CARTE   <b>LT/RT</b> MODE   <b>START</b> JOUER","<b>LB/RB</b> MAPPA   <b>LT/RT</b> MODALITÀ   <b>START</b> GIOCA","<b>LB/RB</b> マップ   <b>LT/RT</b> モード   <b>START</b> プレイ"],"<b>START</b> PLAY":["<b>START</b> JUGAR","<b>START</b> JOUER","<b>START</b> GIOCA","<b>START</b> プレイ"],"<b>START</b> TRY AGAIN":["<b>START</b> REINTENTAR","<b>START</b> RÉESSAYER","<b>START</b> RIPROVA","<b>START</b> もう一度"],"🎲 RANDOM MAP [R]":["🎲 MAPA ALEATORIO [R]","🎲 CARTE ALÉATOIRE [R]","🎲 MAPPA CASUALE [R]","🎲 ランダムマップ [R]"],"🎲 DRAW FROM {n} MAPS":["🎲 SORTEAR ENTRE {n} MAPAS","🎲 TIRAGE PARMI {n} CARTES","🎲 ESTRAI TRA {n} MAPPE","🎲 {n}個のマップから抽選"],"RANDOM MAP:":["MAPA ALEATORIO:","CARTE ALÉATOIRE :","MAPPA CASUALE:","ランダムマップ："],"CONFIRM":["CONFIRMAR","CONFIRMER","CONFERMA","決定"],"BACK":["ATRÁS","RETOUR","INDIETRO","戻る"],"NAVIGATE":["NAVEGAR","NAVIGUER","NAVIGA","移動"],"TABS":["PESTAÑAS","ONGLETS","SCHEDE","タブ"],"MODE":["MODO","MODE","MODALITÀ","モード"],"RANDOM MAP":["MAPA ALEATORIO","CARTE ALÉATOIRE","MAPPA CASUALE","ランダムマップ"],"SIDE":["BANDO","CAMP","SCHIERAMENTO","陣営"],"MENU":["MENÚ","MENU","MENU","メニュー"],"CHANGE":["CAMBIAR","CHANGER","CAMBIA","変更"],"CONTROLLER VIBRATION":["VIBRACIÓN DEL MANDO","VIBRATION DE LA MANETTE","VIBRAZIONE CONTROLLER","コントローラーの振動"],"PHONE VIBRATION (TOUCH)":["VIBRACIÓN DEL TELÉFONO (TÁCTIL)","VIBRATION DU TÉLÉPHONE (TACTILE)","VIBRAZIONE DEL TELEFONO (TOUCH)","スマホの振動（タッチ）"],"NOT AVAILABLE ON THIS DEVICE/BROWSER (IPHONE SAFARI DOES NOT SUPPORT VIBRATION)":["NO DISPONIBLE EN ESTE DISPOSITIVO/NAVEGADOR (SAFARI EN IPHONE NO ADMITE VIBRACIÓN)","NON DISPONIBLE SUR CET APPAREIL/NAVIGATEUR (SAFARI SUR IPHONE NE PREND PAS EN CHARGE LA VIBRATION)","NON DISPONIBILE SU QUESTO DISPOSITIVO/BROWSER (SAFARI SU IPHONE NON SUPPORTA LA VIBRAZIONE)","この端末／ブラウザでは利用できません（iPhoneのSafariは振動に非対応）"],"MINIMUM":["MÍNIMA","MINIMALE","MINIMA","最低"],"PERFORMANCE PRESET:":["PERFIL DE RENDIMIENTO:","PROFIL DE PERFORMANCE :","PROFILO PRESTAZIONI:","パフォーマンスプリセット："],"BATTERY SAVER":["AHORRO DE BATERÍA","ÉCONOMIE DE BATTERIE","RISPARMIO BATTERIA","バッテリー節約"],"BALANCED":["EQUILIBRADO","ÉQUILIBRÉ","BILANCIATO","バランス"],"QUALITY":["CALIDAD","QUALITÉ","QUALITÀ","高画質"],"FPS LIMIT:":["LÍMITE DE FPS:","LIMITE DE FPS :","LIMITE FPS:","FPS上限："],"UNLIMITED":["ILIMITADO","ILLIMITÉ","ILLIMITATO","無制限"],"CHARACTER SHADOWS:":["SOMBRAS DE PERSONAJES:","OMBRES DES PERSONNAGES :","OMBRE DEI PERSONAGGI:","キャラクターの影："],"SIMPLE":["SIMPLES","SIMPLES","SEMPLICI","シンプル"],"SOFT":["SUAVES","DOUCES","MORBIDE","ソフト"],"STATIC HORIZON (HOUSES, BUILDINGS AND TREES)":["HORIZONTE ESTÁTICO (CASAS, EDIFICIOS Y ÁRBOLES)","HORIZON STATIQUE (MAISONS, BÂTIMENTS ET ARBRES)","ORIZZONTE STATICO (CASE, EDIFICI E ALBERI)","静的な地平線（家・建物・木）"],"LIGHT MINIMAP (UPDATES LESS OFTEN)":["MINIMAPA LIGERO (SE ACTUALIZA MENOS)","MINICARTE LÉGÈRE (MISE À JOUR MOINS FRÉQUENTE)","MINIMAPPA LEGGERA (AGGIORNAMENTI MENO FREQUENTI)","軽量ミニマップ（更新頻度を下げる）"],"SMOOTH IMAGE PIXELS":["SUAVIZAR PÍXELES DE LA IMAGEN","LISSER LES PIXELS DE L'IMAGE","ADDOLCISCI I PIXEL DELL'IMMAGINE","画像のピクセルを滑らかにする"],"STICK DEADZONE":["ZONA MUERTA DEL STICK","ZONE MORTE DU STICK","ZONA MORTA DELLO STICK","スティックのデッドゾーン"],"CONTROLLER DISCONNECTED – GAME PAUSED":["MANDO DESCONECTADO – JUEGO EN PAUSA","MANETTE DÉCONNECTÉE – JEU EN PAUSE","CONTROLLER SCOLLEGATO – GIOCO IN PAUSA","コントローラー切断 – ゲームを一時停止しました"],"Previous weapon":["Arma anterior","Arme précédente","Arma precedente","前の武器"],"Random map":["Mapa aleatorio","Carte aléatoire","Mappa casuale","ランダムマップ"],"Side":["Bando","Camp","Schieramento","陣営"],"Change option":["Cambiar opción","Changer d'option","Cambia opzione","オプション変更"],"IN USE":["EN USO","UTILISÉ","IN USO","使用中"],"VERTICAL SENSITIVITY (CAMERA)":["SENSIBILIDAD VERTICAL (CÁMARA)","SENSIBILITÉ VERTICALE (CAMÉRA)","SENSIBILITÀ VERTICALE (CAMERA)","垂直感度（カメラ）"],"INVERT VERTICAL AXIS (LOOK)":["INVERTIR EJE VERTICAL (MIRAR)","INVERSER L'AXE VERTICAL (REGARD)","INVERTI ASSE VERTICALE (SGUARDO)","垂直軸を反転（視点）"],"Turn (left/right)":["Girar (izquierda/derecha)","Tourner (gauche/droite)","Ruota (sinistra/destra)","左右に向く"],"Look (up/down)":["Mirar (arriba/abajo)","Regarder (haut/bas)","Guarda (su/giù)","上下を見る"],"Center camera":["Centrar cámara","Centrer la caméra","Centra la camera","カメラを中央に戻す"],"Use (doors/lights)":["Usar (puertas/luces)","Utiliser (portes/lumières)","Usa (porte/luci)","使用（ドア／照明）"],"MOUSE ↔ / ← →":["RATÓN ↔ / ← →","SOURIS ↔ / ← →","MOUSE ↔ / ← →","マウス ↔ / ← →"],"MOUSE ↕ / PGUP PGDN":["RATÓN ↕ / REPÁG AVPÁG","SOURIS ↕ / PGUP PGDN","MOUSE ↕ / PGUP PGDN","マウス ↕ / PGUP PGDN"],"C / HOME":["C / INICIO","C / HOME","C / HOME","C / HOME"],"DRAG ↔ ON THE RIGHT":["ARRASTRAR ↔ A LA DERECHA","GLISSER ↔ À DROITE","TRASCINA ↔ A DESTRA","右側を左右にドラッグ"],"DRAG ↕ ON THE RIGHT":["ARRASTRAR ↕ A LA DERECHA","GLISSER ↕ À DROITE","TRASCINA ↕ A DESTRA","右側を上下にドラッグ"],"DOUBLE-TAP ON THE RIGHT":["DOBLE TOQUE A LA DERECHA","DOUBLE TAP À DROITE","DOPPIO TOCCO A DESTRA","右側をダブルタップ"],"RELOAD BUTTON":["BOTÓN DE RECARGA","BOUTON DE RECHARGEMENT","PULSANTE RICARICA","リロードボタン"],"SWAP BUTTON":["BOTÓN DE CAMBIO","BOUTON D'ÉCHANGE","PULSANTE SCAMBIO","交換ボタン"],"USE BUTTON":["BOTÓN DE USO","BOUTON D'UTILISATION","PULSANTE USA","使用ボタン"],"PAUSE BUTTON":["BOTÓN DE PAUSA","BOUTON PAUSE","PULSANTE PAUSA","一時停止ボタン"],"RIGHT STICK ↔":["STICK DERECHO ↔","STICK DROIT ↔","STICK DESTRO ↔","右スティック ↔"],"RIGHT STICK ↕":["STICK DERECHO ↕","STICK DROIT ↕","STICK DESTRO ↕","右スティック ↕"],"R3 / CLICK RIGHT STICK":["R3 / PULSAR STICK DERECHO","R3 / CLIC STICK DROIT","R3 / PREMI STICK DESTRO","R3 / 右スティック押し込み"],"Open shop (DM/CTF/Hostage)":["Abrir tienda (DM/CTF/Rehenes)","Ouvrir la boutique (DM/CTF/Otages)","Apri negozio (DM/CTF/Ostaggi)","ショップを開く（DM/CTF/人質）"],"Close shop":["Cerrar tienda","Fermer la boutique","Chiudi negozio","ショップを閉じる"],"Buy weapon / ammo (shop)":["Comprar arma / munición (tienda)","Acheter arme / munitions (boutique)","Compra arma / munizioni (negozio)","武器／弾薬を購入（ショップ）"],"Browse shop":["Navegar por la tienda","Parcourir la boutique","Sfoglia il negozio","ショップ内を移動"],"Skip 5 weapons (shop)":["Saltar 5 armas (tienda)","Sauter 5 armes (boutique)","Salta 5 armi (negozio)","5つ先の武器へ（ショップ）"],"SHOP BUTTON (ICON)":["BOTÓN DE TIENDA (ICONO)","BOUTON BOUTIQUE (ICÔNE)","PULSANTE NEGOZIO (ICONA)","ショップボタン（アイコン）"],"Jump (Kick in Soccer)":["Saltar (Patada en Fútbol)","Sauter (Tir en Football)","Salta (Calcio nel Calcio)","ジャンプ（サッカーではキック）"],"Previous weapon (outside shop)":["Arma anterior (fuera de la tienda)","Arme précédente (hors boutique)","Arma precedente (fuori dal negozio)","前の武器（ショップ外）"],"Interact (doors, lights, floor weapon)":["Interactuar (puertas, luces, arma del suelo)","Interagir (portes, lumières, arme au sol)","Interagisci (porte, luci, arma a terra)","操作（ドア、照明、床の武器）"],"Back to previous weapon":["Volver al arma anterior","Revenir à l'arme précédente","Torna all'arma precedente","前の武器に戻る"],"Grab / drop (Gravity Gun)":["Agarrar / soltar (Pistola de gravedad)","Saisir / lâcher (Pistolet gravitationnel)","Afferra / lascia (Pistola gravitazionale)","つかむ／放す（グラビティガン）"],"Previous / next weapon":["Arma anterior / siguiente","Arme précédente / suivante","Arma precedente / successiva","前／次の武器"],"MOUSE WHEEL":["RUEDA DEL RATÓN","MOLETTE DE LA SOURIS","ROTELLA DEL MOUSE","マウスホイール"],"RIGHT CLICK":["CLIC DERECHO","CLIC DROIT","CLIC DESTRO","右クリック"],"NEW WEAPON!":["¡ARMA NUEVA!","NOUVELLE ARME !","NUOVA ARMA!","新しい武器！"],"VICTORY!":["¡VICTORIA!","VICTOIRE !","VITTORIA!","勝利！"],"KILLS:":["BAJAS:","ÉLIMINATIONS :","UCCISIONI:","キル："],"DEATHS:":["MUERTES:","MORTS :","MORTI:","デス："],"MATCH":["PARTIDA","PARTIE","PARTITA","試合"],"NIGHT · POWER":["NOCHE · ENERGÍA","NUIT · ÉNERGIE","NOTTE · ENERGIA","夜 · 電力"],"RESCUED x CT LOSSES":["RESCATADOS x BAJAS CT","SAUVÉS x PERTES CT","SALVATI x PERDITE CT","救出 x CTの犠牲"],"CAPTURES CT x T":["CAPTURAS CT x T","CAPTURES CT x T","CATTURE CT x T","キャプチャー CT x T"],"KILLS":["BAJAS","ÉLIMINATIONS","UCCISIONI","キル"],"YOU":["TÚ","VOUS","TU","あなた"],"12 AM — SURVIVE UNTIL 6 AM":["12 AM — SOBREVIVE HASTA LAS 6 AM","12 AM — SURVIVEZ JUSQU'À 6 AM","12 AM — SOPRAVVIVI FINO ALLE 6 AM","午前0時 — 午前6時まで生き延びろ"],"RESCUE THE HOSTAGES!":["¡RESCATA A LOS REHENES!","SAUVEZ LES OTAGES !","SALVA GLI OSTAGGI!","人質を救出しろ！"],"GUARD THE HOSTAGES!":["¡PROTEGE A LOS REHENES!","PROTÉGEZ LES OTAGES !","PROTEGGI GLI OSTAGGI!","人質を守れ！"],"DOOR BLOCKED!":["¡PUERTA BLOQUEADA!","PORTE BLOQUÉE !","PORTA BLOCCATA!","ドアがふさがれている！"],"STOP ALL TEST AUDIO":["DETENER TODO EL AUDIO DE PRUEBA","ARRÊTER TOUS LES AUDIOS DE TEST","FERMA TUTTI GLI AUDIO DI PROVA","すべてのテスト音声を停止"],"STOP:":["DETENER:","ARRÊTER :","FERMA:","停止："],"PLAY:":["REPRODUCIR:","LECTURE :","RIPRODUCI:","再生："],"RETURN FLAG":["DEVOLVER BANDERA","RAMENER LE DRAPEAU","RIPORTA LA BANDIERA","旗を戻す"],"GRAB FLAG":["COGER BANDERA","PRENDRE LE DRAPEAU","PRENDI LA BANDIERA","旗を取る"],"TURN LIGHTS OFF":["APAGAR LUCES","ÉTEINDRE LES LUMIÈRES","SPEGNI LE LUCI","照明を消す"],"TURN LIGHTS ON":["ENCENDER LUCES","ALLUMER LES LUMIÈRES","ACCENDI LE LUCI","照明をつける"],"OPEN DOOR":["ABRIR PUERTA","OUVRIR LA PORTE","APRI PORTA","ドアを開ける"],"CLOSE DOOR":["CERRAR PUERTA","FERMER LA PORTE","CHIUDI PORTA","ドアを閉める"],"TEST AUDIO STOPPED":["AUDIO DE PRUEBA DETENIDO","AUDIO DE TEST ARRÊTÉ","AUDIO DI PROVA FERMATO","テスト音声を停止しました"],"STOPPED:":["DETENIDO:","ARRÊTÉ :","FERMATO:","停止中："],"FLAG":["BANDERA","DRAPEAU","BANDIERA","旗"],"RETURNED":["DEVUELTA","RAMENÉ","RIPORTATA","返却"],"TAKEN":["ROBADA","PRIS","PRESA","奪取"],"PASSAGE AREA":["ZONA DE PASO","ZONE DE PASSAGE","AREA DI PASSAGGIO","通路エリア"],"LEVEL":["NIVEL","NIVEAU","LIVELLO","高さ"],"(STAIRS)":["(ESCALERA)","(ESCALIER)","(SCALA)","（階段）"],"(RAMP)":["(RAMPA)","(RAMPE)","(RAMPA)","（スロープ）"],"WATER DEPTH":["PROFUNDIDAD DEL AGUA","PROFONDEUR DE L'EAU","PROFONDITÀ DELL'ACQUA","水深"],"FLOOR":["SUELO","SOL","PAVIMENTO","床"],"SKY":["CIELO","CIEL","CIELO","空"],"CEILING":["TECHO","PLAFOND","SOFFITTO","天井"],"MAP STYLE":["ESTILO DEL MAPA","STYLE DE LA CARTE","STILE DELLA MAPPA","マップスタイル"],"INDOOR":["INTERIOR","INTÉRIEUR","INTERNO","屋内"],"OUTDOOR":["EXTERIOR","EXTÉRIEUR","ESTERNO","屋外"],"ROOF":["TEJADO","TOIT","TETTO","屋根"],"WALL":["PARED","MUR","PARETE","壁"],"FENCE":["REJA","GRILLE","GRATA","柵"],"WINDOW":["VENTANA","FENÊTRE","FINESTRA","窓"],"THIN WALL":["PARED FINA","MUR FIN","PARETE SOTTILE","薄い壁"],"TARGET:":["OBJETIVO:","CIBLE :","BERSAGLIO:","ターゲット："],"BUY TIME OVER - GO BACK TO YOUR BASE":["TIEMPO DE COMPRA TERMINADO - VUELVE A TU BASE","TEMPS D'ACHAT ÉCOULÉ - RETOURNEZ À VOTRE BASE","TEMPO DI ACQUISTO FINITO - TORNA ALLA TUA BASE","購入時間終了 - 自分の拠点に戻れ"],"CAN'T BUY WHILE RELOADING":["NO SE PUEDE COMPRAR MIENTRAS RECARGAS","IMPOSSIBLE D'ACHETER PENDANT LE RECHARGEMENT","NON PUOI COMPRARE MENTRE RICARICHI","リロード中は購入できません"],"NOT ENOUGH MONEY":["DINERO INSUFICIENTE","ARGENT INSUFFISANT","DENARO INSUFFICIENTE","お金が足りません"],"BOUGHT:":["COMPRADA:","ACHETÉ :","ACQUISTATA:","購入："],"AMMO ALREADY FULL":["MUNICIÓN YA LLENA","MUNITIONS DÉJÀ PLEINES","MUNIZIONI GIÀ PIENE","弾薬はすでに満タン"],"AMMO:":["MUNICIÓN:","MUNITIONS :","MUNIZIONI:","弾薬："],"IN BASE: BUY ANYTIME":["EN LA BASE: COMPRA CUANDO QUIERAS","À LA BASE : ACHETEZ QUAND VOUS VOULEZ","IN BASE: COMPRA QUANDO VUOI","拠点内：いつでも購入可能"],"BUY TIME:":["TIEMPO DE COMPRA:","TEMPS D'ACHAT :","TEMPO DI ACQUISTO:","購入時間："],"BUY TIME OVER - RETURN TO BASE":["TIEMPO TERMINADO - VUELVE A LA BASE","TEMPS ÉCOULÉ - RETOURNEZ À LA BASE","TEMPO FINITO - TORNA ALLA BASE","時間切れ - 拠点に戻れ"],"AMMO $":["MUNICIÓN $","MUNITIONS $","MUNIZIONI $","弾薬 $"],"FREE":["GRATIS","GRATUIT","GRATIS","無料"],"Shop":["Tienda","Boutique","Negozio","ショップ"],"SHOP [B]  $":["TIENDA [B]  $","BOUTIQUE [B]  $","NEGOZIO [B]  $","ショップ [B]  $"],"A new weapon replaces the one of the same type · Owned weapon = buy ammo":["Un arma nueva reemplaza a la del mismo tipo · Arma que ya tienes = comprar munición","Une nouvelle arme remplace celle du même type · Arme déjà possédée = acheter des munitions","Una nuova arma sostituisce quella dello stesso tipo · Arma già posseduta = compra munizioni","新しい武器は同じ種類の武器と入れ替わります · 持っている武器 = 弾薬を購入"],"TARGET":["META","OBJECTIF","OBIETTIVO","目標"],"DRAW":["EMPATE","ÉGALITÉ","PAREGGIO","引き分け"],"DEFEAT":["DERROTA","DÉFAITE","SCONFITTA","敗北"],"TIME UP  |":["TIEMPO AGOTADO  |","TEMPS ÉCOULÉ  |","TEMPO SCADUTO  |","タイムアップ  |"],"RESCUED":["RESCATADOS","SAUVÉS","SALVATI","救出"],"CT LOSSES":["BAJAS CT","PERTES CT","PERDITE CT","CTの犠牲"],"CAPTURES":["CAPTURAS","CAPTURES","CATTURE","キャプチャー"],"WATCH UNTIL THE END":["MIRA HASTA EL FINAL","REGARDEZ JUSQU'À LA FIN","GUARDA FINO ALLA FINE","最後まで観戦"],"RESPAWNING IN":["REAPARECES EN","RÉAPPARITION DANS","RINASCITA TRA","復活まで"],"YOU WERE KILLED":["TE HAN ELIMINADO","VOUS AVEZ ÉTÉ ÉLIMINÉ","SEI STATO ELIMINATO","やられた"],"STOPPAGE TIME: +":["TIEMPO ADICIONAL: +","TEMPS ADDITIONNEL : +","RECUPERO: +","アディショナルタイム：+"],"KICK OFF!":["¡SAQUE INICIAL!","COUP D'ENVOI !","CALCIO D'INIZIO!","キックオフ！"],"HALF TIME":["DESCANSO","MI-TEMPS","INTERVALLO","ハーフタイム"],"GOLDEN GOAL!":["¡GOL DE ORO!","BUT EN OR !","GOLDEN GOAL!","ゴールデンゴール！"],"YOUR GOALS:":["TUS GOLES:","VOS BUTS :","I TUOI GOL:","あなたのゴール："],"90+ GOLDEN GOAL":["90+ GOL DE ORO","90+ BUT EN OR","90+ GOLDEN GOAL","90+ ゴールデンゴール"],"OWN GOAL!":["¡AUTOGOL!","CSC !","AUTOGOL!","オウンゴール！"],"GOOOAL!":["¡GOOOOL!","BUUUT !","GOOOOL!","ゴ〜〜ル！"],"OWN GOAL —":["AUTOGOL —","CSC —","AUTOGOL —","オウンゴール —"],"GOAL —":["GOL —","BUT —","GOL —","ゴール —"],"OWN GOAL":["AUTOGOL","CSC","AUTOGOL","オウンゴール"],"GOAL":["GOL","BUT","GOL","ゴール"],"AT BASE":["EN LA BASE","À LA BASE","IN BASE","拠点内"],"DROPPED":["CAÍDA","TOMBÉ","CADUTA","落下中"],"YOU HAVE IT":["LA TIENES","VOUS L'AVEZ","CE L'HAI TU","所持中"],"ALLY HAS IT":["LO TIENE UN ALIADO","UN ALLIÉ L'A","CE L'HA UN ALLEATO","味方が所持"],"STOLEN":["ROBADA","VOLÉ","RUBATA","奪われた"],"YOUR FLAG":["TU BANDERA","VOTRE DRAPEAU","LA TUA BANDIERA","自軍の旗"],"ENEMY FLAG":["BANDERA ENEMIGA","DRAPEAU ENNEMI","BANDIERA NEMICA","敵の旗"],"YOU HAVE THE FLAG — RETURN TO BASE":["LLEVAS LA BANDERA — VUELVE A LA BASE","VOUS AVEZ LE DRAPEAU — RETOURNEZ À LA BASE","HAI LA BANDIERA — TORNA ALLA BASE","旗を持っている — 拠点に戻れ"],"HOSTAGES · RESCUED":["REHENES · RESCATADOS","OTAGES · SAUVÉS","OSTAGGI · SALVATI","人質 · 救出"],"ESCORTED":["ESCOLTADOS","ESCORTÉS","SCORTATI","護衛中"],"· WAITING":["· ESPERANDO","· EN ATTENTE","· IN ATTESA","· 待機中"],"SURVIVED UNTIL":["SOBREVIVISTE HASTA LAS","VOUS AVEZ SURVÉCU JUSQU'À","SOPRAVVISSUTO FINO ALLE","生存時間："],"SCORE:":["PUNTUACIÓN:","SCORE :","PUNTEGGIO:","スコア："],"ANIMATRONIC DISABLED (+100)":["ANIMATRÓNICO DESACTIVADO (+100)","ANIMATRONIQUE DÉSACTIVÉ (+100)","ANIMATRONICO DISATTIVATO (+100)","アニマトロニクスを無力化（+100）"],"SECRET PASSAGE FOUND!":["¡PASADIZO SECRETO ENCONTRADO!","PASSAGE SECRET TROUVÉ !","PASSAGGIO SEGRETO TROVATO!","隠し通路を発見！"],"NO POWER!":["¡SIN ENERGÍA!","PLUS D'ÉNERGIE !","NESSUNA ENERGIA!","電力切れ！"],"PUSH THE FAKE WALL":["EMPUJA LA PARED FALSA","POUSSEZ LE FAUX MUR","SPINGI LA FALSA PARETE","偽の壁を押す"],"WEST":["OESTE","OUEST","OVEST","西"],"EAST":["ESTE","EST","EST","東"],"OPEN":["ABRIR","OUVRIR","APRI","開ける"],"TURN OFF":["APAGAR","ÉTEINDRE","SPEGNI","消す"],"TURN ON":["ENCENDER","ALLUMER","ACCENDI","つける"],"DOOR CLOSED":["PUERTA CERRADA","PORTE FERMÉE","PORTA CHIUSA","ドア閉"],"DOOR OPEN":["PUERTA ABIERTA","PORTE OUVERTE","PORTA APERTA","ドア開"],"LIGHT ON":["LUZ ON","LUMIÈRE ON","LUCE ON","照明ON"],"LIGHT OFF":["LUZ OFF","LUMIÈRE OFF","LUCE OFF","照明OFF"],"POWER":["ENERGÍA","ÉNERGIE","ENERGIA","電力"],"USAGE":["USO","CONSOMMATION","CONSUMO","使用量"],"6 AM — YOU SURVIVED!":["6 AM — ¡HAS SOBREVIVIDO!","6 AM — VOUS AVEZ SURVÉCU !","6 AM — SEI SOPRAVVISSUTO!","午前6時 — 生き延びた！"],"POWER LEFT:":["ENERGÍA RESTANTE:","ÉNERGIE RESTANTE :","ENERGIA RESIDUA:","残り電力："],"POWER OUT!":["¡SE ACABÓ LA ENERGÍA!","PLUS D'ÉNERGIE !","ENERGIA ESAURITA!","電力が尽きた！"],"DEBUG MENU UNLOCKED":["MENÚ DE DEPURACIÓN DESBLOQUEADO","MENU DE DÉBOGAGE DÉVERROUILLÉ","MENU DEBUG SBLOCCATO","デバッグメニューを解除しました"],"WRONG PASSWORD":["CONTRASEÑA INCORRECTA","MOT DE PASSE INCORRECT","PASSWORD ERRATA","パスワードが違います"],"THIS MAP ONLY WORKS WITH ITS OWN MODE":["ESTE MAPA SOLO FUNCIONA CON SU PROPIO MODO","CETTE CARTE NE FONCTIONNE QU'AVEC SON PROPRE MODE","QUESTA MAPPA FUNZIONA SOLO CON LA SUA MODALITÀ","このマップは専用モードでのみ使用できます"],"Preset applied":["Preajuste aplicado","Préréglage appliqué","Preset applicato","プリセットを適用しました"],"ENTER THE TEST MAP FIRST":["ENTRA PRIMERO AL MAPA DE PRUEBAS","ENTREZ D'ABORD DANS LA CARTE DE TEST","ENTRA PRIMA NELLA MAPPA DI PROVA","先にテストマップに入ってください"],"TARGET CREATED IN FRONT OF YOU":["OBJETIVO CREADO DELANTE DE TI","CIBLE CRÉÉE DEVANT VOUS","BERSAGLIO CREATO DAVANTI A TE","目の前にターゲットを作成しました"],"TARGETS RESPAWNED":["OBJETIVOS REAPARECIDOS","CIBLES RÉAPPARUES","BERSAGLI RIGENERATI","ターゲットが復活しました"],"ALL TARGETS DOWN (RESPAWN IN 5s)":["TODOS LOS OBJETIVOS ABATIDOS (REAPARECEN EN 5s)","TOUTES LES CIBLES ABATTUES (RÉAPPARITION DANS 5s)","TUTTI I BERSAGLI ABBATTUTI (RINASCITA TRA 5s)","全ターゲット撃破（5秒後に復活）"],"START A MATCH FIRST":["INICIA UNA PARTIDA PRIMERO","LANCEZ D'ABORD UNE PARTIE","AVVIA PRIMA UNA PARTITA","先に試合を開始してください"],"HEALTH AND AMMO RESTORED":["VIDA Y MUNICIÓN RESTAURADAS","SANTÉ ET MUNITIONS RESTAURÉES","SALUTE E MUNIZIONI RIPRISTINATE","体力と弾薬を回復しました"],"SHOP MONEY MAXED":["DINERO DE LA TIENDA AL MÁXIMO","ARGENT DE LA BOUTIQUE AU MAXIMUM","DENARO DEL NEGOZIO AL MASSIMO","ショップの所持金を最大にしました"],"NOT AVAILABLE NOW":["NO DISPONIBLE AHORA","NON DISPONIBLE POUR LE MOMENT","NON DISPONIBILE ORA","現在は利用できません"],"START A MATCH TO EQUIP A WEAPON":["INICIA UNA PARTIDA PARA EQUIPAR UN ARMA","LANCEZ UNE PARTIE POUR ÉQUIPER UNE ARME","AVVIA UNA PARTITA PER EQUIPAGGIARE UN'ARMA","武器を装備するには試合を開始してください"],"SWAP":["CAMBIAR","ÉCHANGER","SCAMBIA","交換"],"FOR":["POR","CONTRE","CON","→"],"CAN'T SWAP WHILE RELOADING":["NO SE PUEDE CAMBIAR MIENTRAS RECARGAS","IMPOSSIBLE D'ÉCHANGER PENDANT LE RECHARGEMENT","NON PUOI SCAMBIARE MENTRE RICARICHI","リロード中は交換できません"],"SWAPPED:":["CAMBIADA:","ÉCHANGÉ :","SCAMBIATA:","交換："],"TARGET DOWN (RESPAWNS IN 5s)":["OBJETIVO ABATIDO (REAPARECE EN 5s)","CIBLE ABATTUE (RÉAPPARITION DANS 5s)","BERSAGLIO ABBATTUTO (RINASCITA TRA 5s)","ターゲット撃破（5秒後に復活）"],"ENEMY DOWN (+1)":["ENEMIGO ABATIDO (+1)","ENNEMI ABATTU (+1)","NEMICO ABBATTUTO (+1)","敵を撃破（+1）"],"en":["en","en","en","en"],"ENEMY DOWN":["ENEMIGO ABATIDO","ENNEMI ABATTU","NEMICO ABBATTUTO","敵を撃破"],"Industrial yard with warehouses and a long central lane.":["Zona industrial con almacenes y un largo carril central.","Zone industrielle avec entrepôts et un long couloir central.","Zona industriale con magazzini e una lunga corsia centrale.","倉庫と長い中央レーンのある工業エリア。"],"Village of curved streets, apartments and tight alleys.":["Pueblo de calles curvas, apartamentos y callejones estrechos.","Village aux rues courbes, appartements et ruelles étroites.","Villaggio con strade curve, appartamenti e vicoli stretti.","曲がりくねった通り、アパート、狭い路地のある村。"],"Walled castle with gates and a central hall.":["Castillo amurallado con puertas y un salón central.","Château fortifié avec portes et salle centrale.","Castello fortificato con porte e una sala centrale.","門と中央ホールのある城壁の城。"],"Arid town with a palace, apartments and an open middle.":["Ciudad árida con palacio, apartamentos y centro abierto.","Ville aride avec palais, appartements et centre ouvert.","Città arida con palazzo, appartamenti e centro aperto.","宮殿、アパート、開けた中央のある乾燥地帯の街。"],"Jungle split by a river with bridges.":["Selva cortada por un río con puentes.","Jungle coupée par une rivière avec des ponts.","Giungla attraversata da un fiume con ponti.","橋のかかる川が横切るジャングル。"],"Industrial plant with a silo and a two-level building.":["Planta industrial con un silo y un edificio de dos niveles.","Usine avec un silo et un bâtiment à deux niveaux.","Impianto industriale con un silo e un edificio a due livelli.","サイロと2階建ての建物がある工場。"],"Italian village with a sunken square, stalls and houses.":["Pueblo italiano con plaza hundida, puestos y casas.","Village italien avec place en contrebas, étals et maisons.","Borgo italiano con piazza incassata, bancarelle e case.","窪んだ広場、屋台、家のあるイタリアの村。"],"Closed offices and corridors. Close-quarters combat.":["Oficinas y pasillos cerrados. Combate cuerpo a cuerpo.","Bureaux et couloirs fermés. Combat rapproché.","Uffici e corridoi chiusi. Combattimento ravvicinato.","閉鎖されたオフィスと廊下。接近戦。"],"Water canal crossed by bridges in an urban area.":["Canal de agua cruzado por puentes en zona urbana.","Canal d'eau traversé par des ponts en zone urbaine.","Canale d'acqua attraversato da ponti in area urbana.","市街地で橋が架かる水路。"],"Arid town with wide lanes, an open middle and tunnels.":["Ciudad árida con carriles anchos, centro abierto y túneles.","Ville aride avec de larges couloirs, centre ouvert et tunnels.","Città arida con corsie larghe, centro aperto e tunnel.","広いレーン、開けた中央、トンネルのある乾燥地帯の街。"],"Prison with cell blocks, a yard and corridors.":["Prisión con bloques de celdas, un patio y pasillos.","Prison avec blocs de cellules, une cour et des couloirs.","Prigione con blocchi di celle, un cortile e corridoi.","独房棟、中庭、廊下のある刑務所。"],"Urban crossroads with a gas station and corner buildings.":["Cruce urbano con gasolinera y edificios en las esquinas.","Carrefour urbain avec station-service et bâtiments aux coins.","Incrocio urbano con distributore di benzina e edifici agli angoli.","ガソリンスタンドと角の建物がある都会の交差点。"],"Small suburb with two houses, a bus and backyards.":["Pequeño suburbio con dos casas, un autobús y patios traseros.","Petite banlieue avec deux maisons, un bus et des jardins.","Piccolo sobborgo con due case, un autobus e cortili sul retro.","2軒の家、バス、裏庭のある小さな郊外。"],"Desert arena with a central tower and containers.":["Arena desértica con una torre central y contenedores.","Arène désertique avec une tour centrale et des conteneurs.","Arena desertica con una torre centrale e container.","中央に塔とコンテナがある砂漠のアリーナ。"],"Office complex with a pillared lobby.":["Complejo de oficinas con un vestíbulo de pilares.","Complexe de bureaux avec un hall à piliers.","Complesso di uffici con un atrio a pilastri.","柱のあるロビーがあるオフィス複合施設。"],"Oil platform with modules and a central living quarters.":["Plataforma petrolífera con módulos y alojamientos centrales.","Plateforme pétrolière avec modules et quartiers d'habitation centraux.","Piattaforma petrolifera con moduli e alloggi centrali.","モジュールと中央の居住区がある石油プラットフォーム。"],"Village of rooftop houses, a river with a bridge and a hill.":["Pueblo de casas con tejado, un río con puente y una colina.","Village de maisons à toit, une rivière avec pont et une colline.","Villaggio di case con tetto, un fiume con ponte e una collina.","屋根付きの家、橋のかかる川、丘のある村。"],"Harbor of narrow alleys, a canal and walk-through houses.":["Puerto de callejones estrechos, un canal y casas atravesables.","Port aux ruelles étroites, un canal et des maisons traversables.","Porto di vicoli stretti, un canale e case attraversabili.","狭い路地、運河、通り抜けられる家がある港。"],"Hilltop monastery with ramps, rooftops and a lake.":["Monasterio en lo alto de una colina con rampas, tejados y un lago.","Monastère au sommet d'une colline avec rampes, toits et un lac.","Monastero in cima a una collina con rampe, tetti e un lago.","スロープ、屋根、湖がある丘の上の修道院。"],"Container yard with a central warehouse.":["Patio de contenedores con un almacén central.","Cour de conteneurs avec un entrepôt central.","Piazzale di container con un magazzino centrale.","中央に倉庫があるコンテナヤード。"],"Rail yard with rows of train cars and catwalks.":["Patio ferroviario con filas de vagones y pasarelas.","Gare de triage avec rangées de wagons et passerelles.","Scalo ferroviario con file di vagoni e passerelle.","貨車が並ぶ操車場と通路。"],"Ancient temple on a platform, with pillars and ramps.":["Templo antiguo sobre una plataforma, con pilares y rampas.","Temple antique sur une plateforme, avec piliers et rampes.","Tempio antico su una piattaforma, con pilastri e rampe.","柱とスロープのある台地の古代神殿。"],"Tuscan village with rooftop houses and a sunken square.":["Pueblo toscano con casas techadas y una plaza hundida.","Village toscan avec maisons couvertes et place en contrebas.","Borgo toscano con case con tetto e una piazza incassata.","屋根付きの家と窪んだ広場があるトスカーナの村。"],"Canals with bridges, shallow banks and corner houses.":["Canales con puentes, orillas poco profundas y casas en las esquinas.","Canaux avec ponts, berges peu profondes et maisons aux coins.","Canali con ponti, sponde basse e case agli angoli.","橋、浅い岸、角の家がある運河。"],"Moated castle with bridges and an inner tower.":["Castillo con foso, puentes y una torre interior.","Château à douves avec ponts et une tour intérieure.","Castello con fossato, ponti e una torre interna.","堀、橋、内側の塔がある城。"],"Skyscraper rooftop with platforms and open gaps.":["Azotea de rascacielos con plataformas y huecos abiertos.","Toit de gratte-ciel avec plateformes et vides ouverts.","Tetto di grattacielo con piattaforme e vuoti aperti.","足場と吹き抜けのある超高層ビルの屋上。"],"Shallow lagoons, piers and corner houses.":["Lagunas poco profundas, muelles y casas en las esquinas.","Lagunes peu profondes, pontons et maisons aux coins.","Lagune poco profonde, pontili e case agli angoli.","浅い入り江、桟橋、角の家。"],"Long raised ridge with long sightlines.":["Cresta larga y elevada con largas líneas de visión.","Longue crête surélevée avec de longues lignes de vue.","Lunga cresta rialzata con lunghe linee di tiro.","長い視線が通る細長い高台。"],"Canal town with bridges and rooftop houses.":["Ciudad de canales con puentes y casas con tejado.","Ville de canaux avec ponts et maisons à toit.","Città dei canali con ponti e case con tetto.","橋と屋根付きの家がある運河の街。"],"Baggage hall with conveyor belts and pillars.":["Sala de equipajes con cintas transportadoras y pilares.","Hall à bagages avec tapis roulants et piliers.","Sala bagagli con nastri trasportatori e pilastri.","コンベアと柱のある手荷物ホール。"],"Closed office with rooms and a central lobby.":["Oficina cerrada con salas y un vestíbulo central.","Bureau fermé avec pièces et hall central.","Ufficio chiuso con stanze e un atrio centrale.","部屋と中央ロビーのある閉鎖されたオフィス。"],"Farmstead with two houses, low walls and a yard.":["Granja con dos casas, muros bajos y un patio.","Ferme avec deux maisons, murets et une cour.","Fattoria con due case, muretti e un cortile.","2軒の家、低い壁、庭のある農場。"],"Scrapyard with scrap piles and a central shed.":["Chatarrería con montones de chatarra y un cobertizo central.","Casse auto avec tas de ferraille et un hangar central.","Autodemolizione con cumuli di rottami e un capannone centrale.","スクラップの山と中央の小屋があるスクラップ置き場。"],"Cross-shaped alleys between rooftop buildings.":["Callejones en forma de cruz entre edificios techados.","Ruelles en croix entre des bâtiments couverts.","Vicoli a croce tra edifici con tetto.","屋根付きの建物の間を十字に走る路地。"],"Hilltop abbey with a cloister and open garden.":["Abadía en lo alto de una colina con claustro y jardín abierto.","Abbaye au sommet d'une colline avec cloître et jardin ouvert.","Abbazia in cima a una collina con chiostro e giardino aperto.","回廊と開けた庭がある丘の上の修道院。"],"Terminal concourse with columns and counters.":["Vestíbulo de terminal con columnas y mostradores.","Hall de terminal avec colonnes et comptoirs.","Atrio del terminal con colonne e banconi.","柱とカウンターのあるターミナルの大ホール。"],"Airstrip with hangars and a control tower.":["Pista de aterrizaje con hangares y una torre de control.","Piste d'atterrissage avec hangars et une tour de contrôle.","Pista di atterraggio con hangar e una torre di controllo.","格納庫と管制塔のある滑走路。"],"Crowded shacks, narrow alleys and a hillside.":["Chabolas apiñadas, callejones estrechos y una ladera.","Taudis serrés, ruelles étroites et une colline.","Baracche ammassate, vicoli stretti e un pendio.","密集したバラック、狭い路地、丘の斜面。"],"Ruined streets, open buildings and broken walls.":["Calles en ruinas, edificios abiertos y muros rotos.","Rues en ruines, bâtiments ouverts et murs brisés.","Strade in rovina, edifici aperti e muri crollati.","廃墟の街路、開放された建物、崩れた壁。"],"Container yard with an open center.":["Patio de contenedores con centro abierto.","Cour de conteneurs avec centre ouvert.","Piazzale di container con centro aperto.","中央が開けたコンテナヤード。"],"Mansion with a garden and a shallow pool.":["Mansión con jardín y una piscina poco profunda.","Manoir avec jardin et un bassin peu profond.","Villa con giardino e una piscina bassa.","庭と浅いプールのある屋敷。"],"Passage under overpasses, with fences and brick walls.":["Paso bajo viaductos, con rejas y muros de ladrillo.","Passage sous des viaducs, avec grilles et murs de brique.","Passaggio sotto i viadotti, con recinzioni e muri di mattoni.","柵とレンガの壁がある高架下の通路。"],"Château with walls, a tower and sunken gardens.":["Château con muros, una torre y jardines hundidos.","Château avec murs, une tour et des jardins en contrebas.","Castello con mura, una torre e giardini incassati.","壁、塔、沈んだ庭園のあるシャトー。"],"Laboratory with containment chambers.":["Laboratorio con cámaras de contención.","Laboratoire avec chambres de confinement.","Laboratorio con camere di contenimento.","隔離室のある研究所。"],"Stepped temple with a pillared court and a pyramid.":["Templo escalonado con un patio de pilares y una pirámide.","Temple en gradins avec une cour à piliers et une pyramide.","Tempio a gradoni con un cortile a pilastri e una piramide.","柱のある中庭とピラミッドがある段状の神殿。"],"Devastated ground with sheds and scrap metal.":["Terreno devastado con cobertizos y chatarra.","Terrain dévasté avec hangars et ferraille.","Terreno devastato con capannoni e rottami metallici.","小屋とスクラップ金属がある荒廃した土地。"],"Deep river with three bridges and huts.":["Río profundo con tres puentes y cabañas.","Rivière profonde avec trois ponts et des cabanes.","Fiume profondo con tre ponti e capanne.","3本の橋と小屋がある深い川。"],"Bank with a pillared lobby and a central vault.":["Banco con un vestíbulo de pilares y una cámara acorazada central.","Banque avec un hall à piliers et une chambre forte centrale.","Banca con un atrio a pilastri e un caveau centrale.","柱のあるロビーと中央の金庫室がある銀行。"],"Depot with crate stacks and a back office.":["Depósito con pilas de cajas y una oficina trasera.","Dépôt avec piles de caisses et un bureau au fond.","Deposito con pile di casse e un ufficio sul retro.","木箱の山と奥の事務所がある倉庫。"],"Walled compound with gates and a main building.":["Recinto amurallado con puertas y un edificio principal.","Enceinte fortifiée avec portes et un bâtiment principal.","Complesso fortificato con cancelli e un edificio principale.","門と本館のある城壁の敷地。"],"Cargo ship deck packed with containers.":["Cubierta de un buque de carga repleta de contenedores.","Pont de cargo rempli de conteneurs.","Ponte di una nave da carico pieno di container.","コンテナでいっぱいの貨物船の甲板。"],"Multi-room mansion with a raised room.":["Mansión de varias habitaciones con una sala elevada.","Manoir à plusieurs pièces avec une pièce en hauteur.","Villa con più stanze e una stanza rialzata.","高い部屋がある部屋数の多い屋敷。"],"Small village of little houses and open streets.":["Pequeña aldea de casitas y calles abiertas.","Petit hameau de maisonnettes et de rues ouvertes.","Piccolo borgo di casette e strade aperte.","小さな家と開けた通りのある小さな集落。"],"Hotel with a long hallway, rooms and a penthouse.":["Hotel con un largo pasillo, habitaciones y un ático.","Hôtel avec un long couloir, des chambres et un penthouse.","Hotel con un lungo corridoio, stanze e un attico.","長い廊下、客室、ペントハウスのあるホテル。"],"Office building with short corridors.":["Edificio de oficinas con pasillos cortos.","Immeuble de bureaux avec couloirs courts.","Edificio di uffici con corridoi corti.","短い廊下のあるオフィスビル。"],"Wide street between ruined buildings, with gaps to flank.":["Calle ancha entre edificios en ruinas, con huecos para flanquear.","Large rue entre des bâtiments en ruines, avec des brèches pour contourner.","Strada larga tra edifici in rovina, con varchi per aggirare.","回り込める隙間がある、廃墟の建物に挟まれた広い通り。"],"Village with a walled courtyard and a central house.":["Pueblo con un patio amurallado y una casa central.","Village avec une cour fortifiée et une maison centrale.","Villaggio con un cortile fortificato e una casa centrale.","城壁に囲まれた中庭と中央の家がある村。"],"Pizzeria of closed rooms and dark corridors.":["Pizzería de salas cerradas y pasillos oscuros.","Pizzeria de pièces fermées et de couloirs sombres.","Pizzeria di stanze chiuse e corridoi bui.","閉ざされた部屋と暗い廊下のあるピザ店。"],"Flat ground: a grass pitch with two goals.":["Terreno llano: un campo de césped con dos porterías.","Terrain plat : un terrain de gazon avec deux buts.","Terreno piatto: un campo erboso con due porte.","平らな土地：ゴールが2つある芝のピッチ。"],"Long mountain in terraces linked by ramps.":["Montaña larga en terrazas unidas por rampas.","Longue montagne en terrasses reliées par des rampes.","Lunga montagna a terrazze collegate da rampe.","スロープでつながれた段々の細長い山。"],"Tiny pool hall: red side, blue side and a pool in the middle.":["Pequeño pabellón de piscina: lado rojo, lado azul y una piscina en el medio.","Minuscule salle de piscine : côté rouge, côté bleu et un bassin au milieu.","Minuscola sala piscina: lato rosso, lato blu e una vasca al centro.","小さなプールホール：赤チーム側、青チーム側、中央にプール。"],"PISTOLS":["PISTOLAS","PISTOLETS","PISTOLE","ハンドガン"],"SMGs":["SUBFUSILES","PM","MITRAGLIETTE","SMG"],"SHOTGUNS":["ESCOPETAS","FUSILS À POMPE","FUCILI A POMPA","ショットガン"],"RIFLES":["RIFLES","FUSILS D'ASSAUT","FUCILI D'ASSALTO","ライフル"],"SNIPERS":["FRANCOTIRADORES","FUSILS DE PRÉCISION","FUCILI DI PRECISIONE","スナイパーライフル"],"HEAVY":["PESADAS","ARMES LOURDES","ARMI PESANTI","ヘビー"],"YOU DROPPED THE FLAG!":["¡DEJASTE CAER LA BANDERA!","VOUS AVEZ LÂCHÉ LE DRAPEAU !","HAI LASCIATO CADERE LA BANDIERA!","旗を落とした！"],"YOUR TEAM DROPPED THE FLAG!":["¡TU EQUIPO DEJÓ CAER LA BANDERA!","VOTRE ÉQUIPE A LÂCHÉ LE DRAPEAU !","LA TUA SQUADRA HA LASCIATO CADERE LA BANDIERA!","味方チームが旗を落とした！"],"ENEMY FLAG DROPPED!":["¡BANDERA ENEMIGA CAÍDA!","DRAPEAU ENNEMI TOMBÉ !","BANDIERA NEMICA CADUTA!","敵の旗が落ちた！"],"YOU GOT THE FLAG! RETURN TO YOUR BASE!":["¡TIENES LA BANDERA! ¡VUELVE A TU BASE!","VOUS AVEZ LE DRAPEAU ! RETOURNEZ À VOTRE BASE !","HAI LA BANDIERA! TORNA ALLA TUA BASE!","旗を奪った！自分の拠点に戻れ！"],"YOUR TEAM TOOK THE ENEMY FLAG!":["¡TU EQUIPO TOMÓ LA BANDERA ENEMIGA!","VOTRE ÉQUIPE A PRIS LE DRAPEAU ENNEMI !","LA TUA SQUADRA HA PRESO LA BANDIERA NEMICA!","味方チームが敵の旗を奪った！"],"YOUR FLAG WAS STOLEN!":["¡TU BANDERA FUE ROBADA!","VOTRE DRAPEAU A ÉTÉ VOLÉ !","LA TUA BANDIERA È STATA RUBATA!","自軍の旗が奪われた！"],"FLAG CAPTURED! +1":["¡BANDERA CAPTURADA! +1","DRAPEAU CAPTURÉ ! +1","BANDIERA CATTURATA! +1","旗をキャプチャー！+1"],"THE ENEMY CAPTURED YOUR FLAG!":["¡EL ENEMIGO CAPTURÓ TU BANDERA!","L'ENNEMI A CAPTURÉ VOTRE DRAPEAU !","IL NEMICO HA CATTURATO LA TUA BANDIERA!","敵に自軍の旗をキャプチャーされた！"],"HOSTAGE LEFT BEHIND!":["¡REHÉN ABANDONADO!","OTAGE ABANDONNÉ !","OSTAGGIO ABBANDONATO!","人質を置き去りにした！"],"YOU GOT A HOSTAGE! TAKE IT TO THE CT BASE":["¡TIENES UN REHÉN! LLÉVALO A LA BASE CT","VOUS AVEZ UN OTAGE ! AMENEZ-LE À LA BASE CT","HAI UN OSTAGGIO! PORTALO ALLA BASE CT","人質を確保！CTの拠点まで連れて行け"],"YOUR TEAM TOOK A HOSTAGE!":["¡TU EQUIPO TOMÓ UN REHÉN!","VOTRE ÉQUIPE A PRIS UN OTAGE !","LA TUA SQUADRA HA PRESO UN OSTAGGIO!","味方チームが人質を確保した！"],"A HOSTAGE IS BEING RESCUED! STOP THEM!":["¡ESTÁN RESCATANDO A UN REHÉN! ¡DETENLOS!","UN OTAGE EST EN COURS DE SAUVETAGE ! ARRÊTEZ-LES !","UN OSTAGGIO STA VENENDO SALVATO! FERMALI!","人質が救出されそうだ！阻止しろ！"],"HOSTAGE RESCUED! +1":["¡REHÉN RESCATADO! +1","OTAGE SAUVÉ ! +1","OSTAGGIO SALVATO! +1","人質を救出！+1"],"THE ENEMY RESCUED A HOSTAGE!":["¡EL ENEMIGO RESCATÓ A UN REHÉN!","L'ENNEMI A SAUVÉ UN OTAGE !","IL NEMICO HA SALVATO UN OSTAGGIO!","敵が人質を救出した！"],"HOME TEAM (HOST PICKS):":["EQUIPO LOCAL (ELIGE EL ANFITRIÓN):","ÉQUIPE À DOMICILE (CHOIX DE L'HÔTE) :","SQUADRA DI CASA (SCEGLIE L'HOST):","ホームチーム（ホストが選択）："],"AWAY TEAM (GUESTS PICK):":["EQUIPO VISITANTE (ELIGEN LOS INVITADOS):","ÉQUIPE VISITEUSE (CHOIX DES INVITÉS) :","SQUADRA OSPITE (SCELGONO GLI OSPITI):","アウェイチーム（ゲストが選択）："],"BALL":["BALÓN","BALLON","PALLONE","ボール"],"ENEMY":["ENEMIGO","ENNEMI","NEMICO","敵"],"GRAVITY GUN: OFFLINE ONLY":["PISTOLA DE GRAVEDAD: SOLO SIN CONEXIÓN","PISTOLET GRAVITATIONNEL : HORS LIGNE UNIQUEMENT","PISTOLA GRAVITAZIONALE: SOLO OFFLINE","グラビティガン：オフライン専用"],"THROWN:":["LANZADO:","LANCÉ :","LANCIATO:","投げた："],"PUSHED:":["EMPUJADO:","POUSSÉ :","SPINTO:","押した："],"DROPPED:":["SOLTADO:","LÂCHÉ :","LASCIATO:","放した："],"NOTHING IN SIGHT":["NADA A LA VISTA","RIEN EN VUE","NIENTE IN VISTA","何も見当たらない"],"HOLDING:":["SUJETANDO:","EN MAIN :","IN MANO:","保持中："],"FIRE":["DISPARAR","TIRER","SPARA","発射"],"CLICK":["CLIC","CLIC","CLIC","クリック"],"RELOAD":["RECARGAR","RECHARGER","RICARICA","リロード"],"RIGHT BUTTON":["BOTÓN DERECHO","BOUTON DROIT","PULSANTE DESTRO","右ボタン"],"AIM:":["APUNTAR:","VISER :","MIRA:","照準："],"throw":["lanzar","lancer","lanciare","投げる"],"grab":["agarrar","saisir","afferrare","つかむ"],"Match error. Back to menu.":["Error en la partida. Volviendo al menú.","Erreur de partie. Retour au menu.","Errore nella partita. Torno al menu.","試合でエラーが発生しました。メニューに戻ります。"],"CREATING ROOM... PLEASE WAIT":["CREANDO SALA... ESPERA UN MOMENTO","CRÉATION DU SALON... PATIENTEZ","CREAZIONE STANZA... ATTENDI","ルームを作成中... しばらくお待ちください"],"YOU WERE KILLED · SPECTATE UNTIL THE END":["TE ELIMINARON · OBSERVA HASTA EL FINAL","VOUS AVEZ ÉTÉ ÉLIMINÉ · REGARDEZ JUSQU'À LA FIN","SEI STATO ELIMINATO · GUARDA FINO ALLA FINE","やられた · 最後まで観戦"],"YOU WERE KILLED · RESPAWN IN 10s":["TE ELIMINARON · REAPARECES EN 10s","VOUS AVEZ ÉTÉ ÉLIMINÉ · RÉAPPARITION DANS 10s","SEI STATO ELIMINATO · RINASCITA TRA 10s","やられた · 10秒後に復活"],"BACK TO ROOM":["VOLVER A LA SALA","RETOUR AU SALON","TORNA ALLA STANZA","ルームに戻る"],"A player left the match":["Un jugador salió de la partida","Un joueur a quitté la partie","Un giocatore ha lasciato la partita","プレイヤーが試合から退出しました"],"Back in the room":["De vuelta en la sala","De retour dans le salon","Di nuovo nella stanza","ルームに戻りました"],"The host is back in the room":["El anfitrión volvió a la sala","L'hôte est de retour dans le salon","L'host è tornato nella stanza","ホストがルームに戻りました"],"ONLINE ROOM":["SALA EN LÍNEA","SALON EN LIGNE","STANZA ONLINE","オンラインルーム"],"LEAVE ROOM":["SALIR DE LA SALA","QUITTER LE SALON","ESCI DALLA STANZA","ルームを退出"],"WAITING FOR THE HOST...":["ESPERANDO AL ANFITRIÓN...","EN ATTENTE DE L'HÔTE...","IN ATTESA DELL'HOST...","ホストを待っています..."],"START MATCH":["INICIAR PARTIDA","LANCER LA PARTIE","AVVIA PARTITA","試合開始"],"Network failed to load (offline?)":["Error al cargar la red (¿sin conexión?)","Échec du chargement réseau (hors ligne ?)","Impossibile caricare la rete (offline?)","ネットワークの読み込みに失敗しました（オフライン？）"],"Creating room... please wait":["Creando sala... espera un momento","Création du salon... patientez","Creazione stanza... attendi","ルームを作成中... しばらくお待ちください"],"Creating room... the server may be starting up, please wait up to 1 minute":["Creando sala... el servidor puede estar iniciándose, espera hasta 1 minuto","Création du salon... le serveur démarre peut-être, patientez jusqu'à 1 minute","Creazione stanza... il server potrebbe stare avviandosi, attendi fino a 1 minuto","ルームを作成中... サーバーが起動中の可能性があります。最大1分お待ちください"],"Timed out. Check your connection and try again.":["Tiempo agotado. Revisa tu conexión e inténtalo de nuevo.","Délai dépassé. Vérifiez votre connexion et réessayez.","Tempo scaduto. Controlla la connessione e riprova.","タイムアウトしました。接続を確認してもう一度お試しください。"],"Network error:":["Error de red:","Erreur réseau :","Errore di rete:","ネットワークエラー："],"YOUR TEAM:":["TU EQUIPO:","VOTRE ÉQUIPE :","LA TUA SQUADRA:","あなたのチーム："],"Nobody joined yet":["Aún no se ha unido nadie","Personne n'a encore rejoint","Nessuno si è ancora unito","まだ誰も参加していません"],"CHAT":["CHAT","CHAT","CHAT","チャット"],"TYPE":["ESCRIBIR","SAISIR","SCRIVI","入力"],"DELETE":["BORRAR","EFFACER","CANCELLA","削除"],"SPACE":["ESPACIO","ESPACE","SPAZIO","スペース"],"CAPS":["MAYÚS","MAJ","MAIUSC","CAPS"],"SEND":["ENVIAR","ENVOYER","INVIA","送信"],"CANCEL":["CANCELAR","ANNULER","ANNULLA","キャンセル"],"ROOM CODE":["CÓDIGO DE SALA","CODE DU SALON","CODICE STANZA","ルームコード"],"Enter the 6-character room code":["Introduce el código de sala de 6 caracteres","Saisissez le code du salon à 6 caractères","Inserisci il codice stanza di 6 caratteri","6文字のルームコードを入力してください"],"Connecting...":["Conectando...","Connexion...","Connessione...","接続中..."],"Timed out. Check the code and your connection.":["Tiempo agotado. Revisa el código y tu conexión.","Délai dépassé. Vérifiez le code et votre connexion.","Tempo scaduto. Controlla il codice e la connessione.","タイムアウトしました。コードと接続を確認してください。"],"Room not found":["Sala no encontrada","Salon introuvable","Stanza non trovata","ルームが見つかりません"],"The host left the room":["El anfitrión salió de la sala","L'hôte a quitté le salon","L'host ha lasciato la stanza","ホストがルームを退出しました"],"Room full or match in progress":["Sala llena o partida en curso","Salon complet ou partie en cours","Stanza piena o partita in corso","ルームが満員か、試合が進行中です"],"Failed to start the match":["No se pudo iniciar la partida","Impossible de lancer la partie","Impossibile avviare la partita","試合を開始できませんでした"],"CREATE A ROOM":["CREAR UNA SALA","CRÉER UN SALON","CREA UNA STANZA","ルームを作成"],"Generate a code and share it with friends.":["Genera un código y compártelo con tus amigos.","Générez un code et partagez-le avec vos amis.","Genera un codice e condividilo con gli amici.","コードを発行して友達に共有しましょう。"],"CREATE ROOM":["CREAR SALA","CRÉER LE SALON","CREA STANZA","ルーム作成"],"OR JOIN WITH A CODE":["O ÚNETE CON UN CÓDIGO","OU REJOIGNEZ AVEC UN CODE","OPPURE UNISCITI CON UN CODICE","またはコードで参加"],"JOIN ROOM":["UNIRSE A LA SALA","REJOINDRE LE SALON","ENTRA NELLA STANZA","ルームに参加"],"PLAYERS":["JUGADORES","JOUEURS","GIOCATORI","プレイヤー"],"Quality lowered to keep it smooth":["Calidad reducida para mantener la fluidez","Qualité réduite pour garder la fluidité","Qualità ridotta per mantenere la fluidità","滑らかさを保つため画質を下げました"],"Press a controller button to activate it":["Pulsa un botón del mando para activarlo","Appuyez sur un bouton de la manette pour l'activer","Premi un pulsante del controller per attivarlo","コントローラーのボタンを押すと有効になります"],"YOUR FLAG RETURNED TO BASE":["TU BANDERA VOLVIÓ A LA BASE","VOTRE DRAPEAU EST REVENU À LA BASE","LA TUA BANDIERA È TORNATA ALLA BASE","自軍の旗が拠点に戻った"],"ENEMY FLAG RETURNED TO BASE":["LA BANDERA ENEMIGA VOLVIÓ A LA BASE","LE DRAPEAU ENNEMI EST REVENU À SA BASE","LA BANDIERA NEMICA È TORNATA ALLA BASE","敵の旗が拠点に戻った"],"YOUR FLAG WAS RECOVERED!":["¡TU BANDERA FUE RECUPERADA!","VOTRE DRAPEAU A ÉTÉ RÉCUPÉRÉ !","LA TUA BANDIERA È STATA RECUPERATA!","自軍の旗を取り戻した！"],"THE ENEMY RECOVERED THEIR FLAG":["EL ENEMIGO RECUPERÓ SU BANDERA","L'ENNEMI A RÉCUPÉRÉ SON DRAPEAU","IL NEMICO HA RECUPERATO LA SUA BANDIERA","敵が旗を取り戻した"],"{n} left the match":["{n} salió de la partida","{n} a quitté la partie","{n} ha lasciato la partita","{n}が試合から退出しました"],"OPEN {s} DOOR":["ABRIR PUERTA {s}","OUVRIR LA PORTE {s}","APRI PORTA {s}","{s}のドアを開ける"],"CLOSE {s} DOOR":["CERRAR PUERTA {s}","FERMER LA PORTE {s}","CHIUDI PORTA {s}","{s}のドアを閉める"],"TURN OFF {s} HALL LIGHT":["APAGAR LUZ DEL PASILLO {s}","ÉTEINDRE LA LUMIÈRE DU COULOIR {s}","SPEGNI LA LUCE DEL CORRIDOIO {s}","{s}の廊下の照明を消す"],"TURN ON {s} HALL LIGHT":["ENCENDER LUZ DEL PASILLO {s}","ALLUMER LA LUMIÈRE DU COULOIR {s}","ACCENDI LA LUCE DEL CORRIDOIO {s}","{s}の廊下の照明をつける"],"FOXY POUNDED THE DOOR! -{n}% POWER":["¡FOXY GOLPEÓ LA PUERTA! -{n}% ENERGÍA","FOXY A FRAPPÉ À LA PORTE ! -{n}% ÉNERGIE","FOXY HA SBATTUTO CONTRO LA PORTA! -{n}% ENERGIA","フォクシーがドアを叩いた！電力-{n}%"],"YOU ESCORT {n} HOSTAGE — TAKE TO CT BASE":["ESCOLTAS A {n} REHÉN — LLÉVALO A LA BASE CT","VOUS ESCORTEZ {n} OTAGE — AMENEZ-LE À LA BASE CT","SCORTI {n} OSTAGGIO — PORTALO ALLA BASE CT","人質{n}人を護衛中 — CTの拠点まで連れて行け"]};
+const LANG_IDX = { es: 0, fr: 1, it: 2, ja: 3 };
+function trEn(en, lang){
+  const i = LANG_IDX[lang];
+  if(i === undefined || typeof en !== 'string') return en;
+  const m = en.match(/^(\s*)([\s\S]*?)(\s*)$/);
+  const row = Object.prototype.hasOwnProperty.call(XTR, m[2]) ? XTR[m[2]] : null;
+  return (row && row[i]) ? m[1] + row[i] + m[3] : en;
+}
+// LT(pt, en): devolve o texto no idioma atual (pt/en direto; es/fr/it/ja pela tabela, senão inglês)
+function LT(pt, en){ return currentLang === 'pt' ? pt : (currentLang === 'en' ? en : trEn(en, currentLang)); }
+function LD(o){ return LT(o.pt, o.en); }   // objetos { pt, en }
+['es', 'fr', 'it', 'ja'].forEach(function(l){
+  const d = Object.assign({}, I18N.en);
+  for(const k in I18N.en){
+    let v = I18N.en[k], suf = '';
+    const m = v.match(/ \(Deathmatch(?: \/ CTF)?\)$/);
+    if(m){ suf = m[0]; v = v.slice(0, -suf.length); }
+    const t = trEn(v, l);
+    if(t !== v) d[k] = t + suf;
+  }
+  I18N[l] = d;
+});
+const LANG_HTML = { pt: 'pt-BR', en: 'en', es: 'es', fr: 'fr', it: 'it', ja: 'ja' };
+
 function setLanguage(lang) {
+  if(!I18N[lang]) lang = 'pt';
   currentLang = lang;
-  document.querySelectorAll('.dbg-wcat').forEach(h => { const t = h.querySelector('.dbg-wcat-t'); if(t) t.textContent = lang === 'en' ? h.dataset.en : h.dataset.pt; });
+  document.documentElement.lang = LANG_HTML[lang] || 'pt-BR';
+  document.querySelectorAll('.dbg-wcat').forEach(h => { const t = h.querySelector('.dbg-wcat-t'); if(t) t.textContent = LT(h.dataset.pt, h.dataset.en); });
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (I18N[lang][key]) el.textContent = I18N[lang][key];
@@ -9113,7 +9178,7 @@ const MAP_TAGS = (function(){
   return T;
 })();
 function mapNameOf(idx){ const d = LEVEL_DEFINITIONS[idx]; return d ? (I18N[currentLang][d.keyName] || d.keyName) : ''; }
-function mapTagOf(idx){ const t = MAP_TAGS[idx]; return t ? t[currentLang === 'en' ? 1 : 0] : ''; }
+function mapTagOf(idx){ const t = MAP_TAGS[idx]; return t ? LT(t[0], t[1]) : ''; }
 
 // Lista de mapas (estilo Counter-Strike: Source): uma linha por mapa, com nome e texto curto, sem preview.
 var mapUiReady = false;   // vira true quando a lista de mapas (visibleMaps etc.) já foi criada
@@ -9388,7 +9453,7 @@ function gunGameOnPlayerKill() {
     }
     gunGameEquip();
     SFX.pickupWeapon();
-    flashMsg(currentLang === 'en' ? "NEW WEAPON!" : "NOVA ARMA!");
+    flashMsg(LT("NOVA ARMA!", "NEW WEAPON!"));
   }
   updateHUDModeLabel();
 }
@@ -9404,9 +9469,9 @@ function gunGameWin() {
   document.getElementById('countdownOverlay').style.display = 'none';
   const ov = document.getElementById('gameOverOverlay');
   ov.style.display = 'flex';
-  ov.querySelector('h1').textContent = en ? 'VICTORY!' : 'VITÓRIA!';
+  ov.querySelector('h1').textContent = LT('VITÓRIA!', 'VICTORY!');
   document.getElementById('finalScore').textContent =
-    (en ? 'KILLS: ' : 'ABATES: ') + gunGameTotalKills + '  |  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths;
+    (LT('ABATES: ', 'KILLS: ')) + gunGameTotalKills + '  |  ' + (LT('MORTES: ', 'DEATHS: ')) + dmDeaths;
   if (document.pointerLockElement) document.exitPointerLock();
 }
 
@@ -9443,22 +9508,22 @@ function updateHUDModeLabel() {
   }
   if (currentGameMode === 'soccer' && soc) {
     const sh = socClubOf(soc.home), sa = socClubOf(soc.away);
-    lvlLbl.textContent = (currentLang === 'en' ? "MATCH" : "PARTIDA");
+    lvlLbl.textContent = (LT("PARTIDA", "MATCH"));
     lvlVal.innerHTML = '<img class="dm-team-ico" src="' + sh.shield + '" alt="">' + dmScoreCT + ' x ' + dmScoreT + '<img class="dm-team-ico" src="' + sa.shield + '" alt="">';
     return;
   }
   if (fnaf) {
-    lvlLbl.textContent = (currentLang === 'en' ? "NIGHT · POWER" : "NOITE · ENERGIA");
+    lvlLbl.textContent = (LT("NOITE · ENERGIA", "NIGHT · POWER"));
     lvlVal.textContent = FNAF_HOURS[Math.min(5, fnaf.hour)] + " · " + Math.ceil(fnaf.power) + "%";
     return;
   }
   if (currentGameMode === 'hostage') {
-    lvlLbl.textContent = (currentLang === 'en' ? "RESCUED x CT LOSSES" : "RESGATES x BAIXAS CT");
+    lvlLbl.textContent = (LT("RESGATES x BAIXAS CT", "RESCUED x CT LOSSES"));
     lvlVal.textContent = dmScoreCT + "/" + HR_COUNT + " x " + dmScoreT + (dmEnd.mode === 'score' ? "/" + dmEnd.target : "");
     return;
   }
   if (currentGameMode === 'ctf') {
-    lvlLbl.textContent = (currentLang === 'en' ? "CAPTURES CT x T" : "CAPTURAS CT x T");
+    lvlLbl.textContent = (LT("CAPTURAS CT x T", "CAPTURES CT x T"));
     lvlVal.textContent = dmScoreCT + " x " + dmScoreT;
   } else if (currentGameMode === 'deathmatch') {
     lvlLbl.textContent = "CT x T";
@@ -9466,7 +9531,7 @@ function updateHUDModeLabel() {
       ' x ' + dmScoreT + '<img class="dm-team-ico" src="' + DM_HUD_ICONS.T + '" alt="T">';
   } else if (currentGameMode === 'gungame') {
     const en = currentLang === 'en';
-    lvlLbl.textContent = en ? "KILLS" : "ABATES";   // sem nivel/nome da arma: so a contagem de abates
+    lvlLbl.textContent = LT("ABATES", "KILLS");   // sem nivel/nome da arma: so a contagem de abates
     lvlVal.textContent = isGunBots() ? (gunGameTotalKills + "/" + GUN_GAME_WIN_KILLS) : String(gunGameTotalKills);
   } else {
     lvlLbl.textContent = "WAVE";
@@ -9548,13 +9613,18 @@ function drawNameTag(en, sx, headY, sh){
   let nm = (NET.mode && NET.started) ? netTagName(en) : '';
   if(!nm && showBotNames && isTeamBot(en)) nm = kfBotName(en);   // mesmo nome do kill feed
   if(!nm) return;
+  // só aparece de perto: nítido até NAME_NEAR células, some aos poucos e desaparece de vez em NAME_FAR (tamanho continua fixo)
+  const NAME_NEAR = 5, NAME_FAR = 10;
+  const dist = Math.hypot(en.x - player.x, en.y - player.y);
+  if(dist >= NAME_FAR) return;
+  const fade = dist <= NAME_NEAR ? 1 : 1 - (dist - NAME_NEAR) / (NAME_FAR - NAME_NEAR);
   const fs = Math.max(7, Math.round(SCREEN_H * 0.058));   // tamanho FIXO (não depende da distância): pequeno e legível em toda a partida
   let up = 3;
   if(en.hasFlag && ctf) up = Math.max(up, sh * 0.62);
   if(en.ally) up = Math.max(up, Math.max(3, sh * 0.07) * 2.5);
   const y = Math.round(headY - up), x = Math.round(sx);
   ctx.save();
-  ctx.globalAlpha = 1;   // sem esmaecer com a distância: o nome fica igual de perto e de longe
+  ctx.globalAlpha = fade;   // esmaece com a distância (fade-in conforme o bot se aproxima)
   ctx.font = '700 ' + fs + 'px "Trebuchet MS","Segoe UI",Verdana,Arial,sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
   ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(2, Math.round(fs * 0.3));
@@ -9573,7 +9643,7 @@ const KF_BOT_NAMES = ['Dave','Vitaliy','Ricky','Derek','Gus','Pat','Brian','Stev
 let kfOut = [], netSnapN = 0;
 function kfBotName(b){ return KF_BOT_NAMES[Math.abs((b && b.id) | 0) % KF_BOT_NAMES.length]; }
 function kfWho(x){
-  if(x === 'host' || x === player) return { n: getPlayerName() || (NET.mode ? 'HOST' : (currentLang === 'en' ? 'YOU' : 'VOCÊ')), t: dmPlayerTeam, i: 0 };
+  if(x === 'host' || x === player) return { n: getPlayerName() || (NET.mode ? 'HOST' : (LT('VOCÊ', 'YOU'))), t: dmPlayerTeam, i: 0 };
   if(!x) return null;
   if(x.remote && x.peer){ const n = netTagName(x); return { n: n || netT('JOGADOR', 'PLAYER'), t: x.team, i: x.id }; }
   return { n: kfBotName(x), t: x.team, i: x.id };
@@ -9593,11 +9663,21 @@ function kfReport(killer, victim){
 function kfClean(m){
   m = m || {};
   const tm = t => (t === 'CT' || t === 'T') ? t : '';
-  return { k: nameClean(m.k), kt: tm(m.kt), ki: (m.ki | 0), v: nameClean(m.v), vt: tm(m.vt), vi: (m.vi | 0) };
+  const c = { k: nameClean(m.k), kt: tm(m.kt), ki: (m.ki | 0), v: nameClean(m.v), vt: tm(m.vt), vi: (m.vi | 0) };
+  if(m.x){ c.x = chatClean(m.x); c.xt = tm(m.xt); }
+  return c;
 }
 function kfShow(m, myId){
-  const box = document.getElementById('killFeed'); if(!box || !m.v) return;
+  const box = document.getElementById('killFeed'); if(!box || (!m.v && !m.x)) return;
   const row = document.createElement('div');
+  if(m.x){   // aviso de evento (jogador saiu, gol...): mesma lista do kill feed
+    row.className = 'kf-row kf-event';
+    const t = document.createElement('span'); t.className = 'kf-ev-txt' + (m.xt ? ' ' + m.xt : ''); t.textContent = m.x; row.appendChild(t);
+    box.appendChild(row);
+    while(box.children.length > KF_MAX) box.removeChild(box.firstChild);
+    setTimeout(() => { row.classList.add('old'); setTimeout(() => { if(row.parentNode) row.parentNode.removeChild(row); }, 600); }, KF_LIFE_MS);
+    return;
+  }
   row.className = 'kf-row' + ((m.ki === myId || m.vi === myId) ? ' me' : '');
   const nameEl = (txt, team) => { const s = document.createElement('span'); s.className = 'kf-name' + (team ? ' ' + team : ''); s.textContent = txt; return s; };
   if(m.k && m.ki !== m.vi) row.appendChild(nameEl(m.k, m.kt));
@@ -9609,6 +9689,14 @@ function kfShow(m, myId){
   box.appendChild(row);
   while(box.children.length > KF_MAX) box.removeChild(box.firstChild);
   setTimeout(() => { row.classList.add('old'); setTimeout(() => { if(row.parentNode) row.parentNode.removeChild(row); }, 600); }, KF_LIFE_MS);
+}
+// Jogador saiu da partida: aviso no feed (host mostra e manda aos convidados que continuam)
+function kfPeerLeft(p, idx){
+  if(!NET.started) return;
+  const nm = nameClean(p.name) || (netT('JOGADOR ', 'PLAYER ') + (idx + 2));
+  const m = { x: netT('{n} saiu da partida', '{n} left the match').replace('{n}', nm), xt: p.team === 'T' ? 'T' : (p.team === 'CT' ? 'CT' : '') };
+  kfShow(m, 0);
+  if(NET.mode === 'host' && netPeers.length){ kfOut.push(m); if(kfOut.length > 20) kfOut.shift(); }
 }
 function kfClear(){ const box = document.getElementById('killFeed'); if(box) box.innerHTML = ''; kfOut.length = 0; }
 
@@ -9827,14 +9915,14 @@ function startCountdown(){
       if (fnaf) {
         setTimeout(() => {
           if (!started || gameOver) return;
-          flashMsg(currentLang === 'en' ? '12 AM — SURVIVE UNTIL 6 AM' : '12 AM — SOBREVIVA ATÉ AS 6 AM');
+          flashMsg(LT('12 AM — SOBREVIVA ATÉ AS 6 AM', '12 AM — SURVIVE UNTIL 6 AM'));
         }, 2200);
       }
       if (currentGameMode === 'hostage' && !(ldef && ldef.isTestMap)) {
         setTimeout(() => {
           if (!started || gameOver) return;
           const en = currentLang === 'en';
-          flashMsg(dmPlayerTeam === 'CT' ? (en ? 'RESCUE THE HOSTAGES!' : 'RESGATE OS REFÉNS!') : (en ? 'GUARD THE HOSTAGES!' : 'PROTEJA OS REFÉNS!'));
+          flashMsg(dmPlayerTeam === 'CT' ? (LT('RESGATE OS REFÉNS!', 'RESCUE THE HOSTAGES!')) : (LT('PROTEJA OS REFÉNS!', 'GUARD THE HOSTAGES!')));
         }, 2200);
       }
     }
@@ -9869,7 +9957,7 @@ function testToggleDoor(d){
   const want = !d.closed;   // true = fechar
   const cx = d.x + 0.5, cy = d.y + 0.5;
   if(want && (Math.hypot(player.x - cx, player.y - cy) < 0.95 || enemies.some(en => en.alive && Math.hypot(en.x - cx, en.y - cy) < 0.95))){
-    flashMsg(currentLang === 'en' ? 'DOOR BLOCKED!' : 'PORTA BLOQUEADA!');
+    flashMsg(LT('PORTA BLOQUEADA!', 'DOOR BLOCKED!'));
     SFX.fnafDeny();
     return;
   }
@@ -9905,13 +9993,13 @@ function testUseLabel(p){
   const en = currentLang === 'en';
   if(p.btnFor === 'audio'){
     const a = p.audio;
-    if(a.stop) return en ? 'STOP ALL TEST AUDIO' : 'PARAR TODO O ÁUDIO DE TESTE';
+    if(a.stop) return LT('PARAR TODO O ÁUDIO DE TESTE', 'STOP ALL TEST AUDIO');
     const on = a.music && SFX.testMusicOn(a.url);
-    return (on ? (en ? 'STOP: ' : 'PARAR: ') : (en ? 'PLAY: ' : 'TOCAR: ')) + (en ? a.en : a.pt);
+    return (on ? (LT('PARAR: ', 'STOP: ')) : (LT('TOCAR: ', 'PLAY: '))) + (LD(a));
   }
-  if(p.kind === 'flag') return p.state === 'carried' ? (en ? 'RETURN FLAG ' : 'DEVOLVER BANDEIRA ') + p.team : (en ? 'GRAB FLAG ' : 'PEGAR BANDEIRA ') + p.team;
-  if(p.btnFor === 'light') return testLightsOn ? (en ? 'TURN LIGHTS OFF' : 'APAGAR LUZES') : (en ? 'TURN LIGHTS ON' : 'ACENDER LUZES');
-  return (p.door && p.door.closed) ? (en ? 'OPEN DOOR' : 'ABRIR PORTA') : (en ? 'CLOSE DOOR' : 'FECHAR PORTA');
+  if(p.kind === 'flag') return p.state === 'carried' ? (LT('DEVOLVER BANDEIRA ', 'RETURN FLAG ')) + p.team : (LT('PEGAR BANDEIRA ', 'GRAB FLAG ')) + p.team;
+  if(p.btnFor === 'light') return testLightsOn ? (LT('APAGAR LUZES', 'TURN LIGHTS OFF')) : (LT('ACENDER LUZES', 'TURN LIGHTS ON'));
+  return (p.door && p.door.closed) ? (LT('ABRIR PORTA', 'OPEN DOOR')) : (LT('FECHAR PORTA', 'CLOSE DOOR'));
 }
 let testUseKey = '';
 function testUpdateUse(){
@@ -9931,17 +10019,17 @@ function testAudioPress(p){
   if(a.stop){
     SFX.testStop();
     testProps.forEach(q => { if(q.btnFor === 'audio'){ q.node = null; q.flash = 0; } });
-    flashMsg(en ? 'TEST AUDIO STOPPED' : 'ÁUDIO DE TESTE PARADO');
+    flashMsg(LT('ÁUDIO DE TESTE PARADO', 'TEST AUDIO STOPPED'));
     return;
   }
   if(a.music){
     const on = SFX.testMusic(a.url, a.loop);
-    flashMsg((on ? '♪ ' : (en ? 'STOPPED: ' : 'PARADO: ')) + (en ? a.en : a.pt));
+    flashMsg((on ? '♪ ' : (LT('PARADO: ', 'STOPPED: '))) + (LD(a)));
     return;
   }
   if(a.fn){ a.fn(); p.flash = performance.now() + 400; }
   else { p.node = SFX.testClip(a.url, a.vol); }
-  flashMsg('♪ ' + (en ? a.en : a.pt));
+  flashMsg('♪ ' + (LD(a)));
 }
 function testTryUse(){
   if(!started || gameOver || countdownActive || dmPlayerDead || settingsModal.style.display === 'flex') return false;
@@ -9949,8 +10037,8 @@ function testTryUse(){
   if(!p) return false;
   const en = currentLang === 'en';
   if(p.kind === 'flag'){
-    if(p.state === 'carried'){ p.state = 'home'; flashMsg((en ? 'FLAG ' : 'BANDEIRA ') + p.team + (en ? ' RETURNED' : ' DEVOLVIDA')); SFX.pickupAmmo(); }
-    else { p.state = 'carried'; flashMsg((en ? 'FLAG ' : 'BANDEIRA ') + p.team + (en ? ' TAKEN' : ' CAPTURADA')); SFX.pickupWeapon(); }
+    if(p.state === 'carried'){ p.state = 'home'; flashMsg((LT('BANDEIRA ', 'FLAG ')) + p.team + (LT(' DEVOLVIDA', ' RETURNED'))); SFX.pickupAmmo(); }
+    else { p.state = 'carried'; flashMsg((LT('BANDEIRA ', 'FLAG ')) + p.team + (LT(' CAPTURADA', ' TAKEN'))); SFX.pickupWeapon(); }
   } else if(p.btnFor === 'audio'){
     testAudioPress(p);
   } else if(p.btnFor === 'light'){
@@ -10035,33 +10123,33 @@ function updateTestHud(now){
   const en = currentLang === 'en', lines = [];
   if(test){
     const z = testZoneAt(player.x, player.y);
-    lines.push(z ? (en ? z.en : z.pt) : (en ? 'PASSAGE AREA' : 'ÁREA DE PASSAGEM'));
+    lines.push(z ? (LD(z)) : (LT('ÁREA DE PASSAGEM', 'PASSAGE AREA')));
   }
   if(debugOptions.tileInfo){
     const ix = Math.floor(player.x), iy = Math.floor(player.y);
     if(ix >= 0 && iy >= 0 && ix < MAP_W && iy < MAP_H){
       const ti = iy * MAP_W + ix;
-      lines.push('X ' + player.x.toFixed(1) + '  Y ' + player.y.toFixed(1) + '  ' + (en ? 'LEVEL ' : 'NÍVEL ') + (SLP_AX && SLP_AX[ti] ? heightAt(player.x, player.y).toFixed(2) + (SLP_N[ti] > 0 ? (en ? ' (STAIRS)' : ' (ESCADA)') : (en ? ' (RAMP)' : ' (RAMPA)')) : HEIGHTS[iy][ix]));
-      if(waterDepth && waterDepth[ti] > 0) lines.push((en ? 'WATER DEPTH ' : 'PROFUNDIDADE DA ÁGUA ') + waterDepth[ti].toFixed(1));
-      lines.push((en ? 'FLOOR ' : 'PISO ') + floorTileMap[ti] + ' · ' + (TEX_NAMES.floor[floorTileMap[ti]] || '?'));
+      lines.push('X ' + player.x.toFixed(1) + '  Y ' + player.y.toFixed(1) + '  ' + (LT('NÍVEL ', 'LEVEL ')) + (SLP_AX && SLP_AX[ti] ? heightAt(player.x, player.y).toFixed(2) + (SLP_N[ti] > 0 ? (LT(' (ESCADA)', ' (STAIRS)')) : (LT(' (RAMPA)', ' (RAMP)'))) : HEIGHTS[iy][ix]));
+      if(waterDepth && waterDepth[ti] > 0) lines.push((LT('PROFUNDIDADE DA ÁGUA ', 'WATER DEPTH ')) + waterDepth[ti].toFixed(1));
+      lines.push((LT('PISO ', 'FLOOR ')) + floorTileMap[ti] + ' · ' + (TEX_NAMES.floor[floorTileMap[ti]] || '?'));
       const roofed = ceilOnMap ? ceilOnMap[ti] === 1 : !levelNoCeiling;
-      if(!roofed) lines.push((en ? 'SKY ' : 'CÉU ') + currentSky + ' · ' + (TEX_NAMES.sky[currentSky] || '?'));
-      else lines.push((en ? 'CEILING ' : 'TETO ') + ceilTileMap[ti] + ' · ' + (TEX_NAMES.ceil[ceilTileMap[ti]] || '?'));
+      if(!roofed) lines.push((LT('CÉU ', 'SKY ')) + currentSky + ' · ' + (TEX_NAMES.sky[currentSky] || '?'));
+      else lines.push((LT('TETO ', 'CEILING ')) + ceilTileMap[ti] + ' · ' + (TEX_NAMES.ceil[ceilTileMap[ti]] || '?'));
       const ld = LEVEL_DEFINITIONS[currentLevelIndex], rk = roofMap ? roofMap[ti] : 0;
-      lines.push((en ? 'MAP STYLE ' : 'ESTILO DO MAPA ') + ((ld && ld.style) || '?') + ' · ' + (roofed ? (en ? 'INDOOR' : 'INTERIOR') : (en ? 'OUTDOOR' : 'EXTERIOR'))
-        + (rk ? ' · ' + (en ? 'ROOF ' : 'TELHADO ') + ROOFS[rk - 1].kind.toUpperCase() + ' #' + ROOFS[rk - 1].tex : ''));
+      lines.push((LT('ESTILO DO MAPA ', 'MAP STYLE ')) + ((ld && ld.style) || '?') + ' · ' + (roofed ? (LT('INTERIOR', 'INDOOR')) : (LT('EXTERIOR', 'OUTDOOR')))
+        + (rk ? ' · ' + (LT('TELHADO ', 'ROOF ')) + ROOFS[rk - 1].kind.toUpperCase() + ' #' + ROOFS[rk - 1].tex : ''));
     }
     const w = wallInFront();
     if(w){
       const wi = w.iy * MAP_W + w.ix;
-      let t = (en ? 'WALL ' : 'PAREDE ') + wallTileMap[wi] + ' · ' + (TEX_NAMES.wall[wallTileMap[wi]] || '?');
+      let t = (LT('PAREDE ', 'WALL ')) + wallTileMap[wi] + ' · ' + (TEX_NAMES.wall[wallTileMap[wi]] || '?');
       if(doorTileMap[wi] >= 0) t += ' + ' + (TEX_NAMES.door[doorTileMap[wi]] || ('PORTA ' + doorTileMap[wi]));
-      if(windowTileMap[wi] === 2) t += ' + ' + (en ? 'FENCE' : 'GRADE'); else if(windowTileMap[wi]) t += ' + ' + (en ? 'WINDOW' : 'JANELA');
-      if(thinMap && thinMap[wi]) t += ' · ' + (en ? 'THIN WALL' : 'PAREDE FINA');
+      if(windowTileMap[wi] === 2) t += ' + ' + (LT('GRADE', 'FENCE')); else if(windowTileMap[wi]) t += ' + ' + (LT('JANELA', 'WINDOW'));
+      if(thinMap && thinMap[wi]) t += ' · ' + (LT('PAREDE FINA', 'THIN WALL'));
       lines.push(t);
     }
     const tg = targetInFront();
-    if(tg) lines.push((en ? 'TARGET: ' : 'ALVO: ') + (en ? tg.testLabel.en : tg.testLabel.pt) + '  HP ' + Math.max(0, tg.health | 0));
+    if(tg) lines.push((LT('ALVO: ', 'TARGET: ')) + (LD(tg.testLabel)) + '  HP ' + Math.max(0, tg.health | 0));
   }
   const txt = lines.join('\n');
   if(txt !== testHudKey){ testHudKey = txt; el.textContent = txt; }
@@ -10413,11 +10501,11 @@ function shopBuy(id){
   const en = currentLang === 'en';
   const cfg = WEAPON_CONFIG[id];
   if(!cfg) return;
-  if(!shopCanBuyNow()){ shopNote(en ? 'BUY TIME OVER - GO BACK TO YOUR BASE' : 'TEMPO DE COMPRA ACABOU - VOLTE À BASE', true); return; }
-  if(player.isReloading){ shopNote(en ? "CAN'T BUY WHILE RELOADING" : 'NÃO DÁ PARA COMPRAR RECARREGANDO', true); return; }
+  if(!shopCanBuyNow()){ shopNote(LT('TEMPO DE COMPRA ACABOU - VOLTE À BASE', 'BUY TIME OVER - GO BACK TO YOUR BASE'), true); return; }
+  if(player.isReloading){ shopNote(LT('NÃO DÁ PARA COMPRAR RECARREGANDO', "CAN'T BUY WHILE RELOADING"), true); return; }
   if(player.unlockedWeapons[id]){ shopBuyAmmo(id); return; }
   const price = shopPrice(id);
-  if(shop.money < price){ shopNote(en ? 'NOT ENOUGH MONEY' : 'DINHEIRO INSUFICIENTE', true); SFX.noAmmo(); return; }
+  if(shop.money < price){ shopNote(LT('DINHEIRO INSUFICIENTE', 'NOT ENOUGH MONEY'), true); SFX.noAmmo(); return; }
   // arma secundária (pistola / SMG): substitui a secundária que você já tem, sem ocupar o 2º slot
   // arma primária (shotgun / rifle / sniper / pesada): também substitui a primária que você já tem
   {
@@ -10438,7 +10526,7 @@ function shopBuy(id){
   initWeaponUI();
   switchWeapon(id);
   SFX.pickupWeapon();
-  shopNote((en ? 'BOUGHT: ' : 'COMPRADA: ') + cfg.name + ' (-$' + price + ')');
+  shopNote((LT('COMPRADA: ', 'BOUGHT: ')) + cfg.name + ' (-$' + price + ')');
   updateHUD(); shopRefresh(); shopUpdateBtn();
 }
 function shopBuyAmmo(id){
@@ -10446,13 +10534,13 @@ function shopBuyAmmo(id){
   const cfg = WEAPON_CONFIG[id];
   if(!cfg) return;
   const full = cfg.canReload ? (player.reserveMags[id] >= cfg.maxMags) : (player.ammo[id] >= cfg.maxAmmo);
-  if(full){ shopNote(en ? 'AMMO ALREADY FULL' : 'MUNIÇÃO JÁ CHEIA', true); return; }
-  if(shop.money < SHOP_AMMO_PRICE){ shopNote(en ? 'NOT ENOUGH MONEY' : 'DINHEIRO INSUFICIENTE', true); SFX.noAmmo(); return; }
+  if(full){ shopNote(LT('MUNIÇÃO JÁ CHEIA', 'AMMO ALREADY FULL'), true); return; }
+  if(shop.money < SHOP_AMMO_PRICE){ shopNote(LT('DINHEIRO INSUFICIENTE', 'NOT ENOUGH MONEY'), true); SFX.noAmmo(); return; }
   if(!debugOptions.infMoney) shop.money -= SHOP_AMMO_PRICE;
   if(cfg.canReload) player.reserveMags[id] = Math.min(cfg.maxMags, player.reserveMags[id] + 2);
   else player.ammo[id] = Math.min(cfg.maxAmmo, player.ammo[id] + 40);
   SFX.pickupAmmo();
-  shopNote((en ? 'AMMO: ' : 'MUNIÇÃO: ') + cfg.name + ' (-$' + SHOP_AMMO_PRICE + ')');
+  shopNote((LT('MUNIÇÃO: ', 'AMMO: ')) + cfg.name + ' (-$' + SHOP_AMMO_PRICE + ')');
   updateHUD(); shopRefresh(); shopUpdateBtn();
 }
 
@@ -10465,7 +10553,7 @@ function shopBuild(){
   SHOP_CATS.forEach(cat => {
     const grp = document.createElement('div'); grp.className = 'shop-group';
     const h = document.createElement('div');
-    h.className = 'shop-cat'; h.textContent = en ? cat.en : cat.pt;
+    h.className = 'shop-cat'; h.textContent = LD(cat);
     grp.appendChild(h);
     const row = document.createElement('div'); row.className = 'shop-row';
     cat.items.forEach(([id, price]) => {
@@ -10487,7 +10575,7 @@ function shopRefresh(){
   if(t){
     const left = Math.max(0, Math.ceil((SHOP_BUY_TIME_MS - (performance.now() - shop.spawnAt)) / 1000));
     const ok = shopCanBuyNow();
-    t.textContent = ok ? (shopInZone() ? (en ? 'IN BASE: BUY ANYTIME' : 'NA BASE: COMPRE QUANDO QUISER') : (en ? 'BUY TIME: ' : 'TEMPO DE COMPRA: ') + left + 's') : (en ? 'BUY TIME OVER - RETURN TO BASE' : 'TEMPO ACABOU - VOLTE À BASE');
+    t.textContent = ok ? (shopInZone() ? (LT('NA BASE: COMPRE QUANDO QUISER', 'IN BASE: BUY ANYTIME')) : (LT('TEMPO DE COMPRA: ', 'BUY TIME: ')) + left + 's') : (LT('TEMPO ACABOU - VOLTE À BASE', 'BUY TIME OVER - RETURN TO BASE'));
     t.classList.toggle('off', !ok);
   }
   const ok = shopCanBuyNow();
@@ -10497,7 +10585,7 @@ function shopRefresh(){
     b.classList.toggle('poor', !owned && shop.money < price);
     b.classList.toggle('locked', !ok);
     b.classList.toggle('gp-focus', i === shop.sel && usingGamepad && !usingKeyboardMouse);
-    b.querySelector('.shop-price').textContent = owned ? (en ? 'AMMO $' : 'MUNIÇÃO $') + SHOP_AMMO_PRICE : (price ? '$' + price : (en ? 'FREE' : 'GRÁTIS'));
+    b.querySelector('.shop-price').textContent = owned ? (LT('MUNIÇÃO $', 'AMMO $')) + SHOP_AMMO_PRICE : (price ? '$' + price : (LT('GRÁTIS', 'FREE')));
   });
 }
 function shopMode(){ return usingTouch ? 'touch' : ((usingGamepad && !usingKeyboardMouse) ? 'gp' : 'kb'); }
@@ -10516,10 +10604,10 @@ function shopUpdateBtn(){
   b.classList.toggle('icon', mode === 'touch');
   if(!show) return;
   if(mode === 'touch'){
-    if(b.dataset.ico !== '1'){ b.innerHTML = ''; b.dataset.ico = '1'; b.setAttribute('aria-label', currentLang === 'en' ? 'Shop' : 'Loja'); }
+    if(b.dataset.ico !== '1'){ b.innerHTML = ''; b.dataset.ico = '1'; b.setAttribute('aria-label', LT('Loja', 'Shop')); }
   } else {
     b.dataset.ico = '';
-    b.textContent = (currentLang === 'en' ? 'SHOP [B]  $' : 'LOJA [B]  $') + shop.money;
+    b.textContent = (LT('LOJA [B]  $', 'SHOP [B]  $')) + shop.money;
   }
 }
 function shopOpenMenu(){
@@ -10531,7 +10619,7 @@ function shopOpenMenu(){
   if(document.pointerLockElement) document.exitPointerLock();
   document.getElementById('shopModal').style.display = 'flex';
   const hint = document.getElementById('shopHint');
-  if(hint) hint.textContent = currentLang === 'en' ? 'A new weapon replaces the one of the same type · Owned weapon = buy ammo' : 'Arma nova substitui a do mesmo tipo · Arma que já tem = comprar munição';
+  if(hint) hint.textContent = LT('Arma nova substitui a do mesmo tipo · Arma que já tem = comprar munição', 'A new weapon replaces the one of the same type · Owned weapon = buy ammo');
   shop.sel = Math.max(0, shop.btns.findIndex(b => b.dataset.w === player.weapon));
   shopRefresh();
 }
@@ -10691,7 +10779,7 @@ function matchClockUpdate(){
     txt = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
     hot = sec <= 10 && !countdownActive;
   } else if(dmEnd.mode === 'score' && currentGameMode !== 'hostage'){
-    txt = (currentLang === 'en' ? 'TARGET ' : 'META ') + dmEnd.target;
+    txt = (LT('META ', 'TARGET ')) + dmEnd.target;
   }
   if(!txt){ if(el.style.display !== 'none') el.style.display = 'none'; return; }
   if(el.textContent !== txt) el.textContent = txt;
@@ -10729,14 +10817,14 @@ function dmEndMatch(winner, reason){
   document.getElementById('countdownOverlay').style.display = 'none';
   const ov = document.getElementById('gameOverOverlay');
   ov.style.display = 'flex';
-  ov.querySelector('h1').textContent = draw ? (en ? 'DRAW' : 'EMPATE') : (won ? (en ? 'VICTORY!' : 'VITÓRIA!') : (en ? 'DEFEAT' : 'DERROTA'));
+  ov.querySelector('h1').textContent = draw ? (LT('EMPATE', 'DRAW')) : (won ? (LT('VITÓRIA!', 'VICTORY!')) : (LT('DERROTA', 'DEFEAT')));
   document.getElementById('ctfHud').style.display = 'none';
   document.getElementById('hrHud').style.display = 'none';
   const mc = document.getElementById('matchClock'); if(mc) mc.style.display = 'none';
   const hrLim = dmEnd.mode === 'score' ? '/' + dmEnd.target : '';
   document.getElementById('finalScore').textContent =
-    (reason === 'time' ? (en ? 'TIME UP  |  ' : 'TEMPO ESGOTADO  |  ') : '') +
-    (currentGameMode === 'hostage' ? (en ? 'RESCUED ' : 'RESGATADOS ') + dmScoreCT + '/' + HR_COUNT + (en ? '  CT LOSSES ' : '  BAIXAS CT ') + dmScoreT + hrLim + '  |  ' : (currentGameMode === 'ctf' ? (en ? 'CAPTURES  ' : 'CAPTURAS  ') : '') + 'CT ' + dmScoreCT + ' x ' + dmScoreT + ' T  |  ') + (en ? 'KILLS: ' : 'ABATES: ') + dmPlayerKills + '  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths;
+    (reason === 'time' ? (LT('TEMPO ESGOTADO  |  ', 'TIME UP  |  ')) : '') +
+    (currentGameMode === 'hostage' ? (LT('RESGATADOS ', 'RESCUED ')) + dmScoreCT + '/' + HR_COUNT + (LT('  BAIXAS CT ', '  CT LOSSES ')) + dmScoreT + hrLim + '  |  ' : (currentGameMode === 'ctf' ? (LT('CAPTURAS  ', 'CAPTURES  ')) : '') + 'CT ' + dmScoreCT + ' x ' + dmScoreT + ' T  |  ') + (LT('ABATES: ', 'KILLS: ')) + dmPlayerKills + '  ' + (LT('MORTES: ', 'DEATHS: ')) + dmDeaths;
   if(document.pointerLockElement) document.exitPointerLock();
 }
 
@@ -10765,6 +10853,29 @@ function dmOnKill(victim, killerTeam, byPlayer, killer){
   dmCheckWin();
 }
 
+let deathFxEl = null, deathFxTimer = 0, deathBlurOn = true;   // deathBlurOn: opção do menu (Gráficos > Efeitos); o preset Economia desliga
+function deathFxHide(){ if(deathFxTimer){ clearInterval(deathFxTimer); deathFxTimer = 0; } if(deathFxEl) deathFxEl.classList.remove('on'); }
+function deathFxShow(ms){   // tela de morte dos modos com respawn (não é o game over)
+  const en = currentLang === 'en', host = document.getElementById('killFeed');
+  if(!host || !host.parentNode) return;
+  if(!deathFxEl){
+    deathFxEl = document.createElement('div'); deathFxEl.id = 'deathFx';
+    deathFxEl.innerHTML = '<div class="df-title"></div><div class="df-sub"></div>';
+    host.parentNode.appendChild(deathFxEl);
+  }
+  const ti = deathFxEl.querySelector('.df-title'), su = deathFxEl.querySelector('.df-sub');
+  deathFxEl.classList.toggle('noblur', !deathBlurOn);
+  ti.textContent = LT('VOCÊ MORREU', 'YOU DIED');
+  deathFxEl.classList.remove('on'); void deathFxEl.offsetWidth; deathFxEl.classList.add('on');
+  const t0 = performance.now(), t1 = t0 + ms, spectate = !isFinite(ms);
+  const tick = () => {
+    if(!dmPlayerDead || gameOver || !started){ deathFxHide(); return; }
+    const rem = Math.max(0, t1 - performance.now());
+    su.textContent = spectate ? (LT('ASSISTA ATÉ O FIM', 'WATCH UNTIL THE END')) : (LT('RENASCENDO EM ', 'RESPAWNING IN ')) + Math.max(1, Math.ceil(rem / 1000)) + 's';
+  };
+  deathFxHide(); deathFxEl.classList.add('on');
+  tick(); deathFxTimer = setInterval(tick, 100);
+}
 function dmKillPlayer(){
   player.health = 0;
   updateHUD();
@@ -10780,7 +10891,8 @@ function dmKillPlayer(){
   SFX.hurt();
   gpRumble(1.0, 1.0, 450);
   document.getElementById('damageFlash').style.opacity = '0.55';
-  flashMsg(currentLang === 'en' ? 'YOU WERE KILLED' : 'VOCÊ FOI ELIMINADO');
+  flashMsg(LT('VOCÊ FOI ELIMINADO', 'YOU WERE KILLED'));
+  deathFxShow(DM_PLAYER_RESPAWN_MS);
   if(currentGameMode !== 'ctf'){ updateHUDModeLabel(); dmCheckWin(); }
 }
 
@@ -11037,7 +11149,7 @@ const SOC_HALF_SECONDS = SOC_MATCH_SECONDS / 2;
 const SOC_SEC_PER_MIN = SOC_MATCH_SECONDS / 90;   // segundos reais por minuto de jogo
 const SOC_HALFTIME_PAUSE = 5;       // intervalo entre os tempos (s)
 function socRollAdd(){ return Math.random() < 0.15 ? 0 : 1 + Math.floor(Math.random() * 5); }   // acréscimos aleatórios: 0 a 5 min
-function socAddMsg(m){ return (currentLang === 'en' ? 'STOPPAGE TIME: +' : 'ACRÉSCIMOS: +') + m + (currentLang === 'en' ? ' MIN' : ' MIN'); }
+function socAddMsg(m){ return (LT('ACRÉSCIMOS: +', 'STOPPAGE TIME: +')) + m + (LT(' MIN', ' MIN')); }
 const SOC_GOAL_PAUSE = 3.4;
 const SOC_KICKOFF_PAUSE = 1.3;
 const SOC_BOT_RESPAWN_MS = 4000;
@@ -11606,7 +11718,7 @@ function socUpdate(dt, now){
   if(soc.phase === 'pre'){   // aguarda a contagem inicial
     if(countdownActive){ socUpdateHud(); return; }
     soc.phase = 'play'; SFX.socWhistle('start');
-    flashMsg(currentLang === 'en' ? 'KICK OFF!' : 'COMEÇA O JOGO!');
+    flashMsg(LT('COMEÇA O JOGO!', 'KICK OFF!'));
   }
   if(dt > 0){ soc.pvx = (player.x - soc.ppx) / dt; soc.pvy = (player.y - soc.ppy) / dt; }
   soc.ppx = player.x; soc.ppy = player.y;
@@ -11636,13 +11748,13 @@ function socUpdate(dt, now){
     if(soc.clock >= endAt){
       if(soc.half === 1){   // intervalo: 2º tempo recomeça aos 45'
         soc.half = 2; soc.clock = SOC_HALF_SECONDS; soc.add = socRollAdd(); soc.addShown = false;
-        SFX.socWhistle('end'); flashMsg(currentLang === 'en' ? 'HALF TIME' : 'INTERVALO');
+        SFX.socWhistle('end'); flashMsg(LT('INTERVALO', 'HALF TIME'));
         socResetPositions(); soc.phase = 'kick'; soc.phaseT = SOC_HALFTIME_PAUSE; countdownActive = true; fireHeld = false;
         socUpdateHud(true); return;
       }
       if(dmScoreCT !== dmScoreT){ socFinish(); return; }
       soc.golden = true; SFX.socWhistle('end');
-      flashMsg(currentLang === 'en' ? 'GOLDEN GOAL!' : 'GOL DE OURO!');
+      flashMsg(LT('GOL DE OURO!', 'GOLDEN GOAL!'));
     }
   }
   if(!debugOptions.pauseEnemies){
@@ -11715,10 +11827,10 @@ function socFinish(){
   const h = socClubOf(soc.home), a = socClubOf(soc.away);
   const ov = document.getElementById('gameOverOverlay');
   ov.style.display = 'flex';
-  ov.querySelector('h1').textContent = won ? (en ? 'VICTORY!' : 'VITÓRIA!') : (en ? 'DEFEAT' : 'DERROTA');
+  ov.querySelector('h1').textContent = won ? (LT('VITÓRIA!', 'VICTORY!')) : (LT('DERROTA', 'DEFEAT'));
   document.getElementById('finalScore').textContent =
-    h.n + ' ' + dmScoreCT + ' x ' + dmScoreT + ' ' + a.n + '  |  ' + (en ? 'YOUR GOALS: ' : 'SEUS GOLS: ') + soc.playerGoals +
-    '  ' + (en ? 'KILLS: ' : 'ABATES: ') + dmPlayerKills + '  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths;
+    h.n + ' ' + dmScoreCT + ' x ' + dmScoreT + ' ' + a.n + '  |  ' + (LT('SEUS GOLS: ', 'YOUR GOALS: ')) + soc.playerGoals +
+    '  ' + (LT('ABATES: ', 'KILLS: ')) + dmPlayerKills + '  ' + (LT('MORTES: ', 'DEATHS: ')) + dmDeaths;
   if(document.pointerLockElement) document.exitPointerLock();
 }
 
@@ -11729,10 +11841,10 @@ function netApplySoc(d){
   b.sx = 1; b.tx = sb[0]; b.ty = sb[1]; b.tz = sb[2]; b.vx = sb[3]; b.vy = sb[4]; b.vz = sb[5];
   soc.clock = d.sk || 0;
   { const h = d.sh || 1, a = d.sa || 0;
-    if(h !== (soc.half || 1)){ soc.half = h; soc.add = a; soc.addShown = false; SFX.socWhistle('end'); flashMsg(en ? 'HALF TIME' : 'INTERVALO'); }
+    if(h !== (soc.half || 1)){ soc.half = h; soc.add = a; soc.addShown = false; SFX.socWhistle('end'); flashMsg(LT('INTERVALO', 'HALF TIME')); }
     soc.add = a;
     if(!soc.addShown && soc.clock >= (h === 1 ? SOC_HALF_SECONDS : SOC_MATCH_SECONDS)){ soc.addShown = true; if(a > 0) flashMsg(socAddMsg(a)); } }
-  if(d.sg && !soc.golden){ soc.golden = true; SFX.socWhistle('end'); flashMsg(en ? 'GOLDEN GOAL!' : 'GOL DE OURO!'); }
+  if(d.sg && !soc.golden){ soc.golden = true; SFX.socWhistle('end'); flashMsg(LT('GOL DE OURO!', 'GOLDEN GOAL!')); }
   const ph = d.sp;
   if(ph && ph !== soc.phase){
     const prev = soc.phase; soc.phase = ph;
@@ -11741,7 +11853,7 @@ function netApplySoc(d){
       if(countdownInterval) clearInterval(countdownInterval);
       document.getElementById('countdownOverlay').style.display = 'none';
       SFX.socWhistle('start');
-      if(prev === 'pre') flashMsg(en ? 'KICK OFF!' : 'COMEÇA O JOGO!');
+      if(prev === 'pre') flashMsg(LT('COMEÇA O JOGO!', 'KICK OFF!'));
     } else if(ph === 'goal' || ph === 'kick'){
       countdownActive = true;
       if(ph === 'kick') socHideGoal();
@@ -11779,7 +11891,7 @@ function socClientTick(dt, now){
 
 // ---------- HUD ----------
 function socMinuteLabel(){
-  if(soc.golden) return currentLang === 'en' ? '90+ GOLDEN GOAL' : '90+ GOL DE OURO';
+  if(soc.golden) return LT('90+ GOL DE OURO', '90+ GOLDEN GOAL');
   const c = soc.clock, half = soc.half || 1;
   if(half === 1 && c >= SOC_HALF_SECONDS) return "45+" + (Math.floor((c - SOC_HALF_SECONDS) / SOC_SEC_PER_MIN) + 1) + "'";   // acréscimos do 1º tempo
   if(half === 2 && c >= SOC_MATCH_SECONDS) return "90+" + (Math.floor((c - SOC_MATCH_SECONDS) / SOC_SEC_PER_MIN) + 1) + "'";   // acréscimos do 2º tempo
@@ -11802,10 +11914,11 @@ function socShowGoal(side, own){
   if(!el) return;
   const en = currentLang === 'en', c = socClubOf(side === 'CT' ? soc.home : soc.away);
   const h = socClubOf(soc.home), a = socClubOf(soc.away);
-  el.innerHTML = '<img src="' + c.shield + '" alt=""><div class="g-txt">' + (own ? (en ? 'OWN GOAL!' : 'GOL CONTRA!') : (en ? 'GOOOAL!' : 'GOOOOL!')) +
+  el.innerHTML = '<img src="' + c.shield + '" alt=""><div class="g-txt">' + (own ? (LT('GOL CONTRA!', 'OWN GOAL!')) : (LT('GOOOOL!', 'GOOOAL!'))) +
     '</div><div class="g-sub">' + h.n + ' ' + dmScoreCT + ' x ' + dmScoreT + ' ' + a.n + '</div>';
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-  flashMsg((own ? (en ? 'OWN GOAL — ' : 'GOL CONTRA — ') : (en ? 'GOAL — ' : 'GOL — ')) + c.n);
+  flashMsg((own ? (LT('GOL CONTRA — ', 'OWN GOAL — ')) : (LT('GOL — ', 'GOAL — '))) + c.n);
+  kfShow({ x: '⚽ ' + (own ? (LT('GOL CONTRA', 'OWN GOAL')) : (LT('GOL', 'GOAL'))) + ' — ' + c.n, xt: side === 'T' ? 'T' : 'CT' }, 0);
 }
 function socHideGoal(){ const el = document.getElementById('socGoal'); if(el) el.classList.remove('on'); }
 function socHideUi(){
@@ -11844,10 +11957,10 @@ function buildSocGrids(){
     });
     grid.appendChild(b);
   };
-  const rndTxt = currentLang === 'en' ? 'RANDOM' : 'ALEATÓRIO';
+  const rndTxt = LT('ALEATÓRIO', 'RANDOM');
   chip(hg, 'home', 'random', '<span class="chip-dice">🎲</span><span>' + rndTxt + '</span>');
   SOC_CLUBS.forEach(c => chip(hg, 'home', c.k, '<img src="' + c.shield + '" alt=""><span>' + c.n + '</span>'));
-  chip(ag, 'away', 'random', '<span class="chip-dice">🎲</span><span>' + (currentLang === 'en' ? 'RANDOM' : 'ALEATÓRIO') + '</span>');
+  chip(ag, 'away', 'random', '<span class="chip-dice">🎲</span><span>' + (LT('ALEATÓRIO', 'RANDOM')) + '</span>');
   SOC_CLUBS.forEach(c => chip(ag, 'away', c.k, '<img src="' + c.shield + '" alt=""><span>' + c.n + '</span>'));
   refreshSocGrids();
 }
@@ -12101,7 +12214,7 @@ const CTF_PICK_R = 0.8;          // raio de toque para pegar/devolver/capturar
 const CTF_RETURN_MS = 15000;     // bandeira caída volta sozinha para a base
 
 function ctfOpp(team){ return team === 'T' ? 'CT' : 'T'; }
-function ctfMsg(pt, en){ flashMsg(currentLang === 'en' ? en : pt); }
+function ctfMsg(pt, en){ flashMsg(LT(pt, en)); }
 
 function ctfInit(){
   ctf = { flags: {} };
@@ -12226,14 +12339,14 @@ function ctfBotGoal(b){
 
 function ctfFlagStatus(f){
   const pt = currentLang !== 'en';
-  if(f.state === 'home') return pt ? 'NA BASE' : 'AT BASE';
+  if(f.state === 'home') return LT('NA BASE', 'AT BASE');
   if(f.state === 'dropped'){
     const left = Math.max(0, Math.ceil((CTF_RETURN_MS - (performance.now() - f.droppedAt)) / 1000));
-    return (pt ? 'CAÍDA ' : 'DROPPED ') + left + 's';
+    return (LT('CAÍDA ', 'DROPPED ')) + left + 's';
   }
   const c = f.carrier;
-  if(c === player) return pt ? 'COM VOCÊ' : 'YOU HAVE IT';
-  return (c && c.team === dmPlayerTeam) ? (pt ? 'COM ALIADO' : 'ALLY HAS IT') : (pt ? 'ROUBADA' : 'STOLEN');
+  if(c === player) return LT('COM VOCÊ', 'YOU HAVE IT');
+  return (c && c.team === dmPlayerTeam) ? (LT('COM ALIADO', 'ALLY HAS IT')) : (LT('ROUBADA', 'STOLEN'));
 }
 
 function ctfUpdateHud(){
@@ -12247,12 +12360,12 @@ function ctfUpdateHud(){
     const cls = mine ? (f.state !== 'home' ? 'alert' : '')            // sua bandeira fora da base = alerta
                      : (f.state === 'carried' ? 'good' : '');          // bandeira inimiga em posse do seu time = bom
     document.getElementById('ctfRow' + t).className = 'ctf-row ' + t + ' ' + cls;
-    document.getElementById('ctfTxt' + t).textContent = (mine ? (pt ? 'SUA BANDEIRA' : 'YOUR FLAG') : (pt ? 'BANDEIRA INIMIGA' : 'ENEMY FLAG')) + ' · ' + ctfFlagStatus(f);
+    document.getElementById('ctfTxt' + t).textContent = (mine ? (LT('SUA BANDEIRA', 'YOUR FLAG')) : (LT('BANDEIRA INIMIGA', 'ENEMY FLAG'))) + ' · ' + ctfFlagStatus(f);
     document.getElementById('ctfSub' + t).textContent = t + ' · ' + Math.round(Math.hypot(f.x - player.x, f.y - player.y)) + 'm';
   });
   const carry = document.getElementById('ctfCarry');
   carry.style.display = player.hasFlag ? 'block' : 'none';
-  carry.innerHTML = '<img class="hud-inline-icon" src="' + MODE_ICONS.ctf + '" alt="">' + (pt ? 'VOCÊ ESTÁ COM A BANDEIRA — VOLTE À BASE' : 'YOU HAVE THE FLAG — RETURN TO BASE');
+  carry.innerHTML = '<img class="hud-inline-icon" src="' + MODE_ICONS.ctf + '" alt="">' + (LT('VOCÊ ESTÁ COM A BANDEIRA — VOLTE À BASE', 'YOU HAVE THE FLAG — RETURN TO BASE'));
 }
 
 // ============ MODO HOSTAGE RESCUE ============
@@ -12430,13 +12543,13 @@ function hrUpdateHud(){
   });
   const iAmCT = dmPlayerTeam === 'CT';
   document.getElementById('hrRow').className = 'ctf-row ' + dmPlayerTeam + ' ' + (following ? (iAmCT ? 'good' : 'alert') : '');
-  document.getElementById('hrTxt').textContent = (pt ? 'REFÉNS · RESGATADOS ' : 'HOSTAGES · RESCUED ') + rescued + '/' + HR_COUNT;
-  document.getElementById('hrSub').textContent = (pt ? 'ESCOLTADOS ' : 'ESCORTED ') + following + (pt ? ' · PARADOS ' : ' · WAITING ') + idle +
+  document.getElementById('hrTxt').textContent = (LT('REFÉNS · RESGATADOS ', 'HOSTAGES · RESCUED ')) + rescued + '/' + HR_COUNT;
+  document.getElementById('hrSub').textContent = (LT('ESCOLTADOS ', 'ESCORTED ')) + following + (LT(' · PARADOS ', ' · WAITING ')) + idle +
     (idle && isFinite(nearest) ? ' · ' + Math.round(nearest) + 'm' : '');
   const mine = hr.hostages.filter(h => h.state === 'following' && h.leader === player).length;
   const carry = document.getElementById('hrCarry');
   carry.style.display = mine ? 'block' : 'none';
-  carry.innerHTML = '<img class="hud-inline-icon" src="' + MODE_ICONS.hostage + '" alt="">' + (pt ? 'VOCÊ ESCOLTA ' + mine + ' REFÉM — LEVE À BASE CT' : 'YOU ESCORT ' + mine + ' HOSTAGE — TAKE TO CT BASE');
+  carry.innerHTML = '<img class="hud-inline-icon" src="' + MODE_ICONS.hostage + '" alt="">' + LT('VOCÊ ESCOLTA {n} REFÉM — LEVE À BASE CT', 'YOU ESCORT {n} HOSTAGE — TAKE TO CT BASE').replace('{n}', mine);
 }
 
 function spawnPickupsLogic(now) {
@@ -12820,7 +12933,7 @@ function fnafUpdateFoxy(a, dt, dist){
         const lost = 2 + f.hour * 1.6;
         f.power = Math.max(0, f.power - lost);
         SFX.hit(); setTimeout(SFX.hit, 180); setTimeout(SFX.hit, 360);
-        fnafAlert(currentLang === 'en' ? 'FOXY POUNDED THE DOOR! -' + Math.round(lost) + '% POWER' : 'FOXY BATEU NA PORTA! -' + Math.round(lost) + '% ENERGIA');
+        fnafAlert(LT('FOXY BATEU NA PORTA! -{n}% ENERGIA', 'FOXY POUNDED THE DOOR! -{n}% POWER').replace('{n}', Math.round(lost)));
         a.state = 'hide'; a.hideT = 2.5;
       } else fnafStartAttack(a);
     }
@@ -12900,7 +13013,7 @@ function fnafHurtPlayer(a, tgt){
       ov.style.display = 'flex';
       ov.querySelector('h1').textContent = I18N[currentLang].youDied;
       document.getElementById('finalScore').textContent =
-        (en ? 'SURVIVED UNTIL ' : 'SOBREVIVEU ATÉ ') + hourTxt + '  |  ' + (en ? 'SCORE: ' : 'PONTUAÇÃO: ') + score;
+        (LT('SOBREVIVEU ATÉ ', 'SURVIVED UNTIL ')) + hourTxt + '  |  ' + (LT('PONTUAÇÃO: ', 'SCORE: ')) + score;
     }, 1300);
   }
 }
@@ -12917,7 +13030,7 @@ function fnafAnimatronicHit(en, dmg, peer){
     a.downT = 22 + Math.random() * 6;
     a.path = null;
     if(peer) netSendTo(peer, { t: 'kill', pts: 100 }); else score += 100;
-    flashMsg(currentLang === 'en' ? 'ANIMATRONIC DISABLED (+100)' : 'ANIMATRÔNICO DESATIVADO (+100)');
+    flashMsg(LT('ANIMATRÔNICO DESATIVADO (+100)', 'ANIMATRONIC DISABLED (+100)'));
     updateHUD();
   } else if(a.state === 'route' || a.state === 'door' || a.state === 'cove'){
     fnafStartAttack(a);                               // levar tiro deixa ele furioso
@@ -12933,7 +13046,7 @@ function fnafToggleDoor(side){
   if(want){
     const cx = d.x + 0.5, cy = d.y + 0.5;
     if(fnafHumans().some(h => Math.hypot(h.x - cx, h.y - cy) < 0.95) || fnaf.anims.some(a => a.en.alive && Math.hypot(a.en.x - cx, a.en.y - cy) < 0.95)){
-      flashMsg(currentLang === 'en' ? 'DOOR BLOCKED!' : 'PORTA BLOQUEADA!');
+      flashMsg(LT('PORTA BLOQUEADA!', 'DOOR BLOCKED!'));
       SFX.fnafDeny();
       return;
     }
@@ -12959,12 +13072,12 @@ function fnafOpenSecret(){
   wallTileMap[d.y * MAP_W + d.x] = d.wall0;
   doorTileMap[d.y * MAP_W + d.x] = -1;
   SFX.fnafDoor();
-  flashMsg(currentLang === 'en' ? 'SECRET PASSAGE FOUND!' : 'PASSAGEM SECRETA ENCONTRADA!');
+  flashMsg(LT('PASSAGEM SECRETA ENCONTRADA!', 'SECRET PASSAGE FOUND!'));
 }
 function fnafUseButton(b){
   if(b.kind === 'secret'){ fnafOpenSecret(); return; }   // mecânica: funciona mesmo sem energia
   if(fnaf.powerOut){
-    flashMsg(currentLang === 'en' ? 'NO POWER!' : 'SEM ENERGIA!');
+    flashMsg(LT('SEM ENERGIA!', 'NO POWER!'));
     SFX.fnafDeny();
     return;
   }
@@ -12988,15 +13101,14 @@ function fnafFindUse(){
   return best;
 }
 function fnafUseLabel(b){
-  const en = currentLang === 'en';
-  if(b.kind === 'secret') return en ? 'PUSH THE FAKE WALL' : 'EMPURRAR A PAREDE FALSA';
-  const side = b.side === 'W' ? (en ? 'WEST' : 'OESTE') : (en ? 'EAST' : 'LESTE');
+  if(b.kind === 'secret') return LT('EMPURRAR A PAREDE FALSA', 'PUSH THE FAKE WALL');
+  const side = b.side === 'W' ? LT('OESTE', 'WEST') : LT('LESTE', 'EAST');
   if(b.kind === 'door'){
     const closed = fnaf.doors[b.side].closed;
-    return (closed ? (en ? 'OPEN' : 'ABRIR') : (en ? 'CLOSE' : 'FECHAR')) + (en ? ' ' + side + ' DOOR' : ' PORTA ' + side);
+    return (closed ? LT('ABRIR PORTA {s}', 'OPEN {s} DOOR') : LT('FECHAR PORTA {s}', 'CLOSE {s} DOOR')).replace('{s}', side);
   }
   const on = fnaf.lights[b.side];
-  return (on ? (en ? 'TURN OFF ' : 'APAGAR LUZ ') : (en ? 'TURN ON ' : 'ACENDER LUZ ')) + (en ? side + ' HALL LIGHT' : 'DO CORREDOR ' + side);
+  return (on ? LT('APAGAR LUZ DO CORREDOR {s}', 'TURN OFF {s} HALL LIGHT') : LT('ACENDER LUZ DO CORREDOR {s}', 'TURN ON {s} HALL LIGHT')).replace('{s}', side);
 }
 
 // Aviso + botão touch que aparecem ao chegar perto de um botão com função.
@@ -13043,16 +13155,16 @@ function fnafUpdateHud(force){
   let usage = '';
   for(let i = 0; i < 4; i++) usage += '<i class="' + (i < bars ? 'on' : '') + '"></i>';
   const st = s => {
-    const side = s === 'W' ? (en ? 'WEST' : 'OESTE') : (en ? 'EAST' : 'LESTE');
-    const door = f.doors[s].closed ? (en ? 'DOOR CLOSED' : 'PORTA FECHADA') : (en ? 'DOOR OPEN' : 'PORTA ABERTA');
-    const light = f.lights[s] ? (en ? 'LIGHT ON' : 'LUZ ON') : (en ? 'LIGHT OFF' : 'LUZ OFF');
+    const side = s === 'W' ? (LT('OESTE', 'WEST')) : (LT('LESTE', 'EAST'));
+    const door = f.doors[s].closed ? (LT('PORTA FECHADA', 'DOOR CLOSED')) : (LT('PORTA ABERTA', 'DOOR OPEN'));
+    const light = f.lights[s] ? (LT('LUZ ON', 'LIGHT ON')) : (LT('LUZ OFF', 'LIGHT OFF'));
     return '<div class="ctf-row ' + (f.doors[s].closed ? 'good' : '') + '"><div class="ctf-txt"><span>' + side + '</span><small>' + door + ' · ' + light + '</small></div></div>';
   };
-  const alert = f.powerOut ? (en ? 'NO POWER!' : 'SEM ENERGIA!') : (f.alertT > 0 ? f.alert : '');
+  const alert = f.powerOut ? (LT('SEM ENERGIA!', 'NO POWER!')) : (f.alertT > 0 ? f.alert : '');
   const html =
     '<div class="ctf-row ' + (pw < 25 ? 'alert' : '') + '"><div class="ctf-txt"><span>' + FNAF_HOURS[Math.min(5, f.hour)] + '</span>' +
-    '<small>' + (en ? 'POWER ' : 'ENERGIA ') + pw + '%</small>' +
-    '<div class="fh-bar"><i style="width:' + pw + '%"></i></div><div class="fh-use">' + (en ? 'USAGE ' : 'USO ') + usage + '</div></div></div>' +
+    '<small>' + (LT('ENERGIA ', 'POWER ')) + pw + '%</small>' +
+    '<div class="fh-bar"><i style="width:' + pw + '%"></i></div><div class="fh-use">' + (LT('USO ', 'USAGE ')) + usage + '</div></div></div>' +
     st('W') + st('E') +
     (alert ? '<div class="ctf-row alert"><div class="ctf-txt"><span>' + alert + '</span></div></div>' : '');
   if(force || f.hudKey !== html){ f.hudKey = html; hud.innerHTML = html; }
@@ -13077,9 +13189,9 @@ function fnafWin(){
   fnafHideUse();
   const ov = document.getElementById('gameOverOverlay');
   ov.style.display = 'flex';
-  ov.querySelector('h1').textContent = en ? '6 AM — YOU SURVIVED!' : '6 AM — VOCÊ SOBREVIVEU!';
+  ov.querySelector('h1').textContent = LT('6 AM — VOCÊ SOBREVIVEU!', '6 AM — YOU SURVIVED!');
   document.getElementById('finalScore').textContent =
-    (en ? 'POWER LEFT: ' : 'ENERGIA RESTANTE: ') + Math.ceil(f.power) + '%  |  ' + (en ? 'SCORE: ' : 'PONTUAÇÃO: ') + score;
+    (LT('ENERGIA RESTANTE: ', 'POWER LEFT: ')) + Math.ceil(f.power) + '%  |  ' + (LT('PONTUAÇÃO: ', 'SCORE: ')) + score;
   if(document.pointerLockElement) document.exitPointerLock();
 }
 
@@ -13112,7 +13224,7 @@ function updateFnaf(dt, now){
         f.lights[s] = false;
       });
       fnafApplyLights();
-      fnafAlert(currentLang === 'en' ? 'POWER OUT!' : 'A ENERGIA ACABOU!');
+      fnafAlert(LT('A ENERGIA ACABOU!', 'POWER OUT!'));
       SFX.fnafStopAmbient();
       SFX.fnafPowerDown();
     }
@@ -14086,10 +14198,10 @@ document.getElementById('unlockDebugBtn').addEventListener('click', () => {
     SFX.menuAccept();
     document.getElementById('debugSection').style.display = 'block';
     document.getElementById('debugLockContainer').style.display = 'none';
-    uiToast(currentLang === 'en' ? 'DEBUG MENU UNLOCKED' : 'MENU DEBUG DESBLOQUEADO', 'ok');
+    uiToast(LT('MENU DEBUG DESBLOQUEADO', 'DEBUG MENU UNLOCKED'), 'ok');
   } else {
     SFX.menuBack();
-    uiToast(currentLang === 'en' ? 'WRONG PASSWORD' : 'SENHA INCORRETA', 'err');
+    uiToast(LT('SENHA INCORRETA', 'WRONG PASSWORD'), 'err');
   }
 });
 
@@ -14244,7 +14356,7 @@ document.getElementById('playSelectedLevelBtn').addEventListener('click', ()=>{
         const k = LEVEL_DEFINITIONS.findIndex(l => l && l[own]);
         if (k >= 0) { idx = k; ld = LEVEL_DEFINITIONS[k]; }
       } else if (!own && (ld.soccerOnly || ld.fnafOnly)) {
-        uiToast(currentLang === 'en' ? 'THIS MAP ONLY WORKS WITH ITS OWN MODE' : 'ESSE MAPA SÓ FUNCIONA COM O MODO DELE', 'err');
+        uiToast(LT('ESSE MAPA SÓ FUNCIONA COM O MODO DELE', 'THIS MAP ONLY WORKS WITH ITS OWN MODE'), 'err');
         return;
       }
     }
@@ -14408,6 +14520,7 @@ document.querySelectorAll('#fpsCapSeg .seg-btn').forEach(b => b.addEventListener
 document.querySelectorAll('#shadowSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setShadowMode(b.getAttribute('data-val')); }));
 document.getElementById('optHorizon').addEventListener('change', e => { hzEnabled = e.target.checked; });
 document.getElementById('optMmEco').addEventListener('change', e => { mmEco = e.target.checked; });
+document.getElementById('optDeathBlur').addEventListener('change', e => { deathBlurOn = e.target.checked; if(deathFxEl) deathFxEl.classList.toggle('noblur', !deathBlurOn); });
 // ----- Estilo gráfico e efeito de tela -----
 function setGfxStyle(v){
   if(!GFX_STYLES[v]) v = GFX_DEFAULT;
@@ -14431,18 +14544,18 @@ document.querySelectorAll('#gfxStyleSeg .seg-btn').forEach(b => b.addEventListen
 document.querySelectorAll('#fxSeg .seg-btn').forEach(b => b.addEventListener('click', () => { SFX.menuSelect(); setFx(b.getAttribute('data-val')); }));
 document.querySelectorAll('#perfPresetSeg .seg-btn').forEach(b => b.addEventListener('click', () => {
   const P = {
-    eco: { q: '0.75', fps: 30, shadow: 'off',  hz: false, mm: true,  gfx: 'pixel',   fog: 'near',   fx: 'off' },
-    bal: { q: '1',    fps: 0,  shadow: 'soft', hz: true,  mm: false, gfx: 'classic', fog: 'normal', fx: 'off' },
-    hq:  { q: '1.5',  fps: 0,  shadow: 'soft', hz: true,  mm: false, gfx: 'smooth',  fog: 'far',    fx: 'off' }
+    eco: { q: '0.75', fps: 30, shadow: 'off',  hz: false, mm: true,  db: false, gfx: 'pixel',   fog: 'near',   fx: 'off' },
+    bal: { q: '1',    fps: 0,  shadow: 'soft', hz: true,  mm: false, db: true,  gfx: 'classic', fog: 'normal', fx: 'off' },
+    hq:  { q: '1.5',  fps: 0,  shadow: 'soft', hz: true,  mm: false, db: true,  gfx: 'smooth',  fog: 'far',    fx: 'off' }
   }[b.getAttribute('data-val')];
   if(!P) return;
   const qb = document.querySelector('#renderQualitySeg .seg-btn[data-val="' + P.q + '"]'); if(qb) qb.click();
   setFpsCap(P.fps); setShadowMode(P.shadow); setGfxStyle(P.gfx); setFogMode(P.fog); setFx(P.fx);
   document.querySelectorAll('#perfPresetSeg .seg-btn').forEach(x => x.classList.toggle('active', x === b));
-  [['optHorizon', P.hz], ['optMmEco', P.mm]].forEach(([id, v]) => {
+  [['optHorizon', P.hz], ['optMmEco', P.mm], ['optDeathBlur', P.db]].forEach(([id, v]) => {
     const el = document.getElementById(id); el.checked = v; el.dispatchEvent(new Event('change', { bubbles: true }));
   });
-  uiToast(currentLang === 'en' ? 'Preset applied' : 'Preset aplicado', 'ok');
+  uiToast(LT('Preset aplicado', 'Preset applied'), 'ok');
 }));
 
 const dbgOneShot = document.getElementById('dbgOneShot');
@@ -14479,7 +14592,7 @@ function dbgSyncUI(){
 
 function dbgNeedTestMap(){
   if(started && isTestMapNow()) return true;
-  uiToast(currentLang === 'en' ? 'ENTER THE TEST MAP FIRST' : 'ENTRE NO MAPA DE TESTES PRIMEIRO', 'err');
+  uiToast(LT('ENTRE NO MAPA DE TESTES PRIMEIRO', 'ENTER THE TEST MAP FIRST'), 'err');
   return false;
 }
 function dbgCloseToGame(){
@@ -14517,7 +14630,7 @@ function dbgSpawnTarget(kind){
   else { en.team = kind; en.ally = false; en.health = en.maxHealth = 80; en.testLabel = { pt: 'BOT ' + kind + ' (CRIADO)', en: 'BOT ' + kind + ' (SPAWNED)' }; }
   enemies.push(en);
   SFX.menuSelect();
-  uiToast(currentLang === 'en' ? 'TARGET CREATED IN FRONT OF YOU' : 'ALVO CRIADO NA SUA FRENTE', 'ok');
+  uiToast(LT('ALVO CRIADO NA SUA FRENTE', 'TARGET CREATED IN FRONT OF YOU'), 'ok');
 }
 document.getElementById('dbgSpawnZombie').addEventListener('click', () => dbgSpawnTarget('zombie'));
 document.getElementById('dbgSpawnT').addEventListener('click', () => dbgSpawnTarget('T'));
@@ -14527,30 +14640,30 @@ document.getElementById('dbgRespawn').addEventListener('click', () => {
   SFX.menuSelect();
   enemies.forEach(en => { if(en.testDummy){ en.alive = true; en.health = en.maxHealth; en.respawnAt = 0; } });
   ggRestoreAll();   // Gravity Gun: alvos, pickups e bola voltam ao lugar de origem
-  uiToast(currentLang === 'en' ? 'TARGETS RESPAWNED' : 'ALVOS RENASCIDOS', 'ok');
+  uiToast(LT('ALVOS RENASCIDOS', 'TARGETS RESPAWNED'), 'ok');
 });
 document.getElementById('dbgKillAll').addEventListener('click', () => {
   if(!dbgNeedTestMap()) return;
   SFX.menuSelect();
   enemies.forEach(en => { if(en.alive){ en.alive = false; if(en.testDummy) en.respawnAt = performance.now() + TEST_DUMMY_RESPAWN_MS; } });
-  uiToast(currentLang === 'en' ? 'ALL TARGETS DOWN (RESPAWN IN 5s)' : 'TODOS ABATIDOS (RENASCEM EM 5s)', 'ok');
+  uiToast(LT('TODOS ABATIDOS (RENASCEM EM 5s)', 'ALL TARGETS DOWN (RESPAWN IN 5s)'), 'ok');
 });
 document.getElementById('dbgHeal').addEventListener('click', () => {
-  if(!started || gameOver){ uiToast(currentLang === 'en' ? 'START A MATCH FIRST' : 'INICIE UMA PARTIDA PRIMEIRO', 'err'); return; }
+  if(!started || gameOver){ uiToast(LT('INICIE UMA PARTIDA PRIMEIRO', 'START A MATCH FIRST'), 'err'); return; }
   SFX.menuAccept();
   player.health = player.maxHealth;
   resetAmmoToDefaults(); addAmmoAll(10);
   updateHUD();
-  uiToast(currentLang === 'en' ? 'HEALTH AND AMMO RESTORED' : 'VIDA E MUNIÇÃO RESTAURADAS', 'ok');
+  uiToast(LT('VIDA E MUNIÇÃO RESTAURADAS', 'HEALTH AND AMMO RESTORED'), 'ok');
 });
 document.getElementById('dbgMoney').addEventListener('click', () => {
   SFX.menuAccept();
   shop.money = SHOP_MAX_MONEY;
   if(started){ updateHUD(); shopRefresh(); }
-  uiToast(currentLang === 'en' ? 'SHOP MONEY MAXED' : 'DINHEIRO DA LOJA NO MÁXIMO', 'ok');
+  uiToast(LT('DINHEIRO DA LOJA NO MÁXIMO', 'SHOP MONEY MAXED'), 'ok');
 });
 document.getElementById('dbgResetMap').addEventListener('click', () => {
-  if(!started || NET.mode){ uiToast(currentLang === 'en' ? 'NOT AVAILABLE NOW' : 'INDISPONÍVEL AGORA', 'err'); return; }
+  if(!started || NET.mode){ uiToast(LT('INDISPONÍVEL AGORA', 'NOT AVAILABLE NOW'), 'err'); return; }
   SFX.menuAccept();
   dbgCloseToGame();
   resetGame(currentLevelIndex);
@@ -14582,7 +14695,7 @@ document.getElementById('applySettingsBtn').addEventListener('click', ()=>{
       initWeaponUI();
       switchWeapon(chosenW);
     } else {
-      uiToast(currentLang === 'en' ? 'START A MATCH TO EQUIP A WEAPON' : 'INICIE UMA PARTIDA PARA EQUIPAR A ARMA', 'err');
+      uiToast(LT('INICIE UMA PARTIDA PARA EQUIPAR A ARMA', 'START A MATCH TO EQUIP A WEAPON'), 'err');
     }
     dbgPickedWeapon = null;
   }
@@ -14611,7 +14724,7 @@ document.getElementById('resetSettingsBtn').addEventListener('click', ()=>{
     el.dispatchEvent(new Event('input', {bubbles:true}));
   });
   // caixas de marcar (a vibração é ajustada direto, para não vibrar o controle ao restaurar)
-  ['optShowMinimap','optViewBob','optShowFps','optInvertY','optShowCrosshair','optBotNames','optDamageFlash','optMusicOff','optHorizon','optMmEco'].forEach(id=>{
+  ['optShowMinimap','optViewBob','optShowFps','optInvertY','optShowCrosshair','optBotNames','optDamageFlash','optMusicOff','optHorizon','optMmEco','optDeathBlur'].forEach(id=>{
     const el = document.getElementById(id);
     el.checked = el.defaultChecked;
     el.dispatchEvent(new Event('change', {bubbles:true}));
@@ -14761,8 +14874,8 @@ function refreshMapsForMode(){
   matchUISync();   // fim de partida (pontuação / tempo / sem limite): só nos modos Deathmatch, CTF e Resgate
   document.getElementById('dmLoadoutGroups').style.display = (dm && !isGun && !(function(){ const m = document.getElementById('gameModeSelect').value; return m === 'deathmatch' || m === 'ctf' || m === 'hostage'; })()) ? 'block' : 'none';   // Gun Game: só o lado, sem escolher armas
   document.getElementById('socOptions').style.display = document.getElementById('gameModeSelect').value === 'soccer' ? 'block' : 'none';
-  { const sg = document.getElementById('socSameTeamGroup'), st = document.getElementById('socSameTeamTxt');
-    if(sg){ sg.style.display = (NET.lobby && NET.mode === 'client' && document.getElementById('gameModeSelect').value === 'soccer') ? '' : 'none'; if(st) st.textContent = currentLang === 'en' ? "PLAY ON THE HOST'S TEAM" : 'JOGAR NO MESMO TIME DO ANFITRIÃO'; } }
+  { const sg = document.getElementById('socSameTeamGroup');
+    if(sg) sg.style.display = (NET.lobby && NET.mode === 'client' && document.getElementById('gameModeSelect').value === 'soccer') ? '' : 'none'; }
   { const hl = document.querySelector('#socOptions [data-i18n="socHomeLabel"]'), al = document.querySelector('#socOptions [data-i18n="socAwayLabel"]');
     if(hl && al){ const L = I18N[currentLang]; hl.textContent = NET.lobby ? netT('TIME DA CASA (ANFITRIÃO ESCOLHE):', 'HOME TEAM (HOST PICKS):') : L.socHomeLabel; al.textContent = NET.lobby ? netT('TIME VISITANTE (CONVIDADOS ESCOLHEM):', 'AWAY TEAM (GUESTS PICK):') : L.socAwayLabel; } }
 }
@@ -14863,7 +14976,7 @@ const DBG_WEAPON_GROUPS = [
     h.className = 'dbg-wcat';
     h.dataset.pt = g.pt; h.dataset.en = g.en;
     h.innerHTML = '<span class="dbg-wcat-t"></span><small>' + g.ids.length + '</small>';
-    h.firstChild.textContent = currentLang === 'en' ? g.en : g.pt;
+    h.firstChild.textContent = LT(g.pt, g.en);
     grid.appendChild(h);
     const row = document.createElement('div');
     row.className = 'weapon-grid';
@@ -16411,7 +16524,7 @@ function updatePlayer(dt){
           const wc = WEAPON_CONFIG[p.weaponId];
           if(wc.canReload) player.reserveMags[p.weaponId] = Math.min(wc.maxMags, (player.reserveMags[p.weaponId] || 0) + 1);
           else player.ammo[p.weaponId] = Math.min(wc.maxAmmo, player.ammo[p.weaponId] + 40);
-          flashMsg("+ " + wc.name + (currentLang === 'en' ? " AMMO" : " MUNIÇÃO"));
+          flashMsg("+ " + wc.name + (LT(" MUNIÇÃO", " AMMO")));
           SFX.pickupAmmo();
         } else {
           player.unlockedWeapons[p.weaponId] = true;   // ainda há slot livre
@@ -16465,7 +16578,7 @@ function updateSwapPrompt(){
   const en = currentLang === 'en';
   const cur = WEAPON_CONFIG[player.weapon] ? WEAPON_CONFIG[player.weapon].name : '';
   const key = useKeyLabel();
-  el.innerHTML = key + (en ? 'SWAP ' : 'TROCAR ') + cur + (en ? ' FOR ' : ' POR ') + '<b>' + WEAPON_CONFIG[cand.weaponId].name + '</b>';
+  el.innerHTML = key + (LT('TROCAR ', 'SWAP ')) + cur + (LT(' POR ', ' FOR ')) + '<b>' + WEAPON_CONFIG[cand.weaponId].name + '</b>';
   el.style.display = 'block';
   btn.style.display = usingTouch ? 'flex' : 'none';
 }
@@ -16474,7 +16587,7 @@ function trySwapWeapon(){
   const p = swapCandidate;
   if(!p || p.taken || gameOver || countdownActive || dmPlayerDead || settingsModal.style.display === 'flex') return;
   const en = currentLang === 'en';
-  if(player.isReloading){ flashMsg(en ? "CAN'T SWAP WHILE RELOADING" : 'NÃO DÁ PARA TROCAR RECARREGANDO'); return; }
+  if(player.isReloading){ flashMsg(LT('NÃO DÁ PARA TROCAR RECARREGANDO', "CAN'T SWAP WHILE RELOADING")); return; }
   const oldId = player.weapon, newId = p.weaponId;
   if(!WEAPON_CONFIG[newId] || player.unlockedWeapons[newId]) return;
   delete player.unlockedWeapons[oldId];
@@ -16486,7 +16599,7 @@ function trySwapWeapon(){
   swapCandidate = null;
   initWeaponUI();
   switchWeapon(newId);
-  flashMsg((en ? 'SWAPPED: ' : 'TROCADA: ') + WEAPON_CONFIG[oldId].name + ' → ' + WEAPON_CONFIG[newId].name);
+  flashMsg((LT('TROCADA: ', 'SWAPPED: ')) + WEAPON_CONFIG[oldId].name + ' → ' + WEAPON_CONFIG[newId].name);
   SFX.pickupWeapon();
   updateHUD();
 }
@@ -16577,11 +16690,11 @@ function tryFire(){
         if (closestEnemy.testDummy) {
           // alvo do mapa de testes: sem pontos de modo; renasce sozinho depois
           closestEnemy.respawnAt = performance.now() + TEST_DUMMY_RESPAWN_MS;
-          flashMsg(currentLang === 'en' ? 'TARGET DOWN (RESPAWNS IN 5s)' : 'ALVO ABATIDO (RENASCE EM 5s)');
+          flashMsg(LT('ALVO ABATIDO (RENASCE EM 5s)', 'TARGET DOWN (RESPAWNS IN 5s)'));
           SFX.kill();
         } else if (isTeamMode() && currentGameMode !== 'gungame') {
           score += 1; // 1 ponto por abate
-          flashMsg(currentLang === 'en' ? 'ENEMY DOWN (+1)' : 'INIMIGO ABATIDO (+1)');
+          flashMsg(LT('INIMIGO ABATIDO (+1)', 'ENEMY DOWN (+1)'));
           SFX.hit();
           SFX.botPain();
         } else {
@@ -16621,7 +16734,7 @@ function tryFire(){
 // ggUpdate() reescreve a posição de quem está na mão ou voando (assim nenhum modo de jogo precisa saber da arma).
 const GG = { held: null, active: [], hudKey: '', cand: null };
 const GG_RANGE = 14, GG_HOLD_DIST = 2.0, GG_PUNT = 12, GG_THROW = 18;
-function ggT(pt, en){ return currentLang === 'en' ? en : pt; }
+function ggT(pt, en){ return LT(pt, en); }
 function ggFloor(o){ return heightAt(o.x, o.y) * HEIGHT_UNIT; }
 function ggState(o){ return o.gg || (o.gg = { held: false, fly: false, vx: 0, vy: 0, vz: 0, px: o.x, py: o.y }); }
 function ggCandidates(){
@@ -16635,7 +16748,7 @@ function ggLabel(c){
   const o = c.o;
   if(c.k === 'ball') return ggT('BOLA', 'BALL');
   if(c.k === 'pickup') return o.type === 'weapon' ? ((WEAPON_CONFIG[o.weaponId] && WEAPON_CONFIG[o.weaponId].name) || 'ARMA') : o.type === 'health' ? ggT('VIDA', 'HEALTH') : ggT('MUNIÇÃO', 'AMMO');
-  if(o.testLabel) return o.testLabel[currentLang === 'en' ? 'en' : 'pt'];
+  if(o.testLabel) return o.testLabel[LT('pt', 'en')];
   return o.fnaf ? 'FNAF' : o.team ? 'BOT · ' + o.team : ggT('INIMIGO', 'ENEMY');
 }
 // alvo mais próximo do centro da mira (cone horizontal + linha de visão)
@@ -17075,7 +17188,7 @@ let netPeer = null, netConn = null, netMyId = 0, netEntMap = {}, netTimers = [],
 let netAwayPeers = [], netJoinSeq = 0;   // convidados que saíram da partida mas continuam na sala
 const netPeers = [];   // host: { conn, id, idx, team, pref:{team}, ent }
 const netUI = {};
-const netT = (pt, en) => currentLang === 'en' ? en : pt;
+const netT = (pt, en) => LT(pt, en);
 const netEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const netF = n => +(+n || 0).toFixed(2);
 
@@ -17178,6 +17291,7 @@ function netCoopDie(){
   gpRumble(1.0, 1.0, 400);
   document.getElementById('damageFlash').style.opacity = '0.55';
   NET.respawnAt = currentGameMode === 'fnaf' ? Infinity : performance.now() + 10000;
+  deathFxShow(currentGameMode === 'fnaf' ? Infinity : 10000);
   flashMsg(currentGameMode === 'fnaf' ? netT('VOCÊ FOI ELIMINADO · ASSISTA ATÉ O FIM', 'YOU WERE KILLED · SPECTATE UNTIL THE END')
                                       : netT('VOCÊ FOI ELIMINADO · RENASCE EM 10s', 'YOU WERE KILLED · RESPAWN IN 10s'));
   if(NET.mode === 'client') netSend({ t: 'dead' }); else netCoopHostCheck();
@@ -17217,8 +17331,8 @@ function netCoopHostCheck(){
 }
 function netCoopText(d){
   const en = currentLang === 'en';
-  if(currentGameMode === 'fnaf') return (en ? 'SURVIVED UNTIL ' : 'SOBREVIVEU ATÉ ') + FNAF_HOURS[Math.min(5, d.h || 0)] + '  |  ' + (en ? 'SCORE: ' : 'PONTUAÇÃO: ') + score;
-  return (currentGameMode === 'waves' ? 'WAVE ' + (d.w || currentWave) + '  |  ' : '') + (en ? 'SCORE: ' : 'PONTUAÇÃO: ') + score;
+  if(currentGameMode === 'fnaf') return (LT('SOBREVIVEU ATÉ ', 'SURVIVED UNTIL ')) + FNAF_HOURS[Math.min(5, d.h || 0)] + '  |  ' + (LT('PONTUAÇÃO: ', 'SCORE: ')) + score;
+  return (currentGameMode === 'waves' ? 'WAVE ' + (d.w || currentWave) + '  |  ' : '') + (LT('PONTUAÇÃO: ', 'SCORE: ')) + score;
 }
 function netHostEndCoop(){
   if(gameOver) return;
@@ -17289,6 +17403,7 @@ function netHostPeerAway(p){
   const i = netPeers.indexOf(p);
   if(i < 0 || !NET.started) return;
   netPeers.splice(i, 1); netAwayPeers.push(p); p.away = true;
+  kfPeerLeft(p, i);
   if(p.ent){
     if(ctf) ctfDropFlag(p.ent);
     if(hr) hrDropFollowers(p.ent);
@@ -17489,6 +17604,7 @@ function netHostAccept(conn){
     const i = netPeers.indexOf(p);
     if(i < 0){ const j = netAwayPeers.indexOf(p); if(j >= 0) netAwayPeers.splice(j, 1); return; }
     netPeers.splice(i, 1);
+    kfPeerLeft(p, i);
     if(p.ent){
       if(ctf) ctfDropFlag(p.ent);
       if(hr) hrDropFollowers(p.ent);
@@ -17688,7 +17804,7 @@ function chatSubmit(){
     if(ev === 'pointerdown' && baseWanted() && e.pointerType === 'mouse') return;   // console em modo mouse: o clique do A não conta como mouse real
     window.dzLastInput = 'km';
   }, true));
-  const T = (pt, en) => (typeof currentLang !== 'undefined' && currentLang === 'en') ? en : pt;
+  const T = (pt, en) => (typeof currentLang !== 'undefined') ? LT(pt, en) : pt;
   const st = document.createElement('style');
   st.textContent =
     "#dzVk{position:fixed;left:50%;bottom:calc(10px + var(--sy,0px));transform:translateX(-50%);width:min(94vw,900px);box-sizing:border-box;z-index:100000;display:none;flex-direction:column;gap:6px;padding:10px 12px 8px;background:rgba(6,14,28,.95);border:1px solid rgba(159,227,255,.65);border-radius:8px;box-shadow:0 0 24px rgba(0,0,0,.7);font-family:'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;color:#e3ebfa;-webkit-user-select:none;user-select:none;outline:none}" +
@@ -17887,6 +18003,27 @@ function chatSubmit(){
     if(wanted() && !S.open && t && t.tagName === 'INPUT' && t.type === 'text' && t.id !== 'chatInput') forInput(t);
   }, true);
 
+  // No console (ou usando o controle) os campos de texto dos menus ficam "somente leitura" para o teclado do sistema
+  // nunca abrir sozinho (o foco do controle ao navegar ou o toque do A abria o teclado nativo, que não digita nada).
+  // O texto entra só pelo teclado virtual do jogo, que escreve o valor por código. Mouse/teclado físico/toque voltam ao normal.
+  const menuInputs = () => document.querySelectorAll('input[type="text"]:not(#chatInput)');
+  function syncNative(){
+    const w = wanted();
+    menuInputs().forEach(i => {
+      if(w){
+        if(i.dataset.dzRo !== '1'){ i.dataset.dzRo = '1'; i.dataset.dzWasRo = i.readOnly ? '1' : '0'; i.readOnly = true; i.setAttribute('inputmode', 'none'); }
+      } else if(i.dataset.dzRo === '1'){
+        i.readOnly = i.dataset.dzWasRo === '1'; i.removeAttribute('inputmode'); delete i.dataset.dzRo; delete i.dataset.dzWasRo;
+      }
+    });
+  }
+  setInterval(syncNative, 300);
+  syncNative();
+  ['pointerdown', 'mousedown', 'touchstart', 'focusin'].forEach(ev => document.addEventListener(ev, e => {
+    const t = e.target;
+    if(t && t.tagName === 'INPUT' && t.type === 'text' && t.id !== 'chatInput') syncNative();
+  }, true));
+
   window.dzVk = { wanted, isOpen: () => S.open, open, close, pad, key, forInput };
 })();
 
@@ -17950,7 +18087,7 @@ function netHostOnData(p, d){
     if(gameOver || currentGameMode !== 'gungame') return;
     netBroadcast({ t: 'over', k: 'gg', w: p.id });
     const en = currentLang === 'en';
-    netShowOver(en ? 'DEFEAT' : 'DERROTA', (en ? 'KILLS: ' : 'ABATES: ') + gunGameTotalKills + '  |  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths, 'lose');
+    netShowOver(LT('DERROTA', 'DEFEAT'), (LT('ABATES: ', 'KILLS: ')) + gunGameTotalKills + '  |  ' + (LT('MORTES: ', 'DEATHS: ')) + dmDeaths, 'lose');
   }
 }
 function netHostOnHit(p, d){
@@ -18113,16 +18250,16 @@ function netOnKillEvent(d){
   const pts = d.pts || 150;
   if(currentGameMode === 'gungame'){
     score += pts; dmPlayerKills++;
-    flashMsg(currentLang === 'en' ? 'ENEMY DOWN' : 'INIMIGO ABATIDO');
+    flashMsg(LT('INIMIGO ABATIDO', 'ENEMY DOWN'));
     SFX.kill();
     gunGameOnPlayerKill();
   } else if(isTeamMode()){
     score += 1; dmPlayerKills++; shopAdd(SHOP_KILL_REWARD);
-    flashMsg(currentLang === 'en' ? 'ENEMY DOWN (+1)' : 'INIMIGO ABATIDO (+1)');
+    flashMsg(LT('INIMIGO ABATIDO (+1)', 'ENEMY DOWN (+1)'));
     SFX.hit(); SFX.botPain();
   } else {
     score += pts;
-    flashMsg(pts === 100 ? (currentLang === 'en' ? 'ANIMATRONIC DISABLED (+100)' : 'ANIMATRÔNICO DESATIVADO (+100)') : I18N[currentLang].enemyKilled);
+    flashMsg(pts === 100 ? (LT('ANIMATRÔNICO DESATIVADO (+100)', 'ANIMATRONIC DISABLED (+100)')) : I18N[currentLang].enemyKilled);
     SFX.kill();
   }
   updateHUD();
@@ -18140,7 +18277,7 @@ function netOnOver(d){
   const en = currentLang === 'en';
   if(d.k === 'gg'){
     if(d.w === netMyId) return;
-    netShowOver(en ? 'DEFEAT' : 'DERROTA', (en ? 'KILLS: ' : 'ABATES: ') + gunGameTotalKills + '  |  ' + (en ? 'DEATHS: ' : 'MORTES: ') + dmDeaths, 'lose');
+    netShowOver(LT('DERROTA', 'DEFEAT'), (LT('ABATES: ', 'KILLS: ')) + gunGameTotalKills + '  |  ' + (LT('MORTES: ', 'DEATHS: ')) + dmDeaths, 'lose');
   } else if(d.k === 'dead'){
     netShowOver(I18N[currentLang].youDied, netCoopText(d), 'lose');
   } else if(d.k === 'fnaf6' && fnaf){
@@ -18341,7 +18478,7 @@ function netClientTick(dt){
 (function dzConsoleInit(){
   const C = window.DZ_CONSOLE;
   if(!C) return;
-  const T = (pt, en) => currentLang === 'en' ? en : pt;
+  const T = (pt, en) => LT(pt, en);
   const rootEl = document.documentElement;
   if(C.platform === 'ps') gpIsPS = true;   // dicas com ✕ ○ □ △ desde o início
 
@@ -18417,7 +18554,7 @@ setLanguage('pt');
 (function(){
   const KEY = 'dz_settings';
   const RANGES = ['sensRange','fovRange','pitchSensRange','gpDeadRange','sfxVolumeRange','musicVolumeRange','gunBotRange','dmEnemyBotRange','dmAllyBotRange'];
-  const CHECKS = ['optShowMinimap','optViewBob','optShowFps','optInvertY','gpVibration','optShowCrosshair','optBotNames','optDamageFlash','optMusicOff','optTouchVibration','optHorizon','optMmEco'];
+  const CHECKS = ['optShowMinimap','optViewBob','optShowFps','optInvertY','gpVibration','optShowCrosshair','optBotNames','optDamageFlash','optMusicOff','optTouchVibration','optHorizon','optMmEco','optDeathBlur'];
   const get = id => document.getElementById(id);
   const activeVal = segId => { const b = document.querySelector('#' + segId + ' .seg-btn.active'); return b ? b.getAttribute('data-val') : null; };
 
@@ -18467,7 +18604,7 @@ setLanguage('pt');
     if(o.gfx) setGfxStyle(o.gfx); else if(o.check && o.check.optSmoothPx) setGfxStyle('smooth');   // migra o antigo "suavizar pixels"
     if(o.fx) setFx(o.fx);
     // idioma
-    if(o.lang && (o.lang === 'pt' || o.lang === 'en')){
+    if(o.lang && ['pt', 'en', 'es', 'fr', 'it', 'ja'].indexOf(o.lang) >= 0){
       const b = document.querySelector('#langSeg .seg-btn[data-val="' + o.lang + '"]');
       if(b){
         document.querySelectorAll('#langSeg .seg-btn').forEach(x => x.classList.toggle('active', x === b));
