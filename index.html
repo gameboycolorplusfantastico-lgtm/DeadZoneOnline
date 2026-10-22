@@ -14762,7 +14762,7 @@ function refreshMapsForMode(){
   document.getElementById('dmLoadoutGroups').style.display = (dm && !isGun && !(function(){ const m = document.getElementById('gameModeSelect').value; return m === 'deathmatch' || m === 'ctf' || m === 'hostage'; })()) ? 'block' : 'none';   // Gun Game: só o lado, sem escolher armas
   document.getElementById('socOptions').style.display = document.getElementById('gameModeSelect').value === 'soccer' ? 'block' : 'none';
   { const sg = document.getElementById('socSameTeamGroup'), st = document.getElementById('socSameTeamTxt');
-    if(sg){ sg.style.display = (NET.lobby && NET.mode === 'client' && document.getElementById('gameModeSelect').value === 'soccer') ? '' : 'none'; if(st) st.textContent = netT('JOGAR NO MESMO TIME DO ANFITRIÃO', "PLAY ON THE HOST'S TEAM"); } }
+    if(sg){ sg.style.display = (NET.lobby && NET.mode === 'client' && document.getElementById('gameModeSelect').value === 'soccer') ? '' : 'none'; if(st) st.textContent = currentLang === 'en' ? "PLAY ON THE HOST'S TEAM" : 'JOGAR NO MESMO TIME DO ANFITRIÃO'; } }
   { const hl = document.querySelector('#socOptions [data-i18n="socHomeLabel"]'), al = document.querySelector('#socOptions [data-i18n="socAwayLabel"]');
     if(hl && al){ const L = I18N[currentLang]; hl.textContent = NET.lobby ? netT('TIME DA CASA (ANFITRIÃO ESCOLHE):', 'HOME TEAM (HOST PICKS):') : L.socHomeLabel; al.textContent = NET.lobby ? netT('TIME VISITANTE (CONVIDADOS ESCOLHEM):', 'AWAY TEAM (GUESTS PICK):') : L.socAwayLabel; } }
 }
