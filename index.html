@@ -1187,16 +1187,12 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
   #fnafHud .fh-use i{display:inline-block;width:9px;height:9px;background:#2a2a2a;border:1px solid #555;}
   #fnafHud .fh-use i.on{background:#39ff14;border-color:#39ff14;}
 
-  #fnafScare{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:40;background:rgba(0,0,0,.35);}
-  #fnafScare img{height:94%;width:auto;max-width:96%;object-fit:contain;filter:drop-shadow(0 0 18px #000);}
-  #fnafScare.on{display:flex;animation:fnafScarePop .6s ease-out forwards;}
+  #fnafScare{position:absolute;inset:0;display:none;pointer-events:none;z-index:40;background:transparent;overflow:hidden;}
+  #fnafScare img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  #fnafScare.on{display:block;animation:fnafScarePop 1.25s linear forwards;}
   @keyframes fnafScarePop{
-    0%{opacity:1;transform:scale(.75) translate(0,0);}
-    12%{transform:scale(1.18) translate(-14px,9px);}
-    24%{transform:scale(1.1) translate(16px,-10px);}
-    36%{transform:scale(1.22) translate(-10px,-8px);}
-    50%{opacity:1;transform:scale(1.15) translate(8px,6px);}
-    100%{opacity:0;transform:scale(1.3) translate(0,0);}
+    0%,85%{opacity:1;}
+    100%{opacity:0;}
   }
 
   #shopBtn{position:absolute;top:8px;right:230px;padding:7px 14px;background:rgba(0,0,0,.4);border:1px solid rgba(159,227,255,.55);border-radius:4px;color:var(--cs-hud,#9fe3ff);font-weight:600;cursor:pointer;z-index:30;font-family:'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;letter-spacing:1px;text-shadow:0 0 8px var(--cs-hud-glow,rgba(70,185,255,.55)),0 1px 2px #000;}
@@ -1361,6 +1357,48 @@ body.fx-crt #crtOverlay{opacity:.6;}
 .tab-panel > .set-sec:first-child{margin-top:2px;}
 .set-hint{margin-top:6px;font-size:11px;line-height:1.4;letter-spacing:.3px;color:#8f8f8f;}
 #settingsTabRow .tab-btn{min-width:72px;padding:9px 4px;}
+
+/* ===== v5: barra de mensagens e kill feed no estilo Counter-Strike: Source ===== */
+#msgFlash{
+  top:auto;left:2.2%;transform:translateX(-8px);
+  bottom:calc(max(1.6%,10px) + clamp(40px,10vh,80px) * var(--hud-s,1));
+  width:fit-content;max-width:min(62%,560px);box-sizing:border-box;
+  padding:.4em .9em .4em .8em;
+  background:var(--hud-panel,rgba(0,0,0,.4));
+  border:1px solid var(--hud-line,rgba(159,227,255,.55));border-left:3px solid var(--cs-hud,#9fe3ff);border-radius:4px;
+  box-shadow:0 0 10px rgba(0,0,0,.45);
+  font:600 clamp(12px,2.2vh,17px)/1.25 'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;letter-spacing:.4px;text-align:left;
+  transition:opacity .25s, transform .25s;
+}
+#msgFlash.show{transform:none;}
+html.console #msgFlash{left:calc(2.2% + var(--sx,0px));}
+#chatLog .chat-line{
+  padding:3px 9px 3px 8px;border-radius:4px;background:var(--hud-panel,rgba(0,0,0,.45));
+  border:1px solid var(--hud-line,rgba(159,227,255,.35));border-left:3px solid var(--cs-hud,#9fe3ff);
+  box-shadow:0 0 8px rgba(0,0,0,.35);
+}
+#killFeed{
+  position:absolute;top:8px;right:calc(20px + 48px * var(--hud-s,1));
+  display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+  z-index:31;pointer-events:none;max-width:60%;
+  font-family:'Trebuchet MS','Segoe UI',Verdana,Arial,sans-serif;
+}
+body.touch-ui #killFeed{right:150px;}
+html.console #killFeed{top:calc(8px + var(--sy,0px));right:calc(8px + var(--sx,0px));}
+.kf-row{
+  display:flex;align-items:center;gap:7px;padding:3px 10px;border-radius:4px;
+  background:rgba(0,0,0,.5);border:1px solid rgba(0,0,0,.0);
+  font-size:clamp(11px,2.1vh,15px);font-weight:700;letter-spacing:.2px;line-height:1.2;color:#fff;
+  text-shadow:0 1px 2px #000;white-space:nowrap;
+  animation:kfIn .18s ease-out;transition:opacity .5s;
+}
+.kf-row.me{border-color:#ff3a2a;background:rgba(90,0,0,.5);}
+.kf-row.old{opacity:0;}
+.kf-name{max-width:14ch;overflow:hidden;text-overflow:ellipsis;}
+.kf-name.CT{color:#9cc8ff;} .kf-name.T{color:#ff6a55;}
+.kf-ico{display:inline-block;flex:0 0 auto;width:1.7em;height:1.7em;overflow:hidden;position:relative;}
+.kf-ico img{display:block;width:100%;height:100%;object-fit:contain;transform:translateX(-600px);filter:drop-shadow(600px 0 0 var(--cs-hud,#9fe3ff)) drop-shadow(0 0 2px #000);}
+@keyframes kfIn{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:none;}}
 </style>
 </head>
 <body>
@@ -1395,6 +1433,7 @@ body.fx-crt #crtOverlay{opacity:.6;}
   </div>
   <div id="crosshair"><span class="ch-dot"></span></div>
   <div id="msgFlash"></div>
+  <div id="killFeed"></div>
   <div id="swapPrompt"></div>
   <div id="usePrompt"></div>
   <div id="testHud"></div>
@@ -2218,9 +2257,12 @@ html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10p
           <div class="controls-row"><span data-i18n="ctlFire">Atirar</span><span class="controls-keys" data-i18n="ctlMouseClick">CLIQUE ESQ.</span></div>
           <div class="controls-row"><span data-i18n="ctlReload">Recarregar</span><span class="controls-keys">R</span></div>
           <div class="controls-row"><span data-i18n="ctlWeapons">Trocar arma</span><span class="controls-keys">1-9 / 0 / - = [ ]</span></div>
-          <div class="controls-row"><span data-i18n="ctlSwap">Trocar arma do chão</span><span class="controls-keys">E</span></div>
+          <div class="controls-row"><span data-i18n="ctlCycleWpn">Arma anterior / próxima</span><span class="controls-keys" data-i18n="ctlKbWheel">RODA DO MOUSE</span></div>
+          <div class="controls-row"><span data-i18n="ctlLastWeapon">Voltar à arma anterior</span><span class="controls-keys">Q</span></div>
+          <div class="controls-row"><span data-i18n="ctlInteract">Interagir (portas, luzes, arma do chão)</span><span class="controls-keys">E</span></div>
           <div class="controls-row"><span data-i18n="ctlShop">Abrir loja (DM/CTF/Resgate)</span><span class="controls-keys">B</span></div>
           <div class="controls-row"><span data-i18n="ctlShopClose">Fechar loja</span><span class="controls-keys">B / ESC</span></div>
+          <div class="controls-row"><span data-i18n="ctlGrab">Agarrar / soltar (Gravity Gun)</span><span class="controls-keys" data-i18n="ctlKbGrab">CLIQUE DIR.</span></div>
           <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys">F</span></div>
           <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys">ESPAÇO</span></div>
           <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys">ESC</span></div>
@@ -2250,15 +2292,16 @@ html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10p
           <div class="controls-row"><span data-i18n="ctlFire">Atirar</span><span class="controls-keys" data-i18n="ctlRT">RT / R2</span></div>
           <div class="controls-row"><span data-i18n="ctlReload">Recarregar</span><span class="controls-keys" data-i18n="ctlX">X / □</span></div>
           <div class="controls-row"><span data-i18n="ctlWeapons">Trocar arma</span><span class="controls-keys" data-i18n="ctlBumpers">LB/RB · L1/R1</span></div>
-          <div class="controls-row"><span data-i18n="ctlShop">Abrir loja (DM/CTF/Resgate)</span><span class="controls-keys">Y / △</span></div>
-          <div class="controls-row"><span data-i18n="ctlQuickGp">Arma anterior (fora da loja)</span><span class="controls-keys">Y / △</span></div>
-          <div class="controls-row"><span data-i18n="ctlSwap">Trocar arma do chão</span><span class="controls-keys">A / ✕</span></div>
-          <div class="controls-row"><span data-i18n="ctlUseGp">Usar (portas/luzes)</span><span class="controls-keys">A / ✕</span></div>
-          <div class="controls-row"><span data-i18n="ctlKickJump">Pular (Chutar no Futebol)</span><span class="controls-keys">B / ○</span></div>
+          <div class="controls-row"><span data-i18n="ctlShop">Abrir loja (DM/CTF/Resgate)</span><span class="controls-keys">D-PAD ↓</span></div>
+          <div class="controls-row"><span data-i18n="ctlLastWeapon">Voltar à arma anterior</span><span class="controls-keys">D-PAD ←</span></div>
+          <div class="controls-row"><span data-i18n="ctlInteract">Interagir (portas, luzes, arma do chão)</span><span class="controls-keys">Y / △</span></div>
+          <div class="controls-row"><span data-i18n="ctlGrab">Agarrar / soltar (Gravity Gun)</span><span class="controls-keys">LT / L2</span></div>
+          <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys">A / ✕</span></div>
+          <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys">B / ○</span></div>
           <div class="controls-row"><span data-i18n="ctlShopNav">Navegar na loja</span><span class="controls-keys">D-PAD</span></div>
           <div class="controls-row"><span data-i18n="ctlShopBuy">Comprar arma / munição (loja)</span><span class="controls-keys">A / ✕</span></div>
           <div class="controls-row"><span data-i18n="ctlShopFast">Pular 5 armas (loja)</span><span class="controls-keys">LB/RB · L1/R1</span></div>
-          <div class="controls-row"><span data-i18n="ctlShopClose">Fechar loja</span><span class="controls-keys">B / ○ · Y / △ · START</span></div>
+          <div class="controls-row"><span data-i18n="ctlShopClose">Fechar loja</span><span class="controls-keys">B / ○ · START</span></div>
           <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys" data-i18n="ctlStart">START / OPTIONS</span></div>
           <div class="controls-row"><span data-i18n="ctlChat">Abrir chat (online)</span><span class="controls-keys">D-PAD ↑ / VIEW ⧉</span></div>
           <div class="controls-row"><span data-i18n="ctlMenuNav">Navegar nos menus</span><span class="controls-keys">D-PAD / L-STICK</span></div>
@@ -3544,9 +3587,11 @@ const TEX_WALL_URLS = [
   'https://i.postimg.cc/26yLC89z/Bricks-15-512x512.png',  // 9 tijolo 15
   'https://i.postimg.cc/W3zqsbWH/Bricks-12-512x512.png',  // 10 tijolo 12
   'https://i.postimg.cc/Jzb7dD1N/Mat-Cloth-Canvas-06-512x512.png',  // 11 pano (cortina da Pirate Cove, FNAF)
-  'https://i.postimg.cc/h45m2xyv/Mat-Concrete-Gray-02-512x512.png'  // 12 concreto cinza (colunas do Underpass)
+  'https://i.postimg.cc/h45m2xyv/Mat-Concrete-Gray-02-512x512.png',  // 12 concreto cinza (colunas do Underpass)
+  'https://i.postimg.cc/Prvw9x9F/Mat-Concrete-White-05-512x512.png',  // 13 concreto branco 05 (paredes da pizzaria FNAF)
+  'https://i.postimg.cc/sgpf0QV5/Mat-Cloth-Canvas-05-512x512.png'    // 14 pano canvas 05 (Pirate Cove, FNAF)
 ];
-const WALL_CLOTH_IDX = 11;
+const WALL_CLOTH_IDX = 14;
 const TEX_CEIL_URLS = [
   'https://i.postimg.cc/CxwjWYg3/Wood-18-512x512.png',    // 0 madeira 18
   'https://i.postimg.cc/W1773z8Z/Metal-10-512x512.png',   // 1 metal 10
@@ -3939,7 +3984,7 @@ const STYLES = {
   URBAN:      { fo: [5, 4, 3],   fi: [3, 4],  w: [9, 10, 0, 3], c: [3, 4], lt: [7, 0.7], s: [0, 1, 2, 6, 7, 4], d: [1, 2, 3], doorP: 0.07, winP: 0.09, r: [1, 5, 7, 4] },
   HOUSE:      { fo: [0, 1, 10],  fi: [7, 8],  w: [8, 1, 9],     c: [4, 0], lt: [6, 0.7], s: [0, 1, 6, 7],       d: [0, 2, 4], doorP: 0.08, winP: 0.09, r: [0, 3, 4, 2] },
   METRO:      { fo: [5, 4, 3],   fi: [4, 2],  w: [7, 5, 3, 10], c: [3, 4], lt: [5, 1],   s: [0, 6],             d: [4, 3],    doorP: 0.06, winP: 0.04, r: [7, 6] },
-  FNAF:       { fo: [4, 3],      fi: [4, 3],  w: [7, 1, 8],     c: [3],    lt: null,     s: [4],                d: [],        doorP: 0,    winP: 0,    r: [0] }
+  FNAF:       { fo: [6, 6],      fi: [6, 6],  w: [13, 13, 13],  c: [3],    lt: null,     s: [4],                d: [],        doorP: 0,    winP: 0,    r: [0] }
 };
 // FOREST (seção INTERNA, não aparece no menu): base para mapas de floresta. Para criar um novo mapa de floresta, basta pôr o número dele
 // em MAP_CATEGORY.FOREST: ele recebe sozinho chão de grama/terra, paredes de madeira/tijolo, teto de madeira, uma das skyboxes de dia já existentes
@@ -4887,7 +4932,7 @@ const I18N = {
     lvl71: "CS_HAVANA", lvl71Desc: "Estilo Havana (CS): vila com pátio murado e a sala dos reféns no centro. Entre pelos portões e traga todos à base CT, a oeste.",
     lvl72: "AS_OILRIG", lvl72Desc: "Estilo Oilrig (CS): plataforma de petróleo. Os reféns estão no alojamento central, no convés elevado. Os CT resgatam na doca oeste.",
     lvl73: "AS_OILRIG", lvl73Desc: "Estilo Oilrig (CS): plataforma com módulos nos cantos e alojamento central em convés elevado. T a oeste, CT a leste. (Deathmatch / CTF)",
-    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Pizzaria do Freddy, agora em salas fechadas (paredes finas): palco com cortinas, Pirate Cove com porta, banheiro, almoxarifados, backstage e cozinha. Sobreviva da meia-noite às 6 AM; feche as portas, use as luzes e economize energia. Armas e munição escassas.",
+    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Pizzaria do Freddy, mais aberta: palco com alas laterais, Pirate Cove de pano, banheiro, backstage, cozinha, salas Parts & Service e Game Area, corredores de serviço e UMA passagem secreta. Sobreviva da meia-noite às 6 AM; feche as portas, use as luzes e economize energia. Armas e munição escassas.",
     lvl75: "ESTADIO_FUTEBOL", lvl75Desc: "Estádio exclusivo do modo Futebol: gramado com dois gols. Chute a bola (F) e faça gols — todos com a Desert Eagle.",
     lvl76: "DE_VILLAGE", lvl76Desc: "Estilo Counter-Strike: Vila com casas de telhado de duas e quatro águas, paredes finas com janelas em todos os lados, rio com ponte e vau, colina com rampa lisa e escada.",
     lvl77: "DE_VILLAGE", lvl77Desc: "Estilo Counter-Strike: Vila com casas de telhado de duas e quatro águas, rio com ponte e vau e colina com rampa e escada. T ao norte, CT ao sul. (Deathmatch / CTF)",
@@ -4944,7 +4989,7 @@ const I18N = {
     ctlTouchReload: "BOTÃO RECARGA", ctlTouchSwap: "BOTÃO TROCAR", ctlTouchUse: "BOTÃO USAR", ctlTouchPause: "BOTÃO PAUSA",
     ctlGpLookH: "ANALÓGICO DIR. ↔", ctlGpLookV: "ANALÓGICO DIR. ↕", ctlGpCenter: "R3 / CLICAR ANALÓGICO DIR.",
     ctlShop: "Abrir loja (DM/CTF/Resgate)", ctlShopClose: "Fechar loja", ctlShopBuy: "Comprar arma / munição (loja)", ctlShopNav: "Navegar na loja", ctlShopFast: "Pular 5 armas (loja)",
-    ctlTouchShop: "BOTÃO LOJA (ÍCONE)", ctlUseGp: "Usar (portas/luzes)", ctlKickJump: "Pular (Chutar no Futebol)", ctlQuickGp: "Arma anterior (fora da loja)"
+    ctlTouchShop: "BOTÃO LOJA (ÍCONE)", ctlUseGp: "Usar (portas/luzes)", ctlKickJump: "Pular (Chutar no Futebol)", ctlQuickGp: "Arma anterior (fora da loja)", ctlInteract: "Interagir (portas, luzes, arma do chão)", ctlLastWeapon: "Voltar à arma anterior", ctlGrab: "Agarrar / soltar (Gravity Gun)", ctlCycleWpn: "Arma anterior / próxima", ctlKbWheel: "RODA DO MOUSE", ctlKbGrab: "CLIQUE DIR."
   },
   en: {
     pause: "⏸ PAUSE", health: "HEALTH", sector: "WAVE", ammo: "AMMO", score: "SCORE",
@@ -5043,7 +5088,7 @@ const I18N = {
     lvl71: "CS_HAVANA", lvl71Desc: "Havana style (CS): villa with a walled courtyard and the hostage room in the middle. Go in through the gates and bring them to the CT base in the west.",
     lvl72: "AS_OILRIG", lvl72Desc: "Oilrig style (CS): oil platform. The hostages are in the central quarters on the raised deck. CT rescue at the west dock.",
     lvl73: "AS_OILRIG", lvl73Desc: "Oilrig style (CS): platform with corner modules and central quarters on a raised deck. T in the west, CT in the east. (Deathmatch / CTF)",
-    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Freddy's pizzeria, now in closed rooms (thin walls): curtained stage, Pirate Cove with a door, restroom, supply closets, backstage and kitchen. Survive from midnight to 6 AM; close the doors, use the hall lights and save power. Scarce weapons and ammo.",
+    lvl74: "FNAF_PIZZERIA", lvl74Desc: "Freddy's pizzeria, more open: stage with side wings, canvas Pirate Cove, restroom, backstage, kitchen, Parts & Service and Game Area rooms, service corridors and ONE secret passage. Survive from midnight to 6 AM; close the doors, use the hall lights and save power. Scarce weapons and ammo.",
     lvl75: "SOCCER_STADIUM", lvl75Desc: "Exclusive Soccer-mode stadium: a pitch with two goals. Kick the ball (F) and score — everyone carries the Desert Eagle.",
     lvl76: "DE_VILLAGE", lvl76Desc: "Counter-Strike style: Village of gable and hip-roofed houses, thin walls with windows on every side, a river with bridge and ford, a hill with a smooth ramp and stairs.",
     lvl77: "DE_VILLAGE", lvl77Desc: "Counter-Strike style: Village of gable and hip-roofed houses, river with bridge and ford, a hill with ramp and stairs. T in the north, CT in the south. (Deathmatch / CTF)",
@@ -5100,7 +5145,7 @@ const I18N = {
     ctlTouchReload: "RELOAD BUTTON", ctlTouchSwap: "SWAP BUTTON", ctlTouchUse: "USE BUTTON", ctlTouchPause: "PAUSE BUTTON",
     ctlGpLookH: "RIGHT STICK ↔", ctlGpLookV: "RIGHT STICK ↕", ctlGpCenter: "R3 / CLICK RIGHT STICK",
     ctlShop: "Open shop (DM/CTF/Hostage)", ctlShopClose: "Close shop", ctlShopBuy: "Buy weapon / ammo (shop)", ctlShopNav: "Browse shop", ctlShopFast: "Skip 5 weapons (shop)",
-    ctlTouchShop: "SHOP BUTTON (ICON)", ctlUseGp: "Use (doors/lights)", ctlKickJump: "Jump (Kick in Soccer)", ctlQuickGp: "Previous weapon (outside shop)"
+    ctlTouchShop: "SHOP BUTTON (ICON)", ctlUseGp: "Use (doors/lights)", ctlKickJump: "Jump (Kick in Soccer)", ctlQuickGp: "Previous weapon (outside shop)", ctlInteract: "Interact (doors, lights, floor weapon)", ctlLastWeapon: "Back to previous weapon", ctlGrab: "Grab / drop (Gravity Gun)", ctlCycleWpn: "Previous / next weapon", ctlKbWheel: "MOUSE WHEEL", ctlKbGrab: "RIGHT CLICK"
   }
 };
 
@@ -5205,7 +5250,7 @@ const WEAPON_CONFIG = {
   famas: { key: '\\', name: 'FAMAS', fullName: 'GIAT FAMAS F1', img: 'https://i.postimg.cc/mD5XRcDj/FUZIL6.png', dmg: 30, rate: 90, spreadCount: 1, spreadDeg: 2.0, range: 40, auto: true, ammoUse: 1, defaultAmmo: 25, maxAmmo: 25, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3300, moveMul: 0.97 },
   sg552: { key: '`', name: 'SG 552', fullName: 'SIG SG 552 Commando', img: 'https://i.postimg.cc/d1xHv71B/FUZIL4.png', dmg: 33, rate: 90, spreadCount: 1, spreadDeg: 0.9, range: 62, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3000, moveMul: 0.97 },
   sg550: { key: 'x', name: 'SG 550', fullName: 'SIG SG 550 SR', img: 'https://i.postimg.cc/pr50d252/SNIPER4.png', dmg: 70, rate: 250, spreadCount: 1, spreadDeg: 0.2, range: 85, auto: false, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3350, moveMul: 0.91 },
-  g3sg1: { key: 'c', name: 'G3SG/1', fullName: 'HK G3SG/1', img: 'https://i.postimg.cc/cCtDJstW/SNIPER3.png', dmg: 80, rate: 250, spreadCount: 1, spreadDeg: 0.0, range: 88, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3500, moveMul: 0.88 },
+  g3sg1: { key: 't', name: 'G3SG/1', fullName: 'HK G3SG/1', img: 'https://i.postimg.cc/cCtDJstW/SNIPER3.png', dmg: 80, rate: 250, spreadCount: 1, spreadDeg: 0.0, range: 88, auto: false, ammoUse: 1, defaultAmmo: 20, maxAmmo: 20, sizeScale: 1.05, canReload: true, startMags: 2, maxMags: 4, reloadMs: 3500, moveMul: 0.88 },
   // ===== Armas novas (nomes reais conforme a wiki do Counter-Strike Online: cso.fandom.com) =====
   // [INTERNO - nao exibido] FN F2000: fuzil bullpup belga 5.56mm, pente de 30, alta precisao, cadencia alta, pouco coice, pesado.
   f2000: { key: 'h', name: 'F2000', fullName: 'FN F2000', img: 'https://i.postimg.cc/R0VQDd64/FUZIL7.webp', dmg: 31, rate: 80, spreadCount: 1, spreadDeg: 0.8, range: 58, auto: true, ammoUse: 1, defaultAmmo: 30, maxAmmo: 30, sizeScale: 1.0, canReload: true, startMags: 2, maxMags: 3, reloadMs: 3300, moveMul: 0.97, desc: 'INTERNAL: FN F2000 - fuzil bullpup 5.56mm, 30 tiros, alta precisao, pesado.' },
@@ -8175,19 +8220,19 @@ LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0,
 );
 
 // ===== MAPA EXCLUSIVO DO MODO FNAF DOOM: Freddy Fazbear's Pizza =====
-// Layout FECHADO com paredes finas: cortinas no palco (passagem de 4 tiles), Pirate Cove com porta de 2 tiles, banheiro com porta,
+// Layout FECHADO com paredes finas e corredores de 1 tile (estilo FNAF); palco aberto para o salão (sem parede na frente); salas do oeste pequenas, do leste grandes. (antes: cortinas no palco, passagem de 4 tiles), Pirate Cove com porta de 2 tiles, banheiro com porta,
 // mesas finas no salão, almoxarifados nos cantos do corredor e balcões no backstage e na cozinha. Posições de nós, spawns e itens não mudaram.
 // Palco (animatronics), salão, Pirate Cove (Foxy), banheiros, backstage, cozinha, corredores oeste/leste
 // e a sala de segurança com as duas portas. Só aparece na seleção de mapas do modo FNAF Doom.
 const FNAF_ROWS = [
   "############################################",
   "############################################",
-  "############..#..............#..############",
-  "############..#..............#..############",
-  "############..#..............#..############",
-  "############..#..............#..############",
-  "############....................############",
-  "####################....####################",
+  "############.##..............##.############",
+  "############.##..............##.############",
+  "####.........##..............##.############",
+  "####.#######.##..............##.############",
+  "####.#######.#................#.############",
+  "####.#######.#................#.############",
   "##.....##..........................#......##",
   "##.....##..........................#......##",
   "##..........#.####........####.#...#....#.##",
@@ -8195,23 +8240,23 @@ const FNAF_ROWS = [
   "#####..##...............................#.##",
   "##.....##..........................#......##",
   "##.....##...#........##........#...#......##",
-  "#########.....#..............#.....#########",
-  "#########.....#..............#.....#########",
-  "###############...########...###############",
-  "###############...########...###############",
-  "###############...########...###############",
-  "######........#...########...#........######",
-  "######.....####...########...####.....######",
-  "######...#........########........#...######",
+  "######.##.....#..............#.....##.######",
+  "######.##.....#..............#.....##.######",
+  "######.##########.########.##########.######",
+  "######.##########.########.##########.######",
+  "######.##########.########.##########.######",
+  "######.....######.########.###........######",
+  "######.....######.########.######.....######",
+  "######.....######.########.###....#...######",
   "######............########............######",
-  "##########....#...########...#..####..######",
-  "######........#...########...#........######",
-  "######........#...########...#........######",
-  "###############...#......#...###############",
-  "###############...#......#...###############",
-  "###############......##......###############",
-  "###############...#......#...###############",
-  "###############...#......#...###############",
+  "######.....######.########.###..####..######",
+  "#################.########.###........######",
+  "#################.########.###........######",
+  "#################.#......#.######.##########",
+  "########......###.#......#.###..........####",
+  "########.............##.................####",
+  "########......###.#......#.###..........####",
+  "########......#####......#####..........####",
   "############################################"
 ];
 LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, { // 74 — FNAF_PIZZERIA (FNAF Doom)
@@ -8220,19 +8265,20 @@ LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, { // 74 — FNAF_PIZZE
   grid: dmParseGrid(FNAF_ROWS),
   heights: dmFlatH(44, 33, (x, y) => (x >= 15 && x <= 28 && y >= 2 && y <= 4) ? 1 : 0),   // palco elevado
   fnaf: {
-    doors: { W: { x: 18, y: 29 }, E: { x: 25, y: 29 } },
-    curtain: [[7, 8], [8, 8], [7, 9], [8, 9], [7, 12], [8, 12], [7, 13], [8, 13], [7, 14], [8, 14]],   // cortina da Pirate Cove (textura de pano)
+    doors: { W: { x: 18, y: 29 }, E: { x: 25, y: 29 }, S: { x: 11, y: 4 } },   // S = porta SECRETA (parede falsa entre a ala oeste do palco e o túnel até a Pirate Cove)
+    curtain: [[7, 8], [8, 8], [7, 9], [8, 9], [7, 12], [8, 12], [7, 13], [8, 13], [7, 14], [8, 14], [1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [6, 7], [7, 7], [8, 7], [1, 8], [1, 9], [1, 10], [1, 11], [1, 12], [1, 13], [1, 14], [1, 15], [2, 15], [3, 15], [4, 15], [5, 15], [8, 15]],   // Pirate Cove: cortina e paredes da enseada (pano canvas)
     windows: [ { x: 18, y: 28 }, { x: 18, y: 30 }, { x: 25, y: 28 }, { x: 25, y: 30 } ],   // vidro: dá para ver o corredor e atirar através
     buttons: [
       { kind: 'door',  side: 'W', x: 18.63, y: 27.5 }, { kind: 'light', side: 'W', x: 18.63, y: 31.5 },
-      { kind: 'door',  side: 'E', x: 25.37, y: 27.5 }, { kind: 'light', side: 'E', x: 25.37, y: 31.5 }
+      { kind: 'door',  side: 'E', x: 25.37, y: 27.5 }, { kind: 'light', side: 'E', x: 25.37, y: 31.5 },
+      { kind: 'secret', side: 'S', x: 11.5, y: 4.5, r: 1.2 }
     ],
     lit: { W: { x0: 14, y0: 16, x1: 18, y1: 32 }, E: { x0: 25, y0: 16, x1: 29, y1: 32 } },
     nodes: {
       stage: { x: 21.5, y: 3.5 },  dining: { x: 21.5, y: 12.5 }, diningW: { x: 12.5, y: 12.5 }, diningE: { x: 31.5, y: 12.5 },
       restroom: { x: 38.5, y: 11.5 }, cove: { x: 4.5, y: 10.5 },
-      whall1: { x: 16.5, y: 18.5 }, whall2: { x: 16.5, y: 24.5 }, backstage: { x: 9.5, y: 23.5 }, wdoor: { x: 17.5, y: 29.5 },
-      ehall1: { x: 27.5, y: 18.5 }, ehall2: { x: 27.5, y: 24.5 }, kitchen: { x: 33.5, y: 23.5 }, edoor: { x: 26.5, y: 29.5 }
+      whall1: { x: 17.5, y: 18.5 }, whall2: { x: 17.5, y: 24.5 }, backstage: { x: 9.5, y: 23.5 }, wdoor: { x: 17.5, y: 29.5 },
+      ehall1: { x: 26.5, y: 18.5 }, ehall2: { x: 26.5, y: 24.5 }, kitchen: { x: 33.5, y: 23.5 }, edoor: { x: 26.5, y: 29.5 }
     },
     spawns: { Freddy: { x: 21.5, y: 3.5 }, Bonnie: { x: 17.5, y: 3.5 }, Chica: { x: 25.5, y: 3.5 }, Foxy: { x: 4.5, y: 10.5 } },
     // Pickups ESCASSOS: 3 armas, 5 caixas de munição (1 pente) e só 2 kits de vida. Nada renasce.
@@ -8241,8 +8287,10 @@ LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, { // 74 — FNAF_PIZZE
       { type: 'weapon', weaponId: 'shotgun', x: 36.5, y: 24.5 },    // cozinha
       { type: 'weapon', weaponId: 'mp5n',    x: 3.5,  y: 13.5 },    // Pirate Cove (perto do Foxy)
       { type: 'ammo', amount: 1, x: 10.5, y: 15.5 }, { type: 'ammo', amount: 1, x: 33.5, y: 15.5 },
-      { type: 'ammo', amount: 1, x: 40.5, y: 13.5 }, { type: 'ammo', amount: 1, x: 13.5, y: 3.5 },
-      { type: 'ammo', amount: 1, x: 7.5,  y: 25.5 },
+      { type: 'ammo', amount: 1, x: 40.5, y: 13.5 }, { type: 'ammo', amount: 1, x: 12.5, y: 3.5 },
+      { type: 'ammo', amount: 1, x: 7.5,  y: 24.5 },
+      { type: 'ammo', amount: 1, x: 8.5,  y: 4.5 },    // túnel secreto
+      { type: 'ammo', amount: 1, x: 8.5,  y: 29.5 },   // Parts & Service
       { type: 'health', amount: 35, x: 31.5, y: 25.5 }, { type: 'health', amount: 35, x: 40.5, y: 9.5 }
     ]
   }
@@ -9264,6 +9312,7 @@ function gunGameWin() {
 
 function resetGame(levelIdx) {
   if(typeof ggReset === 'function') ggReset();
+  kfClear();
   AssetLoader.hold();   // texturas ainda carregando? mostra a barra e segura a partida
   gameOver = false;
   matchClockReset();
@@ -9364,12 +9413,97 @@ function updateHUD() {
   document.getElementById('scoreval').textContent = score;
 }
 
+// Barra de mensagens da HUD (estilo Counter-Strike: Source): caixa escura translúcida com faixa na cor da HUD.
+let flashMsgTimer = 0;
 function flashMsg(msg) {
   const el = document.getElementById('msgFlash');
+  if(!el) return;
+  clearTimeout(flashMsgTimer);   // mensagem nova não é apagada pelo timer da anterior
+  if(msg === '' || msg == null){ el.style.opacity = '0'; el.classList.remove('show'); return; }
   el.textContent = msg;
   el.style.opacity = '1';
-  setTimeout(() => { el.style.opacity = '0'; }, 1800);
+  el.classList.add('show');
+  flashMsgTimer = setTimeout(() => { el.style.opacity = '0'; el.classList.remove('show'); }, 2200);
 }
+
+// ===== NOME SOBRE A CABEÇA DOS JOGADORES (multiplayer) =====
+// Host: lê o nome direto do convidado (ou "JOGADOR n" se ele não mudou). Convidado: recebe o nome do host no snapshot.
+function kfHostName(){ return getPlayerName() || 'HOST'; }
+function netTagName(en){
+  if(en.remote && en.peer){
+    const i = netPeers.indexOf(en.peer);
+    if(i < 0) return '';
+    return nameClean(en.peer.name) || (netT('JOGADOR ', 'PLAYER ') + (i + 2));
+  }
+  if(en.net && en.human) return en.pname || '';
+  return '';
+}
+function drawNameTag(en, sx, headY, sh){
+  if(!NET.mode || !NET.started) return;
+  const nm = netTagName(en); if(!nm) return;
+  const fs = Math.max(10, Math.min(17, sh * 0.13));
+  let up = 4;
+  if(en.hasFlag && ctf) up = Math.max(up, sh * 0.62);
+  if(en.ally) up = Math.max(up, Math.max(3, sh * 0.07) * 2.5);
+  const y = headY - up;
+  ctx.save();
+  ctx.globalAlpha = Math.max(0.65, ctx.globalAlpha);
+  ctx.font = '700 ' + fs.toFixed(1) + 'px "Trebuchet MS","Segoe UI",Verdana,Arial,sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(2.5, fs * 0.24);
+  ctx.strokeStyle = 'rgba(0,0,0,.9)'; ctx.strokeText(nm, sx, y);
+  ctx.fillStyle = en.team === 'CT' ? '#9cc8ff' : (en.team === 'T' ? '#ff6a55' : '#9fe3ff');
+  ctx.fillText(nm, sx, y);
+  ctx.restore();
+}
+
+// ===== MENSAGENS DE ABATE (kill feed estilo Counter-Strike: Source) =====
+// Host: dmOnKill/dmDamagePlayer chamam kfReport -> mostra aqui e manda para os convidados dentro do snapshot (d.kf).
+const KF_ICON_URL = 'https://i.postimg.cc/7ZX3JmJq/Icon-Death.png';
+const KF_ICON_ALT = 'https://i.postimg.cc/7ZX3JmJq/IconDeath.png';   // mesmo ícone já usado no jogo (reserva)
+const KF_MAX = 6, KF_LIFE_MS = 7000;
+const KF_BOT_NAMES = ['Dave','Vitaliy','Ricky','Derek','Gus','Pat','Brian','Steve','Ted','Wayne','Quade','Rex','Cole','Hunter','Jasper','Mace','Nick','Omar','Pete','Reed','Sam','Troy','Vince','Wade','Xavier','Yuri','Zack','Alvin','Boris','Cliff','Dean','Eli'];
+let kfOut = [], netSnapN = 0;
+function kfBotName(b){ return KF_BOT_NAMES[Math.abs((b && b.id) | 0) % KF_BOT_NAMES.length]; }
+function kfWho(x){
+  if(x === 'host' || x === player) return { n: getPlayerName() || (NET.mode ? 'HOST' : (currentLang === 'en' ? 'YOU' : 'VOCÊ')), t: dmPlayerTeam, i: 0 };
+  if(!x) return null;
+  if(x.remote && x.peer){ const n = netTagName(x); return { n: n || netT('JOGADOR', 'PLAYER'), t: x.team, i: x.id }; }
+  return { n: kfBotName(x), t: x.team, i: x.id };
+}
+function kfReport(killer, victim){
+  if(NET.mode === 'client') return;
+  if(currentGameMode === 'soccer' || currentGameMode === 'waves' || currentGameMode === 'fnaf') return;
+  if(!victim || victim.testDummy) return;
+  const nowT = performance.now();
+  if(victim !== 'host'){ if(nowT - (victim._kfAt || -9999) < 500) return; victim._kfAt = nowT; }   // abate contado uma vez só
+  const v = kfWho(victim); if(!v) return;
+  const k = kfWho(killer);
+  const m = { k: k ? k.n : '', kt: k ? k.t : '', ki: k ? k.i : -1, v: v.n, vt: v.t, vi: v.i };
+  kfShow(m, 0);
+  if(NET.mode === 'host' && NET.started && netPeers.length){ kfOut.push(m); if(kfOut.length > 20) kfOut.shift(); }
+}
+function kfClean(m){
+  m = m || {};
+  const tm = t => (t === 'CT' || t === 'T') ? t : '';
+  return { k: nameClean(m.k), kt: tm(m.kt), ki: (m.ki | 0), v: nameClean(m.v), vt: tm(m.vt), vi: (m.vi | 0) };
+}
+function kfShow(m, myId){
+  const box = document.getElementById('killFeed'); if(!box || !m.v) return;
+  const row = document.createElement('div');
+  row.className = 'kf-row' + ((m.ki === myId || m.vi === myId) ? ' me' : '');
+  const nameEl = (txt, team) => { const s = document.createElement('span'); s.className = 'kf-name' + (team ? ' ' + team : ''); s.textContent = txt; return s; };
+  if(m.k && m.ki !== m.vi) row.appendChild(nameEl(m.k, m.kt));
+  const ic = document.createElement('span'); ic.className = 'kf-ico';
+  const im = document.createElement('img'); im.alt = ''; im.src = KF_ICON_URL;
+  im.onerror = () => { im.onerror = null; im.src = KF_ICON_ALT; };
+  ic.appendChild(im); row.appendChild(ic);
+  row.appendChild(nameEl(m.v, m.vt));
+  box.appendChild(row);
+  while(box.children.length > KF_MAX) box.removeChild(box.firstChild);
+  setTimeout(() => { row.classList.add('old'); setTimeout(() => { if(row.parentNode) row.parentNode.removeChild(row); }, 600); }, KF_LIFE_MS);
+}
+function kfClear(){ const box = document.getElementById('killFeed'); if(box) box.innerHTML = ''; kfOut.length = 0; }
 
 let damageFlashOn = true;
 function triggerDamageFlash() {
@@ -9678,7 +9812,7 @@ function testUpdateUse(){
   if(!el || !btn || !isTestMapNow()) return;
   const p = (started && !gameOver && !countdownActive && !dmPlayerDead && settingsModal.style.display !== 'flex') ? testFindUse() : null;
   if(!p) return;   // (fnafUpdateUse já escondeu o aviso neste quadro)
-  const key = (usingTouch || usingGamepad) ? '' : '[E] ';
+  const key = useKeyLabel();
   const html = key + testUseLabel(p);
   if(testUseKey !== html){ testUseKey = html; el.innerHTML = html; }
   el.style.display = 'block';
@@ -10314,7 +10448,7 @@ function shopTick(){
     shopRefresh();
   }
 }
-// navegação pelo controle: D-pad = mover, A = comprar, B/Y = fechar
+// navegação pelo controle: D-pad = mover, A = comprar, B / START = fechar (abre com D-pad ↓ no jogo)
 function shopGamepad(btn, prev){
   const p = i => btn(i) && !prev(i);
   const n = shop.btns.length; if(!n) return;
@@ -10341,7 +10475,7 @@ function shopGamepad(btn, prev){
   if(p(5)) shop.sel = Math.min(n - 1, shop.sel + 5);
   if(p(4)) shop.sel = Math.max(0, shop.sel - 5);
   if(p(0)) shopBuy(shop.btns[shop.sel].dataset.w);
-  if(p(1) || p(3) || p(9)) shopClose();
+  if(p(1) || p(9)) shopClose();
   const el = shop.btns[shop.sel];
   if(el) try{ el.scrollIntoView({ block: 'nearest' }); }catch(e){}
   shopRefresh();
@@ -10499,7 +10633,8 @@ function dmEndMatch(winner, reason){
   if(document.pointerLockElement) document.exitPointerLock();
 }
 
-function dmOnKill(victim, killerTeam, byPlayer){
+function dmOnKill(victim, killerTeam, byPlayer, killer){
+  kfReport(byPlayer ? 'host' : killer, victim);
   victim.alive = false;
   victim.kills = Math.floor((victim.kills || 0) * 0.6);
   victim.respawnAt = performance.now() + DM_BOT_RESPAWN_MS;
@@ -10542,10 +10677,10 @@ function dmKillPlayer(){
   if(currentGameMode !== 'ctf'){ updateHUDModeLabel(); dmCheckWin(); }
 }
 
-function dmDamagePlayer(amount){
+function dmDamagePlayer(amount, attacker){
   if(dmPlayerDead || debugOptions.godMode) return;
   player.health -= amount;
-  if(player.health <= 0){ dmKillPlayer(); return; }
+  if(player.health <= 0){ kfReport(attacker || null, 'host'); dmKillPlayer(); return; }
   triggerDamageFlash();
   SFX.hurt();
   gpRumble(0.6, 0.7, 180);
@@ -10693,12 +10828,12 @@ function dmBotThink(b, dt, now){
         const fall = (b.pellets > 1) ? Math.max(0.15, 1 - td / b.wRange) : 1;   // shotgun perde força com a distância
         if(tIsPlayer){
           const was = dmPlayerDead;
-          dmDamagePlayer(b.dmgPlayer * fall);
+          dmDamagePlayer(b.dmgPlayer * fall, b);
           if(!was && dmPlayerDead) b.kills = (b.kills || 0) + 1;
         } else {
           tgt.health -= b.dmg * fall;
           { const td2 = Math.hypot(tgt.x - player.x, tgt.y - player.y); if(td2 < 16) SFX.botPain(0.6 * (1 - td2 / 16)); }
-          if(tgt.health <= 0){ b.kills = (b.kills || 0) + 1; dmOnKill(tgt, b.team, false); }
+          if(tgt.health <= 0){ b.kills = (b.kills || 0) + 1; dmOnKill(tgt, b.team, false, b); }
         }
       }
     }
@@ -12231,20 +12366,20 @@ const FNAF_TICK_S = 4.5;                      // intervalo entre "oportunidades 
 const FNAF_USE_R = 1.35;                      // alcance para apertar um botão
 const FNAF_DRAIN = { base: 0.11, door: 0.15, light: 0.12 };   // % de energia por segundo
 const FNAF_ANIMS = {
-  Freddy: { hp: 380, dmg: 45, walk: 1.3, chase: 2.1, base: 0, step: 3.0, scale: 1.12, door: 'E',
+  Freddy: { hp: 380, dmg: 100, walk: 1.3, chase: 2.1, base: 0, step: 3.0, scale: 1.12, door: 'E',
             route: ['stage', 'dining', 'restroom', 'ehall1', 'ehall2', 'edoor'] },
-  Bonnie: { hp: 220, dmg: 28, walk: 1.5, chase: 2.5, base: 2, step: 2.2, scale: 1.0, door: 'W',
+  Bonnie: { hp: 220, dmg: 60, walk: 1.5, chase: 2.5, base: 2, step: 2.2, scale: 1.0, door: 'W',
             route: ['stage', 'diningW', 'backstage', 'whall1', 'whall2', 'wdoor'] },
-  Chica:  { hp: 220, dmg: 28, walk: 1.5, chase: 2.4, base: 2, step: 2.0, scale: 1.0, door: 'E',
+  Chica:  { hp: 220, dmg: 60, walk: 1.5, chase: 2.4, base: 2, step: 2.0, scale: 1.0, door: 'E',
             route: ['stage', 'diningE', 'kitchen', 'ehall1', 'ehall2', 'edoor'] },
-  Foxy:   { hp: 180, dmg: 36, walk: 0,   chase: 3.2, base: 0, step: 0,   scale: 1.0, door: 'W', route: [] }
+  Foxy:   { hp: 180, dmg: 75, walk: 0,   chase: 3.2, base: 0, step: 0,   scale: 1.0, door: 'W', route: [] }
 };
 // Quantidade inicial de munição (pente já carregado) das armas que aparecem no mapa; reserva sempre começa em 0.
 const FNAF_START_AMMO = { pistol2: 12, pistol: 7, shotgun: 4, mp5n: 30 };
 
 function fnafReset(){
   if(fnaf){
-    ['W', 'E'].forEach(s => { const d = fnaf.doors[s]; if(d && fnaf.grid[d.y]) fnaf.grid[d.y][d.x] = 0; });
+    ['W', 'E', 'S'].forEach(s => { const d = fnaf.doors[s]; if(d && fnaf.grid[d.y]) fnaf.grid[d.y][d.x] = 0; });
   }
   fnaf = null;
   fogScale = 1;
@@ -12270,7 +12405,13 @@ function fnafInit(ldef){
     fnaf.doors[s] = { x: o.x, y: o.y, closed: false, wall0: wallTileMap[o.y * MAP_W + o.x] };
     doorTileMap[o.y * MAP_W + o.x] = -1;
   });
-  d.buttons.forEach(b => fnaf.buttons.push({ x: b.x, y: b.y, kind: b.kind, side: b.side }));
+  d.buttons.forEach(b => fnaf.buttons.push({ x: b.x, y: b.y, kind: b.kind, side: b.side, r: b.r }));
+  if(d.doors.S){   // porta secreta: começa fechada, com a mesma textura da parede (some no meio dela)
+    const o = d.doors.S;
+    ldef.grid[o.y][o.x] = 1;
+    fnaf.doors.S = { x: o.x, y: o.y, closed: true, wall0: wallTileMap[o.y * MAP_W + o.x] };
+    doorTileMap[o.y * MAP_W + o.x] = -1;
+  }
   (d.windows || []).forEach(w => { windowTileMap[w.y * MAP_W + w.x] = 1; });
 
   // Jogador: só a USP com pouca munição e nenhum pente reserva. Todo o resto está espalhado pelo mapa.
@@ -12475,6 +12616,12 @@ function fnafAnimLogic(a, dt){
   const dist = Math.hypot(T.x - en.x, T.y - en.y);
   const out = f.powerOut;
 
+  // Foxy: susto por distância, uma única vez na partida (só para quem é o jogador local)
+  if(a.name === 'Foxy' && !f.foxyScared && !T.ent && dist < 5 && (a.state === 'run' || a.state === 'attack')){
+    f.foxyScared = true;
+    fnafJumpscare('Foxy'); SFX.fnafJumpscare();
+  }
+
   if(a.name === 'Freddy'){
     if(!out && f.hour < 2) return;                   // só acorda às 2 AM
     if(!out && fnafSeen(en, 16)) return;             // congela enquanto o jogador o encara
@@ -12486,6 +12633,8 @@ function fnafAnimLogic(a, dt){
     a.cd = 1.3; a.stagger = 0.45;
     return;
   }
+
+  if(out && a.name !== 'Freddy' && a.state !== 'attack') return;   // sem energia: os outros param, só o Freddy vem (como no FNAF)
 
   if(a.state === 'attack'){ fnafUpdateAttack(a, dt, dist); return; }
 
@@ -12590,13 +12739,28 @@ function fnafUpdateAnim(a, dt){
 }
 
 // ----- Dano / susto / desativação -----
+// GIFs de jumpscare (tela cheia). Cada susto cria um <img> novo para o GIF recomeçar do primeiro quadro.
+const FNAF_SCARE_GIFS = {
+  Freddy: 'https://i.postimg.cc/wBYbtbVz/freddyjumpscare.gif',
+  Chica:  'https://i.postimg.cc/MGJrcrDk/chicajumpscare.gif',
+  Bonnie: 'https://i.postimg.cc/MGJrcrDX/bonniejumpscare.gif',
+  Foxy:   'https://i.postimg.cc/rwrPwLSM/foxyjumpscare.gif',      // susto de distância (toca uma vez por partida)
+  FoxyHit:'https://i.postimg.cc/g2FK4L6H/foxyjumpcare2.gif'       // susto do ataque (toca a cada golpe)
+};
+Object.values(FNAF_SCARE_GIFS).forEach(u => { const i = new Image(); i.src = u; });
 function fnafJumpscare(name){
   const el = document.getElementById('fnafScare');
-  const e = fnafImgs[name];
-  if(!el || !e) return;
-  const im = el.firstElementChild;
-  if(im.getAttribute('src') !== e.url) im.src = e.url;
+  const e = fnafImgs[name === 'FoxyHit' ? 'Foxy' : name], gif = FNAF_SCARE_GIFS[name];
+  if(!el || (!e && !gif)) return;
   el.classList.remove('on');
+  el.innerHTML = '';
+  const im = new Image(); im.alt = '';
+  im.onerror = () => {   // GIF não carregou: usa o sprite antigo
+    im.onerror = null;
+    if(e){ im.style.objectFit = 'contain'; im.src = e.url; }
+  };
+  im.src = gif || e.url;
+  el.appendChild(im);
   void el.offsetWidth;
   el.classList.add('on');
 }
@@ -12604,7 +12768,7 @@ function fnafJumpscare(name){
 function fnafHurtPlayer(a, tgt){
   if(tgt && tgt.ent){ if(!gameOver) netDamageRemote(tgt.ent, a.cfg.dmg, a.name); return; }
   if(gameOver) return;
-  fnafJumpscare(a.name);
+  fnafJumpscare(a.name === 'Foxy' ? 'FoxyHit' : a.name);
   SFX.fnafJumpscare();
   if(a.name === 'Freddy' && fnaf && fnaf.powerOut) SFX.fnafEnergyZero();   // música do Freddy: só quando o susto é dele (sem energia)
   if(debugOptions.godMode) return;
@@ -12680,7 +12844,18 @@ function fnafToggleLight(side){
   fnafApplyLights();
   SFX.fnafClick();
 }
+function fnafOpenSecret(){
+  const d = fnaf.doors.S;
+  if(!d || !d.closed) return;
+  d.closed = false;
+  fnaf.grid[d.y][d.x] = 0;
+  wallTileMap[d.y * MAP_W + d.x] = d.wall0;
+  doorTileMap[d.y * MAP_W + d.x] = -1;
+  SFX.fnafDoor();
+  flashMsg(currentLang === 'en' ? 'SECRET PASSAGE FOUND!' : 'PASSAGEM SECRETA ENCONTRADA!');
+}
 function fnafUseButton(b){
+  if(b.kind === 'secret'){ fnafOpenSecret(); return; }   // mecânica: funciona mesmo sem energia
   if(fnaf.powerOut){
     flashMsg(currentLang === 'en' ? 'NO POWER!' : 'SEM ENERGIA!');
     SFX.fnafDeny();
@@ -12695,7 +12870,8 @@ function fnafFindUse(){
   let best = null, bd = 1e9;
   fnaf.buttons.forEach(b => {
     const dx = b.x - player.x, dy = b.y - player.y, d = Math.hypot(dx, dy);
-    if(d > FNAF_USE_R) return;
+    if(b.kind === 'secret' && !(fnaf.doors.S && fnaf.doors.S.closed)) return;   // já aberta
+    if(d > (b.r || FNAF_USE_R)) return;
     let ang = Math.atan2(dy, dx) - player.angle;
     while(ang > Math.PI) ang -= 2 * Math.PI;
     while(ang < -Math.PI) ang += 2 * Math.PI;
@@ -12706,6 +12882,7 @@ function fnafFindUse(){
 }
 function fnafUseLabel(b){
   const en = currentLang === 'en';
+  if(b.kind === 'secret') return en ? 'PUSH THE FAKE WALL' : 'EMPURRAR A PAREDE FALSA';
   const side = b.side === 'W' ? (en ? 'WEST' : 'OESTE') : (en ? 'EAST' : 'LESTE');
   if(b.kind === 'door'){
     const closed = fnaf.doors[b.side].closed;
@@ -12723,7 +12900,7 @@ function fnafUpdateUse(){
   const b = (fnaf && !gameOver && !countdownActive && settingsModal.style.display !== 'flex') ? fnafFindUse() : null;
   if(fnaf) fnaf.use = b;
   if(!b){ fnafHideUse(); return; }
-  const key = (usingTouch || usingGamepad) ? '' : '[E] ';
+  const key = useKeyLabel();
   const html = key + fnafUseLabel(b);
   if(fnaf.useKey !== html){ fnaf.useKey = html; el.innerHTML = html; }
   if(el.style.display !== 'block') el.style.display = 'block';
@@ -12857,6 +13034,7 @@ function updateFnaf(dt, now){
 
 // ----- Botões desenhados no mundo (porta / luz) -----
 function drawFnafButton(b, sx, horizon, size, dist, zShift){
+  if(b.kind === 'secret') return;   // invisível: faz parte da parede
   const fog = Math.max(0.4, 1 - dist / (12 * fogScale));
   horizon = horizon + (zShift || 0);
   const bottom = horizon + size * 0.5;
@@ -13006,13 +13184,14 @@ window.addEventListener('keydown', e => {
     usingTouch = false; 
     applyControlScheme(); 
   }
-  if(k === 'r') reloadWeapon();
+  if(k === 'r' && player.weapon !== 'gravgun') reloadWeapon();   // R = recarregar (agarrar/soltar da Gravity Gun fica só no botão direito do mouse)
   if(k === 'b' && started && !gameOver) shopToggle();
   if(k === 'escape' && shopOpen){ shopClose(true); return; }
   if((k === 'c' || k === 'home') && started && !gameOver && settingsModal.style.display !== 'flex') recenterCam();
   if(k === 'pageup' || k === 'pagedown') e.preventDefault();
   if(started && !gameOver && settingsModal.style.display !== 'flex'){ if(soc && k === 'f') socPlayerKick(); if(k === ' '){ socPlayerJump(); e.preventDefault(); } }
-  if(k === 'e'){ if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }
+  if(k === 'e'){ if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }   // E = interagir (portas/luzes/arma do chão)
+  if(k === 'q' && started && !gameOver && !shopOpen && settingsModal.style.display !== 'flex') quickSwapWeapon();   // Q = volta à arma anterior
   if(k === 'escape') {
     if(document.pointerLockElement) document.exitPointerLock();
     openSettingsMenu();
@@ -13054,6 +13233,17 @@ window.addEventListener('mousedown', e=>{
   }
 });
 window.addEventListener('mouseup', ()=>{ fireHeld=false; });
+// Roda do mouse = arma anterior / próxima (o mesmo que LB / RB no controle). Só durante a partida, com o mouse travado.
+let wheelWpnT = 0;
+window.addEventListener('wheel', e => {
+  if(!started || gameOver || shopOpen || chatOpen || settingsModal.style.display === 'flex') return;
+  if(document.pointerLockElement !== document.getElementById('screen') || !e.deltaY) return;
+  e.preventDefault();
+  const now = performance.now();
+  if(now - wheelWpnT < 110) return;
+  wheelWpnT = now;
+  cycleWeapon(e.deltaY > 0 ? 1 : -1);
+}, { passive: false });
 
 document.getElementById('screen').addEventListener('click', ()=>{
   if(started && !gameOver && !usingTouch && document.getElementById('settingsModal').style.display !== 'flex') requestPointerLockSafe();
@@ -13096,7 +13286,7 @@ let gpVibration = true;
 let gpIsPS = false;          // true se o controle for PlayStation (troca os símbolos das dicas)
 let gpPadLabel = '';
 let gpLastScan = 0;
-let lastWeaponId = null;     // arma anterior (botão Y = troca rápida)
+let lastWeaponId = null;     // arma anterior (troca rápida: Q / D-pad ←)
 
 // Curva de resposta do analógico de mira (só no console): movimentos pequenos = mira precisa,
 // analógico no fim do curso = giro rápido. Mouse/toque não são afetados.
@@ -13184,6 +13374,18 @@ function gpRumble(strong, weak, ms){
   }catch(err){}
 }
 
+// Troca rápida: volta para a arma usada antes (Q no teclado, D-pad ← no controle).
+function quickSwapWeapon(){
+  if(lastWeaponId && lastWeaponId !== player.weapon && player.unlockedWeapons[lastWeaponId]){
+    SFX.menuSelect(); switchWeapon(lastWeaponId);
+  }
+}
+// Rótulo da tecla/botão "interagir" nos avisos da tela (toque: sem rótulo).
+function useKeyLabel(){
+  if(usingTouch) return '';
+  if(usingGamepad) return '[' + (gpIsPS ? '△' : 'Y') + '] ';
+  return '[E] ';
+}
 function cycleWeapon(dir){
   const ids = Object.keys(WEAPON_CONFIG).filter(id => player.unlockedWeapons[id]);
   if(ids.length === 0) return;
@@ -13212,6 +13414,10 @@ function pollGamepad(){
     usingGamepad = true;
     refreshGamepadStatusUI();
   }
+  // Atividade do controle: o teclado virtual usa isto para (1) abrir quando o jogador está no controle, em qualquer navegador,
+  // e (2) ignorar teclas "falsas" (Enter/Esc/espaço...) que alguns navegadores de console geram junto com os botões do controle.
+  if(gp.buttons.some(b => b.pressed) || Math.abs(gp.axes[0] || 0) > .5 || Math.abs(gp.axes[1] || 0) > .5) window.dzPadT = performance.now();
+  if(gp.buttons.some((b, i) => b.pressed && !gpPrevButtons[i])) window.dzLastInput = 'pad';
 
   const menuOpen = settingsModal.style.display === 'flex';
   const btn = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
@@ -13266,21 +13472,21 @@ function pollGamepad(){
     else if(!gpFireHeld && gpTriggerWasHeld){ fireHeld = false; }
     gpTriggerWasHeld = gpFireHeld;
 
-    if(btn(2) && !prev(2)) reloadWeapon();       // X / Square
-    if(btn(6) && !prev(6) && player.weapon === 'gravgun') ggSecondary();   // LT / L2: agarrar / soltar (Gravity Gun)
-    if(btn(0) && !prev(0)){ if(soc && !soc.test) socPlayerJump(); else if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }
-    if(btn(1) && !prev(1)){ if(soc && (!soc.test || socTestInPitch())) socPlayerKick(); else socPlayerJump(); }   // B / ○: chutar (Futebol) ou pular (demais modos)      // A / Cross: troca a arma da mão pela do chão
-    if(btn(3) && !prev(3) && shopOn()){ shopOpenMenu(); }   // Y: abre a loja (DM/CTF)
-    else if(btn(3) && !prev(3)){                       // Y / Triangle: troca rápida p/ a arma anterior
-      if(lastWeaponId && lastWeaponId !== player.weapon && player.unlockedWeapons[lastWeaponId]){
-        SFX.menuSelect(); switchWeapon(lastWeaponId);
-      }
-    }
-    if(btn(11) && !prev(11)) recenterCam();       // R3 (clique do analógico direito): centraliza a câmera
-    if(btn(5) && !prev(5)) cycleWeapon(1);        // RB / R1
-    if(btn(4) && !prev(4)) cycleWeapon(-1);       // LB / L1
-    if(btn(15) && !prev(15)) cycleWeapon(1);      // D-pad right
-    if(btn(14) && !prev(14)) cycleWeapon(-1);     // D-pad left
+    // ===== MAPA ÚNICO DE BOTÕES (igual em TODOS os modos; cada botão faz uma coisa só) =====
+    //  A / ✕  pular            B / ○  chutar (Futebol)      X / □  recarregar       Y / △  interagir (portas, luzes, arma do chão)
+    //  RT/R2  atirar           LT/L2  agarrar/soltar (Gravity Gun)
+    //  LB/RB  arma anterior/próxima    D-pad ←  voltar à arma anterior    D-pad ↓  loja (DM/CTF/Resgate)    D-pad ↑ / VIEW  chat
+    //  R3  centralizar câmera          START  pausa
+    if(btn(0) && !prev(0)) socPlayerJump();                                   // A / ✕: pular
+    if(btn(1) && !prev(1)) socPlayerKick();                                   // B / ○: chutar (só tem efeito no Futebol)
+    if(btn(2) && !prev(2) && player.weapon !== 'gravgun') reloadWeapon();     // X / □: recarregar
+    if(btn(3) && !prev(3)){ if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }   // Y / △: interagir (usar portas/luzes, trocar a arma do chão)
+    if(btn(6) && !prev(6) && player.weapon === 'gravgun') ggSecondary();      // LT / L2: agarrar / soltar (Gravity Gun)
+    if(btn(13) && !prev(13) && shopOn()) shopOpenMenu();                      // D-pad ↓: abre a loja (DM/CTF/Resgate)
+    if(btn(14) && !prev(14)) quickSwapWeapon();                               // D-pad ←: volta à arma anterior
+    if(btn(11) && !prev(11)) recenterCam();                                   // R3: centraliza a câmera
+    if(btn(5) && !prev(5)) cycleWeapon(1);                                    // RB / R1: próxima arma
+    if(btn(4) && !prev(4)) cycleWeapon(-1);                                   // LB / L1: arma anterior
   } else {
     gpVec.x = 0; gpVec.y = 0; gpTurn = 0; gpLook = 0;
   }
@@ -15594,6 +15800,7 @@ function drawEnemySprite(en, sx, horizon, size, dist, zShift){
         ctx.closePath();
         ctx.fill();
       }
+      drawNameTag(en, sx, drawY, sh);   // nome do jogador (multiplayer) acima da cabeça
     }
   } else {
     const bodyColor = en.hostageTex !== undefined ? [216,192,112] : en.team==='T' ? [200,60,40] : en.team==='CT' ? [50,100,200] : (en.type===1 ? [150,40,40] : [70,120,60]);
@@ -16146,7 +16353,7 @@ function updateSwapPrompt(){
   }
   const en = currentLang === 'en';
   const cur = WEAPON_CONFIG[player.weapon] ? WEAPON_CONFIG[player.weapon].name : '';
-  const key = (usingTouch || usingGamepad) ? '' : '[E] ';
+  const key = useKeyLabel();
   el.innerHTML = key + (en ? 'SWAP ' : 'TROCAR ') + cur + (en ? ' FOR ' : ' POR ') + '<b>' + WEAPON_CONFIG[cand.weaponId].name + '</b>';
   el.style.display = 'block';
   btn.style.display = usingTouch ? 'flex' : 'none';
@@ -16485,7 +16692,7 @@ function ggHudHtml(isG){
   const touch = usingTouch, pad = !touch && usingGamepad && !usingKeyboardMouse;
   const ps = gpIsPS;
   const fire = touch ? ggT('TIRO', 'FIRE') : pad ? (ps ? 'R2' : 'RT') : ggT('CLIQUE', 'CLICK');
-  const grab = touch ? ggT('RECARREGAR', 'RELOAD') : pad ? (ps ? '□ / L2' : 'X / LT') : ggT('R / BOTÃO DIREITO', 'R / RIGHT BUTTON');
+  const grab = touch ? ggT('RECARREGAR', 'RELOAD') : pad ? (ps ? 'L2' : 'LT') : ggT('BOTÃO DIREITO', 'RIGHT BUTTON');
   const c = GG.held ? ggLabel(GG.held) : (GG.cand ? ggLabel(GG.cand) : '');
   const top = GG.held ? ggT('SEGURANDO: ', 'HOLDING: ') + c : c ? ggT('MIRA: ', 'AIM: ') + c : 'GRAVITY GUN';
   return '<b>' + top + '</b><br><span>' + fire + ': ' + ggT('lançar', 'throw') + ' · ' + grab + ': ' + ggT('agarrar', 'grab') + '</span>';
@@ -17358,7 +17565,15 @@ function chatSubmit(){
 // D-pad/analógico move · A digita · X apaga · Y espaço · RB/LB maiúsc. · START envia · B cancela.
 // Também aceita mouse/toque e teclado físico. Usado no chat e nos campos de texto dos menus (código da sala).
 (function dzVkInit(){
-  const wanted = () => !!window.DZ_CONSOLE || /[?&]vk=1/.test(location.search);
+  const baseWanted = () => !!window.DZ_CONSOLE || /[?&]vk=1/.test(location.search);
+  // Console OU qualquer navegador em que o jogador esteja usando o controle (ex.: Edge do Xbox no modo Game Controls,
+  // cujo texto do teclado do sistema não chega na página). Mouse / teclado físico / toque continuam usando o campo nativo.
+  const wanted = () => baseWanted() || window.dzLastInput === 'pad';
+  ['keydown', 'mousedown', 'pointerdown', 'wheel'].forEach(ev => window.addEventListener(ev, e => {
+    if(ev === 'keydown' && ((window.dzIsPadKey && window.dzIsPadKey(e)) || performance.now() - (window.dzPadT || 0) < 450)) return;   // tecla gerada pelo controle
+    if(ev === 'pointerdown' && baseWanted() && e.pointerType === 'mouse') return;   // console em modo mouse: o clique do A não conta como mouse real
+    window.dzLastInput = 'km';
+  }, true));
   const T = (pt, en) => (typeof currentLang !== 'undefined' && currentLang === 'en') ? en : pt;
   const st = document.createElement('style');
   st.textContent =
@@ -17522,6 +17737,7 @@ function chatSubmit(){
   // teclado físico (se houver um conectado)
   function key(e){
     if(!S.open) return false;
+    if(performance.now() - (window.dzPadT || 0) < 450) return true;   // tecla fabricada pelo controle (A→Enter, B→Esc...): ignora
     const k = e.key;
     if(k === 'Enter') ok();
     else if(k === 'Escape') cancel();
@@ -17630,7 +17846,7 @@ function netHostOnHit(p, d){
   const team = isTeamMode();
   if(d.id === 0){   // acertou o host
     if(team && dmPlayerTeam !== p.team && !dmPlayerDead){
-      dmDamagePlayer(dmg);
+      dmDamagePlayer(dmg, p.ent);
       if(dmPlayerDead) netSendTo(p, { t: 'kill', pts: 1 });
     }
     return;
@@ -17640,13 +17856,13 @@ function netHostOnHit(p, d){
   if(t.remote){   // jogador x jogador: só entre equipes adversárias
     if(!team || t.team === p.team) return;
     t.health -= dmg;
-    if(t.health <= 0){ dmOnKill(t, p.team, false); netSendTo(p, { t: 'kill', pts: 1 }); }
+    if(t.health <= 0){ dmOnKill(t, p.team, false, p.ent); netSendTo(p, { t: 'kill', pts: 1 }); }
     return;
   }
   if(t.team){   // bot
     if(t.team === p.team) return;
     t.health -= dmg;
-    if(t.health <= 0){ dmOnKill(t, p.team, false); netSendTo(p, { t: 'kill', pts: currentGameMode === 'gungame' ? 150 : 1 }); }
+    if(t.health <= 0){ dmOnKill(t, p.team, false, p.ent); netSendTo(p, { t: 'kill', pts: currentGameMode === 'gungame' ? 150 : 1 }); }
     return;
   }
   if(t.fnaf){ fnafAnimatronicHit(t, dmg, p); return; }
@@ -17662,12 +17878,14 @@ function netHostSnapshot(){
   if(!NET.started || !netPeers.length) return;
   const now = performance.now(), team = isTeamMode();
   const e = [{ i: 0, m: dmPlayerTeam, x: netF(player.x), y: netF(player.y), z: netF(player.z), a: dmPlayerDead ? 0 : 1, h: Math.max(0, player.health | 0), r: 1, k: NET.hostSkin || 0, fl: player.hasFlag ? 1 : 0 }];
+  const sendNames = (netSnapN++ % 8 === 0);   // nomes ~2x por segundo (bem leve)
+  if(sendNames) e[0].n = kfHostName();
   enemies.forEach(b => {
     if(!b.alive && !b.team && !b.fnaf) return;   // zumbis mortos não vão pela rede
     if(team && b.remote && !b.alive && !b.wasDead){ b.wasDead = true; b.respawnAt = now + DM_PLAYER_RESPAWN_MS - 500; }
     const o = { i: b.id, x: netF(b.x), y: netF(b.y), z: netF(b.z), a: b.alive ? 1 : 0, h: Math.max(0, b.health | 0) };
     if(b.team) o.m = b.team;
-    if(b.remote){ o.r = 1; if(b.mpSkin) o.k = b.mpSkin; }
+    if(b.remote){ o.r = 1; if(b.mpSkin) o.k = b.mpSkin; if(sendNames){ const tn = netTagName(b); if(tn) o.n = tn; } }
     if(b.fnaf){ o.f = b.fnaf; o.s = b.scale || 1; }
     else if(!b.team) o.ty = b.type || 0;
     if(b.hasFlag) o.fl = 1;
@@ -17675,6 +17893,7 @@ function netHostSnapshot(){
   });
   const d = { t: 'snap', e, c: dmScoreCT, r: dmScoreT, go: (gameOver && team) ? 1 : 0 };
   if(gameOver && team){ d.gw = dmEndInfo.winner; d.gr = dmEndInfo.reason; }
+  if(kfOut.length) d.kf = kfOut.splice(0);   // mensagens de abate
   if(dmEnd.mode === 'time' && isDmEndMode()) d.tl = +dmTimeLeft.toFixed(1);
   if(currentGameMode === 'waves') d.w = currentWave;
   if(currentGameMode === 'soccer' && soc){ const bl = soc.ball; d.sb = [netF(bl.x), netF(bl.y), netF(bl.z), netF(bl.vx), netF(bl.vy), netF(bl.vz)]; d.sp = soc.phase; d.sk = +soc.clock.toFixed(1); d.sg = soc.golden ? 1 : 0; d.sh = soc.half || 1; d.sa = soc.add || 0; }
@@ -17686,7 +17905,7 @@ function netHostSnapshot(){
   if(hr) d.hs = hr.hostages.map(h => [netF(h.x), netF(h.y), netF(h.z), h.tex, h.state, h.state === 'following' && h.leader ? (h.leader === player ? 0 : h.leader.id) : null]);
   if(fnaf){
     d.fn = { h: fnaf.hour, p: +fnaf.power.toFixed(1), o: fnaf.powerOut ? 1 : 0, t: +fnaf.t.toFixed(1),
-      dW: fnaf.doors.W.closed ? 1 : 0, dE: fnaf.doors.E.closed ? 1 : 0, lW: fnaf.lights.W ? 1 : 0, lE: fnaf.lights.E ? 1 : 0, al: fnaf.alertT > 0 ? fnaf.alert : '' };
+      dW: fnaf.doors.W.closed ? 1 : 0, dE: fnaf.doors.E.closed ? 1 : 0, lW: fnaf.lights.W ? 1 : 0, lE: fnaf.lights.E ? 1 : 0, sc: (fnaf.doors.S && !fnaf.doors.S.closed) ? 1 : 0, al: fnaf.alertT > 0 ? fnaf.alert : '' };
   }
   netBroadcast(d);
 }
@@ -17798,7 +18017,7 @@ function netOnDamage(d){
   if(dmPlayerDead || gameOver || debugOptions.godMode) return;
   player.health -= (+d.d || 0);
   triggerDamageFlash(); SFX.hurt(); gpRumble(0.7, 0.6, 200);
-  if(d.sc){ fnafJumpscare(d.sc); SFX.fnafJumpscare(); if(d.sc === 'Freddy' && fnaf && fnaf.powerOut) SFX.fnafEnergyZero(); }
+  if(d.sc){ fnafJumpscare(d.sc === 'Foxy' ? 'FoxyHit' : d.sc); SFX.fnafJumpscare(); if(d.sc === 'Freddy' && fnaf && fnaf.powerOut) SFX.fnafEnergyZero(); }
   updateHUD();
   if(player.health <= 0){ player.health = 0; netCoopDie(); }
 }
@@ -17821,6 +18040,7 @@ function netApplySnap(d){
   const prevScore = dmScoreCT + dmScoreT;
   const team = isTeamMode();
   if(d.c !== undefined){ dmScoreCT = d.c; dmScoreT = d.r; }
+  if(d.kf) d.kf.forEach(m => kfShow(kfClean(m), netMyId));
   const seen = {};
   d.e.forEach(a => {
     const id = a.i;
@@ -17843,6 +18063,7 @@ function netApplySnap(d){
     o.alive = !!a.a; o.health = a.h; o.hasFlag = !!a.fl;
     o.type = a.ty || 0;
     o.human = !!a.r; o.mpSkin = a.k || 0;
+    if(a.n !== undefined) o.pname = nameClean(a.n);
     if(soc && currentGameMode === 'soccer') o.socClub = a.m === 'CT' ? soc.home : soc.away;   // skin = clube do time
     if(a.f){ o.fnaf = a.f; o.scale = a.s; }
     seen[id] = 1;
@@ -17935,6 +18156,7 @@ function netApplyFnaf(F){
     if(fnaf.lights[s] !== lw){ fnaf.lights[s] = lw; lightsChanged = true; }
   });
   if(lightsChanged) fnafApplyLights();
+  if(F.sc && fnaf.doors.S && fnaf.doors.S.closed) fnafOpenSecret();   // passagem secreta aberta pelo host/outro jogador
   if(F.al && F.al !== fnaf.alert) flashMsg(F.al);
   fnaf.alert = F.al || ''; fnaf.alertT = F.al ? 1 : 0;
   fnafUpdateHud(false);
