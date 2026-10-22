@@ -13405,15 +13405,19 @@ window.addEventListener('keydown', e => {
   }
   if(k === 'r' && player.weapon !== 'gravgun') reloadWeapon();   // R = recarregar (agarrar/soltar da Gravity Gun fica só no botão direito do mouse)
   if(k === 'b' && started && !gameOver) shopToggle();
-  if(k === 'escape' && shopOpen){ shopClose(true); return; }
+  if(k === 'escape' && shopOpen){ e.preventDefault(); shopClose(); return; }   // ESC fecha a loja e devolve o controle do mouse
   if((k === 'c' || k === 'home') && started && !gameOver && settingsModal.style.display !== 'flex') recenterCam();
   if(k === 'pageup' || k === 'pagedown') e.preventDefault();
   if(started && !gameOver && settingsModal.style.display !== 'flex'){ if(soc && k === 'f') socPlayerKick(); if(k === ' '){ socPlayerJump(); e.preventDefault(); } }
   if(k === 'e'){ if(!fnafTryUse() && !testTryUse()) trySwapWeapon(); }   // E = interagir (portas/luzes/arma do chão)
   if(k === 'q' && started && !gameOver && !shopOpen && settingsModal.style.display !== 'flex') quickSwapWeapon();   // Q = volta à arma anterior
   if(k === 'escape') {
-    if(document.pointerLockElement) document.exitPointerLock();
-    openSettingsMenu();
+    e.preventDefault();
+    if(settingsModal.style.display === 'flex' && started && !gameOver){ resumeGame(); }   // ESC de novo = volta ao jogo (e recaptura o mouse)
+    else {
+      if(document.pointerLockElement) document.exitPointerLock();
+      openSettingsMenu();
+    }
   }
   if (settingsModal.style.display !== 'flex') {
     Object.keys(WEAPON_CONFIG).forEach(wId => {
@@ -13471,9 +13475,38 @@ function requestPointerLockSafe(){
   const el = document.getElementById('screen');
   if(el.requestPointerLock) el.requestPointerLock();
 }
+// ---- ESC no PC: captura a tecla ESC para o jogo ----
+// Em tela cheia + mouse travado, o navegador usa o ESC para sair da tela cheia / soltar o mouse
+// e NÃO entrega a tecla à página. A Keyboard Lock API (Chrome/Edge) faz o ESC chegar ao jogo
+// (abre o menu) sem sair da tela cheia. Para sair da tela cheia: segure ESC ~2s ou use o botão.
+function dzLockEsc(){
+  try{ if(navigator.keyboard && navigator.keyboard.lock){ const pr = navigator.keyboard.lock(['Escape']); if(pr && pr.catch) pr.catch(()=>{}); } }catch(_){}
+}
+function dzUnlockEsc(){
+  try{ if(navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); }catch(_){}
+}
+function dzSyncEscLock(){
+  const fs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  if(fs) dzLockEsc(); else dzUnlockEsc();
+}
+['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(ev => document.addEventListener(ev, dzSyncEscLock));
+// Fallback (Firefox/Safari, sem Keyboard Lock): se o navegador soltar o mouse sozinho durante a partida
+// (ESC "engolido" pelo navegador), abre o menu de pausa em vez de deixar o jogo sem controle.
+let dzPLExitT = 0;
+if(document.exitPointerLock){
+  const _dzExitPL = document.exitPointerLock.bind(document);
+  document.exitPointerLock = function(){ dzPLExitT = performance.now(); return _dzExitPL(); };
+}
 document.addEventListener('pointerlockchange', ()=>{
+  const wasLocked = pointerLocked;
   pointerLocked = document.pointerLockElement===document.getElementById('screen');
   resetLookInput();
+  if(wasLocked && !pointerLocked && started && !gameOver && !usingTouch && !usingGamepad
+     && performance.now() - dzPLExitT > 400
+     && settingsModal.style.display !== 'flex' && !shopOpen && !chatOpen
+     && levelSelectModal.style.display !== 'flex' && document.visibilityState === 'visible' && document.hasFocus()){
+    openSettingsMenu();
+  }
 });
 
 let fireHeld = false;
@@ -14209,7 +14242,7 @@ function toggleFullscreen() {
   const elem = document.documentElement;
   if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
     if (elem.requestFullscreen) {
-      const pr = elem.requestFullscreen(); if(pr && pr.catch) pr.catch(()=>{});
+      const pr = elem.requestFullscreen(); if(pr && pr.then) pr.then(dzLockEsc).catch(()=>{});
     } else if (elem.msRequestFullscreen) {
       elem.msRequestFullscreen();
     } else if (elem.mozRequestFullScreen) {
