@@ -1400,6 +1400,19 @@ html.console #killFeed{top:calc(8px + var(--sy,0px));right:calc(8px + var(--sx,0
 .kf-ico img{display:block;width:100%;height:100%;object-fit:contain;transform:translateX(-600px);filter:drop-shadow(600px 0 0 var(--cs-hud,#9fe3ff)) drop-shadow(0 0 2px #000);}
 @keyframes kfIn{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:none;}}
 </style>
+<style id="dzOnlineWinCss">
+/* Menu online em estilo janela (CS:S): compacto e centralizado, sem ocupar a tela toda */
+#netPanel .modal-box.net-box{max-width:min(400px,calc(100vw - 2 * var(--dz-sbw))) !important;width:92vw;max-height:min(80dvh,520px);}
+#netPanel .net-card{padding:10px 12px;margin-bottom:8px;gap:6px;}
+#netPanel input,#netCode{font-size:20px;letter-spacing:8px;padding:7px 6px;}
+#netPanel .net-status{margin:4px 0 8px;}
+#levelSelectModal.net-lobby .modal-box{max-width:min(600px,calc(100vw - 2 * var(--dz-sbw))) !important;max-height:min(84dvh,680px);}
+#levelSelectModal.net-lobby #netPlayersBox{padding:6px 10px;}
+#levelSelectModal.net-lobby #netRoomCode{font-size:22px;letter-spacing:6px;margin:0 0 4px;padding:2px 8px;}
+#levelSelectModal.net-lobby #netPlist{max-height:15vh;display:grid;grid-template-columns:1fr 1fr;gap:3px 6px;}
+#levelSelectModal.net-lobby #netPlist>*,#levelSelectModal.net-lobby .net-pl{margin-top:0;padding:4px 8px;}
+@media (max-width:560px){#levelSelectModal.net-lobby #netPlist{grid-template-columns:1fr;}}
+</style>
 </head>
 <body>
 <div id="loadingScreen">
@@ -1519,13 +1532,15 @@ html.console #killFeed{top:calc(8px + var(--sy,0px));right:calc(8px + var(--sx,0
 /* barra lateral própria dos menus (funciona em toque, mouse e controle; a nativa fica escondida) */
 .modal-box{scrollbar-width:none;}
 .modal-box::-webkit-scrollbar{display:none;width:0;height:0;}
-.modal-box>*:not(h2){margin-right:24px;}
 .dz-sb{position:fixed !important;z-index:5 !important;display:none;width:16px;box-sizing:border-box;touch-action:none;
-  background:rgba(0,0,0,.4);border:1px solid var(--cs-line,#5a3a10);border-radius:8px;}
-.dz-sb-thumb{position:absolute;left:2px;right:2px;top:0;min-height:40px;box-sizing:border-box;border-radius:6px;cursor:grab;touch-action:none;
+  background:rgba(0,0,0,.4);border:1px solid var(--cs-line,#5a3a10);border-radius:0;}
+.dz-sb-thumb{position:absolute;left:2px;right:2px;top:0;min-height:40px;box-sizing:border-box;border-radius:0;cursor:grab;touch-action:none;
   background:linear-gradient(#4a63a8,#2c3f72);border:1px solid var(--cs-y,#9fe3ff);}
 .dz-sb-thumb:hover,.dz-sb-thumb.drag{background:linear-gradient(#5a78c0,#3a5090);}
 html.console .dz-sb{width:24px;}
+/* reserva o espaço da barra dos dois lados (a janela continua centralizada) para a barra nunca entrar na janela, em qualquer tela */
+:root{--dz-sbw:16px;} html.console{--dz-sbw:24px;}
+.modal-box{max-width:calc(100vw - 2 * var(--dz-sbw)) !important;}
 </style>
 <style id="menuThemeCss">
 /* ===== Cor dos menus (azul = padrão, laranja, branco, preto). Tudo via variáveis, com contraste ajustado por tema. ===== */
@@ -1737,6 +1752,67 @@ html .dzVkKey{border-color:rgba(var(--ui-rgb),.35);}
 html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10px var(--mt-glow);}
 #hudThemeSeg{flex-wrap:wrap;}
 #hudThemeSeg .seg-btn{flex:1 1 30%;padding:10px 4px;}
+</style>
+<style id="v4Css">
+/* ===== v4: menus estilo CS:S (VGUI) ===== */
+.modal-box{background:linear-gradient(180deg,rgba(76,88,68,.96),rgba(52,60,46,.96))!important;border:1px solid var(--cs-line,#8a9a7b)!important;border-radius:3px!important;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 12px 40px rgba(0,0,0,.6)!important}
+.modal-box h2{letter-spacing:3px;font-weight:700;color:var(--cs-y,#ffd24a);border-bottom:1px solid var(--cs-line,#8a9a7b);padding-bottom:10px;margin:0 0 14px;text-transform:uppercase}
+.modal-box .setting-group>label{font-size:11px;letter-spacing:2px;color:var(--cs-dim,#b8c4a8);text-transform:uppercase}
+.modal-box .btn{border-radius:2px;letter-spacing:2px;text-transform:uppercase;transition:background .12s,transform .06s}
+.modal-box .btn:active{transform:translateY(1px)}
+.modal-box .btn:not(.btn-secondary){background:linear-gradient(180deg,rgba(255,210,74,.22),rgba(255,210,74,.08));border:1px solid var(--cs-y,#ffd24a);color:var(--cs-y,#ffd24a)}
+.modal-box .btn:not(.btn-secondary):hover{background:rgba(255,210,74,.3)}
+.modal-box .btn-secondary{background:rgba(0,0,0,.25);border:1px solid var(--cs-line,#8a9a7b);color:var(--cs-txt,#e8eedc)}
+/* multiplayer */
+#netPanel .net-box{max-width:460px;width:92vw}
+#netPanel .net-card{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);border-radius:2px;padding:12px 14px;margin:0 0 12px;display:flex;flex-direction:column;gap:8px}
+#netPanel .net-desc{font-size:12px;color:var(--cs-dim,#b8c4a8)}
+#netCode{text-align:center;font-family:Consolas,"Courier New",monospace;font-size:26px;letter-spacing:8px;text-transform:uppercase;padding:8px 6px;background:rgba(0,0,0,.45);border:1px solid var(--cs-line,#8a9a7b);color:var(--cs-y,#ffd24a);border-radius:2px}
+#netCode::placeholder{color:rgba(255,255,255,.2)}
+#netCode:focus{outline:none;border-color:var(--cs-y,#ffd24a);box-shadow:0 0 0 1px var(--cs-y,#ffd24a)}
+#netPanel .net-status{min-height:18px;font-size:12px;text-align:center;color:var(--cs-dim,#b8c4a8);margin-bottom:10px}
+#netRoomCode{font-family:Consolas,"Courier New",monospace;letter-spacing:6px;background:rgba(0,0,0,.45);border:1px dashed var(--cs-y,#ffd24a);padding:4px 10px;border-radius:2px}
+#netPlist{display:flex;flex-direction:column;gap:3px}
+#netPlist>*{background:rgba(0,0,0,.25);border-left:3px solid var(--cs-y,#ffd24a);padding:4px 8px}
+/* configurações: rodapé em grade */
+#settingsModal .modal-footer-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+/* HUD: tirar poluição */
+.cs-right .cs-score:not(.cs-money){display:none!important}
+.stat-bar-track{display:none!important}
+.radar-label{display:none!important}
+</style>
+<style id="v4Themes">
+html[data-menu="red"]{--cs-bg:#2a0808;--cs-panel:rgba(28,4,4,.93);--cs-panel2:rgba(28,4,4,.78);--cs-line:rgba(255,130,130,.42);--cs-txt:#ffecec;--cs-dim:#d8a5a5;--cs-y:#ff4a4a;--ui-rgb:255,74,74;
+  --mt-a:#c42a2a;--mt-b:#7a1010;--mt-hdA:#7a2020;--mt-hdB:#451010;--mt-btA:#6a2a2a;--mt-btB:#452020;--mt-seA:#361414;--mt-seB:#200a0a;--mt-tab:#6a2222;--mt-glow:rgba(255,74,74,.4);--mt-hov:rgba(255,74,74,.24);
+  --mt-v1:rgba(28,4,4,.74);--mt-v2:rgba(28,4,4,.3);--mt-v3:rgba(28,4,4,0);--mt-fill:linear-gradient(115deg,#220404 0%,#661414 45%,#481c1c 70%,#240606 100%);}
+html[data-hud="red"]{--cs-hud:#ff4a4a;--cs-hud-glow:rgba(230,40,40,.6);--cs-hud-dim:rgba(255,130,130,.82);--cs-msg:#ff4a4a;--hud-line:rgba(255,74,74,.62);--hud-hover:rgba(230,40,40,.3);
+  --hud-rgb:255,74,74;--hud-rgb2:230,40,40;--hud-btn:rgba(230,40,40,.25);--hud-act:rgba(230,40,40,.45);--hud-dark:rgba(28,4,4,.7);--hud-send:rgba(230,40,40,.4);--hud-shopbg:rgba(28,4,4,.66);--hud-modalbg:rgba(28,4,4,.55);}
+html[data-menu="purple"]{--cs-bg:#170a2a;--cs-panel:rgba(18,6,32,.93);--cs-panel2:rgba(18,6,32,.78);--cs-line:rgba(200,160,255,.42);--cs-txt:#f3eaff;--cs-dim:#c0a8dc;--cs-y:#b57aff;--ui-rgb:181,122,255;
+  --mt-a:#7e3fd4;--mt-b:#481a8a;--mt-hdA:#55308a;--mt-hdB:#2e1450;--mt-btA:#4a3470;--mt-btB:#33204f;--mt-seA:#271640;--mt-seB:#160a28;--mt-tab:#4a2a7a;--mt-glow:rgba(181,122,255,.4);--mt-hov:rgba(181,122,255,.24);
+  --mt-v1:rgba(18,6,32,.74);--mt-v2:rgba(18,6,32,.3);--mt-v3:rgba(18,6,32,0);--mt-fill:linear-gradient(115deg,#12062a 0%,#3d1a74 45%,#2e1c4c 70%,#150826 100%);}
+html[data-hud="purple"]{--cs-hud:#b57aff;--cs-hud-glow:rgba(160,90,255,.6);--cs-hud-dim:rgba(200,160,255,.82);--cs-msg:#b57aff;--hud-line:rgba(181,122,255,.62);--hud-hover:rgba(160,90,255,.3);
+  --hud-rgb:181,122,255;--hud-rgb2:160,90,255;--hud-btn:rgba(160,90,255,.25);--hud-act:rgba(160,90,255,.45);--hud-dark:rgba(18,6,32,.7);--hud-send:rgba(160,90,255,.4);--hud-shopbg:rgba(18,6,32,.66);--hud-modalbg:rgba(18,6,32,.55);}
+html[data-menu="cyan"]{--cs-bg:#062229;--cs-panel:rgba(3,18,24,.93);--cs-panel2:rgba(3,18,24,.78);--cs-line:rgba(130,238,255,.42);--cs-txt:#e6fcff;--cs-dim:#9ccdd6;--cs-y:#3de8ff;--ui-rgb:61,232,255;
+  --mt-a:#1594ab;--mt-b:#0b5566;--mt-hdA:#1b6577;--mt-hdB:#0a3642;--mt-btA:#2a5663;--mt-btB:#1a3b45;--mt-seA:#112b33;--mt-seB:#091a20;--mt-tab:#1d5a6a;--mt-glow:rgba(61,232,255,.4);--mt-hov:rgba(61,232,255,.24);
+  --mt-v1:rgba(3,18,24,.74);--mt-v2:rgba(3,18,24,.3);--mt-v3:rgba(3,18,24,0);--mt-fill:linear-gradient(115deg,#031c24 0%,#0f5060 45%,#143a46 70%,#04202a 100%);}
+html[data-hud="cyan"]{--cs-hud:#3de8ff;--cs-hud-glow:rgba(30,205,240,.6);--cs-hud-dim:rgba(130,238,255,.82);--cs-msg:#3de8ff;--hud-line:rgba(61,232,255,.62);--hud-hover:rgba(30,205,240,.3);
+  --hud-rgb:61,232,255;--hud-rgb2:30,205,240;--hud-btn:rgba(30,205,240,.25);--hud-act:rgba(30,205,240,.45);--hud-dark:rgba(3,18,24,.7);--hud-send:rgba(30,205,240,.4);--hud-shopbg:rgba(3,18,24,.66);--hud-modalbg:rgba(3,18,24,.55);}
+html[data-menu="yellow"]{--cs-bg:#2a2406;--cs-panel:rgba(26,20,2,.93);--cs-panel2:rgba(26,20,2,.78);--cs-line:rgba(255,230,130,.42);--cs-txt:#fffbe6;--cs-dim:#d6c78a;--cs-y:#ffd84a;--ui-rgb:255,216,74;
+  --mt-a:#c9a014;--mt-b:#7a5f08;--mt-hdA:#7a6a1c;--mt-hdB:#463a0a;--mt-btA:#6b5e2a;--mt-btB:#473d1a;--mt-seA:#362f12;--mt-seB:#201b08;--mt-tab:#6a5a1c;--mt-glow:rgba(255,216,74,.4);--mt-hov:rgba(255,216,74,.24);
+  --mt-v1:rgba(26,20,2,.74);--mt-v2:rgba(26,20,2,.3);--mt-v3:rgba(26,20,2,0);--mt-fill:linear-gradient(115deg,#221c02 0%,#665410 45%,#4a3f14 70%,#241e06 100%);}
+html[data-hud="yellow"]{--cs-hud:#ffd84a;--cs-hud-glow:rgba(240,190,30,.6);--cs-hud-dim:rgba(255,230,130,.82);--cs-msg:#ffd84a;--hud-line:rgba(255,216,74,.62);--hud-hover:rgba(240,190,30,.3);
+  --hud-rgb:255,216,74;--hud-rgb2:240,190,30;--hud-btn:rgba(240,190,30,.25);--hud-act:rgba(240,190,30,.45);--hud-dark:rgba(26,20,2,.7);--hud-send:rgba(240,190,30,.4);--hud-shopbg:rgba(26,20,2,.66);--hud-modalbg:rgba(26,20,2,.55);}
+html[data-menu="olive"]{--cs-bg:#1c2016;--cs-panel:rgba(16,20,10,.93);--cs-panel2:rgba(16,20,10,.78);--cs-line:rgba(210,205,150,.42);--cs-txt:#eef2e0;--cs-dim:#b3bda0;--cs-y:#e0d27a;--ui-rgb:224,210,122;
+  --mt-a:#6c7a4e;--mt-b:#3e4a2c;--mt-hdA:#566346;--mt-hdB:#2e3824;--mt-btA:#4c5a3c;--mt-btB:#39452c;--mt-seA:#2c3622;--mt-seB:#1b2214;--mt-tab:#4c5a38;--mt-glow:rgba(224,210,122,.4);--mt-hov:rgba(224,210,122,.24);
+  --mt-v1:rgba(16,20,10,.74);--mt-v2:rgba(16,20,10,.3);--mt-v3:rgba(16,20,10,0);--mt-fill:linear-gradient(115deg,#141a0e 0%,#3a4a28 45%,#2c3822 70%,#161c10 100%);}
+html[data-hud="olive"]{--cs-hud:#e0d27a;--cs-hud-glow:rgba(190,180,90,.6);--cs-hud-dim:rgba(210,205,150,.82);--cs-msg:#e0d27a;--hud-line:rgba(224,210,122,.62);--hud-hover:rgba(190,180,90,.3);
+  --hud-rgb:224,210,122;--hud-rgb2:190,180,90;--hud-btn:rgba(190,180,90,.25);--hud-act:rgba(190,180,90,.45);--hud-dark:rgba(16,20,10,.7);--hud-send:rgba(190,180,90,.4);--hud-shopbg:rgba(16,20,10,.66);--hud-modalbg:rgba(16,20,10,.55);}
+html[data-menu="lime"]{--cs-bg:#141c04;--cs-panel:rgba(14,22,4,.93);--cs-panel2:rgba(14,22,4,.78);--cs-line:rgba(210,255,110,.42);--cs-txt:#f6ffe0;--cs-dim:#bccf8a;--cs-y:#c6ff1a;--ui-rgb:198,255,26;
+  --mt-a:#7aa80c;--mt-b:#46650a;--mt-hdA:#566e1a;--mt-hdB:#2c3d0c;--mt-btA:#4c6024;--mt-btB:#32421a;--mt-seA:#2a3812;--mt-seB:#1b260a;--mt-tab:#4a6a14;--mt-glow:rgba(198,255,26,.4);--mt-hov:rgba(198,255,26,.24);
+  --mt-v1:rgba(14,22,4,.74);--mt-v2:rgba(14,22,4,.3);--mt-v3:rgba(14,22,4,0);--mt-fill:linear-gradient(115deg,#101a02 0%,#3e5c0a 45%,#2c4010 70%,#121c04 100%);}
+html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud-dim:rgba(220,255,130,.82);--cs-msg:#c6ff1a;--hud-line:rgba(198,255,26,.62);--hud-hover:rgba(130,180,0,.3);
+  --hud-rgb:198,255,26;--hud-rgb2:170,230,0;--hud-btn:rgba(170,230,0,.25);--hud-act:rgba(170,230,0,.45);--hud-dark:rgba(12,20,0,.7);--hud-send:rgba(170,230,0,.4);--hud-shopbg:rgba(12,20,0,.66);--hud-modalbg:rgba(8,14,0,.55);}
+#menuThemeSeg .seg-btn,#hudThemeSeg .seg-btn{flex:1 1 30%}
 </style>
 <div id="mainMenu" class="overlay-screen">
   <div id="menuLogo">DEAD ZONE<small>REMASTERED</small></div>
@@ -1974,6 +2050,12 @@ html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10p
         <label data-i18n="socAwayLabel">ADVERSÁRIO:</label>
         <div class="club-grid" id="socAwayGrid"></div>
       </div>
+      <div class="setting-group" id="socSameTeamGroup" style="display:none">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optSocSameTeam">
+          <span id="socSameTeamTxt">JOGAR NO MESMO TIME DO ANFITRIÃO</span>
+        </label>
+      </div>
     </div>
 
     <button id="playSelectedLevelBtn" class="btn" data-i18n="play">JOGAR</button>
@@ -2127,6 +2209,12 @@ html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10p
           <button type="button" class="seg-btn" data-val="black" data-i18n="mcBlack">PRETO</button>
           <button type="button" class="seg-btn" data-val="blue" data-i18n="mcBlue">AZUL</button>
           <button type="button" class="seg-btn" data-val="pink" data-i18n="mcPink">ROSA CHOQUE</button>
+          <button type="button" class="seg-btn" data-val="red" data-i18n="mc_red">VERMELHO</button>
+          <button type="button" class="seg-btn" data-val="purple" data-i18n="mc_purple">ROXO</button>
+          <button type="button" class="seg-btn" data-val="cyan" data-i18n="mc_cyan">CIANO</button>
+          <button type="button" class="seg-btn" data-val="yellow" data-i18n="mc_yellow">AMARELO</button>
+          <button type="button" class="seg-btn" data-val="olive" data-i18n="mc_olive">OLIVA (CS:S)</button>
+          <button type="button" class="seg-btn" data-val="lime" data-i18n="mc_lime">LIMÃO NEON</button>
         </div>
       </div>
       <div class="setting-group">
@@ -2144,6 +2232,12 @@ html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10p
           <button type="button" class="seg-btn" data-val="black" data-i18n="mcBlack">PRETO</button>
           <button type="button" class="seg-btn" data-val="blue" data-i18n="mcBlue">AZUL</button>
           <button type="button" class="seg-btn" data-val="pink" data-i18n="mcPink">ROSA CHOQUE</button>
+          <button type="button" class="seg-btn" data-val="red" data-i18n="mc_red">VERMELHO</button>
+          <button type="button" class="seg-btn" data-val="purple" data-i18n="mc_purple">ROXO</button>
+          <button type="button" class="seg-btn" data-val="cyan" data-i18n="mc_cyan">CIANO</button>
+          <button type="button" class="seg-btn" data-val="yellow" data-i18n="mc_yellow">AMARELO</button>
+          <button type="button" class="seg-btn" data-val="olive" data-i18n="mc_olive">OLIVA (CS:S)</button>
+          <button type="button" class="seg-btn" data-val="lime" data-i18n="mc_lime">LIMÃO NEON</button>
         </div>
       </div>
       <div class="setting-group">
@@ -2165,6 +2259,12 @@ html .dzVkKey.on{background:var(--cs-y);color:var(--mt-badge);box-shadow:0 0 10p
         <label class="checkbox-label">
           <input type="checkbox" id="optShowCrosshair" checked>
           <span data-i18n="showCrosshairLabel">MOSTRAR MIRA</span>
+        </label>
+      </div>
+      <div class="setting-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="optBotNames">
+          <span data-i18n="showBotNamesLabel">MOSTRAR NOME DOS BOTS</span>
         </label>
       </div>
       <div class="setting-group" id="crosshairColorGroup">
@@ -4772,7 +4872,7 @@ const socNetImg = socLoadImg(SOC_NET_URL);
 // Estado do modo (declarado aqui no começo para as funções do jogo poderem consultá-lo a qualquer momento)
 let soc = null;                                       // partida em andamento (null fora do modo Futebol)
 const socJump = { z: 0, v: 0, applied: 0 };           // pulo do jogador (altura da câmera)
-const socPick  = { home: 'flamengo', away: 'random' }; // escolha no menu
+const socPick  = { home: 'random', away: 'random' }; // escolha no menu
 const socMatch = { home: 'flamengo', away: 'vasco' };  // times efetivos da partida (já sorteados)
 
 // Texturas dos reféns do modo Hostage Rescue (0-3 masculinos, 4-7 femininos)
@@ -4944,7 +5044,7 @@ const I18N = {
     lvl83: "CS_POOL_DAY", lvl83Desc: "Estilo Counter-Strike: Piscinão interno minúsculo, inspirado em Pool Day. Lado vermelho (T) a oeste, azul (CT) a leste e uma piscina grande no salão do meio. Tiroteio curto e frenético. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
-    matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", hudSeparateLabel: "COR DA HUD DIFERENTE DO MENU", hudColorLabel: "COR DA HUD:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", mcGreen: "VERDE", mcPink: "ROSA CHOQUE", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
+    matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", hudSeparateLabel: "COR DA HUD DIFERENTE DO MENU", hudColorLabel: "COR DA HUD:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", mcGreen: "VERDE", mcPink: "ROSA CHOQUE", mc_red: "VERMELHO", mc_purple: "ROXO", mc_cyan: "CIANO", mc_yellow: "AMARELO", mc_olive: "OLIVA (CS:S)", mc_lime: "LIMÃO NEON", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
     gunFoeLabel: "CONTRA:", gunFoeZombies: "ZUMBIS", gunFoeBots: "BOTS",
     dmPrimaryLabel: "ARMA PRINCIPAL (PESADA):", dmSecondaryLabel: "ARMA SECUNDÁRIA (LEVE):", dmRandomWeapon: "ALEATÓRIA",
     debugMenuTitle: "MENU DEBUG", resumeGame: "VOLTAR AO JOGO", dbgLockLabel: "SENHA MENU DEBUG:", dbgPassPh: "Insira a senha...", dbgUnlockBtn: "DESBLOQUEAR DEBUG", dbgHint: "Interruptores e controles deslizantes só valem ao clicar em APLICAR. Os botões agem na hora.", dbgNoClip: "Noclip (Atravessar Paredes)", dbgSecPlayer: "JOGADOR", dbgSecWeapon: "ARMA (EQUIPA AO APLICAR)", dbgSecEnemies: "INIMIGOS E ALVOS", dbgTestOnly: "Os botões abaixo só funcionam no MAPA DE TESTES.", dbgSecMatch: "PARTIDA", dbgSecWorld: "MUNDO E VISUAL", dbgSecMaps: "MAPAS E MODOS", dbgSecTeleport: "TELEPORTE (MAPA DE TESTES)", dbgMapLabel: "IR PARA QUALQUER MAPA (inclui o ESTÁDIO):", dbgModeLabel: "MODO DE JOGO (para testar cada modo):", dbgModeAuto: "AUTOMÁTICO (pelo mapa)", dbgMapBots: "Com bots / inimigos (desmarcado = sem bots)", dbgGoMap: "ENTRAR NO MAPA SELECIONADO", dbgTestLevel: "ENTRAR NO MAPA DE TESTES", dbgGodMode: "Vida Infinita (God Mode)", dbgInfAmmo: "Munição Infinita", dbgPauseEnemies: "Pausar Inimigos",
@@ -4965,7 +5065,7 @@ const I18N = {
     dbgSpeedLabel: "VELOCIDADE DO JOGADOR", dbgFogLabel: "ALCANCE DE VISÃO (NEBLINA)", dbgSkyLabel: "CÉU (SKYBOX):",
     dbgTeleportLabel: "TELEPORTE (MAPA DE TESTES):", tpTex: "TEXTURAS", tpHub: "CORREDOR", tpElev: "ELEVAÇÃO", tpSkins: "SKINS / ALVOS", tpPick: "PICKUPS / ARMAS", tpInter: "INTERAÇÕES", tpAudio: "ÁUDIO / SONS", tpSoc: "FUTEBOL", tpWater: "ÁGUA", tpCeil: "TETOS", tpRoof: "TELHADOS",
     dbgToolsLabel: "FERRAMENTAS:", dbgRespawn: "RENASCER ALVOS", dbgKillAll: "ELIMINAR TODOS", dbgSpawnZombie: "+ ZUMBI", dbgHeal: "CURAR + MUNIÇÃO", dbgSpawnT: "+ BOT T", dbgSpawnCT: "+ BOT CT", dbgResetMap: "REINICIAR MAPA",
-    tabAudio: "ÁUDIO", sfxVolumeLabel: "VOLUME DOS EFEITOS", musicVolumeLabel: "VOLUME DA MÚSICA", musicOffLabel: "DESATIVAR MÚSICA (SEM MEXER NO VOLUME)", showCrosshairLabel: "MOSTRAR MIRA", crosshairColorLabel: "COR DA MIRA:", chc_green: "VERDE", chc_yellow: "AMARELO", chc_red: "VERMELHO", chc_purple: "ROXO", chc_cyan: "CIANO", chc_blue: "AZUL", chc_orange: "LARANJA", chc_pink: "ROSA CHOQUE", chc_white: "BRANCO", chc_lime: "LIMÃO", chc_magenta: "MAGENTA", chc_black: "PRETO", damageFlashLabel: "FLASH VERMELHO AO LEVAR DANO", botGunLabel: "BOTS INIMIGOS", botEnemyLabel: "BOTS INIMIGOS", botAllyLabel: "BOTS ALIADOS",
+    tabAudio: "ÁUDIO", sfxVolumeLabel: "VOLUME DOS EFEITOS", musicVolumeLabel: "VOLUME DA MÚSICA", musicOffLabel: "DESATIVAR MÚSICA (SEM MEXER NO VOLUME)", showCrosshairLabel: "MOSTRAR MIRA", showBotNamesLabel: "MOSTRAR NOME DOS BOTS", crosshairColorLabel: "COR DA MIRA:", chc_green: "VERDE", chc_yellow: "AMARELO", chc_red: "VERMELHO", chc_purple: "ROXO", chc_cyan: "CIANO", chc_blue: "AZUL", chc_orange: "LARANJA", chc_pink: "ROSA CHOQUE", chc_white: "BRANCO", chc_lime: "LIMÃO", chc_magenta: "MAGENTA", chc_black: "PRETO", damageFlashLabel: "FLASH VERMELHO AO LEVAR DANO", botGunLabel: "BOTS INIMIGOS", botEnemyLabel: "BOTS INIMIGOS", botAllyLabel: "BOTS ALIADOS",
     gamepadNone: "NENHUM CONTROLE CONECTADO", gamepadConnected: "CONTROLE CONECTADO",
     controlsKbTitle: "TECLADO / MOUSE", controlsTouchTitle: "TOQUE (MOBILE)", controlsGamepadTitle: "XBOX SERIES X / PS4 / PS5",
     ctlMove: "Mover", ctlLook: "Mirar / olhar", ctlFire: "Atirar", ctlReload: "Recarregar", ctlWeapons: "Trocar arma", ctlPause: "Pausar", ctlSwap: "Trocar arma do chão",
@@ -5100,7 +5200,7 @@ const I18N = {
     lvl83: "CS_POOL_DAY", lvl83Desc: "Counter-Strike style: A tiny indoor swimming hall inspired by Pool Day. Red side (T) in the west, blue side (CT) in the east and a big pool in the middle hall. Short, frantic fights. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
-    matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", hudSeparateLabel: "HUD COLOR DIFFERENT FROM MENU", hudColorLabel: "HUD COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", mcGreen: "GREEN", mcPink: "HOT PINK", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
+    matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", hudSeparateLabel: "HUD COLOR DIFFERENT FROM MENU", hudColorLabel: "HUD COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", mcGreen: "GREEN", mcPink: "HOT PINK", mc_red: "RED", mc_purple: "PURPLE", mc_cyan: "CYAN", mc_yellow: "YELLOW", mc_olive: "OLIVE (CS:S)", mc_lime: "NEON LIME", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
     gunFoeLabel: "VERSUS:", gunFoeZombies: "ZOMBIES", gunFoeBots: "BOTS",
     dmPrimaryLabel: "PRIMARY WEAPON (HEAVY):", dmSecondaryLabel: "SECONDARY WEAPON (LIGHT):", dmRandomWeapon: "RANDOM",
     debugMenuTitle: "DEBUG MENU", resumeGame: "BACK TO GAME", dbgLockLabel: "DEBUG MENU PASSWORD:", dbgPassPh: "Enter the password...", dbgUnlockBtn: "UNLOCK DEBUG", dbgHint: "Switches and sliders only take effect when you click APPLY. Buttons act right away.", dbgNoClip: "Noclip (Walk Through Walls)", dbgSecPlayer: "PLAYER", dbgSecWeapon: "WEAPON (EQUIPS ON APPLY)", dbgSecEnemies: "ENEMIES AND TARGETS", dbgTestOnly: "The buttons below only work on the TEST MAP.", dbgSecMatch: "MATCH", dbgSecWorld: "WORLD AND VISUALS", dbgSecMaps: "MAPS AND MODES", dbgSecTeleport: "TELEPORT (TEST MAP)", dbgMapLabel: "GO TO ANY MAP (includes the STADIUM):", dbgModeLabel: "GAME MODE (to test each mode):", dbgModeAuto: "AUTOMATIC (by map)", dbgMapBots: "With bots / enemies (unchecked = no bots)", dbgGoMap: "ENTER SELECTED MAP", dbgTestLevel: "ENTER THE TEST MAP", dbgGodMode: "Infinite Health (God Mode)", dbgInfAmmo: "Infinite Ammo", dbgPauseEnemies: "Pause Enemies",
@@ -5121,7 +5221,7 @@ const I18N = {
     dbgSpeedLabel: "PLAYER SPEED", dbgFogLabel: "VIEW DISTANCE (FOG)", dbgSkyLabel: "SKY (SKYBOX):",
     dbgTeleportLabel: "TELEPORT (TEST MAP):", tpTex: "TEXTURES", tpHub: "HALL", tpElev: "ELEVATION", tpSkins: "SKINS / TARGETS", tpPick: "PICKUPS / WEAPONS", tpInter: "INTERACTIONS", tpAudio: "AUDIO / SOUNDS", tpSoc: "SOCCER", tpWater: "WATER", tpCeil: "CEILINGS", tpRoof: "ROOFS",
     dbgToolsLabel: "TOOLS:", dbgRespawn: "RESPAWN TARGETS", dbgKillAll: "KILL ALL", dbgSpawnZombie: "+ ZOMBIE", dbgHeal: "HEAL + AMMO", dbgSpawnT: "+ BOT T", dbgSpawnCT: "+ BOT CT", dbgResetMap: "RESTART MAP",
-    tabAudio: "AUDIO", sfxVolumeLabel: "EFFECTS VOLUME", musicVolumeLabel: "MUSIC VOLUME", musicOffLabel: "TURN MUSIC OFF (KEEPS THE VOLUME)", showCrosshairLabel: "SHOW CROSSHAIR", crosshairColorLabel: "CROSSHAIR COLOR:", chc_green: "GREEN", chc_yellow: "YELLOW", chc_red: "RED", chc_purple: "PURPLE", chc_cyan: "CYAN", chc_blue: "BLUE", chc_orange: "ORANGE", chc_pink: "HOT PINK", chc_white: "WHITE", chc_lime: "LIME", chc_magenta: "MAGENTA", chc_black: "BLACK", damageFlashLabel: "RED FLASH WHEN HIT", botGunLabel: "ENEMY BOTS", botEnemyLabel: "ENEMY BOTS", botAllyLabel: "ALLY BOTS",
+    tabAudio: "AUDIO", sfxVolumeLabel: "EFFECTS VOLUME", musicVolumeLabel: "MUSIC VOLUME", musicOffLabel: "TURN MUSIC OFF (KEEPS THE VOLUME)", showCrosshairLabel: "SHOW CROSSHAIR", showBotNamesLabel: "SHOW BOT NAMES", crosshairColorLabel: "CROSSHAIR COLOR:", chc_green: "GREEN", chc_yellow: "YELLOW", chc_red: "RED", chc_purple: "PURPLE", chc_cyan: "CYAN", chc_blue: "BLUE", chc_orange: "ORANGE", chc_pink: "HOT PINK", chc_white: "WHITE", chc_lime: "LIME", chc_magenta: "MAGENTA", chc_black: "BLACK", damageFlashLabel: "RED FLASH WHEN HIT", botGunLabel: "ENEMY BOTS", botEnemyLabel: "ENEMY BOTS", botAllyLabel: "ALLY BOTS",
     gamepadNone: "NO CONTROLLER CONNECTED", gamepadConnected: "CONTROLLER CONNECTED",
     controlsKbTitle: "KEYBOARD / MOUSE", controlsTouchTitle: "TOUCH (MOBILE)", controlsGamepadTitle: "XBOX SERIES X / PS4 / PS5",
     ctlMove: "Move", ctlLook: "Look / aim", ctlFire: "Fire", ctlReload: "Reload", ctlWeapons: "Switch weapon", ctlPause: "Pause", ctlSwap: "Swap with floor weapon",
@@ -9438,22 +9538,29 @@ function netTagName(en){
   if(en.net && en.human) return en.pname || '';
   return '';
 }
+// Bot de partida por equipes (Deathmatch, CTF, Resgate, Gun Game): tem time e não é jogador, refém, zumbi nem boneco de teste.
+function isTeamBot(en){
+  if(!en || en.remote || en.human || en.testDummy || en.hostageTex !== undefined || en.alive === false || !en.team) return false;
+  if(currentGameMode === 'waves' || currentGameMode === 'fnaf' || currentGameMode === 'soccer') return false;
+  return en.keepDist !== undefined || !!en.net;
+}
 function drawNameTag(en, sx, headY, sh){
-  if(!NET.mode || !NET.started) return;
-  const nm = netTagName(en); if(!nm) return;
-  const fs = Math.max(10, Math.min(17, sh * 0.13));
-  let up = 4;
+  let nm = (NET.mode && NET.started) ? netTagName(en) : '';
+  if(!nm && showBotNames && isTeamBot(en)) nm = kfBotName(en);   // mesmo nome do kill feed
+  if(!nm) return;
+  const fs = Math.max(7, Math.round(SCREEN_H * 0.058));   // tamanho FIXO (não depende da distância): pequeno e legível em toda a partida
+  let up = 3;
   if(en.hasFlag && ctf) up = Math.max(up, sh * 0.62);
   if(en.ally) up = Math.max(up, Math.max(3, sh * 0.07) * 2.5);
-  const y = headY - up;
+  const y = Math.round(headY - up), x = Math.round(sx);
   ctx.save();
-  ctx.globalAlpha = Math.max(0.65, ctx.globalAlpha);
-  ctx.font = '700 ' + fs.toFixed(1) + 'px "Trebuchet MS","Segoe UI",Verdana,Arial,sans-serif';
+  ctx.globalAlpha = 1;   // sem esmaecer com a distância: o nome fica igual de perto e de longe
+  ctx.font = '700 ' + fs + 'px "Trebuchet MS","Segoe UI",Verdana,Arial,sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-  ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(2.5, fs * 0.24);
-  ctx.strokeStyle = 'rgba(0,0,0,.9)'; ctx.strokeText(nm, sx, y);
-  ctx.fillStyle = en.team === 'CT' ? '#9cc8ff' : (en.team === 'T' ? '#ff6a55' : '#9fe3ff');
-  ctx.fillText(nm, sx, y);
+  ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(2, Math.round(fs * 0.3));
+  ctx.strokeStyle = 'rgba(0,0,0,.92)'; ctx.strokeText(nm, x, y);
+  ctx.fillStyle = en.team === 'CT' ? '#b4d6ff' : (en.team === 'T' ? '#ff7c68' : '#b8ecff');
+  ctx.fillText(nm, x, y);
   ctx.restore();
 }
 
@@ -14206,6 +14313,8 @@ pitchSensRange.addEventListener('input', e=>{
   saveCamPrefs();
 });
 optInvertY.addEventListener('change', e=>{ invertY = e.target.checked; saveCamPrefs(); });
+let showBotNames = false;   // opção: mostrar o nome dos bots acima da cabeça (igual ao nome dos jogadores)
+document.getElementById('optBotNames').addEventListener('change', e=>{ showBotNames = e.target.checked; });
 document.getElementById('gpVibration').addEventListener('change', e=>{
   gpVibration = e.target.checked;
   if(gpVibration) gpRumble(0.6, 0.6, 150);   // teste rápido ao ligar
@@ -14502,7 +14611,7 @@ document.getElementById('resetSettingsBtn').addEventListener('click', ()=>{
     el.dispatchEvent(new Event('input', {bubbles:true}));
   });
   // caixas de marcar (a vibração é ajustada direto, para não vibrar o controle ao restaurar)
-  ['optShowMinimap','optViewBob','optShowFps','optInvertY','optShowCrosshair','optDamageFlash','optMusicOff','optHorizon','optMmEco'].forEach(id=>{
+  ['optShowMinimap','optViewBob','optShowFps','optInvertY','optShowCrosshair','optBotNames','optDamageFlash','optMusicOff','optHorizon','optMmEco'].forEach(id=>{
     const el = document.getElementById(id);
     el.checked = el.defaultChecked;
     el.dispatchEvent(new Event('change', {bubbles:true}));
@@ -14652,6 +14761,8 @@ function refreshMapsForMode(){
   matchUISync();   // fim de partida (pontuação / tempo / sem limite): só nos modos Deathmatch, CTF e Resgate
   document.getElementById('dmLoadoutGroups').style.display = (dm && !isGun && !(function(){ const m = document.getElementById('gameModeSelect').value; return m === 'deathmatch' || m === 'ctf' || m === 'hostage'; })()) ? 'block' : 'none';   // Gun Game: só o lado, sem escolher armas
   document.getElementById('socOptions').style.display = document.getElementById('gameModeSelect').value === 'soccer' ? 'block' : 'none';
+  { const sg = document.getElementById('socSameTeamGroup'), st = document.getElementById('socSameTeamTxt');
+    if(sg){ sg.style.display = (NET.lobby && NET.mode === 'client' && document.getElementById('gameModeSelect').value === 'soccer') ? '' : 'none'; if(st) st.textContent = netT('JOGAR NO MESMO TIME DO ANFITRIÃO', "PLAY ON THE HOST'S TEAM"); } }
   { const hl = document.querySelector('#socOptions [data-i18n="socHomeLabel"]'), al = document.querySelector('#socOptions [data-i18n="socAwayLabel"]');
     if(hl && al){ const L = I18N[currentLang]; hl.textContent = NET.lobby ? netT('TIME DA CASA (ANFITRIÃO ESCOLHE):', 'HOME TEAM (HOST PICKS):') : L.socHomeLabel; al.textContent = NET.lobby ? netT('TIME VISITANTE (CONVIDADOS ESCOLHEM):', 'AWAY TEAM (GUESTS PICK):') : L.socAwayLabel; } }
 }
@@ -17231,7 +17342,7 @@ function netBackToLobby(fromHost){
     netTimers.push(setInterval(() => { if(!NET.started) netRefreshHostLobby(); }, 500));
     if(wasStarted) uiToast(netT('De volta à sala', 'Back in the room'), 'ok');
   } else {
-    netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', n: getPlayerName(), team: document.getElementById('dmTeamSelect').value }); }, 500));
+    netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', n: getPlayerName(), team: document.getElementById('dmTeamSelect').value, same: !!(document.getElementById('optSocSameTeam') || {}).checked }); }, 500));
     if(fromHost) uiToast(netT('O host voltou para a sala', 'The host is back in the room'), 'ok');
   }
   return true;
@@ -17323,7 +17434,9 @@ function netApplyCfg(cfg){
 function netCreateRoom(){
   if(!netTransportOK()){ netStatus(netT('Rede não carregou (sem internet?)', 'Network failed to load (offline?)')); return; }
   netLeave();
-  const code = Math.random().toString(36).slice(2, 6).toUpperCase();
+  const NET_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for(let i = 0; i < 6; i++) code += NET_ALPHA[Math.floor(Math.random() * NET_ALPHA.length)];
   netStatus(netT('Criando sala... aguarde', 'Creating room... please wait'), true);
   netPeer = netMakePeer(NET_PREFIX + code);
   NET.mode = 'host';
@@ -17444,7 +17557,8 @@ function netHostStart(){
   const cnt = { CT: 0, T: 0 }; cnt[hostTeam]++;
   netPeers.forEach((p, i) => {
     let t = p.pref.team;
-    if(gm === 'soccer') t = cnt.CT < cnt.T ? 'CT' : (cnt.T < cnt.CT ? 'T' : (Math.random() < 0.5 ? 'CT' : 'T'));   // Futebol: o convidado recebe automaticamente o time com menos humanos
+    if(gm === 'soccer' && p.pref.same) t = hostTeam;   // convidado pediu para jogar no mesmo time do anfitrião
+    else if(gm === 'soccer') t = cnt.CT < cnt.T ? 'CT' : (cnt.T < cnt.CT ? 'T' : (Math.random() < 0.5 ? 'CT' : 'T'));   // Futebol: o convidado recebe automaticamente o time com menos humanos
     else if(!teamMode) t = Math.random() < 0.5 ? 'CT' : 'T';   // modos sem lado: skin aleatória
     else if(t !== 'CT' && t !== 'T') t = force ? hostTeam : (cnt.CT <= cnt.T ? 'CT' : 'T');   // aleatório: Gun Game vs bots fica no lado do host; demais equilibram
     // lado escolhido pelo convidado (CT/T) é sempre respeitado
@@ -17784,7 +17898,7 @@ function netHostOnData(p, d){
     }
     return;
   }
-  if(d.t === 'pref'){ p.name = nameClean(d.n); p.pref.team = (d.team === 'CT' || d.team === 'T') ? d.team : 'RANDOM'; return; }
+  if(d.t === 'pref'){ p.name = nameClean(d.n); p.pref.team = (d.team === 'CT' || d.team === 'T') ? d.team : 'RANDOM'; p.pref.same = !!d.same; return; }
   if(d.t === 'chat'){ if(netPeers.indexOf(p) >= 0) chatHostReceive(p, d.m); return; }
   if(d.t === 'away'){ netHostPeerAway(p); return; }
   const b = p.ent;
@@ -17913,8 +18027,8 @@ function netHostSnapshot(){
 // ---------- CLIENTE ----------
 function netJoinRoom(code){
   if(!netTransportOK()){ netStatus(netT('Rede não carregou (sem internet?)', 'Network failed to load (offline?)')); return; }
-  code = (code || '').trim().toUpperCase();
-  if(code.length < 4){ netStatus(netT('Digite o código da sala (4 letras)', 'Enter the 4-letter room code')); return; }
+  code = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if(code.length < 6){ netStatus(netT('Digite o código da sala (6 caracteres)', 'Enter the 6-character room code')); return; }
   netLeave();
   netStatus(netT('Conectando...', 'Connecting...'));
   netPeer = netMakePeer(undefined);
@@ -17937,7 +18051,7 @@ function netJoinRoom(code){
       levelSelectModal.style.display = 'flex';
       netSetLobbyUI(true, 'client');
       refreshMapsForMode();
-      netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', n: getPlayerName(), team: document.getElementById('dmTeamSelect').value }); }, 500));
+      netTimers.push(setInterval(() => { if(!NET.started) netSend({ t: 'pref', n: getPlayerName(), team: document.getElementById('dmTeamSelect').value, same: !!(document.getElementById('optSocSameTeam') || {}).checked }); }, 500));
     });
     netConn.on('data', netClientOnData);
     netConn.on('close', () => { if(NET.mode === 'client') netForceMenu(netT('O host saiu da sala', 'The host left the room')); });
@@ -18190,9 +18304,9 @@ function netClientTick(dt){
 
   const pn = document.createElement('div');
   pn.id = 'netPanel'; pn.className = 'overlay-screen';
-  pn.innerHTML = '<div class="modal-box"><h2>MULTIPLAYER ONLINE</h2>' +
-    '<div class="setting-group"><label>' + netT('CRIAR UMA SALA', 'CREATE A ROOM') + '</label><button id="netCreate" class="btn">' + netT('CRIAR SALA', 'CREATE ROOM') + '</button></div>' +
-    '<div class="setting-group"><label>' + netT('OU ENTRE COM UM CÓDIGO', 'OR JOIN WITH A CODE') + '</label><input id="netCode" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" spellcheck="false">' +
+  pn.innerHTML = '<div class="modal-box net-box"><h2>MULTIPLAYER ONLINE</h2>' +
+    '<div class="setting-group net-card"><label>' + netT('CRIAR UMA SALA', 'CREATE A ROOM') + '</label><div class="net-desc">' + netT('Gere um código e compartilhe com os amigos.', 'Generate a code and share it with friends.') + '</div><button id="netCreate" class="btn">' + netT('CRIAR SALA', 'CREATE ROOM') + '</button></div>' +
+    '<div class="setting-group net-card"><label>' + netT('OU ENTRE COM UM CÓDIGO', 'OR JOIN WITH A CODE') + '</label><input id="netCode" type="text" maxlength="6" placeholder="A7K9QX" autocomplete="off" spellcheck="false">' +
     '<button id="netJoin" class="btn">' + netT('ENTRAR NA SALA', 'JOIN ROOM') + '</button></div>' +
     '<div id="netStatus" class="net-status"></div>' +
     '<button id="netClose" class="btn btn-secondary">' + netT('VOLTAR', 'BACK') + '</button></div>';
@@ -18303,7 +18417,7 @@ setLanguage('pt');
 (function(){
   const KEY = 'dz_settings';
   const RANGES = ['sensRange','fovRange','pitchSensRange','gpDeadRange','sfxVolumeRange','musicVolumeRange','gunBotRange','dmEnemyBotRange','dmAllyBotRange'];
-  const CHECKS = ['optShowMinimap','optViewBob','optShowFps','optInvertY','gpVibration','optShowCrosshair','optDamageFlash','optMusicOff','optTouchVibration','optHorizon','optMmEco'];
+  const CHECKS = ['optShowMinimap','optViewBob','optShowFps','optInvertY','gpVibration','optShowCrosshair','optBotNames','optDamageFlash','optMusicOff','optTouchVibration','optHorizon','optMmEco'];
   const get = id => document.getElementById(id);
   const activeVal = segId => { const b = document.querySelector('#' + segId + ' .seg-btn.active'); return b ? b.getAttribute('data-val') : null; };
 
@@ -18397,7 +18511,7 @@ requestAnimationFrame(gameLoop);
 
 <script>
 /* Barra lateral dos menus: acompanha a rolagem da janela (roda do mouse, toque, analógico direito do controle),
-   e dá para arrastar a barrinha ou tocar na trilha. Fica dentro do jogo, sobre a própria janela. */
+   e dá para arrastar a barrinha ou tocar na trilha. Fica do lado de fora da janela, colada na borda direita, e é quadrada (estilo CS:S). */
 (function dzMenuScrollbars(){
   const bars = new Map();
   function place(o){
@@ -18406,8 +18520,8 @@ requestAnimationFrame(gameLoop);
     if(!box.isConnected || box.getClientRects().length === 0 || over < 3){ if(bar.style.display !== 'none') bar.style.display = 'none'; return; }
     const r = box.getBoundingClientRect(), w = bar.classList.contains('x') ? 24 : (parseInt(getComputedStyle(bar).width, 10) || 16);
     bar.style.display = 'block';
-    const h = Math.max(20, r.height - 8);
-    bar.style.top = (r.top + 4) + 'px'; bar.style.height = h + 'px'; bar.style.left = (r.right - w - 3) + 'px';
+    const h = Math.max(20, r.height);
+    bar.style.top = r.top + 'px'; bar.style.height = h + 'px'; bar.style.left = Math.min(Math.ceil(r.right), window.innerWidth - w) + 'px';
     const thH = Math.max(40, Math.min(h - 2, h * box.clientHeight / box.scrollHeight));
     th.style.height = thH + 'px';
     th.style.top = (over > 0 ? box.scrollTop / over * (h - 2 - thH) : 0) + 'px';
@@ -18443,7 +18557,7 @@ requestAnimationFrame(gameLoop);
 <script>
 /* Cor dos menus: azul (padrão), laranja, branco ou preto. Salva no aparelho. */
 (function dzMenuTheme(){
-  const KEY = 'dz_menu_theme_v2', OK = ['blue', 'orange', 'white', 'black', 'green', 'pink'];
+  const KEY = 'dz_menu_theme_v2', OK = ['blue', 'orange', 'white', 'black', 'green', 'pink', 'red', 'purple', 'cyan', 'yellow', 'olive', 'lime'];
   function apply(v){
     if(OK.indexOf(v) < 0) v = 'green';
     document.documentElement.setAttribute('data-menu', v);
@@ -18464,7 +18578,7 @@ requestAnimationFrame(gameLoop);
 <script>
 /* Cor da HUD: igual ao menu (padrão) ou própria. A escolha fica escondida enquanto "diferente" estiver desligado. */
 (function dzHudTheme(){
-  const K_SEP = 'dz_hud_sep_v1', K_COL = 'dz_hud_theme_v1', OK = ['blue', 'orange', 'white', 'black', 'green', 'pink'];
+  const K_SEP = 'dz_hud_sep_v1', K_COL = 'dz_hud_theme_v1', OK = ['blue', 'orange', 'white', 'black', 'green', 'pink', 'red', 'purple', 'cyan', 'yellow', 'olive', 'lime'];
   const root = document.documentElement, cb = document.getElementById('optHudSeparate'),
         grp = document.getElementById('hudColorGroup'), seg = document.getElementById('hudThemeSeg');
   if(!cb || !grp || !seg) return;
