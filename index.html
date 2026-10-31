@@ -1889,22 +1889,22 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
     <div class="setting-group">
       <label data-i18n="modeLabel">MODO DE JOGO:</label>
       <div class="seg" id="modeSeg">
-        <button type="button" class="seg-btn" data-val="deathmatch"><img class="mode-icon" src="https://i.postimg.cc/nLH36X7N/Icon-Kill.png" alt=""><span>DEATHMATCH</span></button>
+        <button type="button" class="seg-btn active" data-val="deathmatch"><img class="mode-icon" src="https://i.postimg.cc/nLH36X7N/Icon-Kill.png" alt=""><span>DEATHMATCH</span></button>
         <button type="button" class="seg-btn" data-val="ffa"><img class="mode-icon" src="https://i.postimg.cc/nLH36X7N/Icon-Kill.png" alt=""><span>FREE FOR ALL</span></button>
         <button type="button" class="seg-btn" data-val="hostage"><img class="mode-icon" src="https://i.postimg.cc/nrkzSwJm/IconHostage.png" alt=""><span>HOSTAGE RESCUE</span></button>
         <button type="button" class="seg-btn" data-val="ctf"><img class="mode-icon" src="https://i.postimg.cc/Hk3w8B8p/IconCTF.png" alt=""><span>CAPTURE THE FLAG</span></button>
         <button type="button" class="seg-btn" data-val="gungame"><img class="mode-icon" src="https://i.postimg.cc/qvQs6j6R/IconGungame.png" alt=""><span>GUN GAME</span></button>
-        <button type="button" class="seg-btn active" data-val="waves"><img class="mode-icon" src="https://i.postimg.cc/7ZX3JmJY/IconZombie.png" alt=""><span>ZOMBIE SURVIVAL</span></button>
+        <button type="button" class="seg-btn" data-val="waves"><img class="mode-icon" src="https://i.postimg.cc/7ZX3JmJY/IconZombie.png" alt=""><span>ZOMBIE SURVIVAL</span></button>
         <button type="button" class="seg-btn" data-val="fnaf"><img class="mode-icon" src="https://i.postimg.cc/pr3xrSgt/Fnaf-Doom-Icon.png" alt=""><span>FNAF DOOM</span></button>
         <button type="button" class="seg-btn" data-val="soccer"><img class="mode-icon" src="https://i.postimg.cc/CxBDz74H/Icon-Soccermode.png" alt=""><span>FUTEBOL</span></button>
       </div>
       <select id="gameModeSelect" style="display:none">
-        <option value="deathmatch">DEATHMATCH</option>
+        <option value="deathmatch" selected>DEATHMATCH</option>
         <option value="ffa">FREE FOR ALL</option>
         <option value="hostage">HOSTAGE RESCUE</option>
         <option value="ctf">CAPTURE THE FLAG</option>
         <option value="gungame">GUN GAME</option>
-        <option value="waves" selected>ZOMBIE SURVIVAL</option>
+        <option value="waves">ZOMBIE SURVIVAL</option>
         <option value="fnaf">FNAF DOOM</option>
         <option value="soccer">FUTEBOL</option>
       </select>
@@ -5693,7 +5693,7 @@ const GUN_GAME_KILLS_PER_WEAPON = 1;
 const GUN_GAME_WIN_KILLS = 29;   // contra bots / online: vence quem chegar a esta quantidade de abates (contra zumbis e infinito)
 
 let currentLevelIndex = 0;
-let currentGameMode = 'waves';
+let currentGameMode = 'deathmatch';
 let gunGameFoe = 'zombies'; // 'zombies' | 'bots' (escolhido no menu do Gun Game)
 let gunGameKills = 0;
 let gunGameWeaponIdx = 0;
