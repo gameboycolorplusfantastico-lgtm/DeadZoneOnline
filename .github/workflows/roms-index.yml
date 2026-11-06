@@ -1,13 +1,8 @@
 name: Atualizar lista de ROMs
 
-on:
-  push:
-    paths:
-      - 'roms/**'
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
-permissions:
-  contents: write
+permissions: {contents: write}
 
 jobs:
   index:
