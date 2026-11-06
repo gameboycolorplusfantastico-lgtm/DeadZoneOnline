@@ -13961,6 +13961,10 @@ function gpHintsHtml(rootId){
     L.push(it(['START'], d.gpPlay));
   } else if(rootId === 'edOverlay'){
     L.push(it(['B'], d.gpBack), it(['X'], LT('ABRIR', 'OPEN')), it(['Y'], LT('DIGITAR', 'TYPE')), it(['START'], LT('BAIXAR', 'DOWNLOAD')));
+  } else if(rootId === 'emuOverlay'){
+    L.push(it(['B'], d.gpBack));
+  } else if(rootId === 'gbaOverlay'){
+    L.push(it(['B'], d.gpBack), it(['X'], LT('ABRIR', 'OPEN')));
   } else if(rootId === 'lgOverlay'){
     L.push(it(['B'], d.gpBack));
   } else if(rootId === 'jdOverlay'){
@@ -13979,9 +13983,10 @@ function gpHintsHtml(rootId){
 function gpActiveMenuRoot(){
   const ls = document.getElementById('loadingScreen');
   if(ls && ls.style.display !== 'none' && !ls.classList.contains('loading-done')) return null;
-  const ids = ['lgOverlay', 'edOverlay', 'calcOverlay', 'jdOverlay', 'settingsModal', 'levelSelectModal', 'gameOverOverlay', 'netPanel', 'mainMenu'];
+  const ids = ['gbaOverlay', 'emuOverlay', 'lgOverlay', 'edOverlay', 'calcOverlay', 'jdOverlay', 'settingsModal', 'levelSelectModal', 'gameOverOverlay', 'netPanel', 'mainMenu'];
   for(const id of ids){
     const el = document.getElementById(id);
+    if(id === 'gbaOverlay' && el && el.classList.contains('playing')) return null;   // jogo rodando: o controle é do emulador
     if(el && getComputedStyle(el).display !== 'none') return el;
   }
   return null;
@@ -14161,6 +14166,8 @@ function gpMenuUpdate(gp, root, btn, prev){
     else if(root.id === 'calcOverlay'){ if(window.dzCalcBack) window.dzCalcBack(); }
     else if(root.id === 'jdOverlay'){ if(window.dzJdBack) window.dzJdBack(); }
     else if(root.id === 'lgOverlay'){ if(window.dzLgBack) window.dzLgBack(); }
+    else if(root.id === 'gbaOverlay'){ if(window.dzGbaBack) window.dzGbaBack(); }
+    else if(root.id === 'emuOverlay'){ if(window.dzEmuBack) window.dzEmuBack(); }
     else if(root.id === 'settingsModal') gpClickId('closeSettingsBtn');
     else if(root.id === 'levelSelectModal') gpClickId('closeLevelSelectBtn');
     else if(root.id === 'gameOverOverlay') gpClickId(NET.mode ? 'restartBtn' : 'backToMenuBtn');
@@ -14183,6 +14190,7 @@ function gpMenuUpdate(gp, root, btn, prev){
 
   if(root.id === 'edOverlay'){ if(pressed(2)) gpClickId('edOpen'); if(pressed(3)){ const tb = document.getElementById('edTypeBtn'); if(tb && gpElVisible(tb)) tb.click(); else gpClickId('edPadBtn'); } }   // editor: X abre arquivo, Y digita
   if(root.id === 'calcOverlay'){ if(pressed(2)) gpClickId('calcBack'); if(pressed(3)) gpClickId('calcAC'); }
+  if(root.id === 'gbaOverlay'){ if(pressed(2)) gpClickId('gbaOpen'); if(pressed(3)) gpClickId('gbaMenuBtn'); }
   if(root.id === 'jdOverlay'){ if(pressed(2)) gpClickId('jdStdinBtn'); if(pressed(3)) gpClickId('jdTypeBtn'); }   // calculadora: X apaga, Y limpa
 
   // START = ação principal da tela
@@ -14403,6 +14411,8 @@ document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   if (window.dzLgTry && window.dzLgTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
   if (window.dzJdTry && window.dzJdTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do JDoodle
   if (window.dzEdTry && window.dzEdTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do editor de texto
+  if (window.dzEmuTry && window.dzEmuTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // seletor de emuladores
+  if (window.dzGbaTry && window.dzGbaTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do emulador de GBA
   if (inputPass === '31082007') {
     SFX.menuAccept();
     document.getElementById('debugSection').style.display = 'block';
@@ -19319,6 +19329,8 @@ function netClientTick(dt){
       else if(r.id === 'calcOverlay'){ if(window.dzCalcBack) window.dzCalcBack(); }
       else if(r.id === 'jdOverlay'){ if(window.dzJdBack) window.dzJdBack(); }
       else if(r.id === 'lgOverlay'){ if(window.dzLgBack) window.dzLgBack(); }
+      else if(r.id === 'gbaOverlay'){ if(window.dzGbaBack) window.dzGbaBack(); }
+      else if(r.id === 'emuOverlay'){ if(window.dzEmuBack) window.dzEmuBack(); }
       else if(r.id === 'settingsModal') gpClickId('closeSettingsBtn');
       else if(r.id === 'levelSelectModal') gpClickId('closeLevelSelectBtn');
       else if(r.id === 'gameOverOverlay') gpClickId(NET.mode ? 'restartBtn' : 'backToMenuBtn');
@@ -21365,6 +21377,7 @@ html.console #jdOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0p
 #jdPad{display:none;flex-wrap:wrap;gap:4px;align-items:center}
 #jdPad.padon{display:flex}
 @media (max-width:760px){#jdMain{flex-direction:column}#jdEd{flex:1.2}}
+@media (pointer:coarse){#jdHl,#jdCode,#jdGut,#jdIn{font-size:16px}}   /* 16px evita o zoom automático do iPhone ao tocar no campo */
 </style>
 <div id="jdOverlay" aria-hidden="true">
   <div id="jdBox" role="dialog" aria-label="Código Legal">
@@ -21790,6 +21803,236 @@ window.dzLgTry = function(v){
   open(); return true;
 };
 window.dzLgBack = () => close();
+})();
+</script>
+
+
+<style id="dzGbaStyle">
+#gbaOverlay{position:fixed;inset:0;z-index:99990;display:none;background:rgba(0,0,0,.95);padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));box-sizing:border-box;font-family:inherit;color:#f0d9a0;touch-action:manipulation}
+html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0px))}
+#gbaOverlay.open{display:block}
+#gbaBox{width:min(100%,1100px);height:100%;margin:0 auto;display:flex;flex-direction:column;gap:6px;background:#0d0b07;border:2px solid #6a4bd8;border-radius:8px;padding:6px;box-sizing:border-box;box-shadow:0 0 30px rgba(106,75,216,.4);overflow:hidden}
+#gbaHead{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+#gbaLogo{font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;white-space:nowrap;margin-right:4px}
+#gbaLogo span{font-size:10px;font-weight:600;color:#9a8a5a;letter-spacing:1.5px;margin-left:4px}
+.gbab{font:inherit;font-size:12px;font-weight:700;letter-spacing:.5px;color:#f0d9a0;background:#17130b;border:1px solid rgba(232,185,58,.4);border-radius:5px;cursor:pointer;padding:0 10px;min-width:34px;min-height:34px;display:inline-flex;align-items:center;justify-content:center;gap:4px;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.gbab:active{background:#3a2d12}
+.gbab.clr{background:#4a1a10;color:#ff9a80;border-color:#c94b2c}
+#gbaHead .sp{flex:1}
+#gbaBody{flex:1;min-height:0;position:relative;display:flex;gap:6px}
+#gbaList{width:min(260px,40%);overflow:auto;display:flex;flex-direction:column;gap:5px;padding-right:2px}
+#gbaList.full{width:100%}
+#gbaListTitle{font-size:11px;letter-spacing:1.5px;color:#9a8a5a;padding:2px 2px 0}
+.gbarom{font:inherit;text-align:left;color:#f0d9a0;background:#17130b;border:1px solid rgba(232,185,58,.35);border-radius:6px;padding:9px 10px;cursor:pointer;min-height:44px;-webkit-tap-highlight-color:transparent}
+.gbarom:active{background:#3a2d12}
+.gbarom b{display:block;font-size:13px;letter-spacing:.5px;color:#fff}
+.gbarom small{display:block;font-size:11px;color:#9a8a5a;margin-top:2px}
+#gbaEmpty{font-size:12px;line-height:1.5;color:#b8a878;padding:8px;border:1px dashed rgba(232,185,58,.3);border-radius:6px}
+#gbaScreen{flex:1;min-width:0;position:relative;background:#000;border-radius:6px;overflow:hidden}
+#gbaFrame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+#gbaMsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;font-size:13px;line-height:1.5;color:#b8a878;pointer-events:none}
+#gbaOverlay.playing #gbaMsg{display:none}
+#gbaOverlay.playing #gbaList{display:none}
+#gbaOverlay .gp-focus{outline:3px solid #39ff14;outline-offset:1px;position:relative;z-index:2}
+@media (max-width:640px){#gbaList{width:100%}#gbaBody{flex-direction:column}#gbaScreen{min-height:200px}}
+</style>
+<div id="gbaOverlay" aria-hidden="true">
+  <div id="gbaBox" role="dialog" aria-label="Game Boy Advance">
+    <div id="gbaHead">
+      <div id="gbaLogo">GAME BOY ADVANCE<span>mGBA</span></div>
+      <button type="button" class="gbab" id="gbaOpen">📂 ABRIR .GBA</button>
+      <button type="button" class="gbab" id="gbaMenuBtn">☰ JOGOS</button>
+      <span class="sp"></span>
+      <button type="button" class="gbab clr" id="gbaClose">✕ FECHAR</button>
+    </div>
+    <div id="gbaBody">
+      <div id="gbaList"></div>
+      <div id="gbaScreen"><div id="gbaMsg"></div><iframe id="gbaFrame" title="GBA" allow="autoplay; gamepad; fullscreen" style="display:none"></iframe></div>
+    </div>
+    <input type="file" id="gbaFile" accept=".gba,.zip,.7z,.agb,.bin" style="display:none">
+  </div>
+</div>
+<script id="dzGbaScript">
+/* ===== EMULADOR DE GAME BOY ADVANCE (menu DEBUG) =====
+   Digite GBA_SECRET_CODE no campo de SENHA do menu DEBUG (ou escolha no seletor de apps: "utility").
+   Núcleo: EmulatorJS (core mGBA), carregado de EJS_CDN dentro de um iframe — a cada jogo o iframe é recriado.
+   Lista de jogos: roms/roms.json (gerado sozinho pelo GitHub Action) + botão "abrir .gba" para arquivos locais.
+   Para mudar o código, altere GBA_SECRET_CODE. Para hospedar o núcleo no próprio repositório, altere EJS_CDN. */
+(function(){
+'use strict';
+const GBA_SECRET_CODE = 'gba123';
+const EJS_CDN = 'https://cdn.emulatorjs.org/stable/data/';
+const ROMS_DIR = 'roms/';
+const $ = id => document.getElementById(id);
+const ov = $('gbaOverlay'), frame = $('gbaFrame'), list = $('gbaList');
+const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
+const isOpen = () => ov.classList.contains('open');
+let blobUrl = null, romsLoaded = false;
+
+function labels(){
+  $('gbaOpen').textContent = '📂 ' + tr('ABRIR .GBA', 'OPEN .GBA');
+  $('gbaMenuBtn').textContent = '☰ ' + tr('JOGOS', 'GAMES');
+  $('gbaClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
+  if(!ov.classList.contains('playing'))
+    $('gbaMsg').textContent = tr('Escolha um jogo da lista ou abra um arquivo .gba do seu aparelho.', 'Pick a game from the list or open a .gba file from your device.');
+}
+function stop(){
+  try{ frame.src = 'about:blank'; frame.removeAttribute('srcdoc'); }catch(e){}
+  frame.style.display = 'none';
+  if(blobUrl){ try{ URL.revokeObjectURL(blobUrl); }catch(e){} blobUrl = null; }
+  ov.classList.remove('playing'); list.classList.remove('full');
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function play(url, name){
+  stop();
+  const cfg = { core:'gba', url:url, name:name || 'game', cdn:EJS_CDN };
+  const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div>' +
+    '<script>var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +
+    'EJS_player="#game";EJS_core=C.core;EJS_gameUrl=C.url;EJS_gameName=C.name;EJS_pathtodata=C.cdn;EJS_startOnLoaded=true;EJS_color="#6a4bd8";' +
+    'EJS_language="pt-BR";EJS_threads=false;<\/script>' +
+    '<script src="' + esc(EJS_CDN) + 'loader.js"><\/script></body></html>';
+  frame.srcdoc = html; frame.style.display = 'block';
+  ov.classList.add('playing');
+  setTimeout(() => { try{ frame.focus(); }catch(e){} }, 300);
+}
+function playFile(f){
+  if(!f) return;
+  stop();
+  const ext = (f.name.split('.').pop() || 'gba').toLowerCase();
+  blobUrl = URL.createObjectURL(f);
+  play(blobUrl + '#rom.' + (ext === 'zip' || ext === '7z' ? ext : 'gba'), f.name.replace(/\.[^.]+$/, ''));
+}
+function showList(){ stop(); list.classList.add('full'); renderList(); labels(); $('gbaMsg').textContent = ''; }
+
+async function loadRoms(){
+  let items = [];
+  try{
+    const r = await fetch(ROMS_DIR + 'roms.json', { cache:'no-store' });
+    if(r.ok){ const j = await r.json(); items = Array.isArray(j) ? j : (j.games || []); }
+  }catch(e){}
+  romsLoaded = true; return items.filter(x => x && x.file);
+}
+let romItems = [];
+function renderList(){
+  list.innerHTML = '';
+  const t = document.createElement('div'); t.id = 'gbaListTitle'; t.textContent = tr('JOGOS HOMEBREW / FAN GAMES', 'HOMEBREW / FAN GAMES'); list.appendChild(t);
+  if(!romItems.length){
+    const e = document.createElement('div'); e.id = 'gbaEmpty';
+    e.textContent = tr('Nenhum jogo na pasta roms/ ainda. Coloque arquivos .gba lá no GitHub (veja roms/README.md) ou use "ABRIR .GBA".', 'No games in the roms/ folder yet. Put .gba files there on GitHub (see roms/README.md) or use "OPEN .GBA".');
+    list.appendChild(e); return;
+  }
+  romItems.forEach(g => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'gbarom';
+    b.innerHTML = '<b>' + esc(g.title || g.file.replace(/\.[^.]+$/, '')) + '</b>' + (g.author ? '<small>' + esc(g.author) + '</small>' : '');
+    b.addEventListener('click', () => { snd('menuAccept'); play(ROMS_DIR + encodeURIComponent(g.file).replace(/%2F/g, '/'), g.title || g.file.replace(/\.[^.]+$/, '')); });
+    list.appendChild(b);
+  });
+}
+async function open(){
+  try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
+  try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
+  ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); snd('menuAccept');
+  list.classList.add('full'); labels(); renderList();
+  if(!romsLoaded){ romItems = await loadRoms(); if(isOpen() && !ov.classList.contains('playing')) renderList(); }
+}
+function close(quiet){
+  if(!isOpen()) return;
+  stop(); ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); if(!quiet) snd('menuBack');
+}
+function goBack(){ if(ov.classList.contains('playing')) showList(); else close(); }
+
+$('gbaOpen').addEventListener('click', () => $('gbaFile').click());
+$('gbaFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if(f) playFile(f); });
+$('gbaMenuBtn').addEventListener('click', () => showList());
+$('gbaClose').addEventListener('click', () => close());
+
+/* mouse / roda / toque dentro do app não chegam no jogo */
+['mousedown', 'mouseup', 'wheel', 'contextmenu', 'click', 'dblclick'].forEach(t => ov.addEventListener(t, e => e.stopPropagation()));
+ov.addEventListener('dragover', e => { if(e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault(); });
+ov.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(!f) return; e.preventDefault(); playFile(f); });
+/* teclado fora do iframe: as teclas nunca chegam ao jogo (dentro do iframe o emulador cuida delas) */
+ov.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Escape'){ e.preventDefault(); goBack(); } });
+ov.addEventListener('keyup', e => e.stopPropagation());
+ov.addEventListener('keypress', e => e.stopPropagation());
+['keydown', 'keyup', 'keypress'].forEach(t => window.addEventListener(t, e => {
+  if(!isOpen() || ov.contains(e.target)) return;
+  if(e.type === 'keydown' && e.key === 'Escape'){ goBack(); }
+  e.stopImmediatePropagation();
+}, true));
+
+window.dzGbaTry = function(v){
+  if(String(v || '').trim().toLowerCase() !== GBA_SECRET_CODE.toLowerCase()) return false;
+  open(); return true;
+};
+window.dzGba = { open, close, isOpen };
+(window.dzEmus = window.dzEmus || []).push({ id:'gba', icon:'🎮', name:'GAME BOY ADVANCE', open });
+window.dzGbaBack = goBack;
+})();
+</script>
+
+
+<style id="dzEmuStyle">
+#emuOverlay{position:fixed;inset:0;z-index:99991;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.92);padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));box-sizing:border-box;font-family:inherit;color:#f0d9a0;touch-action:manipulation}
+html.console #emuOverlay{padding:calc(8px + var(--sy,0px)) calc(8px + var(--sx,0px))}
+#emuOverlay.open{display:flex}
+#emuBox{width:min(100%,380px);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;background:#0d0b07;border:2px solid #6a4bd8;border-radius:8px;padding:14px;box-sizing:border-box;box-shadow:0 0 30px rgba(106,75,216,.4)}
+#emuTitle{font-size:13px;letter-spacing:2px;color:#e8b93a;text-align:center;margin-bottom:2px}
+#emuOverlay .gp-focus{outline:3px solid #39ff14;outline-offset:1px;position:relative;z-index:2}
+</style>
+<div id="emuOverlay" aria-hidden="true">
+  <div id="emuBox" role="dialog" aria-label="Emuladores">
+    <div id="emuTitle">EMULADORES</div>
+    <div id="emuList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <button type="button" class="lgb clr" id="emuClose">✕ FECHAR</button>
+  </div>
+</div>
+<script id="dzEmuScript">
+/* ===== SELETOR DE EMULADORES (menu DEBUG) =====
+   Digite EMU_SECRET_CODE no campo de SENHA do menu DEBUG para escolher entre os emuladores.
+   Para adicionar outro emulador no futuro, o app dele só precisa se registrar assim:
+     (window.dzEmus = window.dzEmus || []).push({ id:'nes', icon:'🕹️', name:'NES', open: () => window.dzNes.open() });
+   e o botão aparece aqui sozinho. */
+(function(){
+'use strict';
+const EMU_SECRET_CODE = 'emu';
+const $ = id => document.getElementById(id);
+const ov = $('emuOverlay'), listEl = $('emuList');
+const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
+const isOpen = () => ov.classList.contains('open');
+function build(){
+  $('emuTitle').textContent = tr('EMULADORES', 'EMULATORS');
+  $('emuClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
+  listEl.innerHTML = '';
+  (window.dzEmus || []).forEach(e => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lgb';
+    b.textContent = (e.icon ? e.icon + ' ' : '') + e.name;
+    b.addEventListener('click', () => { close(true); try{ e.open(); }catch(err){} });
+    listEl.appendChild(b);
+  });
+}
+function open(){
+  try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
+  try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
+  build(); ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); snd('menuAccept');
+}
+function close(quiet){ if(!isOpen()) return; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); if(!quiet) snd('menuBack'); }
+$('emuClose').addEventListener('click', () => close());
+ov.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Escape'){ e.preventDefault(); close(); } });
+ov.addEventListener('keyup', e => e.stopPropagation());
+ov.addEventListener('keypress', e => e.stopPropagation());
+['keydown', 'keyup', 'keypress'].forEach(t => window.addEventListener(t, e => {
+  if(!isOpen() || ov.contains(e.target)) return;
+  if(e.type === 'keydown' && e.key === 'Escape'){ close(); }
+  e.stopImmediatePropagation();
+}, true));
+window.dzEmuTry = function(v){
+  if(String(v || '').trim().toLowerCase() !== EMU_SECRET_CODE.toLowerCase()) return false;
+  open(); return true;
+};
+window.dzEmuBack = () => close();
 })();
 </script>
 
