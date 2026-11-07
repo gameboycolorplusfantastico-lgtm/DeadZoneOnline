@@ -14472,6 +14472,7 @@ document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   if (window.dzEdTry && window.dzEdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['ed']); document.getElementById('debugPassInput').value = ''; return; }   // código do editor de texto
   if (window.dzEmuTry && window.dzEmuTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['emu']); document.getElementById('debugPassInput').value = ''; return; }   // seletor de emuladores
   if (window.dzW95Try && window.dzW95Try(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do Windows 95
+  { const sid = window.dzEmuSysTry && window.dzEmuSysTry(inputPass); if (sid) { window.dzExtrasGrant && window.dzExtrasGrant([sid]); document.getElementById('debugPassInput').value = ''; return; } }   // códigos dos consoles novos (nes123, snes123, md123)
   if (window.dzGbaTry && window.dzGbaTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['gba']); document.getElementById('debugPassInput').value = ''; return; }   // código do emulador de GBA
   if (inputPass === '31082007') {
     SFX.menuAccept();
@@ -21930,11 +21931,37 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
   #gbaPad .STA{left:auto;right:14px;bottom:calc(var(--ab)*1.55 + 44px)}
 }
 @media (max-width:640px){#gbaOverlay:not(.playing) #gbaList{width:100%}#gbaOverlay:not(.playing) #gbaBody{flex-direction:column}#gbaOverlay:not(.playing) #gbaScreen{min-height:120px}}
+/* ===== vários consoles no mesmo overlay: data-sys = gba | nes | snes | md ===== */
+#gbaPad .X,#gbaPad .Y{display:none;width:var(--ab);height:var(--ab);border-radius:50%;font-size:calc(var(--ab)/2.6)}
+#gbaOverlay[data-sys="nes"] #gbaPad .L,#gbaOverlay[data-sys="nes"] #gbaPad .R,
+#gbaOverlay[data-sys="md"] #gbaPad .L,#gbaOverlay[data-sys="md"] #gbaPad .R{display:none}
+/* SNES: losango Y/X/B/A + L/R */
+#gbaOverlay[data-sys="snes"] #gbaPad{--ab:clamp(46px,12.5vmin,58px);--c:calc(var(--ab)*1.06)}
+#gbaOverlay[data-sys="snes"] #gbaPad .X,#gbaOverlay[data-sys="snes"] #gbaPad .Y{display:flex}
+#gbaOverlay[data-sys="snes"] #gbaPad .A{right:14px;bottom:calc(14px + var(--c))}
+#gbaOverlay[data-sys="snes"] #gbaPad .B{right:calc(14px + var(--c));bottom:14px}
+#gbaOverlay[data-sys="snes"] #gbaPad .X{right:calc(14px + var(--c));bottom:calc(14px + var(--c)*2)}
+#gbaOverlay[data-sys="snes"] #gbaPad .Y{right:calc(14px + var(--c)*2);bottom:calc(14px + var(--c))}
+/* NES: só A e B, um pouco maiores */
+#gbaOverlay[data-sys="nes"] #gbaPad{--ab:clamp(58px,16vmin,76px)}
+#gbaOverlay[data-sys="nes"] #gbaPad .A{right:14px;bottom:calc(14px + var(--ab)*.35)}
+#gbaOverlay[data-sys="nes"] #gbaPad .B{right:calc(var(--ab) + 28px);bottom:14px}
+/* Mega Drive: três botões A B C em fileira (A = .Y, B = .B, C = .A) */
+#gbaOverlay[data-sys="md"] #gbaPad{--ab:clamp(50px,13.5vmin,64px)}
+#gbaOverlay[data-sys="md"] #gbaPad .Y{display:flex}
+#gbaOverlay[data-sys="md"] #gbaPad .A{right:14px;bottom:calc(14px + var(--ab)*.45)}
+#gbaOverlay[data-sys="md"] #gbaPad .B{right:calc(14px + var(--ab)*1.12);bottom:calc(14px + var(--ab)*.22)}
+#gbaOverlay[data-sys="md"] #gbaPad .Y{right:calc(14px + var(--ab)*2.24);bottom:14px}
+/* SELECT/START ficam no centro embaixo nos consoles novos (inclusive com o celular deitado) */
+@media (orientation:landscape) and (max-height:640px){
+  #gbaOverlay:not([data-sys="gba"]) #gbaPad .SEL{left:calc(50% - clamp(64px,18vmin,84px) - 6px);bottom:12px}
+  #gbaOverlay:not([data-sys="gba"]) #gbaPad .STA{left:calc(50% + 6px);right:auto;bottom:12px}
+}
 </style>
 <div id="gbaOverlay" aria-hidden="true">
   <div id="gbaBox" role="dialog" aria-label="Game Boy Advance">
     <div id="gbaHead">
-      <div id="gbaLogo">GAME BOY ADVANCE<span>mGBA</span></div>
+      <div id="gbaLogo"><b id="gbaLogoName" style="font:inherit">GAME BOY ADVANCE</b><span id="gbaLogoCore">mGBA</span></div>
       <button type="button" class="gbab nopl" id="gbaOpen">📂 ABRIR .GBA</button>
       <button type="button" class="gbab" id="gbaMenuBtn">☰ JOGOS</button>
       <button type="button" class="gbab onpl" id="gbaPadBtn">🕹 CONTROLES</button>
@@ -21945,7 +21972,7 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
     <div id="gbaBody">
       <div id="gbaList"></div>
       <div id="gbaScreen">
-        <div id="gbaView"><div id="gbaMsg"></div><iframe id="gbaFrame" title="GBA" allow="autoplay; gamepad; fullscreen" style="display:none"></iframe></div>
+        <div id="gbaView"><div id="gbaMsg"></div><iframe id="gbaFrame" title="Emulador" allow="autoplay; gamepad; fullscreen" style="display:none"></iframe></div>
         <div id="gbaPad">
           <div class="pb L" data-k="10">L</div>
           <div class="pb R" data-k="11">R</div>
@@ -21958,6 +21985,8 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
           <div class="pb STA" data-k="3">START</div>
           <div class="pb B" data-k="0">B</div>
           <div class="pb A" data-k="8">A</div>
+          <div class="pb X" data-k="9">X</div>
+          <div class="pb Y" data-k="1">Y</div>
         </div>
       </div>
     </div>
@@ -21977,6 +22006,55 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
 const GBA_SECRET_CODE = 'gba123';
 const EJS_CDN = 'https://cdn.emulatorjs.org/stable/data/';
 const ROMS_DIR = 'roms/';
+/* ---- consoles: todos usam a MESMA pasta roms/ (e o mesmo roms.json). Cada console só mostra os jogos do seu tipo:
+   o tipo vem do campo "system" do roms.json ou, se faltar, da extensão do arquivo (.nes, .sfc, .md, .gba ...).
+   btn = bit que cada botão da tela/teclado/controle manda (índices do libretro: B0 Y1 SEL2 START3 ↑4 ↓5 ←6 →7 A8 X9 L10 R11) */
+const SYSTEMS = {
+  gba:{ id:'gba', code:'gba123', icon:'🎮', name:'GAME BOY ADVANCE', core:'gba', coreName:'mGBA', exts:['gba','agb'], pick:'.gba,.zip,.7z,.agb,.bin',
+    title:['JOGOS HOMEBREW / FAN GAMES','HOMEBREW / FAN GAMES'],
+    keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, KeyA:10, KeyS:11, Enter:3, NumpadEnter:3, Backspace:2 },
+    keyTxt:['setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
+    labels:{ 8:'A', 0:'B' }, sel:'SELECT',
+    gp:{ 0:0, 2:0, 1:8, 3:8, 4:10, 6:10, 5:11, 7:11 } },
+  nes:{ id:'nes', code:'nes123', icon:'🕹️', name:'NINTENDO (NES)', core:'nes', coreName:'FCEUmm', exts:['nes','fds','unf','unif'], pick:'.nes,.fds,.zip,.7z',
+    title:['JOGOS DE NES','NES GAMES'],
+    keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, Enter:3, NumpadEnter:3, Backspace:2 },
+    keyTxt:['setas = direcional · Z = B · X = A · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
+    labels:{ 8:'A', 0:'B' }, sel:'SELECT',
+    gp:{ 0:0, 2:0, 1:8, 3:8 } },
+  snes:{ id:'snes', code:'snes123', icon:'🎛️', name:'SUPER NINTENDO (SNES)', core:'snes', coreName:'Snes9x', exts:['sfc','smc','fig','swc'], pick:'.sfc,.smc,.fig,.swc,.zip,.7z',
+    title:['JOGOS DE SUPER NINTENDO','SUPER NINTENDO GAMES'],
+    keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, KeyS:9, KeyA:1, KeyQ:10, KeyW:11, Enter:3, NumpadEnter:3, Backspace:2 },
+    keyTxt:['setas = direcional · Z = B · X = A · A = Y · S = X · Q = L · W = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · A = Y · S = X · Q = L · W = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
+    labels:{ 8:'A', 0:'B', 9:'X', 1:'Y' }, sel:'SELECT',
+    gp:{ 0:0, 1:8, 2:1, 3:9, 4:10, 6:10, 5:11, 7:11 } },
+  md:{ id:'md', code:'md123', icon:'🔵', name:'MEGA DRIVE / GENESIS', core:'segaMD', coreName:'Genesis Plus GX', exts:['md','gen','smd','bin'], pick:'.md,.gen,.smd,.bin,.zip,.7z',
+    title:['JOGOS DE MEGA DRIVE','MEGA DRIVE GAMES'],
+    /* no Genesis Plus GX: botão A do Mega Drive = Y do libretro (1), B = B (0), C = A (8) */
+    keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyZ:1, KeyX:0, KeyC:8, Enter:3, NumpadEnter:3, Backspace:2 },
+    keyTxt:['setas = direcional · Z = A · X = B · C = C · Enter = START · Backspace = MODE · F = tela cheia · Esc = voltar','arrows = D-pad · Z = A · X = B · C = C · Enter = START · Backspace = MODE · F = fullscreen · Esc = back'],
+    labels:{ 1:'A', 0:'B', 8:'C' }, sel:'MODE',
+    gp:{ 2:1, 0:0, 1:8, 3:8 } }
+};
+const SYS_ORDER = ['gba', 'nes', 'snes', 'md'];
+let cur = SYSTEMS.gba;
+/* descobre o console de um jogo: campo "system" do roms.json, senão pela extensão */
+function sysOf(g){
+  const s = String(g.system || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const alias = { gba:'gba', gameboyadvance:'gba', nes:'nes', famicom:'nes', nintendo:'nes', snes:'snes', supernintendo:'snes', sfc:'snes', superfamicom:'snes', md:'md', megadrive:'md', genesis:'md', segagenesis:'md', segamd:'md' };
+  if(alias[s]) return alias[s];
+  const ext = (String(g.file).split('?')[0].split('.').pop() || '').toLowerCase();
+  for(const id of SYS_ORDER) if(SYSTEMS[id].exts.indexOf(ext) >= 0) return id;
+  return '';
+}
+function applySys(){
+  ov.dataset.sys = cur.id;
+  $('gbaLogoName').textContent = cur.name; $('gbaLogoCore').textContent = cur.coreName;
+  $('gbaFile').setAttribute('accept', cur.pick);
+  ov.querySelectorAll('#gbaPad .A,#gbaPad .B,#gbaPad .X,#gbaPad .Y').forEach(el => { const t = cur.labels[+el.dataset.k]; if(t) el.textContent = t; });
+  const sel = ov.querySelector('#gbaPad .SEL'); if(sel) sel.textContent = cur.sel;
+  frame.title = cur.name;
+}
 const $ = id => document.getElementById(id);
 const ov = $('gbaOverlay'), list = $('gbaList');
 let frame = $('gbaFrame');
@@ -22024,18 +22102,17 @@ function fsLabel(){ $('gbaFs').textContent = (fsEl() ? '⛶ ' + tr('SAIR DA TELA
 ['fullscreenchange', 'webkitfullscreenchange'].forEach(t => document.addEventListener(t, fsLabel));
 
 function labels(){
-  $('gbaOpen').textContent = '📂 ' + tr('ABRIR .GBA', 'OPEN .GBA');
+  $('gbaOpen').textContent = '📂 ' + tr('ABRIR ARQUIVO', 'OPEN FILE');
   $('gbaMenuBtn').textContent = '☰ ' + tr('JOGOS', 'GAMES');
   $('gbaPadBtn').textContent = '🕹 ' + tr('CONTROLES', 'CONTROLS');
   $('gbaClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
   fsLabel();
   if(!isPlaying())
-    $('gbaMsg').textContent = tr('Escolha um jogo da lista ou abra um arquivo .gba do seu aparelho.', 'Pick a game from the list or open a .gba file from your device.');
+    $('gbaMsg').textContent = tr('Escolha um jogo da lista ou abra um arquivo do seu aparelho (' + cur.pick.split(',').filter(x => !/zip|7z/.test(x)).join(' ') + ').', 'Pick a game from the list or open a file from your device (' + cur.pick.split(',').filter(x => !/zip|7z/.test(x)).join(' ') + ').');
 }
 
 /* ---- entrada: toque + teclado + controle viram os botões do GBA (índices do libretro) ---- */
 const BIT = { B:0, SELECT:2, START:3, UP:4, DOWN:5, LEFT:6, RIGHT:7, A:8, L:10, R:11 };
-const KEYMAP = { ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, KeyA:10, KeyS:11, Enter:3, NumpadEnter:3, Backspace:2 };
 const src = { touch:0, key:0, pad:0 };
 let applied = 0;
 const padEls = Array.from(ov.querySelectorAll('#gbaPad [data-k]'));
@@ -22102,10 +22179,7 @@ function padLoop(){
     if(!gp || !gp.connected) continue;
     if(gp.buttons.some(x => x && x.pressed)) anyBtn = true;
     const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed);
-    if(b(0) || b(2)) m |= 1 << 0;
-    if(b(1) || b(3)) m |= 1 << 8;
-    if(b(4) || b(6)) m |= 1 << 10;
-    if(b(5) || b(7)) m |= 1 << 11;
+    for(const gi in cur.gp) if(b(+gi)) m |= 1 << cur.gp[gi];   /* botões do controle -> botões do console atual (cur.gp) */
     if(b(8)) m |= 1 << 2;
     if(b(9)) m |= 1 << 3;
     if(b(12)) m |= 1 << 4; if(b(13)) m |= 1 << 5; if(b(14)) m |= 1 << 6; if(b(15)) m |= 1 << 7;
@@ -22139,7 +22213,7 @@ function onKey(e){
     if(down && window.DZ_CONSOLE && window.dzPadT && performance.now() - window.dzPadT < 600){ e.preventDefault(); e.stopImmediatePropagation(); return; }
     if(down && e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); goBack(); return; }
     if(down && !e.repeat && e.code === 'KeyF' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); e.stopImmediatePropagation(); toggleFs(); return; }
-    const i = KEYMAP[e.code];
+    const i = cur.keys[e.code];
     if(i !== undefined){
       e.preventDefault(); e.stopImmediatePropagation();
       const bit = 1 << i; if(down){ src.key |= bit; ov.classList.remove('showpad'); } else src.key &= ~bit;
@@ -22170,7 +22244,7 @@ function killEmu(){
   }catch(x){}
   try{
     const old = frame, nu = document.createElement('iframe');
-    nu.id = 'gbaFrame'; nu.title = 'GBA'; nu.setAttribute('allow', 'autoplay; gamepad; fullscreen'); nu.style.display = 'none';
+    nu.id = 'gbaFrame'; nu.title = cur.name; nu.setAttribute('allow', 'autoplay; gamepad; fullscreen'); nu.style.display = 'none';
     old.src = 'about:blank';
     old.parentNode.replaceChild(nu, old);
     frame = nu;
@@ -22200,7 +22274,7 @@ function onEmuReady(){
 }
 function play(url, name){
   stop(); initPad(); regSw();
-  const cfg = { core:'gba', url:url, name:name || 'game', cdn:EJS_CDN };
+  const cfg = { core:cur.core, url:url, name:name || 'game', cdn:EJS_CDN };
   const legacy = !!(window.DZ_CONSOLE && window.DZ_CONSOLE.legacy);   /* Xbox One / PS4: hardware fraco */
   /* sem barra/menus do EmulatorJS (menos DOM e menos CPU); em Xbox One/PS4 também frameskip automático e remoção de loops ociosos do mGBA */
   const perf = '';   /* (sem opções extras do EmulatorJS: as interface dele já fica escondida pelo CSS) */
@@ -22230,9 +22304,9 @@ function play(url, name){
 function playFile(f){
   if(!f) return;
   stop();
-  const ext = (f.name.split('.').pop() || 'gba').toLowerCase();
+  const ext = (f.name.split('.').pop() || '').toLowerCase();
   blobUrl = URL.createObjectURL(f);
-  play(blobUrl + '#rom.' + (ext === 'zip' || ext === '7z' ? ext : 'gba'), f.name.replace(/\.[^.]+$/, ''));
+  play(blobUrl + '#rom.' + (ext === 'zip' || ext === '7z' || cur.exts.indexOf(ext) >= 0 ? ext : cur.exts[0]), f.name.replace(/\.[^.]+$/, ''));
 }
 function showList(){ stop(); list.classList.add('full'); renderList(); labels(); $('gbaMsg').textContent = ''; }
 
@@ -22247,13 +22321,15 @@ async function loadRoms(){
 let romItems = [];
 function renderList(){
   list.innerHTML = '';
-  const t = document.createElement('div'); t.id = 'gbaListTitle'; t.textContent = tr('JOGOS HOMEBREW / FAN GAMES', 'HOMEBREW / FAN GAMES'); list.appendChild(t);
-  if(!romItems.length){
+  const t = document.createElement('div'); t.id = 'gbaListTitle'; t.textContent = tr(cur.title[0], cur.title[1]); list.appendChild(t);
+  const mine = romItems.filter(g => sysOf(g) === cur.id);
+  if(!mine.length){
     const e = document.createElement('div'); e.id = 'gbaEmpty';
-    e.textContent = tr('Nenhum jogo na pasta roms/ ainda. Coloque arquivos .gba lá no GitHub (veja roms/README.md) ou use "ABRIR .GBA".', 'No games in the roms/ folder yet. Put .gba files there on GitHub (see roms/README.md) or use "OPEN .GBA".');
+    const ex = cur.exts.map(x => '.' + x).join(' / ');
+    e.textContent = tr('Nenhum jogo de ' + cur.name + ' na pasta roms/ ainda. Coloque arquivos ' + ex + ' lá no GitHub (veja roms/README.md) ou use "ABRIR ARQUIVO".', 'No ' + cur.name + ' games in the roms/ folder yet. Put ' + ex + ' files there on GitHub (see roms/README.md) or use "OPEN FILE".');
     list.appendChild(e);
   }
-  romItems.forEach(g => {
+  mine.forEach(g => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'gbarom';
     b.innerHTML = '<b>' + esc(g.title || g.file.replace(/\.[^.]+$/, '')) + '</b>' + (g.author ? '<small>' + esc(g.author) + '</small>' : '');
     b.addEventListener('click', () => { play(ROMS_DIR + encodeURIComponent(g.file).replace(/%2F/g, '/'), g.title || g.file.replace(/\.[^.]+$/, '')); });
@@ -22262,7 +22338,7 @@ function renderList(){
   const h = document.createElement('div'); h.id = 'gbaHelp';
   const off = offlineReady();
   [
-    ['⌨️', tr('TECLADO', 'KEYBOARD'), tr('setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar', 'arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back')],
+    ['⌨️', tr('TECLADO', 'KEYBOARD'), tr(cur.keyTxt[0], cur.keyTxt[1])],
     ['🎮', tr('CONTROLE', 'CONTROLLER'), tr('botões padrão. Para voltar à lista, segure por 1 s: SELECT + START, L3 + R3 ou L1 + R1 + L2 + R2. Na lista, B fecha o emulador.', 'standard buttons. To go back to the list, hold for 1 s: SELECT + START, L3 + R3 or L1 + R1 + L2 + R2. On the list, B closes the emulator.')],
     ['💾', off ? tr('OFFLINE PRONTO', 'OFFLINE READY') : tr('OFFLINE', 'OFFLINE'), off ? tr('já funciona sem internet.', 'works without internet.') : tr('abra um jogo uma vez com internet para usar offline.', 'open a game once while online to use it offline.')]
   ].forEach(r => {
@@ -22273,7 +22349,8 @@ function renderList(){
   });
   list.appendChild(h);
 }
-async function open(){
+async function open(id){
+  cur = SYSTEMS[typeof id === 'string' ? id : 'gba'] || SYSTEMS.gba; applySys();
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
   muteGame(); ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
@@ -22306,12 +22383,18 @@ ov.addEventListener('keypress', e => e.stopPropagation());
 
 window.dzGbaTry = function(v){
   if(String(v || '').trim().toLowerCase() !== GBA_SECRET_CODE.toLowerCase()) return false;
-  open(); return true;
+  open('gba'); return true;
+};
+/* códigos individuais dos consoles novos (nes123, snes123, md123): abre o console e devolve o id para liberar na aba EXTRAS */
+window.dzEmuSysTry = function(v){
+  const t = String(v || '').trim().toLowerCase();
+  for(const id of ['nes', 'snes', 'md']) if(t === SYSTEMS[id].code){ open(id); return id; }
+  return '';
 };
 window.dzGba = { open, close, isOpen };
 window.dzGbaBack = () => { if(!isPlaying()) goBack(); };    /* durante o jogo o controle é do emulador */
 window.dzGbaPlaying = isPlaying;
-(window.dzEmus = window.dzEmus || []).push({ id:'gba', icon:'🎮', name:'GAME BOY ADVANCE', open });
+SYS_ORDER.forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, open: () => open(id) }));
 })();
 </script>
 
@@ -22581,7 +22664,7 @@ window.addEventListener('load', () => { have = load(); refresh(); });
 #gbaPad .pb,#gbaPad .dp,#gbaDpad .dc{background:linear-gradient(160deg,rgba(62,50,114,.94),rgba(28,22,58,.94));border:1px solid rgba(190,170,255,.55);color:var(--xu-text);
   box-shadow:0 3px 0 rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.2);text-shadow:0 1px 2px rgba(0,0,0,.7)}
 #gbaDpad .dc{box-shadow:none;border-left:0;border-right:0}
-#gbaPad .A,#gbaPad .B{background:radial-gradient(circle at 35% 30%,#b39cff,#5a3dc0 72%);border-color:rgba(255,255,255,.6);
+#gbaPad .A,#gbaPad .B,#gbaPad .X,#gbaPad .Y{background:radial-gradient(circle at 35% 30%,#b39cff,#5a3dc0 72%);border-color:rgba(255,255,255,.6);
   box-shadow:0 4px 0 #2a1b66,0 7px 14px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.4)}
 #gbaPad .pb.on,#gbaPad .dp.on{background:#8b6bff;color:#fff;border-color:#fff;box-shadow:0 0 18px rgba(139,107,255,.9);transform:translateY(2px)}
 
