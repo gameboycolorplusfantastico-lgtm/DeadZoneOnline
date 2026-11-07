@@ -22921,6 +22921,7 @@ html.console.dz-gba-play #gbaOverlay{visibility:visible}   /* o DEAD ZONE parado
       <iframe id="w95Frame" title="Windows 95" allow="autoplay; fullscreen"></iframe>
       <div id="w95Msg"></div>
     </div>
+    <div id="w95Keys" style="display:none;flex-wrap:wrap;gap:6px"></div>
     <input type="file" id="w95HdIn" style="display:none">
     <input type="file" id="w95CdIn" accept=".iso,.img,.bin" style="display:none">
     <input type="file" id="w95FdIn" accept=".img,.ima,.flp,.vfd,.dsk" style="display:none">
@@ -22944,6 +22945,7 @@ const WIN95_DIR = 'win95/';   /* pasta no GitHub: win95.json (lista) + imagens +
 const files = { hd: null, cd: null, fd: null };
 let items = [], itemsLoaded = false;
 const abs = p => new URL(p, location.href).href;
+const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
 let urls = [], running = false, muted = false;
 
 /* ---- áudio do jogo mudo enquanto o Windows está aberto ---- */
@@ -22986,14 +22988,45 @@ function frameMain(){
       if(cfg.fd) o.fda = { url: cfg.fd };
       try{ emu = new V(o); }catch(e){ status('Erro ao criar o emulador: ' + (e && e.message || e), 1); return; }
       window.emu = emu;
-      emu.add_listener('download-progress', function(e){ status('Carregando arquivos… ' + (e && e.total ? Math.round(e.loaded / e.total * 100) + '%' : '')); });
-      emu.add_listener('download-error', function(e){ status('Falha ao baixar um arquivo do emulador (' + ((e && (e.file_name || e.url)) || 'BIOS/disco') + ').', 1); });
-      emu.add_listener('emulator-ready', function(){ status('', 0, 1); });
+      var failed = false;
+      emu.add_listener('download-progress', function(e){
+        var mb = function(n){ return (n / 1048576).toFixed(1) + ' MB'; };
+        status('Baixando a imagem… ' + (e && e.total ? mb(e.loaded) + ' de ' + mb(e.total) + ' (' + Math.round(e.loaded / e.total * 100) + '%)' : (e && e.loaded ? mb(e.loaded) : '')));
+      });
+      emu.add_listener('download-error', function(e){ failed = true; status('Falha ao baixar um arquivo (' + ((e && (e.file_name || e.url)) || 'BIOS/disco') + '). Confira o link, o CORS e a internet.', 1); });
+      emu.add_listener('emulator-ready', function(){
+        status('Ligando o PC… a tela pode ficar preta por até 1 minuto. Aguarde.');
+        setTimeout(function(){ if(!failed) status('', 0, 1); }, 30000);
+      });
       emu.add_listener('screen-set-size', function(a){ if(a && a.length >= 2){ sw = a[0] || sw; sh = a[1] || sh; } fit(); });
-      setTimeout(function(){ status('', 0, 1); fit(); }, 4000);
+      setupTouch();
     }
     tryNext();
   };
+  function setupTouch(){
+    var el = document.getElementById('sc'), lx = 0, ly = 0, t0 = 0, moved = 0, lp = 0, two = 0;
+    function click(btn){ try{ var d = [0, 0, 0]; d[btn] = true; emu.bus.send('mouse-click', d); setTimeout(function(){ emu.bus.send('mouse-click', [0, 0, 0]); }, 60); }catch(e){} }
+    el.style.touchAction = 'none';
+    el.addEventListener('touchstart', function(e){
+      e.preventDefault(); var t = e.touches[0]; lx = t.clientX; ly = t.clientY; t0 = Date.now(); moved = 0; two = e.touches.length > 1;
+      clearTimeout(lp); lp = setTimeout(function(){ if(!moved && !two){ click(2); t0 = 0; } }, 550);
+    }, { passive: false });
+    el.addEventListener('touchmove', function(e){
+      e.preventDefault(); var t = e.touches[0], dx = t.clientX - lx, dy = t.clientY - ly; lx = t.clientX; ly = t.clientY;
+      moved += Math.abs(dx) + Math.abs(dy);
+      if(moved > 8) clearTimeout(lp);
+      try{ emu.bus.send('mouse-delta', [dx * 1.8, -dy * 1.8]); }catch(x){}
+    }, { passive: false });
+    el.addEventListener('touchend', function(e){
+      e.preventDefault(); clearTimeout(lp);
+      if(t0 && moved < 10 && Date.now() - t0 < 300) click(two ? 2 : 0);
+    }, { passive: false });
+  }
+  window.dzKey = function(n){
+    var m = { enter: [0x1C, 0x9C], esc: [0x01, 0x81], tab: [0x0F, 0x8F], bs: [0x0E, 0x8E], del: [0xE0, 0x53, 0xE0, 0xD3], up: [0xE0, 0x48, 0xE0, 0xC8], down: [0xE0, 0x50, 0xE0, 0xD0], left: [0xE0, 0x4B, 0xE0, 0xCB], right: [0xE0, 0x4D, 0xE0, 0xCD] };
+    try{ if(m[n]) emu.keyboard_send_scancodes(m[n]); }catch(e){}
+  };
+  window.dzText = function(t){ try{ emu.keyboard_send_text(t); }catch(e){} };
   window.dzCad = function(){ try{ emu.keyboard_send_scancodes([0x1D, 0x38, 0x53, 0xD3, 0xB8, 0x9D]); }catch(e){} };
   window.dzMouse = function(){ try{ emu.lock_mouse(); }catch(e){} };
 }
@@ -23030,6 +23063,14 @@ async function loadList(){
   }catch(e){}
   if(isOpen() && !running) help();
 }
+function keysBar(){
+  const k = $('w95Keys'); if(k.dataset.ok) return; k.dataset.ok = 1;
+  [['Aa', 'text'], ['⏎', 'enter'], ['Esc', 'esc'], ['Tab', 'tab'], ['⌫', 'bs'], ['Del', 'del'], ['◀', 'left'], ['▲', 'up'], ['▼', 'down'], ['▶', 'right']].forEach(a => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'w95b'; b.textContent = a[0]; b.style.minWidth = '40px';
+    b.onclick = () => { try{ if(a[1] === 'text'){ const t = prompt('Texto para digitar no Windows:'); if(t) frame.contentWindow.dzText(t); } else frame.contentWindow.dzKey(a[1]); }catch(e){} };
+    k.appendChild(b);
+  });
+}
 function refresh(){
   [['hd', 'w95HdBtn', '💽 DISCO'], ['cd', 'w95CdBtn', '💿 CD'], ['fd', 'w95FdBtn', '💾 DISQUETE']].forEach(a => {
     const b = $(a[1]), f = files[a[0]];
@@ -23048,7 +23089,7 @@ function killVM(){
   try{ frame.contentWindow.emu && frame.contentWindow.emu.destroy(); }catch(e){}
   const nf = frame.cloneNode(false); frame.replaceWith(nf); frame = nf;   /* iframe novo = documento limpo na hora */
   urls.forEach(u => { try{ URL.revokeObjectURL(u); }catch(e){} }); urls = [];
-  $('w95Cad').disabled = true; $('w95Mouse').disabled = true;
+  $('w95Cad').disabled = true; $('w95Mouse').disabled = true; $('w95Keys').style.display = 'none';
 }
 function start(){
   if(!(files.hd || files.cd || files.fd)) return;
@@ -23061,6 +23102,7 @@ function start(){
   doc.close();
   const s = doc.createElement('script'); s.textContent = '(' + frameMain.toString() + ')()'; doc.body.appendChild(s);
   $('w95Cad').disabled = false; $('w95Mouse').disabled = false;
+  if(coarse()){ keysBar(); $('w95Keys').style.display = 'flex'; }
   try{ frame.contentWindow.dzRun(cfg, status); }catch(e){ status('Erro ao iniciar: ' + (e && e.message || e), 1); }
 }
 function pick(key, input){
@@ -23080,6 +23122,7 @@ function open(){
   if(isOpen()) return;
   ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); mute();
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
+  if(coarse() && !ov.dataset.mem){ ov.dataset.mem = 1; $('w95Mem').value = '32'; }
   if(!running) help(); refresh(); loadList();
 }
 function close(){
