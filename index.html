@@ -14467,10 +14467,11 @@ document.getElementById('debugPassInput').addEventListener('keydown', e => {
 document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   const inputPass = document.getElementById('debugPassInput').value.trim();
   if (window.dzCalcTry && window.dzCalcTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc']); document.getElementById('debugPassInput').value = ''; return; }   // código da calculadora
-  if (window.dzLgTry && window.dzLgTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc', 'ed', 'jd']); document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
+  if (window.dzLgTry && window.dzLgTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc', 'ed', 'jd', 'w95']); document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
   if (window.dzJdTry && window.dzJdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['jd']); document.getElementById('debugPassInput').value = ''; return; }   // código do JDoodle
   if (window.dzEdTry && window.dzEdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['ed']); document.getElementById('debugPassInput').value = ''; return; }   // código do editor de texto
   if (window.dzEmuTry && window.dzEmuTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['emu']); document.getElementById('debugPassInput').value = ''; return; }   // seletor de emuladores
+  if (window.dzW95Try && window.dzW95Try(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['w95']); document.getElementById('debugPassInput').value = ''; return; }   // código do Windows 95
   if (window.dzGbaTry && window.dzGbaTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['gba']); document.getElementById('debugPassInput').value = ''; return; }   // código do emulador de GBA
   if (inputPass === '31082007') {
     SFX.menuAccept();
@@ -17815,7 +17816,7 @@ let loopErrs = 0;
 let lastFrameAt = 0;
 function gameLoop(now){
   /* emulador de GBA aberto: o DEAD ZONE fica parado por baixo (poupa CPU/GPU, importante no Xbox One) */
-  if(window.dzGba && window.dzGba.isOpen() && !(typeof NET !== 'undefined' && NET.mode)){ lastTime = now; try{ pollGamepad(); }catch(e){} requestAnimationFrame(gameLoop); return; }   /* o jogo fica parado, mas o controle continua navegando na lista de ROMs */
+  if(((window.dzGba && window.dzGba.isOpen()) || (window.dzW95 && window.dzW95.isOpen())) && !(typeof NET !== 'undefined' && NET.mode)){ lastTime = now; try{ pollGamepad(); }catch(e){} requestAnimationFrame(gameLoop); return; }   /* o jogo fica parado, mas o controle continua navegando na lista de ROMs */
   if(fpsCap > 0){
     const iv = 1000 / fpsCap, el = now - lastFrameAt;
     if(el < iv - 1){ requestAnimationFrame(gameLoop); return; }
@@ -22421,7 +22422,8 @@ let have = load();
 const APPS = [
   { id:'calc', icon:'🧮', pt:'CALCULADORA LEGAL', en:'COOL CALCULATOR', open: () => window.dzCalc.open() },
   { id:'ed',   icon:'📝', pt:'EDITOR DE TEXTO LEGAL', en:'COOL TEXT EDITOR', open: () => window.dzEd.open() },
-  { id:'jd',   icon:'💻', pt:'CÓDIGO LEGAL', en:'COOL CODE', open: () => window.dzJd.open() }
+  { id:'jd',   icon:'💻', pt:'CÓDIGO LEGAL', en:'COOL CODE', open: () => window.dzJd.open() },
+  { id:'w95',  icon:'🪟', pt:'WINDOWS 95', en:'WINDOWS 95', open: () => window.dzW95.open() }
 ];
 function emuList(){
   const all = window.dzEmus || [];
@@ -22872,5 +22874,239 @@ html.console.dz-gba-play #gbaOverlay{visibility:visible}   /* o DEAD ZONE parado
   }, true);
 })();
 </script>
+
+<style id="dzW95Style">
+/* ===== WINDOWS 95 (emulador v86, aba EXTRAS) ===== */
+#w95Overlay{position:fixed;inset:0;z-index:99990;display:none;background:#05040c;padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));box-sizing:border-box;font-family:inherit;color:#f1eaff;touch-action:manipulation}
+#w95Overlay.open{display:block}
+#w95Box{width:100%;height:100%;display:flex;flex-direction:column;gap:6px;background:#0d0b07;border:2px solid #6a4bd8;border-radius:8px;padding:6px;box-sizing:border-box;overflow:hidden}
+#w95Head{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+#w95Logo{font-size:13px;font-weight:800;letter-spacing:2px;margin-right:6px}
+#w95Logo span{font-size:10px;opacity:.6;margin-left:6px;letter-spacing:1px}
+.w95b{font:inherit;font-size:12px;font-weight:700;letter-spacing:.5px;color:#f0d9a0;background:#17130b;border:1px solid rgba(232,185,58,.4);border-radius:5px;cursor:pointer;padding:0 10px;min-height:34px;display:inline-flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent}
+.w95b[disabled]{opacity:.4;cursor:default}
+.w95b.go{background:#1d4d12;border-color:#39ff14;color:#d9ffd0}
+.w95b.clr{border-color:#c94b2c;color:#ffb09a}
+.w95b.set{border-color:#39ff14}
+#w95Mem{font:inherit;font-size:12px;color:#f0d9a0;background:#17130b;border:1px solid rgba(232,185,58,.4);border-radius:5px;min-height:34px;padding:0 6px}
+#w95Sp{flex:1}
+#w95Body{position:relative;flex:1;min-height:0;background:#000;border-radius:4px;overflow:hidden}
+#w95Frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;display:none}
+#w95Body.run #w95Frame{display:block}
+#w95Msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;overflow:auto;text-align:center;font-size:13px;line-height:1.5;color:#d8cfff}
+#w95Body.run #w95Msg{inset:auto 0 0 0;padding:6px 10px;background:rgba(0,0,0,.7);font-size:12px;pointer-events:none}
+#w95Body.run #w95Msg.ok{display:none}
+#w95Msg.err{color:#ff9a8a}
+#w95Msg b{color:#e8b93a}
+#w95Msg .w95h{max-width:560px;text-align:left}
+#w95Msg ul{margin:6px 0;padding-left:18px}
+</style>
+
+<div id="w95Overlay" aria-hidden="true">
+  <div id="w95Box" role="dialog" aria-label="Windows 95">
+    <div id="w95Head">
+      <div id="w95Logo">WINDOWS 95<span>v86</span></div>
+      <button type="button" class="w95b" id="w95HdBtn">💽 DISCO (.img)</button>
+      <button type="button" class="w95b" id="w95CdBtn">💿 CD (.iso)</button>
+      <button type="button" class="w95b" id="w95FdBtn">💾 DISQUETE (.img)</button>
+      <select id="w95Mem" title="Memória RAM"><option value="32">32 MB</option><option value="64" selected>64 MB</option><option value="128">128 MB</option></select>
+      <button type="button" class="w95b go" id="w95Go" disabled>▶ INICIAR</button>
+      <span id="w95Sp"></span>
+      <button type="button" class="w95b" id="w95Cad" disabled>⌨ CTRL+ALT+DEL</button>
+      <button type="button" class="w95b" id="w95Mouse" disabled>🖱 MOUSE</button>
+      <button type="button" class="w95b" id="w95Fs">⛶ TELA CHEIA</button>
+      <button type="button" class="w95b clr" id="w95Close">✕ FECHAR</button>
+    </div>
+    <div id="w95Body">
+      <iframe id="w95Frame" title="Windows 95" allow="autoplay; fullscreen"></iframe>
+      <div id="w95Msg"></div>
+    </div>
+    <input type="file" id="w95HdIn" style="display:none">
+    <input type="file" id="w95CdIn" accept=".iso,.img,.bin" style="display:none">
+    <input type="file" id="w95FdIn" accept=".img,.ima,.flp,.vfd,.dsk" style="display:none">
+  </div>
+</div>
+
+<script id="dzW95Script">
+/* ===== WINDOWS 95 DE VERDADE (aba EXTRAS) =====
+   Emulador de PC x86 em JavaScript (v86), baixado da internet quando você aperta INICIAR. O Windows em si NÃO vem
+   no jogo: você escolhe a SUA imagem de disco (.img de um Windows 95 já instalado, ou um .iso de CD + disquete de boot).
+   O emulador roda dentro de um iframe, então o teclado e o mouse vão só para o Windows (nada move o personagem).
+   Libere com o código W95_SECRET_CODE no campo de SENHA do menu DEBUG (o código "utility" também libera). */
+(function(){
+'use strict';
+const W95_SECRET_CODE = 'win95';
+const $ = id => document.getElementById(id);
+const ov = $('w95Overlay'), body = $('w95Body'), msgEl = $('w95Msg');
+let frame = $('w95Frame');
+const isOpen = () => ov.classList.contains('open');
+const WIN95_DIR = 'win95/';   /* pasta no GitHub: win95.json (lista) + imagens + (opcional) libv86.js, v86.wasm, seabios.bin, vgabios.bin */
+const files = { hd: null, cd: null, fd: null };
+let items = [], itemsLoaded = false;
+const abs = p => new URL(p, location.href).href;
+let urls = [], running = false, muted = false;
+
+/* ---- áudio do jogo mudo enquanto o Windows está aberto ---- */
+function mute(){ if(muted) return; muted = true; try{ window.dzAudio.minimum(); window.dzAudio.setHardMute(true); }catch(e){} }
+function unmute(){ if(!muted) return; muted = false; try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(e){} }
+
+/* ---- código que roda DENTRO do iframe (injetado como texto) ---- */
+function frameMain(){
+  var J = 'https://cdn.jsdelivr.net/npm/v86@latest/', C = 'https://copy.sh/v86/';
+  var CANDS = [
+    { l: J + 'build/libv86.js', w: J + 'build/v86.wasm', b: J + 'bios/seabios.bin', v: J + 'bios/vgabios.bin' },
+    { l: C + 'build/libv86.js', w: C + 'build/v86.wasm', b: C + 'bios/seabios.bin', v: C + 'bios/vgabios.bin' }
+  ];
+  var sw = 640, sh = 400, emu = null;
+  function fit(){
+    if(!emu) return;
+    var s = Math.max(0.1, Math.min(window.innerWidth / sw, window.innerHeight / sh));
+    try{ emu.screen_set_scale(s, s); }catch(e){}
+  }
+  window.addEventListener('resize', fit);
+  window.dzRun = function(cfg, status){
+    var i = 0;
+    if(cfg.local) CANDS.unshift({ l: cfg.local + 'libv86.js', w: cfg.local + 'v86.wasm', b: cfg.local + 'seabios.bin', v: cfg.local + 'vgabios.bin' });
+    function tryNext(){
+      if(i >= CANDS.length){ status('Não consegui baixar o emulador v86. Confira a internet (o jogo precisa acessar cdn.jsdelivr.net) e tente de novo.', 1); return; }
+      var c = CANDS[i++];
+      status('Baixando o emulador… (' + i + '/' + CANDS.length + ')');
+      var s = document.createElement('script'); s.src = c.l;
+      s.onload = function(){ if(!(window.V86 || window.V86Starter)){ tryNext(); return; } boot(c); };
+      s.onerror = function(){ s.remove(); tryNext(); };
+      document.head.appendChild(s);
+    }
+    function boot(c){
+      var V = window.V86 || window.V86Starter, o;
+      status('Iniciando o PC virtual…');
+      o = { wasm_path: c.w, memory_size: cfg.mem * 1048576, vga_memory_size: 8 * 1048576, screen_container: document.getElementById('sc'),
+            bios: { url: c.b }, vga_bios: { url: c.v }, autostart: true };
+      if(cfg.hd) o.hda = { url: cfg.hd };
+      if(cfg.cd) o.cdrom = { url: cfg.cd };
+      if(cfg.fd) o.fda = { url: cfg.fd };
+      try{ emu = new V(o); }catch(e){ status('Erro ao criar o emulador: ' + (e && e.message || e), 1); return; }
+      window.emu = emu;
+      emu.add_listener('download-progress', function(e){ status('Carregando arquivos… ' + (e && e.total ? Math.round(e.loaded / e.total * 100) + '%' : '')); });
+      emu.add_listener('download-error', function(e){ status('Falha ao baixar um arquivo do emulador (' + ((e && (e.file_name || e.url)) || 'BIOS/disco') + ').', 1); });
+      emu.add_listener('emulator-ready', function(){ status('', 0, 1); });
+      emu.add_listener('screen-set-size', function(a){ if(a && a.length >= 2){ sw = a[0] || sw; sh = a[1] || sh; } fit(); });
+      setTimeout(function(){ status('', 0, 1); fit(); }, 4000);
+    }
+    tryNext();
+  };
+  window.dzCad = function(){ try{ emu.keyboard_send_scancodes([0x1D, 0x38, 0x53, 0xD3, 0xB8, 0x9D]); }catch(e){} };
+  window.dzMouse = function(){ try{ emu.lock_mouse(); }catch(e){} };
+}
+
+/* ---- interface ---- */
+function help(){
+  msgEl.className = ''; body.classList.remove('run');
+  msgEl.innerHTML = '<div class="w95h"><b>Windows 95 original, rodando num PC virtual (v86).</b><br>O Windows não vem junto: escolha a sua imagem.<ul>' +
+    '<li><b>💽 DISCO (.img)</b> — imagem de um <b>Windows 95 já instalado</b> (arquivo bruto, ex.: win95.img). É o jeito mais fácil: escolha e aperte INICIAR.</li>' +
+    '<li><b>💿 CD (.iso)</b> + <b>💾 DISQUETE (.img)</b> — só para instalar do zero (o Windows 95 não dá boot sozinho pelo CD).</li></ul>' +
+    'Não precisa de BIOS: ela é baixada junto com o emulador (precisa de internet na hora de iniciar). Formatos .vhd, .vmdk e .qcow2 não servem: converta para .img bruto.<br>' +
+    'Ou coloque as imagens na pasta <b>win95/</b> do GitHub e liste em <b>win95/win95.json</b> (veja win95/README.md): elas aparecem aqui embaixo.</div>';
+  if(items.length){
+    const l = document.createElement('div'); l.style.cssText = 'display:flex;flex-direction:column;gap:6px;width:min(420px,100%)';
+    items.forEach(it => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'w95b';
+      const ty = it.type === 'cd' ? '💿' : it.type === 'fd' ? '💾' : '💽';
+      b.textContent = ty + ' ' + (it.title || it.file);
+      b.onclick = () => {
+        const k = it.type === 'cd' ? 'cd' : it.type === 'fd' ? 'fd' : 'hd';
+        files[k] = { name: it.title || it.file, url: /^https?:/i.test(it.file) ? it.file : abs(WIN95_DIR + encodeURI(it.file).replace(/%2F/g, '/')) };
+        refresh(); if(k === 'hd') start();
+      };
+      l.appendChild(b);
+    });
+    msgEl.appendChild(l);
+  }
+}
+async function loadList(){
+  if(itemsLoaded) return; itemsLoaded = true;
+  try{
+    const r = await fetch(WIN95_DIR + 'win95.json', { cache: 'no-store' });
+    if(r.ok){ const j = await r.json(); items = (Array.isArray(j) ? j : (j.images || j.games || [])).filter(x => x && x.file); }
+  }catch(e){}
+  if(isOpen() && !running) help();
+}
+function refresh(){
+  [['hd', 'w95HdBtn', '💽 DISCO'], ['cd', 'w95CdBtn', '💿 CD'], ['fd', 'w95FdBtn', '💾 DISQUETE']].forEach(a => {
+    const b = $(a[1]), f = files[a[0]];
+    b.classList.toggle('set', !!f); b.textContent = f ? a[2] + ': ' + (f.name.length > 16 ? f.name.slice(0, 14) + '…' : f.name) : a[2] + (a[0] === 'cd' ? ' (.iso)' : ' (.img)');
+  });
+  $('w95Go').disabled = !(files.hd || files.cd || files.fd);
+  $('w95Go').textContent = running ? '⟲ REINICIAR' : '▶ INICIAR';
+}
+function status(t, err, ok){
+  msgEl.className = (err ? 'err' : '') + (ok ? ' ok' : '');
+  if(t || err) msgEl.textContent = t;
+  if(ok) try{ frame.contentWindow.focus(); }catch(e){}
+}
+function killVM(){
+  running = false; body.classList.remove('run');
+  try{ frame.contentWindow.emu && frame.contentWindow.emu.destroy(); }catch(e){}
+  const nf = frame.cloneNode(false); frame.replaceWith(nf); frame = nf;   /* iframe novo = documento limpo na hora */
+  urls.forEach(u => { try{ URL.revokeObjectURL(u); }catch(e){} }); urls = [];
+  $('w95Cad').disabled = true; $('w95Mouse').disabled = true;
+}
+function start(){
+  if(!(files.hd || files.cd || files.fd)) return;
+  killVM();
+  const mk = f => { if(!f) return null; if(f.url) return f.url; const u = URL.createObjectURL(f); urls.push(u); return u; };
+  const cfg = { hd: mk(files.hd), cd: mk(files.cd), fd: mk(files.fd), mem: parseInt($('w95Mem').value, 10) || 64, local: abs(WIN95_DIR) };
+  body.classList.add('run'); running = true; refresh(); status('Preparando…');
+  const doc = frame.contentDocument; doc.open();
+  doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#sc{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#sc canvas{display:block}#sc div{color:#ccc;font:14px monospace;white-space:pre}</style></head><body><div id="sc"><div></div><canvas></canvas></div></body></html>');
+  doc.close();
+  const s = doc.createElement('script'); s.textContent = '(' + frameMain.toString() + ')()'; doc.body.appendChild(s);
+  $('w95Cad').disabled = false; $('w95Mouse').disabled = false;
+  try{ frame.contentWindow.dzRun(cfg, status); }catch(e){ status('Erro ao iniciar: ' + (e && e.message || e), 1); }
+}
+function pick(key, input){
+  input.value = ''; input.onchange = () => { const f = input.files && input.files[0]; if(f){ files[key] = f; refresh(); } };
+  input.click();
+}
+$('w95HdBtn').onclick = () => pick('hd', $('w95HdIn'));
+$('w95CdBtn').onclick = () => pick('cd', $('w95CdIn'));
+$('w95FdBtn').onclick = () => pick('fd', $('w95FdIn'));
+$('w95Go').onclick = start;
+$('w95Cad').onclick = () => { try{ frame.contentWindow.dzCad(); frame.contentWindow.focus(); }catch(e){} };
+$('w95Mouse').onclick = () => { try{ frame.contentWindow.dzMouse(); frame.contentWindow.focus(); }catch(e){} };
+$('w95Fs').onclick = () => { try{ if(document.fullscreenElement) document.exitFullscreen(); else (ov.requestFullscreen || ov.webkitRequestFullscreen).call(ov); }catch(e){} };
+$('w95Close').onclick = () => close();
+
+function open(){
+  if(isOpen()) return;
+  ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); mute();
+  try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
+  if(!running) help(); refresh(); loadList();
+}
+function close(){
+  if(!isOpen()) return;
+  killVM(); help(); refresh();
+  try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+  ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); unmute();
+}
+
+/* teclas fora do Windows (foco na página) nunca movem o personagem */
+['keydown', 'keyup', 'keypress'].forEach(t => window.addEventListener(t, e => {
+  if(!isOpen() || ov.contains(e.target)) return;
+  if(window.dzVk && window.dzVk.isOpen()) return;
+  e.stopImmediatePropagation();
+}, true));
+ov.addEventListener('keydown', e => e.stopPropagation());
+ov.addEventListener('keyup', e => e.stopPropagation());
+
+/* gatilho secreto (campo de SENHA do menu DEBUG) e registro na aba EXTRAS */
+window.dzW95Try = function(v){
+  if(String(v || '').trim().toLowerCase() !== W95_SECRET_CODE.toLowerCase()) return false;
+  open(); return true;
+};
+window.dzW95 = { open, close, isOpen };
+help(); refresh();
+})();
+</script>
+
 </body>
 </html>
