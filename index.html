@@ -17815,7 +17815,7 @@ let loopErrs = 0;
 let lastFrameAt = 0;
 function gameLoop(now){
   /* emulador de GBA aberto: o DEAD ZONE fica parado por baixo (poupa CPU/GPU, importante no Xbox One) */
-  if(window.dzGba && window.dzGba.isOpen() && !(typeof NET !== 'undefined' && NET.mode)){ lastTime = now; requestAnimationFrame(gameLoop); return; }
+  if(window.dzGba && window.dzGba.isOpen() && !(typeof NET !== 'undefined' && NET.mode)){ lastTime = now; try{ pollGamepad(); }catch(e){} requestAnimationFrame(gameLoop); return; }   /* o jogo fica parado, mas o controle continua navegando na lista de ROMs */
   if(fpsCap > 0){
     const iv = 1000 / fpsCap, el = now - lastFrameAt;
     if(el < iv - 1){ requestAnimationFrame(gameLoop); return; }
@@ -22202,8 +22202,7 @@ function play(url, name){
   const cfg = { core:'gba', url:url, name:name || 'game', cdn:EJS_CDN };
   const legacy = !!(window.DZ_CONSOLE && window.DZ_CONSOLE.legacy);   /* Xbox One / PS4: hardware fraco */
   /* sem barra/menus do EmulatorJS (menos DOM e menos CPU); em Xbox One/PS4 também frameskip automático e remoção de loops ociosos do mGBA */
-  const perf = 'EJS_Buttons={playPause:false,restart:false,mute:false,settings:false,fullscreen:false,saveState:false,loadState:false,screenRecord:false,gamepad:false,cheat:false,volume:false,saveSavFiles:false,loadSavFiles:false,quickSave:false,quickLoad:false,screenshot:false,cacheManager:false,exitEmulation:false,netplay:false,diskButton:false,contextMenuButton:false};' +
-    (legacy ? 'EJS_defaultOptions={"mgba_frameskip":"auto","mgba_idle_optimization":"Remove Known","mgba_audio_low_pass_filter":"disabled","mgba_interframe_blending":"disabled"};' : '');
+  const perf = '';   /* (sem opções extras do EmulatorJS: as interface dele já fica escondida pelo CSS) */
   const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div>' +
     '<script>try{navigator.getGamepads=function(){return[]};}catch(x){}var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +   /* o iframe NÃO lê o controle: só o app lê (evita botão duplicado/conflitante) */
@@ -22860,7 +22859,8 @@ try{ new MutationObserver(fit).observe(ov, { attributes:true, attributeFilter:['
 html.console #gbaOverlay.playing{background:#000}
 html.console #gbaOverlay.playing #gbaHead{display:none}      /* no console a saída é por combo de botões (aviso na tela) */
 html.console #gbaOverlay.playing #gbaBox{box-shadow:none;border-color:transparent;border-radius:0;background:#000;padding:0;gap:0}
-html.console.dz-gba-play body>*:not(#gbaOverlay){visibility:hidden}   /* o DEAD ZONE parado não gasta GPU desenhando por baixo */
+html.console.dz-gba-play body>*:not(#gbaOverlay){visibility:hidden}
+html.console.dz-gba-play #gbaOverlay{visibility:visible}   /* o DEAD ZONE parado não gasta GPU desenhando por baixo */
 </style>
 <script id="dzFixCtlScript">
 /* Console: o menu de contexto do navegador (aparece ao segurar botões do controle) não deve abrir por cima do jogo/menus. */
