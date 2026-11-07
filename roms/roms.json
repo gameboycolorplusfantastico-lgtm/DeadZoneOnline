@@ -2,91 +2,139 @@
   {
     "file": "DM.gba",
     "title": "DM",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "DRV3R.gba",
     "title": "DRV3R",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "FF07.GBA",
     "title": "FF07",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "GTA3PCR.gba",
     "title": "GTA3PCR",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "GTAA.gba",
     "title": "GTAA",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "MKSC.gba",
     "title": "MKSC",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "MRA.gba",
     "title": "MRA",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "PKME.gba",
     "title": "PKME",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "PKMFR.gba",
     "title": "PKMFR",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "PKMLG.gba",
     "title": "PKMLG",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "SA2.gba",
     "title": "SA2",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "SA3.gba",
     "title": "SA3",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "SASPC.gba",
     "title": "SASPC",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "SMA2SMW.gba",
     "title": "SMA2SMW",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "TLZALPFS.gba",
     "title": "TLZALPFS",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "TLZMC.gba",
     "title": "TLZMC",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "TTRSWRLD.gba",
     "title": "TTRSWRLD",
+    "system": "gba",
     "author": ""
   },
   {
     "file": "VR3.gba",
     "title": "VR3",
+    "system": "gba",
     "author": ""
+  },
+  {
+    "file": "SMB3.nes",
+    "title": "SMB3",
+    "system": "nes"
+  },
+  {
+    "file": "SMBDH.nes",
+    "title": "SMBDH",
+    "system": "nes"
+  },
+  {
+    "file": "SMASSMW.sfc",
+    "title": "SMASSMW",
+    "system": "snes"
+  },
+  {
+    "file": "SMK.sfc",
+    "title": "SMK",
+    "system": "snes"
+  },
+  {
+    "file": "STH.md",
+    "title": "STH",
+    "system": "md"
+  },
+  {
+    "file": "UMK3.md",
+    "title": "UMK3",
+    "system": "md"
   }
 ]
