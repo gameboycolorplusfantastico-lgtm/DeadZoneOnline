@@ -22911,6 +22911,7 @@ html.console.dz-gba-play #gbaOverlay{visibility:visible}   /* o DEAD ZONE parado
       <button type="button" class="w95b" id="w95FdBtn">💾 DISQUETE (.img)</button>
       <select id="w95Mem" title="Memória RAM"><option value="32">32 MB</option><option value="64" selected>64 MB</option><option value="128">128 MB</option></select>
       <button type="button" class="w95b go" id="w95Go" disabled>▶ INICIAR</button>
+      <button type="button" class="w95b" id="w95Safe" title="Aperta F5 sozinho durante o boot (modo seguro do Windows 95)">🛡 SEGURO: NÃO</button>
       <span id="w95Sp"></span>
       <button type="button" class="w95b" id="w95Cad" disabled>⌨ CTRL+ALT+DEL</button>
       <button type="button" class="w95b" id="w95Mouse" disabled>🖱 MOUSE</button>
@@ -22949,7 +22950,7 @@ const files = { hd: null, cd: null, fd: null };
 let items = [], itemsLoaded = false;
 const abs = p => new URL(p, location.href).href;
 const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
-let urls = [], running = false, muted = false;
+let urls = [], running = false, muted = false, safe = false;
 
 /* ---- áudio do jogo mudo enquanto o Windows está aberto ---- */
 function mute(){ if(muted) return; muted = true; try{ window.dzAudio.minimum(); window.dzAudio.setHardMute(true); }catch(e){} }
@@ -23001,6 +23002,7 @@ function frameMain(){
         status('Ligando o PC… a tela pode ficar preta por até 1 minuto. Aguarde.');
         setTimeout(function(){ if(!failed) status('', 0, 1); }, 30000);
       });
+      if(cfg.safe) emu.add_listener('emulator-ready', function(){ var n = 0, t = setInterval(function(){ try{ emu.keyboard_send_scancodes([0x3F, 0xBF]); }catch(e){} if(++n > 200) clearInterval(t); }, 300); });
       emu.add_listener('screen-set-size', function(a){ if(a && a.length >= 2){ sw = a[0] || sw; sh = a[1] || sh; } fit(); });
       setupTouch();
     }
@@ -23026,7 +23028,7 @@ function frameMain(){
     }, { passive: false });
   }
   window.dzKey = function(n){
-    var m = { enter: [0x1C, 0x9C], esc: [0x01, 0x81], tab: [0x0F, 0x8F], bs: [0x0E, 0x8E], del: [0xE0, 0x53, 0xE0, 0xD3], up: [0xE0, 0x48, 0xE0, 0xC8], down: [0xE0, 0x50, 0xE0, 0xD0], left: [0xE0, 0x4B, 0xE0, 0xCB], right: [0xE0, 0x4D, 0xE0, 0xCD] };
+    var m = { enter: [0x1C, 0x9C], esc: [0x01, 0x81], tab: [0x0F, 0x8F], bs: [0x0E, 0x8E], del: [0xE0, 0x53, 0xE0, 0xD3], f5: [0x3F, 0xBF], f8: [0x42, 0xC2], up: [0xE0, 0x48, 0xE0, 0xC8], down: [0xE0, 0x50, 0xE0, 0xD0], left: [0xE0, 0x4B, 0xE0, 0xCB], right: [0xE0, 0x4D, 0xE0, 0xCD] };
     try{ if(m[n]) emu.keyboard_send_scancodes(m[n]); }catch(e){}
   };
   window.dzText = function(t){ try{ emu.keyboard_send_text(t); }catch(e){} };
@@ -23088,7 +23090,7 @@ async function loadList(){
 }
 function keysBar(){
   const k = $('w95Keys'); if(k.dataset.ok) return; k.dataset.ok = 1;
-  [['Aa', 'text'], ['⏎', 'enter'], ['Esc', 'esc'], ['Tab', 'tab'], ['⌫', 'bs'], ['Del', 'del'], ['◀', 'left'], ['▲', 'up'], ['▼', 'down'], ['▶', 'right']].forEach(a => {
+  [['Aa', 'text'], ['⏎', 'enter'], ['Esc', 'esc'], ['Tab', 'tab'], ['⌫', 'bs'], ['Del', 'del'], ['F5', 'f5'], ['F8', 'f8'], ['◀', 'left'], ['▲', 'up'], ['▼', 'down'], ['▶', 'right']].forEach(a => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'w95b'; b.textContent = a[0]; b.style.minWidth = '40px';
     b.onclick = () => { try{ if(a[1] === 'text'){ const t = prompt('Texto para digitar no Windows:'); if(t) frame.contentWindow.dzText(t); } else frame.contentWindow.dzKey(a[1]); }catch(e){} };
     k.appendChild(b);
@@ -23119,7 +23121,7 @@ function start(test){
   if(test !== true && !(files.hd || files.cd || files.fd)) return;
   killVM();
   const mk = f => { if(!f) return null; if(f.url) return f.url; const u = URL.createObjectURL(f); urls.push(u); return u; };
-  const cfg = test === true ? { fd: 'https://i.copy.sh/freedos722.img', mem: 32, local: abs(WIN95_DIR) } : { hd: mk(files.hd), cd: mk(files.cd), fd: mk(files.fd), mem: parseInt($('w95Mem').value, 10) || 64, local: abs(WIN95_DIR) };
+  const cfg = test === true ? { fd: 'https://i.copy.sh/freedos722.img', mem: 32, local: abs(WIN95_DIR) } : { hd: mk(files.hd), cd: mk(files.cd), fd: mk(files.fd), mem: parseInt($('w95Mem').value, 10) || 64, safe: safe, local: abs(WIN95_DIR) };
   body.classList.add('run'); running = true; refresh(); status('Preparando…');
   const doc = frame.contentDocument; doc.open();
   doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#sc{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#sc canvas{display:block}#sc div{color:#ccc;font:14px monospace;white-space:pre}</style></head><body><div id="sc"><div></div><canvas></canvas></div></body></html>');
@@ -23143,6 +23145,7 @@ $('w95Info').onclick = () => {
   const upd = () => { try{ p.textContent = frame.contentWindow.dzInfo(); }catch(e){ p.textContent = 'sem info: ' + e; } };
   p.style.display = 'block'; upd(); dbgT = setInterval(upd, 1500);
 };
+$('w95Safe').onclick = () => { safe = !safe; $('w95Safe').textContent = '🛡 SEGURO: ' + (safe ? 'SIM' : 'NÃO'); $('w95Safe').classList.toggle('set', safe); };
 $('w95Go').onclick = () => start();
 $('w95Test').onclick = () => start(true);
 $('w95Cad').onclick = () => { try{ frame.contentWindow.dzCad(); frame.contentWindow.focus(); }catch(e){} };
