@@ -21931,32 +21931,34 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
   #gbaPad .STA{left:auto;right:14px;bottom:calc(var(--ab)*1.55 + 44px)}
 }
 @media (max-width:640px){#gbaOverlay:not(.playing) #gbaList{width:100%}#gbaOverlay:not(.playing) #gbaBody{flex-direction:column}#gbaOverlay:not(.playing) #gbaScreen{min-height:120px}}
-/* ===== vários consoles no mesmo overlay: data-sys = gba | nes | snes | md ===== */
+/* ===== vários consoles no mesmo overlay: data-lay = gba | ab | snes | md3 | native ===== */
 #gbaPad .X,#gbaPad .Y{display:none;width:var(--ab);height:var(--ab);border-radius:50%;font-size:calc(var(--ab)/2.6)}
-#gbaOverlay[data-sys="nes"] #gbaPad .L,#gbaOverlay[data-sys="nes"] #gbaPad .R,
-#gbaOverlay[data-sys="md"] #gbaPad .L,#gbaOverlay[data-sys="md"] #gbaPad .R{display:none}
+#gbaOverlay[data-lay="ab"] #gbaPad .L,#gbaOverlay[data-lay="ab"] #gbaPad .R,
+#gbaOverlay[data-lay="md3"] #gbaPad .L,#gbaOverlay[data-lay="md3"] #gbaPad .R{display:none}
 /* SNES: losango Y/X/B/A + L/R */
-#gbaOverlay[data-sys="snes"] #gbaPad{--ab:clamp(46px,12.5vmin,58px);--c:calc(var(--ab)*1.06)}
-#gbaOverlay[data-sys="snes"] #gbaPad .X,#gbaOverlay[data-sys="snes"] #gbaPad .Y{display:flex}
-#gbaOverlay[data-sys="snes"] #gbaPad .A{right:14px;bottom:calc(14px + var(--c))}
-#gbaOverlay[data-sys="snes"] #gbaPad .B{right:calc(14px + var(--c));bottom:14px}
-#gbaOverlay[data-sys="snes"] #gbaPad .X{right:calc(14px + var(--c));bottom:calc(14px + var(--c)*2)}
-#gbaOverlay[data-sys="snes"] #gbaPad .Y{right:calc(14px + var(--c)*2);bottom:calc(14px + var(--c))}
+#gbaOverlay[data-lay="snes"] #gbaPad{--ab:clamp(46px,12.5vmin,58px);--c:calc(var(--ab)*1.06)}
+#gbaOverlay[data-lay="snes"] #gbaPad .X,#gbaOverlay[data-lay="snes"] #gbaPad .Y{display:flex}
+#gbaOverlay[data-lay="snes"] #gbaPad .A{right:14px;bottom:calc(14px + var(--c))}
+#gbaOverlay[data-lay="snes"] #gbaPad .B{right:calc(14px + var(--c));bottom:14px}
+#gbaOverlay[data-lay="snes"] #gbaPad .X{right:calc(14px + var(--c));bottom:calc(14px + var(--c)*2)}
+#gbaOverlay[data-lay="snes"] #gbaPad .Y{right:calc(14px + var(--c)*2);bottom:calc(14px + var(--c))}
 /* NES: só A e B, um pouco maiores */
-#gbaOverlay[data-sys="nes"] #gbaPad{--ab:clamp(58px,16vmin,76px)}
-#gbaOverlay[data-sys="nes"] #gbaPad .A{right:14px;bottom:calc(14px + var(--ab)*.35)}
-#gbaOverlay[data-sys="nes"] #gbaPad .B{right:calc(var(--ab) + 28px);bottom:14px}
+#gbaOverlay[data-lay="ab"] #gbaPad{--ab:clamp(58px,16vmin,76px)}
+#gbaOverlay[data-lay="ab"] #gbaPad .A{right:14px;bottom:calc(14px + var(--ab)*.35)}
+#gbaOverlay[data-lay="ab"] #gbaPad .B{right:calc(var(--ab) + 28px);bottom:14px}
 /* Mega Drive: três botões A B C em fileira (A = .Y, B = .B, C = .A) */
-#gbaOverlay[data-sys="md"] #gbaPad{--ab:clamp(50px,13.5vmin,64px)}
-#gbaOverlay[data-sys="md"] #gbaPad .Y{display:flex}
-#gbaOverlay[data-sys="md"] #gbaPad .A{right:14px;bottom:calc(14px + var(--ab)*.45)}
-#gbaOverlay[data-sys="md"] #gbaPad .B{right:calc(14px + var(--ab)*1.12);bottom:calc(14px + var(--ab)*.22)}
-#gbaOverlay[data-sys="md"] #gbaPad .Y{right:calc(14px + var(--ab)*2.24);bottom:14px}
+#gbaOverlay[data-lay="md3"] #gbaPad{--ab:clamp(50px,13.5vmin,64px)}
+#gbaOverlay[data-lay="md3"] #gbaPad .Y{display:flex}
+#gbaOverlay[data-lay="md3"] #gbaPad .A{right:14px;bottom:calc(14px + var(--ab)*.45)}
+#gbaOverlay[data-lay="md3"] #gbaPad .B{right:calc(14px + var(--ab)*1.12);bottom:calc(14px + var(--ab)*.22)}
+#gbaOverlay[data-lay="md3"] #gbaPad .Y{right:calc(14px + var(--ab)*2.24);bottom:14px}
 /* SELECT/START ficam no centro embaixo nos consoles novos (inclusive com o celular deitado) */
 @media (orientation:landscape) and (max-height:640px){
-  #gbaOverlay:not([data-sys="gba"]) #gbaPad .SEL{left:calc(50% - clamp(64px,18vmin,84px) - 6px);bottom:12px}
-  #gbaOverlay:not([data-sys="gba"]) #gbaPad .STA{left:calc(50% + 6px);right:auto;bottom:12px}
+  #gbaOverlay:not([data-lay="gba"]) #gbaPad .SEL{left:calc(50% - clamp(64px,18vmin,84px) - 6px);bottom:12px}
+  #gbaOverlay:not([data-lay="gba"]) #gbaPad .STA{left:calc(50% + 6px);right:auto;bottom:12px}
 }
+/* consoles "nativos" (N64, PS1, Saturn...): usam os controles do próprio EmulatorJS; os botões roxos do app ficam escondidos */
+#gbaOverlay[data-lay="native"] #gbaPad,#gbaOverlay[data-lay="native"] #gbaPadBtn{display:none!important}
 </style>
 <div id="gbaOverlay" aria-hidden="true">
   <div id="gbaBox" role="dialog" aria-label="Game Boy Advance">
@@ -22007,48 +22009,97 @@ const GBA_SECRET_CODE = 'gba123';
 const EJS_CDN = 'https://cdn.emulatorjs.org/stable/data/';
 const ROMS_DIR = 'roms/';
 /* ---- consoles: todos usam a MESMA pasta roms/ (e o mesmo roms.json). Cada console só mostra os jogos do seu tipo:
-   o tipo vem do campo "system" do roms.json ou, se faltar, da extensão do arquivo (.nes, .sfc, .md, .gba ...).
-   btn = bit que cada botão da tela/teclado/controle manda (índices do libretro: B0 Y1 SEL2 START3 ↑4 ↓5 ←6 →7 A8 X9 L10 R11) */
-const SYSTEMS = {
-  gba:{ id:'gba', code:'gba123', icon:'🎮', name:'GAME BOY ADVANCE', core:'gba', coreName:'mGBA', exts:['gba','agb'], pick:'.gba,.zip,.7z,.agb,.bin',
-    title:['JOGOS HOMEBREW / FAN GAMES','HOMEBREW / FAN GAMES'],
-    keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, KeyA:10, KeyS:11, Enter:3, NumpadEnter:3, Backspace:2 },
-    keyTxt:['setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
-    labels:{ 8:'A', 0:'B' }, sel:'SELECT',
-    gp:{ 0:0, 2:0, 1:8, 3:8, 4:10, 6:10, 5:11, 7:11 } },
-  nes:{ id:'nes', code:'nes123', icon:'🕹️', name:'NINTENDO (NES)', core:'nes', coreName:'FCEUmm', exts:['nes','fds','unf','unif'], pick:'.nes,.fds,.zip,.7z',
-    title:['JOGOS DE NES','NES GAMES'],
-    keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, Enter:3, NumpadEnter:3, Backspace:2 },
-    keyTxt:['setas = direcional · Z = B · X = A · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
-    labels:{ 8:'A', 0:'B' }, sel:'SELECT',
-    gp:{ 0:0, 2:0, 1:8, 3:8 } },
-  snes:{ id:'snes', code:'snes123', icon:'🎛️', name:'SUPER NINTENDO (SNES)', core:'snes', coreName:'Snes9x', exts:['sfc','smc','fig','swc'], pick:'.sfc,.smc,.fig,.swc,.zip,.7z',
-    title:['JOGOS DE SUPER NINTENDO','SUPER NINTENDO GAMES'],
-    keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, KeyS:9, KeyA:1, KeyQ:10, KeyW:11, Enter:3, NumpadEnter:3, Backspace:2 },
-    keyTxt:['setas = direcional · Z = B · X = A · A = Y · S = X · Q = L · W = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · A = Y · S = X · Q = L · W = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
-    labels:{ 8:'A', 0:'B', 9:'X', 1:'Y' }, sel:'SELECT',
-    gp:{ 0:0, 1:8, 2:1, 3:9, 4:10, 6:10, 5:11, 7:11 } },
-  md:{ id:'md', code:'md123', icon:'🔵', name:'MEGA DRIVE / GENESIS', core:'segaMD', coreName:'Genesis Plus GX', exts:['md','gen','smd','bin'], pick:'.md,.gen,.smd,.bin,.zip,.7z',
-    title:['JOGOS DE MEGA DRIVE','MEGA DRIVE GAMES'],
-    /* no Genesis Plus GX: botão A do Mega Drive = Y do libretro (1), B = B (0), C = A (8) */
-    keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyZ:1, KeyX:0, KeyC:8, Enter:3, NumpadEnter:3, Backspace:2 },
-    keyTxt:['setas = direcional · Z = A · X = B · C = C · Enter = START · Backspace = MODE · F = tela cheia · Esc = voltar','arrows = D-pad · Z = A · X = B · C = C · Enter = START · Backspace = MODE · F = fullscreen · Esc = back'],
-    labels:{ 1:'A', 0:'B', 8:'C' }, sel:'MODE',
-    gp:{ 2:1, 0:0, 1:8, 3:8 } }
-};
-const SYS_ORDER = ['gba', 'nes', 'snes', 'md'];
+   o tipo vem do campo "system" do roms.json ou, se faltar, da extensão do arquivo (.nes, .sfc, .z64, .cue ...).
+   lay = como são os controles:  gba | ab (2 botões) | snes | md3 (A B C)  -> botões roxos do app (btn = bit do libretro: B0 Y1 SEL2 START3 UP4 DOWN5 LEFT6 RIGHT7 A8 X9 L10 R11)
+                                 native -> N64, PS1, Saturn etc.: usam os controles do próprio EmulatorJS (teclado, controle e botões na tela do celular)
+   bios = arquivo opcional em roms/bios/ (usado só se existir) */
+const KEYS_AB = { ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, Enter:3, NumpadEnter:3, Backspace:2 };
+const KEY_TXT_AB = ['setas = direcional · Z = B · X = A · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar', 'arrows = D-pad · Z = B · X = A · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'];
+const KEY_TXT_12 = ['setas = direcional · Z = botão 1 · X = botão 2 · Enter = START · F = tela cheia · Esc = voltar', 'arrows = D-pad · Z = button 1 · X = button 2 · Enter = START · F = fullscreen · Esc = back'];
+const KEY_TXT_NATIVE = ['controles padrão do próprio emulador (teclado e controle; no celular os botões aparecem na tela) · F = tela cheia · Esc = voltar', 'the emulator default controls (keyboard and gamepad; on phones the buttons show on screen) · F = fullscreen · Esc = back'];
+const GP_AB = { 0:0, 2:0, 1:8, 3:8 };
+const SYSTEMS = {};
+function addSys(o){
+  const s = Object.assign({ icon:'🎮', lay:'native', exts:[], hints:[], keys:{}, gp:{}, labels:{}, sel:'SELECT', keyTxt:KEY_TXT_NATIVE, bios:'' }, o);
+  s.native = s.lay === 'native';
+  s.pick = s.pick || s.exts.map(x => '.' + x).concat(['.zip', '.7z']).join(',');
+  s.title = s.title || ['JOGOS DE ' + s.name, s.name + ' GAMES'];
+  SYSTEMS[s.id] = s;
+}
+/* --- controles com botões do app --- */
+addSys({ id:'gba', icon:'🎮', name:'GAME BOY ADVANCE', core:'gba', coreName:'mGBA', exts:['gba','agb'], hints:['gba','gameboyadvance'], pick:'.gba,.zip,.7z,.agb,.bin', lay:'gba',
+  title:['JOGOS HOMEBREW / FAN GAMES','HOMEBREW / FAN GAMES'],
+  keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, KeyA:10, KeyS:11, Enter:3, NumpadEnter:3, Backspace:2 },
+  keyTxt:['setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
+  labels:{ 8:'A', 0:'B' }, gp:{ 0:0, 2:0, 1:8, 3:8, 4:10, 6:10, 5:11, 7:11 } });
+addSys({ id:'nes', icon:'🕹️', name:'NINTENDO (NES)', core:'nes', coreName:'FCEUmm', exts:['nes','fds','unf','unif'], hints:['nes','famicom','nintendo'], lay:'ab',
+  keys:KEYS_AB, keyTxt:KEY_TXT_AB, labels:{ 8:'A', 0:'B' }, gp:GP_AB });
+addSys({ id:'gb', icon:'🟩', name:'GAME BOY', core:'gb', coreName:'Gambatte', exts:['gb'], hints:['gb','gameboy'], lay:'ab',
+  keys:KEYS_AB, keyTxt:KEY_TXT_AB, labels:{ 8:'A', 0:'B' }, gp:GP_AB });
+addSys({ id:'gbc', icon:'🌈', name:'GAME BOY COLOR', core:'gb', coreName:'Gambatte', exts:['gbc'], hints:['gbc','gameboycolor'], lay:'ab',
+  keys:KEYS_AB, keyTxt:KEY_TXT_AB, labels:{ 8:'A', 0:'B' }, gp:GP_AB });
+addSys({ id:'snes', icon:'🎛️', name:'SUPER NINTENDO (SNES)', core:'snes', coreName:'Snes9x', exts:['sfc','smc','fig','swc'], hints:['snes','supernintendo','superfamicom','sfc'], lay:'snes',
+  keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, KeyS:9, KeyA:1, KeyQ:10, KeyW:11, Enter:3, NumpadEnter:3, Backspace:2 },
+  keyTxt:['setas = direcional · Z = B · X = A · A = Y · S = X · Q = L · W = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · A = Y · S = X · Q = L · W = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
+  labels:{ 8:'A', 0:'B', 9:'X', 1:'Y' }, gp:{ 0:0, 1:8, 2:1, 3:9, 4:10, 6:10, 5:11, 7:11 } });
+/* no Genesis Plus GX: botão A do Mega Drive = Y do libretro (1), B = B (0), C = A (8) */
+const MD3 = { keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyZ:1, KeyX:0, KeyC:8, Enter:3, NumpadEnter:3, Backspace:2 },
+  keyTxt:['setas = direcional · Z = A · X = B · C = C · Enter = START · Backspace = MODE · F = tela cheia · Esc = voltar','arrows = D-pad · Z = A · X = B · C = C · Enter = START · Backspace = MODE · F = fullscreen · Esc = back'],
+  labels:{ 1:'A', 0:'B', 8:'C' }, sel:'MODE', gp:{ 2:1, 0:0, 1:8, 3:8 } };
+addSys(Object.assign({ id:'md', icon:'🔵', name:'MEGA DRIVE / GENESIS', core:'segaMD', coreName:'Genesis Plus GX', exts:['md','gen','smd','bin'], hints:['md','megadrive','genesis','segagenesis','segamd'], lay:'md3' }, MD3));
+addSys(Object.assign({ id:'segacd', icon:'💿', name:'SEGA CD / MEGA-CD', core:'segaCD', coreName:'Genesis Plus GX', exts:[], hints:['segacd','scd','megacd','mcd','segamegacd'], lay:'md3', bios:'segacd.bin' }, MD3));
+addSys({ id:'ms', icon:'🔴', name:'MASTER SYSTEM', core:'segaMS', coreName:'Genesis Plus GX', exts:['sms'], hints:['ms','mastersystem','sms','segamastersystem'], lay:'ab',
+  keys:KEYS_AB, keyTxt:KEY_TXT_12, labels:{ 8:'2', 0:'1' }, gp:GP_AB });
+addSys({ id:'gg', icon:'🟦', name:'GAME GEAR', core:'segaGG', coreName:'Genesis Plus GX', exts:['gg'], hints:['gg','gamegear','segagamegear'], lay:'ab',
+  keys:KEYS_AB, keyTxt:KEY_TXT_12, labels:{ 8:'2', 0:'1' }, gp:GP_AB });
+/* --- controles do próprio EmulatorJS (native) --- */
+addSys({ id:'sega32x', icon:'⚡', name:'SEGA 32X', core:'sega32x', coreName:'PicoDrive', exts:['32x'], hints:['32x','sega32x'] });
+addSys({ id:'saturn', icon:'🪐', name:'SEGA SATURN', core:'segaSaturn', coreName:'Yabause', exts:['ccd','mds'], hints:['saturn','segasaturn','ss'], bios:'saturn.bin' });
+addSys({ id:'n64', icon:'🎮', name:'NINTENDO 64', core:'n64', coreName:'Mupen64Plus-Next', exts:['z64','n64','v64'], hints:['n64','nintendo64'] });
+addSys({ id:'psx', icon:'💽', name:'PLAYSTATION (PS1)', core:'psx', coreName:'PCSX ReARMed', exts:['cue','pbp','m3u','iso','chd'], hints:['psx','ps1','playstation','playstation1'], bios:'psx.bin' });
+addSys({ id:'nds', icon:'📱', name:'NINTENDO DS (BETA)', core:'nds', coreName:'melonDS', exts:['nds','dsi'], hints:['nds','ds','nintendods'] });
+addSys({ id:'psp', icon:'📺', name:'PSP (BETA)', core:'psp', coreName:'PPSSPP', exts:['cso'], hints:['psp','playstationportable'] });
+addSys({ id:'atari2600', icon:'👾', name:'ATARI 2600', core:'atari2600', coreName:'Stella', exts:['a26'], hints:['atari2600','2600'] });
+addSys({ id:'atari7800', icon:'👾', name:'ATARI 7800', core:'atari7800', coreName:'ProSystem', exts:['a78'], hints:['atari7800','7800'] });
+addSys({ id:'lynx', icon:'🦊', name:'ATARI LYNX', core:'lynx', coreName:'Handy', exts:['lnx'], hints:['lynx','atarilynx'] });
+addSys({ id:'jaguar', icon:'🐆', name:'ATARI JAGUAR (BETA)', core:'jaguar', coreName:'Virtual Jaguar', exts:['j64','jag'], hints:['jaguar','atarijaguar'] });
+addSys({ id:'pce', icon:'🔶', name:'PC ENGINE / TURBOGRAFX', core:'pce', coreName:'Beetle PCE', exts:['pce','sgx'], hints:['pce','pcengine','turbografx','tg16'] });
+addSys({ id:'ngp', icon:'⚫', name:'NEO GEO POCKET', core:'ngp', coreName:'Beetle NGP', exts:['ngp','ngc'], hints:['ngp','neogeopocket'] });
+addSys({ id:'ws', icon:'🦢', name:'WONDERSWAN', core:'ws', coreName:'Beetle Cygne', exts:['ws','wsc'], hints:['ws','wonderswan'] });
+addSys({ id:'vb', icon:'🟥', name:'VIRTUAL BOY', core:'vb', coreName:'Beetle VB', exts:['vb','vboy'], hints:['vb','virtualboy'] });
+addSys({ id:'coleco', icon:'🎯', name:'COLECOVISION', core:'coleco', coreName:'GearColeco', exts:['col','cv'], hints:['coleco','colecovision'] });
+addSys({ id:'3do', icon:'🔷', name:'3DO (BETA)', core:'3do', coreName:'Opera', exts:[], hints:['3do'] });
+addSys({ id:'arcade', icon:'🕹️', name:'ARCADE (BETA)', core:'arcade', coreName:'FinalBurn Neo', exts:[], hints:['arcade','fbneo','mame','neogeo'] });
+const SYS_ORDER = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md', 'ms', 'gg', 'segacd', 'sega32x', 'saturn', 'n64', 'psx',
+  'nds', 'psp', 'atari2600', 'atari7800', 'lynx', 'jaguar', 'pce', 'ngp', 'ws', 'vb', 'coleco', '3do', 'arcade'];
+/* QUAIS CONSOLES APARECEM NO MENU (seletor "emu" e aba EXTRAS).
+   Todos os outros já estão prontos acima e continuam reconhecidos pelo gerador da lista, só ficam escondidos.
+   Para liberar um, é só colocar o id dele aqui (ex.: 'n64', 'psx', 'gb', 'gbc', 'ms', 'gg', 'segacd', 'sega32x', 'saturn', 'nds'...). */
+const SHOWN = ['gba', 'nes', 'snes', 'md'];
 let cur = SYSTEMS.gba;
-/* descobre o console de um jogo: campo "system" do roms.json, senão pela extensão */
+/* descobre o console de um jogo: campo "system" do roms.json (id, apelido ou nome), senão pela extensão */
 function sysOf(g){
-  const s = String(g.system || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const alias = { gba:'gba', gameboyadvance:'gba', nes:'nes', famicom:'nes', nintendo:'nes', snes:'snes', supernintendo:'snes', sfc:'snes', superfamicom:'snes', md:'md', megadrive:'md', genesis:'md', segagenesis:'md', segamd:'md' };
-  if(alias[s]) return alias[s];
-  const ext = (String(g.file).split('?')[0].split('.').pop() || '').toLowerCase();
-  for(const id of SYS_ORDER) if(SYSTEMS[id].exts.indexOf(ext) >= 0) return id;
-  return '';
+  const norm = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const s = norm(g.system);
+  if(s){
+    if(SYSTEMS[s]) return s;
+    for(const id of SYS_ORDER){ const S = SYSTEMS[id]; if(S.hints.indexOf(s) >= 0 || norm(S.name) === s) return id; }
+  }
+  /* sem "system": pega da subpasta (roms/psx/Jogo.iso), da dupla extensão (Jogo.psx.zip) ou da extensão */
+  const parts = String(g.file).split('?')[0].toLowerCase().split('/'), name = parts.pop(), bits = name.split('.'), ext = bits.length > 1 ? bits.pop() : '';
+  const byTok = t => {
+    t = norm(t); if(!t) return '';
+    if(SYSTEMS[t]) return t;
+    for(const id of SYS_ORDER) if(SYSTEMS[id].hints.indexOf(t) >= 0) return id;
+    for(const id of SYS_ORDER) if(SYSTEMS[id].exts.indexOf(t) >= 0) return id;
+    return '';
+  };
+  for(const f of parts){ const r = byTok(f); if(r) return r; }
+  if(ext === 'zip' || ext === '7z') return byTok(bits.length > 1 ? bits.pop() : '');
+  return byTok(ext);
 }
 function applySys(){
-  ov.dataset.sys = cur.id;
+  ov.dataset.sys = cur.id; ov.dataset.lay = cur.lay;
   $('gbaLogoName').textContent = cur.name; $('gbaLogoCore').textContent = cur.coreName;
   $('gbaFile').setAttribute('accept', cur.pick);
   ov.querySelectorAll('#gbaPad .A,#gbaPad .B,#gbaPad .X,#gbaPad .Y').forEach(el => { const t = cur.labels[+el.dataset.k]; if(t) el.textContent = t; });
@@ -22122,7 +22173,7 @@ function emuApi(){
 function sync(){
   const m = src.touch | src.key | src.pad;
   if(m === applied) return;
-  const g = emuApi();
+  const g = cur.native ? null : emuApi();   /* nativo: o próprio EmulatorJS lê teclado e controle */
   for(let i = 0; i < 12; i++){
     const b = 1 << i;
     if((m & b) !== (applied & b) && g){ try{ g.simulateInput(0, i, (m & b) ? 1 : 0); }catch(e){} }
@@ -22262,6 +22313,12 @@ function stop(){
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function onEmuReady(){
+  if(cur.native){   /* N64, PS1...: mantém os controles do EmulatorJS e deixa o iframe receber teclado, controle e toque */
+    frame.style.pointerEvents = '';
+    try{ frame.focus(); if(frame.contentWindow) frame.contentWindow.focus(); }catch(e){}
+    try{ localStorage.setItem('dz_gba_ready', '1'); }catch(e){}
+    return;
+  }
   /* o emulador subiu: esconde os controles dele (usamos os nossos) e passa a receber teclado/toque só pelo app */
   try{
     const doc = frame.contentDocument, st = doc.createElement('style');
@@ -22274,18 +22331,28 @@ function onEmuReady(){
 }
 function play(url, name){
   stop(); initPad(); regSw();
-  const cfg = { core:cur.core, url:url, name:name || 'game', cdn:EJS_CDN };
+  const cfg = { core:cur.core, url:url, name:name || 'game', cdn:EJS_CDN, native:!!cur.native, bios:'' };
   const legacy = !!(window.DZ_CONSOLE && window.DZ_CONSOLE.legacy);   /* Xbox One / PS4: hardware fraco */
   /* sem barra/menus do EmulatorJS (menos DOM e menos CPU); em Xbox One/PS4 também frameskip automático e remoção de loops ociosos do mGBA */
   const perf = '';   /* (sem opções extras do EmulatorJS: as interface dele já fica escondida pelo CSS) */
-  const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+  const mkHtml = () => '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div>' +
-    '<script>try{navigator.getGamepads=function(){return[]};}catch(x){}var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +   /* o iframe NÃO lê o controle: só o app lê (evita botão duplicado/conflitante) */
+    '<script>' + (cfg.native ? '' : 'try{navigator.getGamepads=function(){return[]};}catch(x){}') + 'var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +   /* o iframe NÃO lê o controle: só o app lê (evita botão duplicado/conflitante) */
     'EJS_player="#game";EJS_core=C.core;EJS_gameUrl=C.url;EJS_gameName=C.name;EJS_pathtodata=C.cdn;EJS_startOnLoaded=true;EJS_color="#6a4bd8";' +
-    'EJS_language="pt-BR";EJS_threads=false;' + perf + '<\/script>' +
+    'EJS_language="pt-BR";EJS_threads=false;' + (cfg.bios ? 'EJS_biosUrl=C.bios;' : '') + perf + '<\/script>' +
     '<script src="' + esc(EJS_CDN) + 'loader.js"><\/script></body></html>';
   const tok = playTok;
-  startTimer = setTimeout(() => { startTimer = 0; if(tok !== playTok) return; frame.srcdoc = html; frame.style.display = 'block'; }, 600);   /* dá tempo de liberar o jogo anterior */
+  startTimer = setTimeout(async () => {
+    startTimer = 0; if(tok !== playTok) return;
+    if(cur.bios){   /* BIOS opcional: só usa se o arquivo existir em roms/bios/ */
+      try{
+        const bu = ROMS_DIR + 'bios/' + cur.bios, r = await fetch(bu + '?v=' + Date.now(), { method:'HEAD', cache:'no-store' });
+        if(r.ok && !/html/i.test(r.headers.get('content-type') || '')) cfg.bios = bu;
+      }catch(e){}
+      if(tok !== playTok) return;
+    }
+    frame.srcdoc = mkHtml(); frame.style.display = 'block';
+  }, 600);   /* dá tempo de liberar o jogo anterior */
   ov.classList.add('playing'); root.classList.add('dz-gba-play'); padFirst = true; padIgnore = 0;
   labels();
   enterFs();                                  /* tela cheia ao iniciar (o clique do jogador libera) */
@@ -22310,13 +22377,19 @@ function playFile(f){
 }
 function showList(){ stop(); list.classList.add('full'); renderList(); labels(); $('gbaMsg').textContent = ''; }
 
+let romsInfo = { ok:false, total:0, counts:'' };
 async function loadRoms(){
-  let items = [];
+  let items = [], ok = false;
   try{
-    const r = await fetch(ROMS_DIR + 'roms.json', { cache:'no-store' });
-    if(r.ok){ const j = await r.json(); items = Array.isArray(j) ? j : (j.games || []); }
+    /* ?v=... fura o cache do navegador e do service worker: jogo novo no GitHub aparece na hora */
+    const r = await fetch(ROMS_DIR + 'roms.json?v=' + Date.now(), { cache:'no-store' });
+    if(r.ok){ const j = await r.json(); items = Array.isArray(j) ? j : (j.games || []); ok = true; }
   }catch(e){}
-  romsLoaded = true; return items.filter(x => x && x.file);
+  items = items.map(x => typeof x === 'string' ? { file:x } : x).filter(x => x && x.file && !/^bios\//i.test(String(x.file)));   /* roms/bios/ guarda só BIOS, não jogos */
+  const c = {}; items.forEach(g => { const k = sysOf(g) || '?'; c[k] = (c[k] || 0) + 1; });
+  romsInfo = { ok:ok, total:items.length, counts:Object.keys(c).map(k => k + ' ' + c[k]).join(', ') };
+  romsLoaded = ok;   /* se falhou, tenta de novo na próxima vez que abrir */
+  return items;
 }
 let romItems = [];
 function renderList(){
@@ -22326,7 +22399,11 @@ function renderList(){
   if(!mine.length){
     const e = document.createElement('div'); e.id = 'gbaEmpty';
     const ex = cur.exts.map(x => '.' + x).join(' / ');
-    e.textContent = tr('Nenhum jogo de ' + cur.name + ' na pasta roms/ ainda. Coloque arquivos ' + ex + ' lá no GitHub (veja roms/README.md) ou use "ABRIR ARQUIVO".', 'No ' + cur.name + ' games in the roms/ folder yet. Put ' + ex + ' files there on GitHub (see roms/README.md) or use "OPEN FILE".');
+    const why = romsInfo.ok
+      ? tr('O roms.json tem ' + romsInfo.total + ' jogo(s) (' + (romsInfo.counts || 'nenhum') + '), mas nenhum deste console. Se você já subiu os arquivos, rode a Action "Gerar lista de ROMs" no GitHub.', 'roms.json has ' + romsInfo.total + ' game(s) (' + (romsInfo.counts || 'none') + '), but none for this console. If you already uploaded the files, run the "Gerar lista de ROMs" Action on GitHub.')
+      : tr('Não consegui ler roms/roms.json (ainda não existe ou o site não foi atualizado). Rode a Action "Gerar lista de ROMs" no GitHub.', 'Could not read roms/roms.json (missing, or the site was not updated). Run the "Gerar lista de ROMs" Action on GitHub.');
+    e.textContent = tr('Nenhum jogo de ' + cur.name + ' na pasta roms/ ainda. Coloque arquivos ' + ex + ' lá no GitHub (veja roms/README.md) ou use "ABRIR ARQUIVO".', 'No ' + cur.name + ' games in the roms/ folder yet. Put ' + ex + ' files there on GitHub (see roms/README.md) or use "OPEN FILE".') + '\n\n' + why;
+    e.style.whiteSpace = 'pre-line';
     list.appendChild(e);
   }
   mine.forEach(g => {
@@ -22385,16 +22462,16 @@ window.dzGbaTry = function(v){
   if(String(v || '').trim().toLowerCase() !== GBA_SECRET_CODE.toLowerCase()) return false;
   open('gba'); return true;
 };
-/* códigos individuais dos consoles novos (nes123, snes123, md123): abre o console e devolve o id para liberar na aba EXTRAS */
+/* códigos individuais dos consoles novos (nes123, snes123, md123, n64123, psx123 ...): abre o console e devolve o id para liberar na aba EXTRAS */
 window.dzEmuSysTry = function(v){
   const t = String(v || '').trim().toLowerCase();
-  for(const id of ['nes', 'snes', 'md']) if(t === SYSTEMS[id].code){ open(id); return id; }
+  for(const id of SYS_ORDER) if(id !== 'gba' && SHOWN.indexOf(id) >= 0 && t === id + '123'){ open(id); return id; }
   return '';
 };
 window.dzGba = { open, close, isOpen };
 window.dzGbaBack = () => { if(!isPlaying()) goBack(); };    /* durante o jogo o controle é do emulador */
 window.dzGbaPlaying = isPlaying;
-SYS_ORDER.forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, open: () => open(id) }));
+SYS_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, open: () => open(id) }));
 })();
 </script>
 
@@ -22492,7 +22569,7 @@ const row = $('settingsTabRow'); if(!row) return;
 /* ---- salvar / ler ---- */
 let mem = [];
 function load(){
-  try{ const v = JSON.parse(localStorage.getItem(KEY) || 'null'); if(Array.isArray(v)) return v.filter(x => typeof x === 'string'); }catch(e){}
+  try{ const v = JSON.parse(localStorage.getItem(KEY) || 'null'); if(Array.isArray(v)){ const f = v.filter(x => typeof x === 'string' && x !== 'w95'); if(f.length !== v.length){ try{ localStorage.setItem(KEY, JSON.stringify(f)); }catch(e){} } return f; } }catch(e){}   /* w95 nunca fica salvo (limpa o que já estava salvo) */
   return mem.slice();
 }
 function save(list){
@@ -22574,7 +22651,7 @@ function refresh(){
 /* ---- chamado quando um código certo é digitado ---- */
 window.dzExtrasGrant = function(ids){
   const had = hasAny();
-  (ids || []).forEach(id => { if(have.indexOf(id) < 0) have.push(id); });
+  (ids || []).forEach(id => { if(id !== 'w95' && have.indexOf(id) < 0) have.push(id); });
   save(have); refresh();
   if(!had){ try{ if(typeof uiToast === 'function') uiToast(tr('Aba EXTRAS liberada nas configurações', 'EXTRAS tab unlocked in settings'), 'ok'); }catch(e){} }
 };
