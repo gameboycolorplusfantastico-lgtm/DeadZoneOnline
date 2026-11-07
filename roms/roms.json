@@ -143,6 +143,21 @@
     "system": "gb"
   },
   {
+    "file": "PKMC.gbc",
+    "title": "PKMC",
+    "system": "gbc"
+  },
+  {
+    "file": "PKMG.gbc",
+    "title": "PKMG",
+    "system": "gbc"
+  },
+  {
+    "file": "PKMS.gbc",
+    "title": "PKMS",
+    "system": "gbc"
+  },
+  {
     "file": "SMASSMW.sfc",
     "title": "SMASSMW",
     "system": "snes"
