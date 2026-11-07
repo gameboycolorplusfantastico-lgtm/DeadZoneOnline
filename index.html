@@ -3792,7 +3792,19 @@ const SFX = (function(){
   return { setHardMute, waterJump, socKick, socGoal, socWhistle, socCrowdStart, socCrowdSet, socCrowdStop, socReact, unlock, testClip, testMusic, testMusicOn, testStop: ()=>testAudioStop(false), shoot, botShoot, noAmmo, reloadStart, reloadDone, hit, kill, hurt, zombieScream, pickupAmmo, pickupHealth, pickupWeapon, menuAccept, menuBack, menuSelect, footstep, gameOverJingle, victoryJingle, waveStart, gameStartGeneric, modeStart, modeOver, teamWin, botPain, gunShell, hostageCT, hostageT, botFootstep, fnafAmbient, fnafQuote, fnafDoor, fnafJumpscare, fnafPowerDown, fnafEnergyZero, fnafLaugh, fnafWindowScare, fnafKeepAmbient, fnafStopAmbient, fnafStopLoops, fnafRobotStep, fnafClick, fnafDeny, fnafSixAM, fnafGameOver, zombieStart, stopModeOver, releaseEnd, setEnabled, setVolume, playMusic, stopMusic, pauseMusic, resumeMusic, setMusicVolume, setMusicMuted, playMenuMusic, stopMenuMusic };
 })();
 // Expõe SOMENTE o mudo total para os scripts dos emuladores (eles ficam fora desta função, onde o SFX não existe).
-window.dzAudio = { setHardMute: (on) => SFX.setHardMute(on) };
+window.dzAudio = {
+  setHardMute: (on) => SFX.setHardMute(on),
+  // Coloca música e efeitos no MÍNIMO (sem mexer nos controles nem salvar nada).
+  minimum: () => { SFX.setMusicMuted(true); SFX.setMusicVolume(0); SFX.setVolume(0); },
+  // Volta ao que está salvo nas configurações de ÁUDIO (sliders e opção "desativar música").
+  restore: () => {
+    const g = id => document.getElementById(id);
+    const sv = parseFloat(g('sfxVolumeRange').value), mv = parseFloat(g('musicVolumeRange').value);
+    SFX.setVolume(isFinite(sv) ? sv : 0.8);
+    SFX.setMusicVolume(isFinite(mv) ? mv : 0.4);
+    SFX.setMusicMuted(!!g('optMusicOff').checked);
+  }
+};
 
 function loadTexture(key, url) {
   const done = AssetLoader.track();
@@ -21966,10 +21978,12 @@ let blobUrl = null, romsLoaded = false, gameMuted = false, watchTimer = 0, padRa
 /* ---- som do jogo: mudo enquanto o emulador está aberto ---- */
 function muteGame(){
   if(gameMuted) return; gameMuted = true;
+  try{ window.dzAudio.minimum(); }catch(e){}
   try{ window.dzAudio.setHardMute(true); }catch(e){}
 }
 function unmuteGame(){
   if(!gameMuted) return; gameMuted = false;
+  try{ window.dzAudio.restore(); }catch(e){}
   try{ window.dzAudio.setHardMute(false); }catch(e){}
 }
 
@@ -22260,8 +22274,8 @@ const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : p
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const isOpen = () => ov.classList.contains('open');
 let selMuted = false;   /* o seletor silencia o áudio do Dead Zone; ao abrir um emulador, ele assume o mudo */
-function selMute(){ if(selMuted) return; selMuted = true; try{ window.dzAudio.setHardMute(true); }catch(e){} }
-function selUnmute(){ if(!selMuted) return; selMuted = false; try{ window.dzAudio.setHardMute(false); }catch(e){} }
+function selMute(){ if(selMuted) return; selMuted = true; try{ window.dzAudio.minimum(); window.dzAudio.setHardMute(true); }catch(e){} }
+function selUnmute(){ if(!selMuted) return; selMuted = false; try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(e){} }
 function build(){
   $('emuTitle').textContent = tr('EMULADORES', 'EMULATORS');
   $('emuClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
@@ -22269,7 +22283,7 @@ function build(){
   (window.dzEmus || []).forEach(e => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lgb';
     b.textContent = (e.icon ? e.icon + ' ' : '') + e.name;
-    b.addEventListener('click', () => { selMuted = false; close(true); try{ e.open(); }catch(err){ try{ window.dzAudio.setHardMute(false); }catch(_){} } });
+    b.addEventListener('click', () => { selMuted = false; close(true); try{ e.open(); }catch(err){ try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(_){} } });
     listEl.appendChild(b);
   });
 }
