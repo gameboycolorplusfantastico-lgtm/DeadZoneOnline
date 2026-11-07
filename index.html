@@ -14463,12 +14463,12 @@ document.getElementById('debugPassInput').addEventListener('keydown', e => {
 });
 document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   const inputPass = document.getElementById('debugPassInput').value.trim();
-  if (window.dzCalcTry && window.dzCalcTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código da calculadora
-  if (window.dzLgTry && window.dzLgTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
-  if (window.dzJdTry && window.dzJdTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do JDoodle
-  if (window.dzEdTry && window.dzEdTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do editor de texto
-  if (window.dzEmuTry && window.dzEmuTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // seletor de emuladores
-  if (window.dzGbaTry && window.dzGbaTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do emulador de GBA
+  if (window.dzCalcTry && window.dzCalcTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc']); document.getElementById('debugPassInput').value = ''; return; }   // código da calculadora
+  if (window.dzLgTry && window.dzLgTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc', 'ed', 'jd']); document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
+  if (window.dzJdTry && window.dzJdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['jd']); document.getElementById('debugPassInput').value = ''; return; }   // código do JDoodle
+  if (window.dzEdTry && window.dzEdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['ed']); document.getElementById('debugPassInput').value = ''; return; }   // código do editor de texto
+  if (window.dzEmuTry && window.dzEmuTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['emu']); document.getElementById('debugPassInput').value = ''; return; }   // seletor de emuladores
+  if (window.dzGbaTry && window.dzGbaTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['gba']); document.getElementById('debugPassInput').value = ''; return; }   // código do emulador de GBA
   if (inputPass === '31082007') {
     SFX.menuAccept();
     document.getElementById('debugSection').style.display = 'block';
@@ -17811,6 +17811,8 @@ let lastTime = performance.now();
 let loopErrs = 0;
 let lastFrameAt = 0;
 function gameLoop(now){
+  /* emulador de GBA aberto: o DEAD ZONE fica parado por baixo (poupa CPU/GPU, importante no Xbox One) */
+  if(window.dzGba && window.dzGba.isOpen() && !(typeof NET !== 'undefined' && NET.mode)){ lastTime = now; requestAnimationFrame(gameLoop); return; }
   if(fpsCap > 0){
     const iv = 1000 / fpsCap, el = now - lastFrameAt;
     if(el < iv - 1){ requestAnimationFrame(gameLoop); return; }
@@ -21972,12 +21974,13 @@ const GBA_SECRET_CODE = 'gba123';
 const EJS_CDN = 'https://cdn.emulatorjs.org/stable/data/';
 const ROMS_DIR = 'roms/';
 const $ = id => document.getElementById(id);
-const ov = $('gbaOverlay'), frame = $('gbaFrame'), list = $('gbaList');
+const ov = $('gbaOverlay'), list = $('gbaList');
+let frame = $('gbaFrame');
 const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const isOpen = () => ov.classList.contains('open');
 const isPlaying = () => ov.classList.contains('playing');
-let blobUrl = null, romsLoaded = false, gameMuted = false, watchTimer = 0, padRaf = 0, padInit = false;
+let blobUrl = null, romsLoaded = false, gameMuted = false, watchTimer = 0, padRaf = 0, padInit = false, startTimer = 0, playTok = 0;
 
 /* ---- som do jogo: mudo enquanto o emulador está aberto ---- */
 function muteGame(){
@@ -22140,8 +22143,29 @@ function onKey(e){
 window.addEventListener('blur', () => { if(isPlaying()) releaseAll(); });
 
 /* ---- rodar um jogo ---- */
+/* libera de verdade o jogo anterior (áudio, WebGL, loop) e troca o iframe por um novo: o Xbox One tem pouca memória
+   e, sem isso, o 2º jogo abria numa tela azul/preta */
+function killEmu(){
+  try{
+    const w = frame.contentWindow, e = w && w.EJS_emulator;
+    if(e){
+      try{ if(e.pause) e.pause(true); }catch(x){}
+      try{ if(e.gameManager && e.gameManager.toggleMainLoop) e.gameManager.toggleMainLoop(0); }catch(x){}
+      try{ const M = e.Module, ac = M && ((M.AL && M.AL.currentCtx && M.AL.currentCtx.audioCtx) || (M.SDL2 && M.SDL2.audioContext)); if(ac && ac.close) ac.close(); }catch(x){}
+    }
+    try{ Array.from(frame.contentDocument.querySelectorAll('canvas')).forEach(c => { const gl = c.getContext('webgl2') || c.getContext('webgl'); const x = gl && gl.getExtension('WEBGL_lose_context'); if(x) x.loseContext(); }); }catch(x){}
+  }catch(x){}
+  try{
+    const old = frame, nu = document.createElement('iframe');
+    nu.id = 'gbaFrame'; nu.title = 'GBA'; nu.setAttribute('allow', 'autoplay; gamepad; fullscreen'); nu.style.display = 'none';
+    old.src = 'about:blank';
+    old.parentNode.replaceChild(nu, old);
+    frame = nu;
+  }catch(x){}
+}
 function stop(){
-  clearInterval(watchTimer); watchTimer = 0;
+  clearInterval(watchTimer); watchTimer = 0; clearTimeout(startTimer); startTimer = 0; playTok++;
+  killEmu();
   if(padRaf){ cancelAnimationFrame(padRaf); padRaf = 0; }
   releaseAll(); touchBtn.clear(); touchDp = 0; exitHold = 0; exitHintHide();
   try{ frame.src = 'about:blank'; frame.removeAttribute('srcdoc'); }catch(e){}
@@ -22170,7 +22194,8 @@ function play(url, name){
     'EJS_player="#game";EJS_core=C.core;EJS_gameUrl=C.url;EJS_gameName=C.name;EJS_pathtodata=C.cdn;EJS_startOnLoaded=true;EJS_color="#6a4bd8";' +
     'EJS_language="pt-BR";EJS_threads=false;<\/script>' +
     '<script src="' + esc(EJS_CDN) + 'loader.js"><\/script></body></html>';
-  frame.srcdoc = html; frame.style.display = 'block';
+  const tok = playTok;
+  startTimer = setTimeout(() => { startTimer = 0; if(tok !== playTok) return; frame.srcdoc = html; frame.style.display = 'block'; }, 600);   /* dá tempo de liberar o jogo anterior */
   ov.classList.add('playing');
   labels();
   enterFs();                                  /* tela cheia ao iniciar (o clique do jogador libera) */
@@ -22179,7 +22204,11 @@ function play(url, name){
   let tries = 0;
   watchTimer = setInterval(() => {
     if(emuApi()){ clearInterval(watchTimer); watchTimer = 0; onEmuReady(); }
-    else if(++tries > 300){ clearInterval(watchTimer); watchTimer = 0; }
+    else{
+      ++tries;
+      if(tries === 100) exitHint(tr('Está demorando… Se ficar parado, segure SELECT + START (ou L3 + R3) e abra o jogo de novo.', 'Taking long… If it stays stuck, hold SELECT + START (or L3 + R3) and open the game again.'), 0);
+      if(tries > 300){ clearInterval(watchTimer); watchTimer = 0; }
+    }
   }, 300);
 }
 function playFile(f){
@@ -22215,9 +22244,17 @@ function renderList(){
     list.appendChild(b);
   });
   const h = document.createElement('div'); h.id = 'gbaHelp';
-  h.textContent = tr('Teclado: setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar. Controle: botões padrão; segure SELECT + START (ou L3 + R3, ou L1+R1+L2+R2) por 1 s para voltar à lista; na lista, B fecha o emulador.',
-                     'Keyboard: arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back. Controller: standard buttons; hold SELECT + START (or L3 + R3, or L1+R1+L2+R2) for 1 s to go back to the list; on the list, B closes the emulator.') +
-    ' ' + (offlineReady() ? tr('✓ Offline pronto: já funciona sem internet.', '✓ Offline ready: works without internet.') : tr('Para usar offline: abra um jogo uma vez com internet.', 'To use offline: open a game once while online.'));
+  const off = offlineReady();
+  [
+    ['⌨️', tr('TECLADO', 'KEYBOARD'), tr('setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar', 'arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back')],
+    ['🎮', tr('CONTROLE', 'CONTROLLER'), tr('botões padrão. Para voltar à lista, segure por 1 s: SELECT + START, L3 + R3 ou L1 + R1 + L2 + R2. Na lista, B fecha o emulador.', 'standard buttons. To go back to the list, hold for 1 s: SELECT + START, L3 + R3 or L1 + R1 + L2 + R2. On the list, B closes the emulator.')],
+    ['💾', off ? tr('OFFLINE PRONTO', 'OFFLINE READY') : tr('OFFLINE', 'OFFLINE'), off ? tr('já funciona sem internet.', 'works without internet.') : tr('abra um jogo uma vez com internet para usar offline.', 'open a game once while online to use it offline.')]
+  ].forEach(r => {
+    const d = document.createElement('div'); d.className = 'hr';
+    const i = document.createElement('i'); i.textContent = r[0];
+    const t = document.createElement('span'); const bb = document.createElement('b'); bb.textContent = r[1] + ' '; t.appendChild(bb); t.appendChild(document.createTextNode(r[2]));
+    d.appendChild(i); d.appendChild(t); h.appendChild(d);
+  });
   list.appendChild(h);
 }
 async function open(){
@@ -22328,6 +22365,383 @@ window.dzEmuTry = function(v){
 window.dzEmuBack = () => close();
 })();
 </script>
+
+
+<style id="dzExtrasStyle">
+#extrasTabBtn{display:none}
+#extrasTabBtn.on{display:block}
+#tabExtras .xt-sec{margin:14px 0 6px;font-size:12px;letter-spacing:2px;color:#e8b93a}
+#tabExtras .xt-sec:first-child{margin-top:2px}
+#tabExtras .xt-row{display:flex;flex-direction:column;gap:8px}
+#tabExtras .xt-hint{font-size:12px;opacity:.7;margin-top:12px;line-height:1.4}
+</style>
+<script id="dzExtrasScript">
+/* ===== ABA EXTRAS (escondida) =====
+   Fica invisível até alguém digitar um dos códigos no campo de SENHA da aba DEBUG
+   (utility, calc123, word123, jdoodle123, emu, gba123). Cada código acertado é SALVO neste aparelho/navegador
+   (localStorage; se o navegador bloquear, vale só até fechar a página) e a aba EXTRAS passa a aparecer sozinha,
+   com os apps já liberados. Funciona igual em PC, celular e console (mouse, toque e controle).
+   Para registrar um app novo: adicione em APPS (utilidades) ou use window.dzEmus (emuladores). */
+(function(){
+'use strict';
+const KEY = 'dz_extras_v1';
+const $ = id => document.getElementById(id);
+const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
+const row = $('settingsTabRow'); if(!row) return;
+
+/* ---- salvar / ler ---- */
+let mem = [];
+function load(){
+  try{ const v = JSON.parse(localStorage.getItem(KEY) || 'null'); if(Array.isArray(v)) return v.filter(x => typeof x === 'string'); }catch(e){}
+  return mem.slice();
+}
+function save(list){
+  mem = list.slice();
+  try{ localStorage.setItem(KEY, JSON.stringify(list)); }catch(e){}
+}
+let have = load();
+
+/* ---- apps de utilidade ---- */
+const APPS = [
+  { id:'calc', icon:'🧮', pt:'CALCULADORA LEGAL', en:'COOL CALCULATOR', open: () => window.dzCalc.open() },
+  { id:'ed',   icon:'📝', pt:'EDITOR DE TEXTO LEGAL', en:'COOL TEXT EDITOR', open: () => window.dzEd.open() },
+  { id:'jd',   icon:'💻', pt:'CÓDIGO LEGAL', en:'COOL CODE', open: () => window.dzJd.open() }
+];
+function emuList(){
+  const all = window.dzEmus || [];
+  if(have.indexOf('emu') >= 0) return all;
+  return all.filter(e => have.indexOf(e.id) >= 0);
+}
+const hasAny = () => APPS.some(a => have.indexOf(a.id) >= 0) || emuList().length > 0;
+
+/* ---- aba + painel (criados na hora, só quando liberados) ---- */
+function ensureDom(){
+  if($('extrasTabBtn')) return;
+  const b = document.createElement('button');
+  b.className = 'tab-btn'; b.id = 'extrasTabBtn'; b.type = 'button'; b.setAttribute('data-tab', 'tabExtras'); b.textContent = 'EXTRAS';
+  row.appendChild(b);
+  const p = document.createElement('div');
+  p.className = 'tab-panel'; p.id = 'tabExtras';
+  const dbg = $('tabDebug'); if(dbg && dbg.parentNode) dbg.parentNode.insertBefore(p, dbg.nextSibling); else row.parentNode.appendChild(p);
+  b.addEventListener('click', () => { snd('menuSelect'); activate(); });
+}
+function activate(){
+  row.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('active', x.id === 'extrasTabBtn'));
+  document.querySelectorAll('.tab-panel').forEach(x => x.classList.toggle('active', x.id === 'tabExtras'));
+  build();
+}
+function mk(label, fn){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary'; b.style.width = '100%'; b.textContent = label;
+  b.addEventListener('click', () => { snd('menuAccept'); try{ fn(); }catch(e){} });
+  return b;
+}
+function build(){
+  const p = $('tabExtras'); if(!p) return;
+  p.innerHTML = '';
+  const apps = APPS.filter(a => have.indexOf(a.id) >= 0);
+  if(apps.length){
+    const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.textContent = tr('UTILIDADES', 'UTILITIES'); p.appendChild(h);
+    const r = document.createElement('div'); r.className = 'xt-row';
+    apps.forEach(a => r.appendChild(mk(a.icon + ' ' + tr(a.pt, a.en), a.open)));
+    p.appendChild(r);
+  }
+  const emus = emuList();
+  if(emus.length){
+    const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.textContent = tr('EMULADORES', 'EMULATORS'); p.appendChild(h);
+    const r = document.createElement('div'); r.className = 'xt-row';
+    emus.forEach(e => r.appendChild(mk((e.icon ? e.icon + ' ' : '') + e.name, () => e.open())));
+    p.appendChild(r);
+  }
+  const hint = document.createElement('div'); hint.className = 'xt-hint';
+  hint.textContent = tr('Esta aba só aparece neste aparelho, porque o código foi digitado aqui. Digite outros códigos na aba DEBUG para liberar mais apps.',
+                        'This tab only shows on this device, because the code was entered here. Enter other codes in the DEBUG tab to unlock more apps.');
+  p.appendChild(hint);
+  p.appendChild(mk('🔒 ' + tr('ESCONDER ABA EXTRAS', 'HIDE EXTRAS TAB'), () => { save([]); have = []; refresh(); goDebug(); }));
+}
+function goDebug(){
+  row.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('active', x.getAttribute('data-tab') === 'tabDebug'));
+  document.querySelectorAll('.tab-panel').forEach(x => x.classList.toggle('active', x.id === 'tabDebug'));
+}
+function refresh(){
+  if(hasAny()){ ensureDom(); $('extrasTabBtn').classList.add('on'); if($('tabExtras').classList.contains('active')) build(); }
+  else{
+    const b = $('extrasTabBtn'); if(b) b.classList.remove('on');
+    const p = $('tabExtras'); if(p) p.classList.remove('active');
+  }
+}
+
+/* ---- chamado quando um código certo é digitado ---- */
+window.dzExtrasGrant = function(ids){
+  const had = hasAny();
+  (ids || []).forEach(id => { if(have.indexOf(id) < 0) have.push(id); });
+  save(have); refresh();
+  if(!had){ try{ if(typeof uiToast === 'function') uiToast(tr('Aba EXTRAS liberada nas configurações', 'EXTRAS tab unlocked in settings'), 'ok'); }catch(e){} }
+};
+
+refresh();
+/* o app de emuladores pode se registrar depois: confere de novo quando a página terminar de carregar */
+window.addEventListener('load', () => { have = load(); refresh(); });
+})();
+</script>
+
+
+<style id="dzUiPolish">
+/* ===== POLIMENTO VISUAL DOS MENUS (emuladores, apps legais e aba EXTRAS) =====
+   Só aparência: nada aqui muda a lógica. Fica por último para vencer os estilos antigos. */
+:root{--xu-bg1:#151030;--xu-bg2:#0a0815;--xu-acc:#8b6bff;--xu-gold:#e8b93a;--xu-text:#f1eaff;--xu-dim:#a39bc9;--xu-line:rgba(139,107,255,.38);
+  --xu-card:linear-gradient(160deg,rgba(44,35,86,.94),rgba(22,17,48,.96))}
+#gbaOverlay,#emuOverlay,#lgOverlay{background:radial-gradient(ellipse at 50% -10%,rgba(106,75,216,.28),transparent 62%),rgba(6,4,14,.97);color:var(--xu-text)}
+#lgOverlay{background:radial-gradient(ellipse at 50% -10%,rgba(214,100,60,.22),transparent 62%),rgba(8,4,6,.97)}
+#gbaBox,#emuBox,#lgBox{background:linear-gradient(180deg,var(--xu-bg1),var(--xu-bg2));border:1px solid var(--xu-line);border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.07)}
+#lgBox{border-color:rgba(232,125,80,.5);background:linear-gradient(180deg,#1d1010,#0d0807)}
+#emuBox,#lgBox{width:min(100%,430px);padding:22px 18px 16px;gap:10px;scrollbar-width:thin;overscroll-behavior:contain}
+@keyframes xuIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+#gbaOverlay.open #gbaBox,#emuOverlay.open #emuBox,#lgOverlay.open #lgBox{animation:xuIn .2s ease-out}
+@media (prefers-reduced-motion:reduce){#gbaOverlay.open #gbaBox,#emuOverlay.open #emuBox,#lgOverlay.open #lgBox{animation:none}}
+
+/* títulos com filete dourado */
+#emuTitle,#lgTitle{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:800;letter-spacing:4px;color:var(--xu-text);margin:0 0 8px}
+#emuTitle::before,#emuTitle::after,#lgTitle::before,#lgTitle::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--xu-gold))}
+#emuTitle::after,#lgTitle::after{background:linear-gradient(90deg,var(--xu-gold),transparent)}
+
+/* botões-cartão dos seletores */
+.lgb{display:block;width:100%;box-sizing:border-box;text-align:left;font-size:15px;font-weight:700;letter-spacing:.8px;color:var(--xu-text);
+  background:var(--xu-card);border:1px solid var(--xu-line);border-radius:14px;padding:14px 18px;min-height:56px;
+  box-shadow:0 2px 0 rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);transition:transform .12s,border-color .12s,box-shadow .12s,background .12s}
+#lgBox .lgb{background:linear-gradient(160deg,rgba(70,36,28,.92),rgba(34,16,14,.96));border-color:rgba(232,125,80,.4)}
+.lgb:hover{border-color:var(--xu-gold);transform:translateY(-1px)}
+.lgb:active{transform:translateY(1px) scale(.99);background:rgba(106,75,216,.4)}
+.lgb.clr{text-align:center;background:transparent;border-color:rgba(255,130,100,.45);color:#ffa58f;font-size:13px;min-height:46px;margin-top:6px;box-shadow:none}
+#lgBox .lgb.clr{background:transparent}
+
+/* foco do controle: anel verde com brilho (vale para os 3 menus) */
+#gbaOverlay .gp-focus,#emuOverlay .gp-focus,#lgOverlay .gp-focus{outline:none;border-color:#39ff14;box-shadow:0 0 0 2px #39ff14,0 0 18px rgba(57,255,20,.45);transform:translateY(-1px)}
+
+/* cabeçalho do emulador */
+#gbaBox{padding:10px;gap:10px}
+#gbaHead{gap:8px;padding:2px 2px 10px;border-bottom:1px solid var(--xu-line)}
+#gbaLogo{font-size:16px;font-weight:900;letter-spacing:3px;color:#fff;text-shadow:0 0 14px rgba(232,185,58,.45)}
+#gbaLogo span{display:inline-block;margin-left:8px;padding:2px 9px;border-radius:999px;background:rgba(106,75,216,.35);border:1px solid var(--xu-line);color:#d3c9ff;font-size:10px;font-weight:700;letter-spacing:1.5px;vertical-align:middle;text-shadow:none}
+.gbab{min-height:40px;padding:0 15px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.8px;color:var(--xu-text);
+  background:rgba(44,35,86,.75);border:1px solid var(--xu-line);transition:transform .1s,border-color .12s,background .12s}
+.gbab:hover{border-color:var(--xu-gold)}
+.gbab:active{background:rgba(106,75,216,.55);transform:scale(.97)}
+.gbab.clr{background:rgba(120,30,20,.45);border-color:rgba(255,120,95,.55);color:#ffb7a5}
+
+/* lista de jogos */
+#gbaList{gap:10px;padding:2px 4px 8px 2px;scrollbar-width:thin;scrollbar-color:rgba(139,107,255,.5) transparent;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#gbaList.full{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));align-content:start;gap:12px}
+#gbaList.full > #gbaListTitle,#gbaList.full > #gbaEmpty,#gbaList.full > #gbaHelp{grid-column:1/-1}
+#gbaListTitle{display:flex;align-items:center;gap:12px;padding:6px 2px 2px;font-size:12px;font-weight:800;letter-spacing:3px;color:var(--xu-gold)}
+#gbaListTitle::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--xu-gold),transparent)}
+.gbarom{position:relative;display:block;width:100%;box-sizing:border-box;min-height:72px;padding:13px 40px 13px 70px;border-radius:14px;color:var(--xu-text);
+  background:var(--xu-card);border:1px solid var(--xu-line);box-shadow:0 2px 0 rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);
+  transition:transform .12s,border-color .12s,box-shadow .12s;overflow:hidden}
+.gbarom::before{content:"";position:absolute;left:16px;top:50%;width:38px;height:44px;margin-top:-22px;border-radius:6px 6px 3px 3px;
+  background:linear-gradient(#8b6bff,#5b3fc4) 5px 5px/28px 20px no-repeat,linear-gradient(160deg,#aeaec4,#5a5a72);box-shadow:0 2px 5px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.3)}
+.gbarom::after{content:"▶";position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--xu-gold);opacity:.65;transition:opacity .12s}
+.gbarom b{font-size:14px;letter-spacing:.6px;color:#fff;word-break:break-word}
+.gbarom small{font-size:11px;color:var(--xu-dim)}
+.gbarom:hover{border-color:var(--xu-gold);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.gbarom:hover::after{opacity:1}
+.gbarom:active{transform:scale(.985);background:rgba(106,75,216,.4)}
+#gbaEmpty{padding:22px 16px;text-align:center;font-size:13px;line-height:1.6;color:var(--xu-dim);border:1px dashed var(--xu-line);border-radius:14px;background:rgba(106,75,216,.06)}
+#gbaEmpty::before{content:"📂";display:block;font-size:28px;margin-bottom:6px}
+#gbaHelp{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:14px;background:rgba(106,75,216,.12);border:1px solid var(--xu-line);color:var(--xu-dim);font-size:12px;line-height:1.55}
+#gbaHelp .hr{display:flex;gap:10px;align-items:flex-start}
+#gbaHelp .hr i{flex:none;width:22px;text-align:center;font-style:normal}
+#gbaHelp .hr b{color:#fff;letter-spacing:.8px}
+
+/* tela do jogo e avisos */
+#gbaScreen{border-radius:12px;box-shadow:0 0 0 1px var(--xu-line),inset 0 0 40px rgba(0,0,0,.6)}
+#gbaMsg{color:var(--xu-dim);font-size:14px}
+#gbaExitHint{border-radius:12px;background:rgba(14,10,30,.95);border:1px solid var(--xu-acc);box-shadow:0 8px 24px rgba(0,0,0,.6);padding:11px 20px;color:var(--xu-text)}
+#gbaExitHint i{height:4px;background:linear-gradient(90deg,var(--xu-acc),#39ff14)}
+
+/* controles na tela (toque) */
+#gbaPad .pb,#gbaPad .dp,#gbaDpad .dc{background:linear-gradient(160deg,rgba(62,50,114,.94),rgba(28,22,58,.94));border:1px solid rgba(190,170,255,.55);color:var(--xu-text);
+  box-shadow:0 3px 0 rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.2);text-shadow:0 1px 2px rgba(0,0,0,.7)}
+#gbaDpad .dc{box-shadow:none;border-left:0;border-right:0}
+#gbaPad .A,#gbaPad .B{background:radial-gradient(circle at 35% 30%,#b39cff,#5a3dc0 72%);border-color:rgba(255,255,255,.6);
+  box-shadow:0 4px 0 #2a1b66,0 7px 14px rgba(0,0,0,.5),inset 0 2px 3px rgba(255,255,255,.4)}
+#gbaPad .pb.on,#gbaPad .dp.on{background:#8b6bff;color:#fff;border-color:#fff;box-shadow:0 0 18px rgba(139,107,255,.9);transform:translateY(2px)}
+
+/* aba EXTRAS */
+#tabExtras .xt-sec{display:flex;align-items:center;gap:10px}
+#tabExtras .xt-sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(232,185,58,.5),transparent)}
+#tabExtras .xt-row .btn{display:flex;align-items:center;justify-content:flex-start;gap:10px;text-align:left;min-height:54px;padding:14px 18px;border-radius:12px}
+
+/* telas sensíveis ao toque: alvos maiores */
+@media (pointer:coarse){.gbab{min-height:44px}.gbarom{min-height:76px}.lgb{min-height:60px}}
+/* celular deitado: cabeçalho compacto para sobrar espaço para o jogo */
+@media (max-height:520px){#gbaBox{padding:6px;gap:6px;border-radius:12px}#gbaHead{padding-bottom:6px;gap:6px}.gbab{min-height:34px;padding:0 11px;font-size:11px}}
+</style>
+
+
+<style id="dzUiPolish2">
+/* ===== POLIMENTO VISUAL: calculadora, editor de texto e editor de código =====
+   Só aparência (tema "brasa": marrom escuro com laranja e dourado). Não mexe em medidas/fontes do editor de código,
+   para o destaque de sintaxe continuar alinhado com o texto. */
+:root{--xw-bg1:#1d110c;--xw-bg2:#0c0706;--xw-acc:#ff7a55;--xw-gold:#e8b93a;--xw-text:#fbefd9;--xw-dim:#b3a07a;--xw-line:rgba(232,140,90,.4);
+  --xw-btn:linear-gradient(180deg,#2c2013,#1a120a)}
+#calcOverlay,#edOverlay,#jdOverlay{background:radial-gradient(ellipse at 50% -10%,rgba(214,100,60,.24),transparent 62%),rgba(8,4,3,.97);color:var(--xw-text)}
+#calcBox,#edBox,#jdBox{background:linear-gradient(180deg,var(--xw-bg1),var(--xw-bg2));border:1px solid var(--xw-line);border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.06)}
+#calcBox{padding:12px;gap:10px;scrollbar-width:thin}
+#edBox,#jdBox{padding:10px;gap:8px}
+#calcOverlay.open #calcBox,#edOverlay.open #edBox,#jdOverlay.open #jdBox{animation:xuIn .2s ease-out}
+@media (prefers-reduced-motion:reduce){#calcOverlay.open #calcBox,#edOverlay.open #edBox,#jdOverlay.open #jdBox{animation:none}}
+
+/* foco do controle */
+#calcOverlay .gp-focus,#edOverlay .gp-focus,#jdOverlay .gp-focus,#calcOverlay .ck:focus-visible,#edOverlay .eb:focus-visible,#edOverlay .es:focus-visible{
+  outline:none;border-color:#39ff14;box-shadow:0 0 0 2px #39ff14,0 0 16px rgba(57,255,20,.45)}
+
+/* ---------- CALCULADORA ---------- */
+#calcHead{gap:6px;padding-bottom:8px;border-bottom:1px solid var(--xw-line)}
+#calcTitle{font-weight:800;letter-spacing:3px;color:var(--xw-gold)}
+#calcDisp{background:linear-gradient(180deg,#050302,#0d0805);border:1px solid var(--xw-line);border-radius:14px;padding:8px 14px;box-shadow:inset 0 2px 10px rgba(0,0,0,.8)}
+#calcInd{color:#8fd0ff;font-weight:700}
+#calcExpr{color:var(--xw-dim)}
+#calcRes{color:#5dff8a;text-shadow:0 0 12px rgba(93,255,138,.35)}
+#calcRes.err{color:#ff8a65;text-shadow:none}
+#calcRes.pv{color:#79b872;text-shadow:none}
+.calc-pad{gap:6px}
+.ck{border-radius:12px;background:var(--xw-btn);border:1px solid rgba(232,185,58,.32);color:var(--xw-text);box-shadow:0 2px 0 rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07);transition:transform .08s,background .1s}
+.ck.num{background:linear-gradient(180deg,#38291a,#221810);color:#fff;border-color:rgba(255,255,255,.14)}
+.ck.op{background:linear-gradient(180deg,#6a4a10,#3f2b08);color:#ffd35a;border-color:rgba(232,185,58,.7)}
+.ck.fn{background:linear-gradient(180deg,#16281a,#0d170f);color:#a6efab;border-color:rgba(57,255,20,.32)}
+.ck.mem{background:linear-gradient(180deg,#14212d,#0b141c);color:#8fd0ff;border-color:rgba(127,196,255,.4)}
+.ck.clr{background:linear-gradient(180deg,#6a2415,#431509);color:#ffb09a;border-color:rgba(255,122,85,.6)}
+.ck.eq{background:linear-gradient(180deg,#ff8a65,#c94b2c);color:#fff;border-color:rgba(255,200,170,.7);box-shadow:0 2px 0 #7a2a15,0 0 14px rgba(255,122,85,.35),inset 0 1px 0 rgba(255,255,255,.3)}
+.ck.hb{border-radius:999px;padding:5px 14px}
+.ck.hb.on{background:linear-gradient(180deg,#6a4a10,#3f2b08);color:#ffd35a;border-color:var(--xw-gold)}
+.ck:active{transform:translateY(2px) scale(.97);box-shadow:none;filter:brightness(1.25)}
+#calcHist{background:rgba(10,6,4,.98);border:1px solid var(--xw-line);border-radius:16px;padding:8px}
+.calc-h{border-radius:10px}
+.calc-empty{color:var(--xw-dim)}
+
+/* ---------- EDITOR DE TEXTO ---------- */
+#edHead{gap:6px;padding-bottom:8px;border-bottom:1px solid var(--xw-line)}
+#edTitle{font-weight:800;letter-spacing:3px;color:var(--xw-gold)}
+#edName,#edFind input,#edDlgIn{border-radius:10px;background:#080504;border-color:var(--xw-line);transition:border-color .12s,box-shadow .12s}
+#edName:focus,#edFind input:focus,#edDlgIn:focus{outline:none;border-color:var(--xw-acc);box-shadow:0 0 0 2px rgba(255,122,85,.3)}
+.eb,.es{border-radius:10px;background:var(--xw-btn);border:1px solid rgba(232,185,58,.32);color:var(--xw-text);box-shadow:0 2px 0 rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);transition:transform .08s,border-color .12s,background .1s}
+.eb{min-height:34px;padding:0 11px}
+.es{min-height:34px}
+.eb:hover,.es:hover{border-color:var(--xw-gold)}
+.eb.on{background:linear-gradient(180deg,#6a4a10,#3f2b08);color:#ffd35a;border-color:var(--xw-gold)}
+.eb.pri{background:linear-gradient(180deg,#ff8a65,#c94b2c);color:#fff;border-color:rgba(255,200,170,.7)}
+.eb.clr{background:linear-gradient(180deg,#6a2415,#431509);color:#ffb09a;border-color:rgba(255,122,85,.6)}
+.eb.fn{background:linear-gradient(180deg,#16281a,#0d170f);color:#a6efab;border-color:rgba(57,255,20,.32)}
+.eb:active{transform:translateY(2px) scale(.97);box-shadow:none;filter:brightness(1.25)}
+.eg{border-right-color:var(--xw-line)}
+.sw{border-radius:8px}
+#edArea{border-radius:12px;box-shadow:0 0 0 1px var(--xw-line),inset 0 0 24px rgba(0,0,0,.18)}
+#edStatus{color:var(--xw-dim)}
+#edPop{border-radius:14px;background:linear-gradient(180deg,var(--xw-bg1),var(--xw-bg2));border:1px solid var(--xw-gold);box-shadow:0 12px 32px rgba(0,0,0,.75)}
+#edDlg{background:rgba(6,3,2,.78)}
+#edDlgBox{border-radius:18px;background:linear-gradient(180deg,var(--xw-bg1),var(--xw-bg2));border:1px solid var(--xw-gold);box-shadow:0 18px 50px rgba(0,0,0,.7);padding:18px}
+#edDrop{border-radius:12px;background:rgba(201,75,44,.4)}
+
+/* ---------- EDITOR DE CÓDIGO ---------- */
+#jdHead{gap:6px;padding-bottom:8px;border-bottom:1px solid var(--xw-line)}
+#jdLogo{letter-spacing:2px;text-shadow:0 0 14px rgba(255,122,85,.45)}
+#jdLogo span{color:var(--xw-dim)}
+.jb,.jsel{border-radius:10px;background:var(--xw-btn);border:1px solid rgba(232,185,58,.32);color:var(--xw-text);box-shadow:0 2px 0 rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);transition:transform .08s,border-color .12s,background .1s}
+.jb{min-height:34px;padding:0 11px}
+.jsel{min-height:34px}
+.jb:hover,.jsel:hover{border-color:var(--xw-gold)}
+.jb.on{background:linear-gradient(180deg,#6a4a10,#3f2b08);color:#ffd35a;border-color:var(--xw-gold)}
+.jb.run{background:linear-gradient(180deg,#2bb04e,#1a7433);color:#fff;border-color:rgba(120,255,160,.7);box-shadow:0 2px 0 #0e4220,0 0 14px rgba(57,255,20,.3),inset 0 1px 0 rgba(255,255,255,.25)}
+.jb.pri{background:linear-gradient(180deg,#ff8a65,#c94b2c);color:#fff;border-color:rgba(255,200,170,.7)}
+.jb.clr{background:linear-gradient(180deg,#6a2415,#431509);color:#ffb09a;border-color:rgba(255,122,85,.6)}
+.jb:active{transform:translateY(2px) scale(.97);box-shadow:none;filter:brightness(1.25)}
+#jdEd{background:#110d08;border-color:var(--xw-line);border-radius:12px}
+#jdGut{background:#0c0906;color:#75684a}
+#jdOut{background:#070504;border-color:var(--xw-line);border-radius:12px}
+#jdOutH{background:#0e0a07;color:var(--xw-dim);border-bottom-color:var(--xw-line);padding:6px 10px}
+#jdIn{background:#050302;border-color:rgba(127,196,255,.45);border-radius:12px}
+#jdHl .k{color:#ff8a65}#jdHl .s{color:#a5e8a0}#jdHl .n{color:#ffc277}#jdHl .c{color:#84947a}
+
+/* toque: alvos maiores (vem depois para vencer os tamanhos acima) */
+@media (pointer:coarse){.eb,.jb,.jsel,.es{min-height:42px;min-width:42px}#edName{height:42px}}
+</style>
+
+
+<style id="dzConsoleUi">
+/* ===== LAYOUT EXCLUSIVO DE CONSOLE (Xbox / PlayStation) =====
+   Tudo aqui só vale quando o jogo detecta um console: a detecção fica no começo do arquivo (user agent com "Xbox" ou
+   "PlayStation") e coloca a classe "console" no <html>. Para testar no PC, abra o jogo com ?console=xbox ou ?console=ps.
+   Celular e PC não recebem nada deste bloco. Medidas em vh/vw, pensadas para TV a ~3 m, e sem sombras/animações pesadas
+   (o Xbox One e o PS4 têm GPU fraca). */
+html.console{--cu-font:clamp(15px,2.3vh,21px);--cu-btn:clamp(48px,6.8vh,64px)}
+
+/* ---- emulador ---- */
+html.console #gbaBox{padding:clamp(10px,1.6vh,18px);gap:clamp(10px,1.6vh,18px)}
+html.console #gbaLogo{font-size:clamp(18px,3vh,28px)}
+html.console #gbaLogo span{font-size:clamp(11px,1.6vh,15px)}
+html.console .gbab{font-size:var(--cu-font);min-height:var(--cu-btn);padding:0 clamp(16px,2.2vw,30px)}
+html.console #gbaPadBtn,html.console #gbaFs{display:none!important}          /* sem toque e já em tela cheia */
+html.console #gbaHelp .hr:first-child{display:none}                            /* linha do teclado não serve no console */
+html.console #gbaListTitle{font-size:clamp(14px,2.2vh,20px)}
+html.console #gbaList.full{grid-template-columns:repeat(auto-fill,minmax(min(clamp(320px,36vw,460px),100%),1fr));gap:clamp(12px,2vh,22px)}
+html.console .gbarom{min-height:clamp(92px,13vh,126px);padding:clamp(14px,2vh,22px) 56px clamp(14px,2vh,22px) clamp(88px,11.5vh,116px)}
+html.console .gbarom::before{left:clamp(18px,2.4vh,28px);width:clamp(46px,6.2vh,62px);height:clamp(54px,7.4vh,74px);margin-top:calc(clamp(54px,7.4vh,74px) / -2);
+  background:linear-gradient(#8b6bff,#5b3fc4) 50% 12%/72% 44% no-repeat,linear-gradient(160deg,#aeaec4,#5a5a72)}
+html.console .gbarom::after{right:22px;font-size:clamp(16px,2.4vh,22px)}
+html.console .gbarom b{font-size:clamp(17px,2.7vh,26px)}
+html.console .gbarom small{font-size:clamp(13px,2vh,19px)}
+html.console #gbaHelp,html.console #gbaEmpty{font-size:clamp(14px,2.1vh,19px)}
+html.console #gbaExitHint{top:calc(var(--sy,0px) + 12px);padding:14px 26px;font-size:clamp(16px,2.4vh,22px)}
+
+/* ---- seletores (emuladores e apps legais) ---- */
+html.console #emuBox,html.console #lgBox{width:min(100%,clamp(520px,46vw,720px));padding:clamp(22px,3.4vh,38px) clamp(20px,2.6vw,36px) clamp(18px,2.6vh,28px);gap:clamp(12px,1.8vh,20px)}
+html.console #emuTitle,html.console #lgTitle{font-size:clamp(16px,2.6vh,24px)}
+html.console .lgb{font-size:clamp(18px,2.8vh,26px);min-height:clamp(68px,10vh,96px);padding:14px clamp(20px,2.4vw,34px)}
+html.console .lgb.clr{font-size:clamp(15px,2.2vh,20px);min-height:clamp(54px,7.4vh,72px)}
+
+/* ---- calculadora ---- */
+html.console #calcBox{width:min(100%,clamp(820px,70vw,1100px));padding:clamp(12px,2vh,22px);gap:clamp(10px,1.6vh,18px)}
+html.console #calcBox.basic{width:min(100%,clamp(460px,38vw,620px))}
+html.console #calcTitle{font-size:clamp(15px,2.4vh,22px)}
+html.console .calc-pad{grid-auto-rows:clamp(46px,8.4vh,78px);gap:clamp(6px,1vh,10px)}
+html.console .ck{font-size:clamp(16px,3vh,26px)}
+html.console .ck.fn,html.console .ck.mem{font-size:clamp(14px,2.5vh,21px)}
+html.console .ck.hb{font-size:clamp(13px,2vh,18px);min-height:clamp(38px,5.4vh,52px);padding:0 clamp(14px,1.6vw,26px)}
+html.console #calcRes{font-size:clamp(30px,7.6vh,64px)}
+html.console #calcRes.err{font-size:clamp(18px,3.8vh,32px)}
+html.console #calcExpr,html.console .calc-h{font-size:clamp(14px,2.8vh,22px)}
+
+/* ---- editor de texto e editor de código ---- */
+html.console #edBox,html.console #jdBox{padding:clamp(10px,1.6vh,18px)}
+html.console .eb,html.console .es,html.console .jb,html.console .jsel{font-size:var(--cu-font);min-height:clamp(44px,6.2vh,58px);padding:0 clamp(12px,1.4vw,22px)}
+html.console .es,html.console .jsel{padding:0 8px}
+html.console #edName,html.console #edDlgIn{height:clamp(44px,6.2vh,58px);font-size:var(--cu-font)}
+html.console #edTitle{font-size:clamp(15px,2.4vh,22px)}
+html.console #edRich{font-size:clamp(18px,2.8vh,26px)}
+html.console #edPlain{font-size:clamp(16px,2.5vh,22px)}
+html.console #edStatus,html.console #jdOutH{font-size:clamp(12px,1.8vh,16px)}
+html.console #edDlgMsg{font-size:clamp(16px,2.4vh,22px)}
+html.console #jdLogo{font-size:clamp(17px,2.8vh,26px)}
+html.console #jdHl,html.console #jdCode,html.console #jdGut{font-size:clamp(15px,2.3vh,21px)}   /* os três juntos, para o destaque não desalinhar */
+html.console #jdGut{width:56px;flex-basis:56px}
+html.console #jdOutT,html.console #jdIn{font-size:clamp(14px,2.2vh,20px)}
+
+/* ---- aba EXTRAS nas configurações ---- */
+html.console #tabExtras .xt-row .btn{min-height:clamp(58px,8vh,76px)}
+
+/* ---- foco do controle mais grosso (leitura na TV) ---- */
+html.console #gbaOverlay .gp-focus,html.console #emuOverlay .gp-focus,html.console #lgOverlay .gp-focus,
+html.console #calcOverlay .gp-focus,html.console #edOverlay .gp-focus,html.console #jdOverlay .gp-focus{box-shadow:0 0 0 4px #39ff14,0 0 24px rgba(57,255,20,.5)}
+
+/* ---- leve para GPU fraca ---- */
+html.console #gbaBox,html.console #emuBox,html.console #lgBox,html.console #calcBox,html.console #edBox,html.console #jdBox{box-shadow:0 0 0 1px rgba(0,0,0,.6)}
+html.console .gbarom,html.console .lgb,html.console .gbab,html.console .ck,html.console .eb,html.console .jb{transition:none}
+html.console #gbaOverlay.open #gbaBox,html.console #emuOverlay.open #emuBox,html.console #lgOverlay.open #lgBox,
+html.console #calcOverlay.open #calcBox,html.console #edOverlay.open #edBox,html.console #jdOverlay.open #jdBox{animation:none}
+</style>
 
 </body>
 </html>
