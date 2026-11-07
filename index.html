@@ -21967,11 +21967,17 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
       <button type="button" class="gbab nopl" id="gbaOpen">📂 ABRIR .GBA</button>
       <button type="button" class="gbab" id="gbaMenuBtn">☰ JOGOS</button>
       <button type="button" class="gbab onpl" id="gbaPadBtn">🕹 CONTROLES</button>
+      <button type="button" class="gbab onpl" id="gbaSaveOut">💾 BAIXAR SAVE</button>
+      <button type="button" class="gbab onpl" id="gbaSaveIn">📥 ENVIAR SAVE</button>
+      <button type="button" class="gbab onpl" id="gbaStateOut">⬇ BAIXAR ESTADO</button>
+      <button type="button" class="gbab onpl" id="gbaStateIn">⬆ ENVIAR ESTADO</button>
+      <input type="file" id="gbaSaveFile" style="display:none">
       <button type="button" class="gbab" id="gbaFs">⛶ TELA CHEIA</button>
       <span class="sp"></span>
       <button type="button" class="gbab clr" id="gbaClose">✕ FECHAR</button>
     </div>
     <div id="gbaBody">
+      <canvas id="gbaBg"></canvas>
       <div id="gbaList"></div>
       <div id="gbaScreen">
         <div id="gbaView"><div id="gbaMsg"></div><iframe id="gbaFrame" title="Emulador" allow="autoplay; gamepad; fullscreen" style="display:none"></iframe></div>
@@ -22075,7 +22081,7 @@ const SYS_ORDER = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md', 'ms', 'gg', 'segacd'
 /* QUAIS CONSOLES APARECEM NO MENU (seletor "emu" e aba EXTRAS).
    Todos os outros já estão prontos acima e continuam reconhecidos pelo gerador da lista, só ficam escondidos.
    Para liberar um, é só colocar o id dele aqui (ex.: 'n64', 'psx', 'gb', 'gbc', 'ms', 'gg', 'segacd', 'sega32x', 'saturn', 'nds'...). */
-const SHOWN = ['gba', 'nes', 'snes', 'md'];
+const SHOWN = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md'];
 let cur = SYSTEMS.gba;
 /* descobre o console de um jogo: campo "system" do roms.json (id, apelido ou nome), senão pela extensão */
 function sysOf(g){
@@ -22113,7 +22119,7 @@ const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : p
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const isOpen = () => ov.classList.contains('open');
 const isPlaying = () => ov.classList.contains('playing');
-let blobUrl = null, romsLoaded = false, gameMuted = false, watchTimer = 0, padRaf = 0, padInit = false, startTimer = 0, playTok = 0;
+let curGameName = 'game', saveMode = '', blobUrl = null, romsLoaded = false, gameMuted = false, watchTimer = 0, padRaf = 0, padInit = false, startTimer = 0, playTok = 0;
 let padIgnore = 0, padFirst = false;   /* botões já apertados ao abrir o jogo (ex.: o A que escolheu a ROM) só valem depois de soltos */
 const root = document.documentElement;
 
@@ -22330,6 +22336,8 @@ function onEmuReady(){
   try{ localStorage.setItem('dz_gba_ready', '1'); }catch(e){}
 }
 function play(url, name){
+  curGameName = name || 'game';
+  menuFx(false);   /* entrou no jogo: para a música e a animação do menu */
   stop(); initPad(); regSw();
   const cfg = { core:cur.core, url:url, name:name || 'game', cdn:EJS_CDN, native:!!cur.native, bios:'' };
   const legacy = !!(window.DZ_CONSOLE && window.DZ_CONSOLE.legacy);   /* Xbox One / PS4: hardware fraco */
@@ -22375,7 +22383,7 @@ function playFile(f){
   blobUrl = URL.createObjectURL(f);
   play(blobUrl + '#rom.' + (ext === 'zip' || ext === '7z' || cur.exts.indexOf(ext) >= 0 ? ext : cur.exts[0]), f.name.replace(/\.[^.]+$/, ''));
 }
-function showList(){ stop(); list.classList.add('full'); renderList(); labels(); $('gbaMsg').textContent = ''; }
+function showList(){ stop(); list.classList.add('full'); renderList(); labels(); $('gbaMsg').textContent = ''; menuFx(true); }
 
 let romsInfo = { ok:false, total:0, counts:'' };
 async function loadRoms(){
@@ -22394,7 +22402,7 @@ async function loadRoms(){
 let romItems = [];
 function renderList(){
   list.innerHTML = '';
-  const t = document.createElement('div'); t.id = 'gbaListTitle'; t.textContent = tr(cur.title[0], cur.title[1]); list.appendChild(t);
+  const t = document.createElement('div'); t.id = 'gbaListTitle'; t.textContent = tr(cur.title[0], cur.title[1]); list.appendChild(t); list.appendChild(themeBar());
   const mine = romItems.filter(g => sysOf(g) === cur.id);
   if(!mine.length){
     const e = document.createElement('div'); e.id = 'gbaEmpty';
@@ -22433,12 +22441,14 @@ async function open(id){
   muteGame(); ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
   if(!ov.dataset.pad){ ov.dataset.pad = '1'; if(window.matchMedia && matchMedia('(pointer:coarse)').matches) ov.classList.add('showpad'); }
   regSw(); initPad();
-  list.classList.add('full'); labels(); renderList();
+  list.classList.add('full'); labels(); renderList(); menuFx(true);
   if(!romsLoaded){ romItems = await loadRoms(); if(isOpen() && !isPlaying()) renderList(); }
 }
 function close(quiet){
   if(!isOpen()) return;
-  stop(); exitFs(); ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); unmuteGame(); if(!quiet) snd('menuBack');
+  stop(); exitFs(); menuFx(false); ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); unmuteGame(); if(!quiet) snd('menuBack');
+  const back = window.dzEmuFromSel; window.dzEmuFromSel = false;   /* aberto pelo seletor de emuladores? então volta pra ele */
+  if(back && typeof window.dzEmuReopen === 'function') setTimeout(() => { try{ window.dzEmuReopen(); }catch(e){} }, 0);
 }
 function goBack(){ if(isPlaying()) showList(); else close(); }
 
@@ -22446,6 +22456,201 @@ $('gbaOpen').addEventListener('click', () => $('gbaFile').click());
 $('gbaFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if(f) playFile(f); });
 $('gbaMenuBtn').addEventListener('click', () => showList());
 $('gbaPadBtn').addEventListener('click', () => ov.classList.toggle('showpad'));
+
+/* ---- exportar / importar save (SRAM do jogo) e estado salvo (save state) ---- */
+function saveMsg(t){ exitHint(t, 0); clearTimeout(hintTimer); hintTimer = setTimeout(exitHintHide, 4500); }
+function saveName(ext){ return (cur.id + '-' + String(curGameName).replace(/[^\w\-]+/g, '_') + '.' + ext); }
+function download(bytes, fname){
+  const a = document.createElement('a'), u = URL.createObjectURL(new Blob([bytes], { type:'application/octet-stream' }));
+  a.href = u; a.download = fname; document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(u); }, 3000);
+}
+function needGame(){
+  const g = isPlaying() ? emuApi() : null;
+  if(!g) saveMsg(tr('Abra um jogo e espere ele carregar primeiro.', 'Open a game and wait for it to load first.'));
+  return g;
+}
+$('gbaSaveOut').addEventListener('click', () => {
+  const g = needGame(); if(!g) return;
+  try{
+    const d = g.getSaveFile(true);
+    if(!d || !d.length) return saveMsg(tr('Esse jogo ainda não tem save. Salve dentro do jogo primeiro (menu do próprio jogo) e tente de novo.', 'This game has no save yet. Save inside the game first and try again.'));
+    download(d, saveName('srm')); saveMsg(tr('Save baixado.', 'Save downloaded.'));
+  }catch(e){ saveMsg(tr('Não consegui pegar o save deste jogo/emulador.', 'Could not get the save from this game/emulator.')); }
+});
+$('gbaStateOut').addEventListener('click', () => {
+  const g = needGame(); if(!g) return;
+  try{
+    const d = g.getState();
+    if(!d || !d.length) throw 0;
+    download(d, saveName('state')); saveMsg(tr('Estado baixado.', 'State downloaded.'));
+  }catch(e){ saveMsg(tr('Não consegui pegar o estado deste jogo/emulador.', 'Could not get the state from this game/emulator.')); }
+});
+$('gbaSaveIn').addEventListener('click', () => { if(!needGame()) return; saveMode = 'save'; $('gbaSaveFile').click(); });
+$('gbaStateIn').addEventListener('click', () => { if(!needGame()) return; saveMode = 'state'; $('gbaSaveFile').click(); });
+$('gbaSaveFile').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ''; if(!f) return;
+  const g = needGame(); if(!g) return;
+  try{
+    const data = new Uint8Array(await f.arrayBuffer());
+    if(!data.length) throw 0;
+    if(saveMode === 'state'){
+      g.loadState(data);
+      saveMsg(tr('Estado carregado.', 'State loaded.'));
+    }else{
+      const path = g.getSaveFilePath();
+      g.FS.writeFile(path, data);
+      try{ g.loadSaveFiles(); }catch(x){}
+      try{ g.restart(); }catch(x){}
+      saveMsg(tr('Save enviado. Se o progresso não aparecer, volte à lista e abra o jogo de novo.', 'Save uploaded. If progress does not show, go back to the list and reopen the game.'));
+    }
+  }catch(x){ saveMsg(tr('Não consegui usar esse arquivo neste jogo.', 'Could not use this file in this game.')); }
+});
+
+/* ---- MENU BONITINHO: temas animados + música de fundo (só toca/anima na lista; ao entrar no jogo para tudo) ----
+   Música: lista abaixo (hospedada no file.garden). Toca uma depois da outra, em loop. Para trocar/adicionar, é só mexer na lista. */
+const MENU_TRACKS = [
+  'https://file.garden/aoj4oJPXcy0zW16k/secretmenuemu1.mp3',
+  'https://file.garden/aoj4oJPXcy0zW16k/secretmenuemu2.mp3'
+];
+const THEMES = [['neon', '🌆', 'NEON'], ['stars', '🌌', 'ESTRELAS'], ['rain', '🌧', 'CHUVA PIXEL'], ['aurora', '🌈', 'AURORA'], ['off', '⛔', 'SEM ANIMAÇÃO']];
+let theme = 'neon', mOn = true, mMissing = false, mAudio = null, mProbed = false, barEl = null;
+try{
+  const t = localStorage.getItem('dz_gba_theme');
+  if(THEMES.some(x => x[0] === t)) theme = t;
+  else if((window.DZ_CONSOLE && window.DZ_CONSOLE.legacy) || (window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches)) theme = 'off';
+  mOn = localStorage.getItem('dz_gba_music') !== '0';
+}catch(e){}
+ov.dataset.theme = theme;
+
+const bg = $('gbaBg'), bx = bg.getContext('2d');
+let bW = 0, bH = 0, bRaf = 0, bLast = 0, bT = 0, bStars = [], bDrops = [];
+function bSeed(){
+  bStars = []; for(let i = 0; i < 90; i++) bStars.push({ x:Math.random() * bW, y:Math.random() * bH, z:.25 + Math.random() * .75, p:1 + Math.random() * 3 });
+  bDrops = []; for(let x = 4; x < bW; x += 14) bDrops.push({ x:x, y:Math.random() * bH, v:50 + Math.random() * 110, n:6 + (Math.random() * 9 | 0), c:Math.random() < .25 ? 1 : 0 });
+}
+function bFit(){
+  const w = bg.clientWidth | 0, h = bg.clientHeight | 0;
+  if(w !== bW || h !== bH){ bW = bg.width = w; bH = bg.height = h; bSeed(); }
+  return bW > 0 && bH > 0;
+}
+function bDraw(dt){
+  const W = bW, H = bH;
+  if(theme === 'neon'){
+    const hz = H * .62, g = bx.createLinearGradient(0, 0, 0, hz);
+    g.addColorStop(0, '#14032e'); g.addColorStop(.6, '#4b0f5e'); g.addColorStop(1, '#ff3c9e');
+    bx.fillStyle = g; bx.fillRect(0, 0, W, hz);
+    const r = Math.min(W, H) * .24, sg = bx.createLinearGradient(0, hz - r * 2, 0, hz);
+    sg.addColorStop(0, '#ffe45e'); sg.addColorStop(1, '#ff4fa3');
+    bx.fillStyle = sg; bx.beginPath(); bx.arc(W / 2, hz - r * .55, r, 0, 6.2832); bx.fill();
+    bx.fillStyle = '#12021f'; bx.fillRect(0, hz, W, H - hz);
+    bx.lineWidth = 1.5;
+    for(let k = -12; k <= 12; k++){
+      bx.strokeStyle = 'rgba(0,229,255,' + (.18 + .3 * (1 - Math.abs(k) / 13)) + ')';
+      bx.beginPath(); bx.moveTo(W / 2 + k * W * .02, hz); bx.lineTo(W / 2 + k * W * .16, H); bx.stroke();
+    }
+    const off = (bT * .5) % 1;
+    for(let i = 0; i < 12; i++){
+      const t = (i + off) / 12, y = hz + (H - hz) * t * t;
+      bx.strokeStyle = 'rgba(255,60,200,' + (.15 + .55 * t) + ')';
+      bx.beginPath(); bx.moveTo(0, y); bx.lineTo(W, y); bx.stroke();
+    }
+  }else if(theme === 'stars'){
+    const g = bx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#060a22'); g.addColorStop(1, '#1d0f40');
+    bx.fillStyle = g; bx.fillRect(0, 0, W, H);
+    for(const s of bStars){
+      s.x -= s.z * 40 * dt; if(s.x < -2){ s.x = W + 2; s.y = Math.random() * H; }
+      bx.globalAlpha = .35 + .65 * Math.abs(Math.sin(bT * s.p + s.x));
+      bx.fillStyle = s.z > .8 ? '#ffe9a8' : '#cfd8ff';
+      const z = 1 + s.z * 2; bx.fillRect(s.x, s.y, z, z);
+    }
+    bx.globalAlpha = 1;
+  }else if(theme === 'rain'){
+    bx.fillStyle = '#09061a'; bx.fillRect(0, 0, W, H);
+    for(const d of bDrops){
+      d.y += d.v * dt; if(d.y - d.n * 8 > H){ d.y = -8; d.v = 50 + Math.random() * 110; }
+      for(let i = 0; i < d.n; i++){
+        const a = 1 - i / d.n;
+        bx.fillStyle = i === 0 ? '#ffffff' : (d.c ? 'rgba(232,185,58,' + a * .8 + ')' : 'rgba(139,107,255,' + a * .8 + ')');
+        bx.fillRect(d.x, d.y - i * 8, 6, 6);
+      }
+    }
+  }else if(theme === 'aurora'){
+    bx.globalCompositeOperation = 'source-over'; bx.fillStyle = '#050816'; bx.fillRect(0, 0, W, H);
+    bx.globalCompositeOperation = 'lighter';
+    const cols = [[139, 107, 255], [40, 220, 190], [255, 90, 170], [232, 185, 58]], R = Math.max(W, H) * .5;
+    cols.forEach((c, i) => {
+      const x = W * (.5 + .42 * Math.sin(bT * .22 + i * 1.7)), y = H * (.5 + .3 * Math.cos(bT * .17 + i * 2.3));
+      const g = bx.createRadialGradient(x, y, 0, x, y, R);
+      g.addColorStop(0, 'rgba(' + c.join(',') + ',.38)'); g.addColorStop(1, 'rgba(' + c.join(',') + ',0)');
+      bx.fillStyle = g; bx.fillRect(0, 0, W, H);
+    });
+    bx.globalCompositeOperation = 'source-over';
+  }
+}
+function bLoop(ts){
+  bRaf = requestAnimationFrame(bLoop);
+  if(ts - bLast < 33) return;                       /* ~30 quadros/s: leve até em celular fraco */
+  const dt = Math.min(.1, (ts - bLast) / 1000); bLast = ts; bT += dt;
+  if(bFit()) bDraw(dt);
+}
+function bgStart(){
+  if(theme === 'off' || document.hidden){ bgStop(); return; }
+  bg.classList.add('on');
+  if(!bRaf){ bLast = 0; bRaf = requestAnimationFrame(bLoop); }
+}
+function bgStop(){ if(bRaf){ cancelAnimationFrame(bRaf); bRaf = 0; } bg.classList.remove('on'); }
+
+let mIdx = Math.random() * MENU_TRACKS.length | 0, mFails = 0;
+function musicProbe(){}   /* os arquivos ficam em outro site (sem CORS): não dá pra checar antes, o próprio áudio avisa se falhar */
+function musicNext(){ mIdx = (mIdx + 1) % MENU_TRACKS.length; if(mAudio){ mAudio.src = MENU_TRACKS[mIdx]; const p = mAudio.play(); if(p && p.catch) p.catch(() => {}); } }
+function musicStart(){
+  if(!mOn || mMissing) return;
+  try{
+    if(!mAudio){
+      mAudio = new Audio(MENU_TRACKS[mIdx]); mAudio.volume = .5;
+      mAudio.addEventListener('ended', () => { mFails = 0; musicNext(); });   /* acabou: próxima música */
+      mAudio.addEventListener('playing', () => { mFails = 0; });
+      mAudio.addEventListener('error', () => {                                /* arquivo falhou: tenta a próxima; se todas falharem, esconde o botão */
+        if(++mFails >= MENU_TRACKS.length){ mMissing = true; fillBar(); return; }
+        musicNext();
+      });
+    }
+    const p = mAudio.play(); if(p && p.catch) p.catch(() => {});
+  }catch(e){}
+}
+function musicStop(){ try{ if(mAudio) mAudio.pause(); }catch(e){} }
+function menuFx(on){
+  if(on && isOpen() && !isPlaying()){ musicProbe(); bgStart(); musicStart(); }
+  else{ bgStop(); musicStop(); }
+}
+document.addEventListener('visibilitychange', () => { if(isOpen() && !isPlaying()) menuFx(!document.hidden); });
+
+function fillBar(){
+  if(!barEl) return;
+  barEl.innerHTML = '';
+  THEMES.forEach(x => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'gbachip' + (x[0] === theme ? ' sel' : '');
+    b.textContent = x[1] + ' ' + (x[0] === 'off' ? tr('SEM ANIMAÇÃO', 'NO ANIMATION') : x[2]);
+    b.addEventListener('click', () => {
+      theme = x[0]; try{ localStorage.setItem('dz_gba_theme', theme); }catch(e){}
+      ov.dataset.theme = theme; fillBar(); menuFx(true);
+    });
+    barEl.appendChild(b);
+  });
+  if(!mMissing){
+    const m = document.createElement('button'); m.type = 'button'; m.className = 'gbachip' + (mOn ? ' sel' : '');
+    m.textContent = mOn ? tr('🎵 MÚSICA: LIGADA', '🎵 MUSIC: ON') : tr('🔇 MÚSICA: DESLIGADA', '🔇 MUSIC: OFF');
+    m.addEventListener('click', () => {
+      mOn = !mOn; try{ localStorage.setItem('dz_gba_music', mOn ? '1' : '0'); }catch(e){}
+      if(mOn) musicStart(); else musicStop();
+      fillBar();
+    });
+    barEl.appendChild(m);
+  }
+}
+function themeBar(){ barEl = document.createElement('div'); barEl.id = 'gbaThemes'; fillBar(); return barEl; }
+
 $('gbaFs').addEventListener('click', () => toggleFs());
 $('gbaClose').addEventListener('click', () => close());
 
@@ -22508,6 +22713,7 @@ const isOpen = () => ov.classList.contains('open');
 let selMuted = false;   /* o seletor silencia o áudio do Dead Zone; ao abrir um emulador, ele assume o mudo */
 function selMute(){ if(selMuted) return; selMuted = true; try{ window.dzAudio.minimum(); window.dzAudio.setHardMute(true); }catch(e){} }
 function selUnmute(){ if(!selMuted) return; selMuted = false; try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(e){} }
+window.dzEmuColor = id => ({ gba:'#8b6bff', nes:'#ff5a5a', gb:'#8bc34a', gbc:'#e056fd', snes:'#f2c14e', md:'#3b82f6', ms:'#ff4d4d', gg:'#38bdf8' })[id] || '#b48bff';
 function build(){
   $('emuTitle').textContent = tr('EMULADORES', 'EMULATORS');
   $('emuClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
@@ -22515,7 +22721,8 @@ function build(){
   (window.dzEmus || []).forEach(e => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lgb';
     b.textContent = (e.icon ? e.icon + ' ' : '') + e.name;
-    b.addEventListener('click', () => { selMuted = false; close(true); try{ e.open(); }catch(err){ try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(_){} } });
+    b.style.setProperty('--xc', window.dzEmuColor(e.id));
+    b.addEventListener('click', () => { selMuted = false; close(true); window.dzEmuFromSel = true; try{ e.open(); }catch(err){ window.dzEmuFromSel = false; try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(_){} } });
     listEl.appendChild(b);
   });
 }
@@ -22539,6 +22746,7 @@ window.dzEmuTry = function(v){
   open(); return true;
 };
 window.dzEmuBack = () => close();
+window.dzEmuReopen = () => open();   /* o emulador chama isto ao sair, se foi aberto por aqui */
 })();
 </script>
 
@@ -22608,8 +22816,8 @@ function activate(){
   document.querySelectorAll('.tab-panel').forEach(x => x.classList.toggle('active', x.id === 'tabExtras'));
   build();
 }
-function mk(label, fn){
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary'; b.style.width = '100%'; b.textContent = label;
+function mk(label, fn, cls){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary' + (cls ? ' ' + cls : ''); b.style.width = '100%'; b.textContent = label;
   b.addEventListener('click', () => { snd('menuAccept'); try{ fn(); }catch(e){} });
   return b;
 }
@@ -22618,16 +22826,16 @@ function build(){
   p.innerHTML = '';
   const apps = APPS.filter(a => have.indexOf(a.id) >= 0);
   if(apps.length){
-    const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.textContent = tr('UTILIDADES', 'UTILITIES'); p.appendChild(h);
+    const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.classList.add('xt-h-util'); h.textContent = tr('UTILIDADES', 'UTILITIES'); p.appendChild(h);
     const r = document.createElement('div'); r.className = 'xt-row';
-    apps.forEach(a => r.appendChild(mk(a.icon + ' ' + tr(a.pt, a.en), a.open)));
+    apps.forEach(a => r.appendChild(mk(a.icon + ' ' + tr(a.pt, a.en), a.open, 'xt-util')));
     p.appendChild(r);
   }
   const emus = emuList();
   if(emus.length){
-    const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.textContent = tr('EMULADORES', 'EMULATORS'); p.appendChild(h);
+    const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.classList.add('xt-h-emu'); h.textContent = tr('EMULADORES', 'EMULATORS'); p.appendChild(h);
     const r = document.createElement('div'); r.className = 'xt-row';
-    emus.forEach(e => r.appendChild(mk((e.icon ? e.icon + ' ' : '') + e.name, () => e.open())));
+    emus.forEach(e => { const b = mk((e.icon ? e.icon + ' ' : '') + e.name, () => e.open(), 'xt-emu'); b.style.setProperty('--xc', (window.dzEmuColor ? window.dzEmuColor(e.id) : '#b48bff')); r.appendChild(b); });
     p.appendChild(r);
   }
   const hint = document.createElement('div'); hint.className = 'xt-hint';
@@ -23386,5 +23594,34 @@ help(); refresh();
 })();
 </script>
 
+<style id="dzGbaThemeStyle">
+#gbaBody{position:relative}
+#gbaList{position:relative;z-index:1}
+#gbaBg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;border-radius:12px;display:none}
+#gbaOverlay:not(.playing) #gbaBg.on{display:block}
+#gbaThemes{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gbachip{font:inherit;font-size:11px;font-weight:700;letter-spacing:.5px;color:#f1eaff;background:rgba(20,14,40,.78);border:1px solid rgba(139,107,255,.45);border-radius:999px;padding:0 12px;min-height:34px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gbachip.sel{background:rgba(139,107,255,.6);border-color:#e8b93a}
+.gbachip:active{transform:scale(.97)}
+@media (pointer:coarse){.gbachip{min-height:40px}}
+html.console .gbachip{font-size:clamp(13px,2vh,18px);min-height:clamp(40px,6vh,56px);padding:0 clamp(14px,2vw,26px)}
+#gbaOverlay[data-theme]:not([data-theme=off]) .gbarom{background:rgba(14,9,30,.8)}
+#gbaOverlay[data-theme=neon] #gbaBox{border-color:#ff3cc8;box-shadow:0 0 30px rgba(255,60,200,.45)}
+#gbaOverlay[data-theme=stars] #gbaBox{border-color:#7f9bff;box-shadow:0 0 30px rgba(127,155,255,.4)}
+#gbaOverlay[data-theme=rain] #gbaBox{border-color:#8b6bff;box-shadow:0 0 30px rgba(232,185,58,.3)}
+#gbaOverlay[data-theme=aurora] #gbaBox{border-color:#28dcbe;box-shadow:0 0 30px rgba(40,220,190,.4)}
+</style>
+<style id="dzExtrasColors">
+/* aba EXTRAS: utilidades = verde-água · emuladores = rosa/roxo, cada console com a cor da sua lateral */
+#tabExtras .xt-sec.xt-h-util{color:#2fd9c4}
+#tabExtras .xt-sec.xt-h-util::after{background:linear-gradient(90deg,rgba(47,217,196,.6),transparent)}
+#tabExtras .xt-sec.xt-h-emu{color:#ff7ad9}
+#tabExtras .xt-sec.xt-h-emu::after{background:linear-gradient(90deg,rgba(255,122,217,.6),transparent)}
+#tabExtras .xt-row .btn.xt-util{border:1px solid rgba(47,217,196,.4);border-left:6px solid #2fd9c4;background:linear-gradient(90deg,rgba(47,217,196,.24),rgba(47,217,196,.05))}
+#tabExtras .xt-row .btn.xt-emu{--xc:#b48bff;border:1px solid rgba(255,122,217,.35);border-left:6px solid var(--xc);background:linear-gradient(90deg,rgba(139,107,255,.28),rgba(255,122,217,.06));background:linear-gradient(90deg,color-mix(in srgb,var(--xc) 32%,transparent),rgba(255,122,217,.06))}
+#tabExtras .xt-row .btn.xt-util:hover{border-color:#2fd9c4}
+#tabExtras .xt-row .btn.xt-emu:hover{border-color:var(--xc)}
+#emuList .lgb{--xc:#b48bff;border-left:6px solid var(--xc)}
+</style>
 </body>
 </html>
