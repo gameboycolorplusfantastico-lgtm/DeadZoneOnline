@@ -2982,7 +2982,8 @@ const SFX = (function(){
   // recarga e tiros de arma (do jogador e dos bots). Esses podem se sobrepor entre si e a qualquer outro som.
   // Prioridade (pri): maior corta menor; menor é descartado se o canal estiver ocupado por maior; igual = o novo substitui.
   function playClip(url, volume, cat, pri){
-    if(!enabled || !url) return null;
+    const uiOk = (cat === 'ui' && window.__dzEmuUi === true);   /* nos menus dos emuladores o único som do Dead Zone que toca é o clique */
+    if((!enabled && !uiOk) || !url) return null;
     cat = cat || 'game';
     if((cat === 'game' || cat === 'dmg') && endLock) return null;   // partida acabou: sem áudio ingame
     if((cat === 'game' || cat === 'dmg') && AssetLoader.isHolding()) return null;   // tela de loading: nenhum som do jogo
@@ -2997,7 +2998,8 @@ const SFX = (function(){
     try{
       const base = getAudio(url);
       const node = base.cloneNode();
-      node.volume = Math.max(0, Math.min(1, (volume===undefined?1:volume) * clipVolume));
+      node.volume = Math.max(0, Math.min(1, (volume===undefined?1:volume) * (uiOk ? 0.8 : clipVolume)));
+      if(uiOk){ node.__dzKeep = true; try{ node.muted = false; }catch(e){} }
       if(cat === 'game' || cat === 'dmg') trackNode(node, gameNodes);
       else if(cat === 'end') trackNode(node, endNodes);
       if(cat === 'game'){ chanNode = node; chanPri = pri || 2; }
@@ -3759,7 +3761,7 @@ const SFX = (function(){
   try{
     const _mediaPlay = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function(){
-      if(hardMuted){ try{ this.pause(); }catch(_){} return Promise.resolve(); }
+      if(hardMuted && !this.__dzKeep){ try{ this.pause(); }catch(_){} return Promise.resolve(); }   /* __dzKeep = música do menu dos emuladores e cliques de UI: passam pelo mudo */
       return _mediaPlay.apply(this, arguments);
     };
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -3780,7 +3782,7 @@ const SFX = (function(){
     try{ document.querySelectorAll('audio,video').forEach(e=>els.push(e)); }catch(_){}
     if(on){
       enabledBeforeHard = enabled; enabled = false;
-      els.forEach(e=>{ if(e){ try{ e.pause(); }catch(_){} try{ e.muted = true; }catch(_){} } });
+      els.forEach(e=>{ if(e && !e.__dzKeep){ try{ e.pause(); }catch(_){} try{ e.muted = true; }catch(_){} } });
       try{ if(ctx && ctx.state === 'running') ctx.suspend(); }catch(_){}
     } else {
       enabled = enabledBeforeHard;
@@ -3793,7 +3795,7 @@ const SFX = (function(){
 })();
 // Expõe SOMENTE o mudo total para os scripts dos emuladores (eles ficam fora desta função, onde o SFX não existe).
 window.dzAudio = {
-  setHardMute: (on) => SFX.setHardMute(on),
+  setHardMute: (on) => { window.__dzEmuUi = !!on; SFX.setHardMute(on); },
   // Coloca música e efeitos no MÍNIMO (sem mexer nos controles nem salvar nada).
   minimum: () => { SFX.setMusicMuted(true); SFX.setMusicVolume(0); SFX.setVolume(0); },
   // Volta ao que está salvo nas configurações de ÁUDIO (sliders e opção "desativar música").
@@ -21960,11 +21962,199 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
 /* consoles "nativos" (N64, PS1, Saturn...): usam os controles do próprio EmulatorJS; os botões roxos do app ficam escondidos */
 #gbaOverlay[data-lay="native"] #gbaPad,#gbaOverlay[data-lay="native"] #gbaPadBtn{display:none!important}
 </style>
+<script id="dzEmuFxScript">
+/* ===== MENU DOS EMULADORES: temas animados + música + painel de ajustes (⚙) =====
+   Usado pelo hub de emuladores e pela lista de jogos de cada console. A música só toca nesses menus
+   e para sozinha quando o jogo começa. Para trocar as músicas, mexa na lista TRACKS. */
+(function(){
+'use strict';
+const TRACKS = [
+  'https://file.garden/aoj4oJPXcy0zW16k/secretmenuemu1.mp3',
+  'https://file.garden/aoj4oJPXcy0zW16k/secretmenuemu2.mp3'
+];
+const THEMES = [['neon', '🌆', 'NEON'], ['stars', '🌌', 'ESTRELAS'], ['rain', '🌧', 'CHUVA PIXEL'], ['aurora', '🌈', 'AURORA'], ['off', '⛔', 'SEM ANIMAÇÃO']];
+const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const snd = () => { try{ if(typeof SFX !== 'undefined' && SFX.menuSelect) SFX.menuSelect(); }catch(e){} };
+let theme = 'neon', mOn = true, vol = .5, missing = false;
+try{
+  const t = localStorage.getItem('dz_gba_theme');
+  if(THEMES.some(x => x[0] === t)) theme = t;
+  else if((window.DZ_CONSOLE && window.DZ_CONSOLE.legacy) || (window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches)) theme = 'off';
+  mOn = localStorage.getItem('dz_gba_music') !== '0';
+  const v = parseFloat(localStorage.getItem('dz_gba_vol')); if(isFinite(v)) vol = Math.max(0, Math.min(1, v));
+}catch(e){}
+const save = (k, v) => { try{ localStorage.setItem(k, v); }catch(e){} };
+
+const surfaces = [], panels = [];
+let act = null, raf = 0, last = 0, T = 0, W = 0, H = 0, stars = [], drops = [], stopTimer = 0;
+let audio = null, idx = Math.random() * TRACKS.length | 0, fails = 0;
+
+/* ---- animação ---- */
+function seed(){
+  stars = []; for(let i = 0; i < 90; i++) stars.push({ x:Math.random() * W, y:Math.random() * H, z:.25 + Math.random() * .75, p:1 + Math.random() * 3 });
+  drops = []; for(let x = 4; x < W; x += 14) drops.push({ x:x, y:Math.random() * H, v:50 + Math.random() * 110, n:6 + (Math.random() * 9 | 0), c:Math.random() < .25 ? 1 : 0 });
+}
+function fit(){
+  const w = act.cv.clientWidth | 0, h = act.cv.clientHeight | 0;
+  if(w !== W || h !== H){ W = act.cv.width = w; H = act.cv.height = h; seed(); }
+  return W > 0 && H > 0;
+}
+function draw(dt){
+  const bx = act.cx;
+  if(theme === 'neon'){
+    const hz = H * .62, g = bx.createLinearGradient(0, 0, 0, hz);
+    g.addColorStop(0, '#14032e'); g.addColorStop(.6, '#4b0f5e'); g.addColorStop(1, '#ff3c9e');
+    bx.fillStyle = g; bx.fillRect(0, 0, W, hz);
+    const r = Math.min(W, H) * .24, sg = bx.createLinearGradient(0, hz - r * 2, 0, hz);
+    sg.addColorStop(0, '#ffe45e'); sg.addColorStop(1, '#ff4fa3');
+    bx.fillStyle = sg; bx.beginPath(); bx.arc(W / 2, hz - r * .55, r, 0, 6.2832); bx.fill();
+    bx.fillStyle = '#12021f'; bx.fillRect(0, hz, W, H - hz);
+    bx.lineWidth = 1.5;
+    for(let k = -12; k <= 12; k++){
+      bx.strokeStyle = 'rgba(0,229,255,' + (.18 + .3 * (1 - Math.abs(k) / 13)) + ')';
+      bx.beginPath(); bx.moveTo(W / 2 + k * W * .02, hz); bx.lineTo(W / 2 + k * W * .16, H); bx.stroke();
+    }
+    const off = (T * .5) % 1;
+    for(let i = 0; i < 12; i++){
+      const t = (i + off) / 12, y = hz + (H - hz) * t * t;
+      bx.strokeStyle = 'rgba(255,60,200,' + (.15 + .55 * t) + ')';
+      bx.beginPath(); bx.moveTo(0, y); bx.lineTo(W, y); bx.stroke();
+    }
+  }else if(theme === 'stars'){
+    const g = bx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#060a22'); g.addColorStop(1, '#1d0f40');
+    bx.fillStyle = g; bx.fillRect(0, 0, W, H);
+    for(const s of stars){
+      s.x -= s.z * 40 * dt; if(s.x < -2){ s.x = W + 2; s.y = Math.random() * H; }
+      bx.globalAlpha = .35 + .65 * Math.abs(Math.sin(T * s.p + s.x));
+      bx.fillStyle = s.z > .8 ? '#ffe9a8' : '#cfd8ff';
+      const z = 1 + s.z * 2; bx.fillRect(s.x, s.y, z, z);
+    }
+    bx.globalAlpha = 1;
+  }else if(theme === 'rain'){
+    bx.fillStyle = '#09061a'; bx.fillRect(0, 0, W, H);
+    for(const d of drops){
+      d.y += d.v * dt; if(d.y - d.n * 8 > H){ d.y = -8; d.v = 50 + Math.random() * 110; }
+      for(let i = 0; i < d.n; i++){
+        const a = 1 - i / d.n;
+        bx.fillStyle = i === 0 ? '#ffffff' : (d.c ? 'rgba(232,185,58,' + a * .8 + ')' : 'rgba(139,107,255,' + a * .8 + ')');
+        bx.fillRect(d.x, d.y - i * 8, 6, 6);
+      }
+    }
+  }else if(theme === 'aurora'){
+    bx.globalCompositeOperation = 'source-over'; bx.fillStyle = '#050816'; bx.fillRect(0, 0, W, H);
+    bx.globalCompositeOperation = 'lighter';
+    const cols = [[139, 107, 255], [40, 220, 190], [255, 90, 170], [232, 185, 58]], R = Math.max(W, H) * .5;
+    cols.forEach((c, i) => {
+      const x = W * (.5 + .42 * Math.sin(T * .22 + i * 1.7)), y = H * (.5 + .3 * Math.cos(T * .17 + i * 2.3));
+      const g = bx.createRadialGradient(x, y, 0, x, y, R);
+      g.addColorStop(0, 'rgba(' + c.join(',') + ',.38)'); g.addColorStop(1, 'rgba(' + c.join(',') + ',0)');
+      bx.fillStyle = g; bx.fillRect(0, 0, W, H);
+    });
+    bx.globalCompositeOperation = 'source-over';
+  }
+}
+function loop(ts){
+  raf = requestAnimationFrame(loop);
+  if(!act || ts - last < 33) return;                 /* ~30 quadros/s: leve até em aparelho fraco */
+  const dt = Math.min(.1, (ts - last) / 1000); last = ts; T += dt;
+  if(fit()) draw(dt);
+}
+function gfxStop(){ if(raf){ cancelAnimationFrame(raf); raf = 0; } surfaces.forEach(s => s.cv.classList.remove('on')); }
+function gfxStart(){
+  if(!act) return;
+  if(theme === 'off' || document.hidden){ gfxStop(); return; }
+  surfaces.forEach(s => s.cv.classList.toggle('on', s === act));
+  W = H = 0;
+  if(!raf){ last = 0; raf = requestAnimationFrame(loop); }
+}
+
+/* ---- música (o elemento leva __dzKeep: o mudo do Dead Zone não pega nele) ---- */
+function nextTrack(){ idx = (idx + 1) % TRACKS.length; if(audio){ audio.src = TRACKS[idx]; const p = audio.play(); if(p && p.catch) p.catch(() => {}); } }
+function musicStart(){
+  if(!mOn || missing || !act) return;
+  try{
+    if(!audio){
+      audio = new Audio(TRACKS[idx]); audio.__dzKeep = true; audio.volume = vol;
+      audio.addEventListener('ended', () => { fails = 0; nextTrack(); });
+      audio.addEventListener('playing', () => { fails = 0; });
+      audio.addEventListener('error', () => { if(++fails >= TRACKS.length){ missing = true; refreshPanels(); return; } nextTrack(); });
+    }
+    audio.volume = vol;
+    const p = audio.play(); if(p && p.catch) p.catch(() => {});
+  }catch(e){}
+}
+function musicStop(){ try{ if(audio) audio.pause(); }catch(e){} }
+
+/* ---- ligar / desligar (desligar tem um pequeno atraso: ao passar de um menu para outro a música não pica) ---- */
+function on(surf){
+  clearTimeout(stopTimer); stopTimer = 0;
+  act = surf; gfxStart(); musicStart();
+}
+function off(){
+  clearTimeout(stopTimer);
+  stopTimer = setTimeout(() => { stopTimer = 0; gfxStop(); musicStop(); act = null; }, 200);
+}
+document.addEventListener('visibilitychange', () => {
+  if(!act) return;
+  if(document.hidden){ gfxStop(); musicStop(); } else { gfxStart(); musicStart(); }
+});
+
+function setTheme(t){ theme = t; save('dz_gba_theme', t); surfaces.forEach(s => { s.ov.dataset.theme = t; }); if(act) gfxStart(); refreshPanels(); }
+function setMusicOn(v){ mOn = !!v; save('dz_gba_music', mOn ? '1' : '0'); if(mOn) musicStart(); else musicStop(); refreshPanels(); }
+function setVol(v){ vol = Math.max(0, Math.min(1, Math.round(v * 10) / 10)); save('dz_gba_vol', String(vol)); if(audio) audio.volume = vol; refreshPanels(); }
+
+/* ---- painel de ajustes (botão ⚙) ---- */
+function mkb(cls, txt, fn){
+  const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = txt;
+  b.addEventListener('click', () => { snd(); fn(); });
+  return b;
+}
+function fill(p){
+  p.title.textContent = '⚙ ' + tr('AJUSTES DO MENU', 'MENU SETTINGS');
+  p.hTheme.textContent = tr('TEMA ANIMADO', 'ANIMATED THEME');
+  p.hMusic.textContent = tr('MÚSICA DE FUNDO', 'BACKGROUND MUSIC');
+  p.themes.innerHTML = '';
+  THEMES.forEach(x => p.themes.appendChild(mkb('fxChip' + (x[0] === theme ? ' sel' : ''), x[1] + ' ' + (x[0] === 'off' ? tr('SEM ANIMAÇÃO', 'NO ANIMATION') : x[2]), () => setTheme(x[0]))));
+  p.music.innerHTML = '';
+  if(missing){ const m = document.createElement('div'); m.className = 'fxHint'; m.textContent = tr('Não consegui carregar a música (sem internet?).', 'Could not load the music (offline?).'); p.music.appendChild(m); return; }
+  p.music.appendChild(mkb('fxChip' + (mOn ? ' sel' : ''), mOn ? tr('🎵 LIGADA', '🎵 ON') : tr('🔇 DESLIGADA', '🔇 OFF'), () => setMusicOn(!mOn)));
+  p.music.appendChild(mkb('fxChip fxSmall', '−', () => setVol(vol - .1)));
+  const pc = document.createElement('span'); pc.className = 'fxPct'; pc.textContent = Math.round(vol * 100) + '%'; p.music.appendChild(pc);
+  p.music.appendChild(mkb('fxChip fxSmall', '+', () => setVol(vol + .1)));
+}
+function refreshPanels(){ panels.forEach(fill); }
+function panel(box, opts){
+  opts = opts || {};
+  const el = document.createElement('div'); el.className = 'fxPanel';
+  el.innerHTML = '<div class="fxTitle"></div><div class="fxSec"></div><div class="fxRow"></div><div class="fxSec"></div><div class="fxRow"></div>';
+  const q = el.children;
+  const p = { title:q[0], hTheme:q[1], themes:q[2], hMusic:q[3], music:q[4] };
+  const done = document.createElement('button'); done.type = 'button'; done.className = 'fxChip fxDone'; done.textContent = '✓ ' + tr('PRONTO', 'DONE');
+  el.appendChild(done); box.appendChild(el);
+  panels.push(p); fill(p);
+  const api = {
+    isOpen: () => el.classList.contains('open'),
+    open(){ fill(p); done.textContent = '✓ ' + tr('PRONTO', 'DONE'); el.classList.add('open'); if(opts.onToggle) opts.onToggle(true); },
+    close(){ if(!el.classList.contains('open')) return; el.classList.remove('open'); if(opts.onToggle) opts.onToggle(false); },
+    toggle(){ api.isOpen() ? api.close() : api.open(); }
+  };
+  done.addEventListener('click', () => { snd(); api.close(); });
+  return api;
+}
+function register(ov, cv){
+  const s = { ov:ov, cv:cv, cx:cv.getContext('2d') };
+  cv.classList.add('fxBg'); ov.dataset.theme = theme; surfaces.push(s);
+  return s;
+}
+window.dzEmuFx = { register, on, off, panel };
+})();
+</script>
 <div id="gbaOverlay" aria-hidden="true">
   <div id="gbaBox" role="dialog" aria-label="Game Boy Advance">
     <div id="gbaHead">
       <div id="gbaLogo"><b id="gbaLogoName" style="font:inherit">GAME BOY ADVANCE</b><span id="gbaLogoCore">mGBA</span></div>
       <button type="button" class="gbab nopl" id="gbaOpen">📂 ABRIR .GBA</button>
+      <button type="button" class="gbab nopl" id="gbaFx" aria-label="Ajustes do menu" title="Ajustes do menu">⚙</button>
       <button type="button" class="gbab" id="gbaMenuBtn">☰ JOGOS</button>
       <button type="button" class="gbab onpl" id="gbaPadBtn">🕹 CONTROLES</button>
       <button type="button" class="gbab onpl" id="gbaSaveOut">💾 BAIXAR SAVE</button>
@@ -22402,7 +22592,7 @@ async function loadRoms(){
 let romItems = [];
 function renderList(){
   list.innerHTML = '';
-  const t = document.createElement('div'); t.id = 'gbaListTitle'; t.textContent = tr(cur.title[0], cur.title[1]); list.appendChild(t); list.appendChild(themeBar());
+  const t = document.createElement('div'); t.id = 'gbaListTitle'; t.textContent = tr(cur.title[0], cur.title[1]); list.appendChild(t);
   const mine = romItems.filter(g => sysOf(g) === cur.id);
   if(!mine.length){
     const e = document.createElement('div'); e.id = 'gbaEmpty';
@@ -22446,11 +22636,13 @@ async function open(id){
 }
 function close(quiet){
   if(!isOpen()) return;
-  stop(); exitFs(); menuFx(false); ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); unmuteGame(); if(!quiet) snd('menuBack');
-  const back = window.dzEmuFromSel; window.dzEmuFromSel = false;   /* aberto pelo seletor de emuladores? então volta pra ele */
-  if(back && typeof window.dzEmuReopen === 'function') setTimeout(() => { try{ window.dzEmuReopen(); }catch(e){} }, 0);
+  if(fxPanel) fxPanel.close();
+  stop(); exitFs(); menuFx(false); ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); const back = window.dzEmuFromSel && typeof window.dzEmuReopen === 'function'; window.dzEmuFromSel = false;   /* aberto pelo hub de emuladores? então volta pra ele */
+  if(back) gameMuted = false; else unmuteGame();   /* voltando pro hub o mudo continua (sem estalo do áudio do Dead Zone) */
+  if(!quiet) snd('menuBack');
+  if(back) setTimeout(() => { try{ window.dzEmuReopen(); }catch(e){} }, 0);
 }
-function goBack(){ if(isPlaying()) showList(); else close(); }
+function goBack(){ if(fxPanel && fxPanel.isOpen()){ fxPanel.close(); return; } if(isPlaying()) showList(); else close(); }
 
 $('gbaOpen').addEventListener('click', () => $('gbaFile').click());
 $('gbaFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if(f) playFile(f); });
@@ -22507,149 +22699,15 @@ $('gbaSaveFile').addEventListener('change', async e => {
   }catch(x){ saveMsg(tr('Não consegui usar esse arquivo neste jogo.', 'Could not use this file in this game.')); }
 });
 
-/* ---- MENU BONITINHO: temas animados + música de fundo (só toca/anima na lista; ao entrar no jogo para tudo) ----
-   Música: lista abaixo (hospedada no file.garden). Toca uma depois da outra, em loop. Para trocar/adicionar, é só mexer na lista. */
-const MENU_TRACKS = [
-  'https://file.garden/aoj4oJPXcy0zW16k/secretmenuemu1.mp3',
-  'https://file.garden/aoj4oJPXcy0zW16k/secretmenuemu2.mp3'
-];
-const THEMES = [['neon', '🌆', 'NEON'], ['stars', '🌌', 'ESTRELAS'], ['rain', '🌧', 'CHUVA PIXEL'], ['aurora', '🌈', 'AURORA'], ['off', '⛔', 'SEM ANIMAÇÃO']];
-let theme = 'neon', mOn = true, mMissing = false, mAudio = null, mProbed = false, barEl = null;
-try{
-  const t = localStorage.getItem('dz_gba_theme');
-  if(THEMES.some(x => x[0] === t)) theme = t;
-  else if((window.DZ_CONSOLE && window.DZ_CONSOLE.legacy) || (window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches)) theme = 'off';
-  mOn = localStorage.getItem('dz_gba_music') !== '0';
-}catch(e){}
-ov.dataset.theme = theme;
-
-const bg = $('gbaBg'), bx = bg.getContext('2d');
-let bW = 0, bH = 0, bRaf = 0, bLast = 0, bT = 0, bStars = [], bDrops = [];
-function bSeed(){
-  bStars = []; for(let i = 0; i < 90; i++) bStars.push({ x:Math.random() * bW, y:Math.random() * bH, z:.25 + Math.random() * .75, p:1 + Math.random() * 3 });
-  bDrops = []; for(let x = 4; x < bW; x += 14) bDrops.push({ x:x, y:Math.random() * bH, v:50 + Math.random() * 110, n:6 + (Math.random() * 9 | 0), c:Math.random() < .25 ? 1 : 0 });
-}
-function bFit(){
-  const w = bg.clientWidth | 0, h = bg.clientHeight | 0;
-  if(w !== bW || h !== bH){ bW = bg.width = w; bH = bg.height = h; bSeed(); }
-  return bW > 0 && bH > 0;
-}
-function bDraw(dt){
-  const W = bW, H = bH;
-  if(theme === 'neon'){
-    const hz = H * .62, g = bx.createLinearGradient(0, 0, 0, hz);
-    g.addColorStop(0, '#14032e'); g.addColorStop(.6, '#4b0f5e'); g.addColorStop(1, '#ff3c9e');
-    bx.fillStyle = g; bx.fillRect(0, 0, W, hz);
-    const r = Math.min(W, H) * .24, sg = bx.createLinearGradient(0, hz - r * 2, 0, hz);
-    sg.addColorStop(0, '#ffe45e'); sg.addColorStop(1, '#ff4fa3');
-    bx.fillStyle = sg; bx.beginPath(); bx.arc(W / 2, hz - r * .55, r, 0, 6.2832); bx.fill();
-    bx.fillStyle = '#12021f'; bx.fillRect(0, hz, W, H - hz);
-    bx.lineWidth = 1.5;
-    for(let k = -12; k <= 12; k++){
-      bx.strokeStyle = 'rgba(0,229,255,' + (.18 + .3 * (1 - Math.abs(k) / 13)) + ')';
-      bx.beginPath(); bx.moveTo(W / 2 + k * W * .02, hz); bx.lineTo(W / 2 + k * W * .16, H); bx.stroke();
-    }
-    const off = (bT * .5) % 1;
-    for(let i = 0; i < 12; i++){
-      const t = (i + off) / 12, y = hz + (H - hz) * t * t;
-      bx.strokeStyle = 'rgba(255,60,200,' + (.15 + .55 * t) + ')';
-      bx.beginPath(); bx.moveTo(0, y); bx.lineTo(W, y); bx.stroke();
-    }
-  }else if(theme === 'stars'){
-    const g = bx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#060a22'); g.addColorStop(1, '#1d0f40');
-    bx.fillStyle = g; bx.fillRect(0, 0, W, H);
-    for(const s of bStars){
-      s.x -= s.z * 40 * dt; if(s.x < -2){ s.x = W + 2; s.y = Math.random() * H; }
-      bx.globalAlpha = .35 + .65 * Math.abs(Math.sin(bT * s.p + s.x));
-      bx.fillStyle = s.z > .8 ? '#ffe9a8' : '#cfd8ff';
-      const z = 1 + s.z * 2; bx.fillRect(s.x, s.y, z, z);
-    }
-    bx.globalAlpha = 1;
-  }else if(theme === 'rain'){
-    bx.fillStyle = '#09061a'; bx.fillRect(0, 0, W, H);
-    for(const d of bDrops){
-      d.y += d.v * dt; if(d.y - d.n * 8 > H){ d.y = -8; d.v = 50 + Math.random() * 110; }
-      for(let i = 0; i < d.n; i++){
-        const a = 1 - i / d.n;
-        bx.fillStyle = i === 0 ? '#ffffff' : (d.c ? 'rgba(232,185,58,' + a * .8 + ')' : 'rgba(139,107,255,' + a * .8 + ')');
-        bx.fillRect(d.x, d.y - i * 8, 6, 6);
-      }
-    }
-  }else if(theme === 'aurora'){
-    bx.globalCompositeOperation = 'source-over'; bx.fillStyle = '#050816'; bx.fillRect(0, 0, W, H);
-    bx.globalCompositeOperation = 'lighter';
-    const cols = [[139, 107, 255], [40, 220, 190], [255, 90, 170], [232, 185, 58]], R = Math.max(W, H) * .5;
-    cols.forEach((c, i) => {
-      const x = W * (.5 + .42 * Math.sin(bT * .22 + i * 1.7)), y = H * (.5 + .3 * Math.cos(bT * .17 + i * 2.3));
-      const g = bx.createRadialGradient(x, y, 0, x, y, R);
-      g.addColorStop(0, 'rgba(' + c.join(',') + ',.38)'); g.addColorStop(1, 'rgba(' + c.join(',') + ',0)');
-      bx.fillStyle = g; bx.fillRect(0, 0, W, H);
-    });
-    bx.globalCompositeOperation = 'source-over';
-  }
-}
-function bLoop(ts){
-  bRaf = requestAnimationFrame(bLoop);
-  if(ts - bLast < 33) return;                       /* ~30 quadros/s: leve até em celular fraco */
-  const dt = Math.min(.1, (ts - bLast) / 1000); bLast = ts; bT += dt;
-  if(bFit()) bDraw(dt);
-}
-function bgStart(){
-  if(theme === 'off' || document.hidden){ bgStop(); return; }
-  bg.classList.add('on');
-  if(!bRaf){ bLast = 0; bRaf = requestAnimationFrame(bLoop); }
-}
-function bgStop(){ if(bRaf){ cancelAnimationFrame(bRaf); bRaf = 0; } bg.classList.remove('on'); }
-
-let mIdx = Math.random() * MENU_TRACKS.length | 0, mFails = 0;
-function musicProbe(){}   /* os arquivos ficam em outro site (sem CORS): não dá pra checar antes, o próprio áudio avisa se falhar */
-function musicNext(){ mIdx = (mIdx + 1) % MENU_TRACKS.length; if(mAudio){ mAudio.src = MENU_TRACKS[mIdx]; const p = mAudio.play(); if(p && p.catch) p.catch(() => {}); } }
-function musicStart(){
-  if(!mOn || mMissing) return;
-  try{
-    if(!mAudio){
-      mAudio = new Audio(MENU_TRACKS[mIdx]); mAudio.volume = .5;
-      mAudio.addEventListener('ended', () => { mFails = 0; musicNext(); });   /* acabou: próxima música */
-      mAudio.addEventListener('playing', () => { mFails = 0; });
-      mAudio.addEventListener('error', () => {                                /* arquivo falhou: tenta a próxima; se todas falharem, esconde o botão */
-        if(++mFails >= MENU_TRACKS.length){ mMissing = true; fillBar(); return; }
-        musicNext();
-      });
-    }
-    const p = mAudio.play(); if(p && p.catch) p.catch(() => {});
-  }catch(e){}
-}
-function musicStop(){ try{ if(mAudio) mAudio.pause(); }catch(e){} }
+/* ---- MENU BONITINHO: temas e música ficam no motor compartilhado (dzEmuFxScript). Aqui só liga/desliga e o botão ⚙ ---- */
+const FX = window.dzEmuFx || null;
+const fxSurf = FX ? FX.register(ov, $('gbaBg')) : null;
+const fxPanel = FX ? FX.panel($('gbaBox'), { onToggle: o => { try{ $('gbaBody').inert = !!o; }catch(e){} } }) : null;
 function menuFx(on){
-  if(on && isOpen() && !isPlaying()){ musicProbe(); bgStart(); musicStart(); }
-  else{ bgStop(); musicStop(); }
+  if(!FX) return;
+  if(on && isOpen() && !isPlaying()) FX.on(fxSurf); else FX.off();
 }
-document.addEventListener('visibilitychange', () => { if(isOpen() && !isPlaying()) menuFx(!document.hidden); });
-
-function fillBar(){
-  if(!barEl) return;
-  barEl.innerHTML = '';
-  THEMES.forEach(x => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'gbachip' + (x[0] === theme ? ' sel' : '');
-    b.textContent = x[1] + ' ' + (x[0] === 'off' ? tr('SEM ANIMAÇÃO', 'NO ANIMATION') : x[2]);
-    b.addEventListener('click', () => {
-      theme = x[0]; try{ localStorage.setItem('dz_gba_theme', theme); }catch(e){}
-      ov.dataset.theme = theme; fillBar(); menuFx(true);
-    });
-    barEl.appendChild(b);
-  });
-  if(!mMissing){
-    const m = document.createElement('button'); m.type = 'button'; m.className = 'gbachip' + (mOn ? ' sel' : '');
-    m.textContent = mOn ? tr('🎵 MÚSICA: LIGADA', '🎵 MUSIC: ON') : tr('🔇 MÚSICA: DESLIGADA', '🔇 MUSIC: OFF');
-    m.addEventListener('click', () => {
-      mOn = !mOn; try{ localStorage.setItem('dz_gba_music', mOn ? '1' : '0'); }catch(e){}
-      if(mOn) musicStart(); else musicStop();
-      fillBar();
-    });
-    barEl.appendChild(m);
-  }
-}
-function themeBar(){ barEl = document.createElement('div'); barEl.id = 'gbaThemes'; fillBar(); return barEl; }
+$('gbaFx').addEventListener('click', () => { if(fxPanel) fxPanel.toggle(); });
 
 $('gbaFs').addEventListener('click', () => toggleFs());
 $('gbaClose').addEventListener('click', () => close());
@@ -22676,7 +22734,7 @@ window.dzEmuSysTry = function(v){
 window.dzGba = { open, close, isOpen };
 window.dzGbaBack = () => { if(!isPlaying()) goBack(); };    /* durante o jogo o controle é do emulador */
 window.dzGbaPlaying = isPlaying;
-SYS_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, open: () => open(id) }));
+SYS_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, sub:SYSTEMS[id].coreName, open: () => open(id) }));
 })();
 </script>
 
@@ -22690,10 +22748,14 @@ html.console #emuOverlay{padding:calc(8px + var(--sy,0px)) calc(8px + var(--sx,0
 #emuOverlay .gp-focus{outline:3px solid #39ff14;outline-offset:1px;position:relative;z-index:2}
 </style>
 <div id="emuOverlay" aria-hidden="true">
+  <canvas id="emuBg"></canvas>
   <div id="emuBox" role="dialog" aria-label="Emuladores">
-    <div id="emuTitle">EMULADORES</div>
-    <div id="emuList" style="display:flex;flex-direction:column;gap:8px"></div>
-    <button type="button" class="lgb clr" id="emuClose">✕ FECHAR</button>
+    <div id="emuHead">
+      <div id="emuTitleBox"><span id="emuLogo">🎮</span><div><div id="emuTitle">EMULADORES</div><div id="emuSub"></div></div></div>
+      <button type="button" class="emuIcoBtn" id="emuGear" aria-label="Ajustes" title="Ajustes">⚙</button>
+      <button type="button" class="emuIcoBtn clr" id="emuClose" aria-label="Fechar" title="Fechar">✕</button>
+    </div>
+    <div id="emuList"></div>
   </div>
 </div>
 <script id="dzEmuScript">
@@ -22714,39 +22776,66 @@ let selMuted = false;   /* o seletor silencia o áudio do Dead Zone; ao abrir um
 function selMute(){ if(selMuted) return; selMuted = true; try{ window.dzAudio.minimum(); window.dzAudio.setHardMute(true); }catch(e){} }
 function selUnmute(){ if(!selMuted) return; selMuted = false; try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(e){} }
 window.dzEmuColor = id => ({ gba:'#8b6bff', nes:'#ff5a5a', gb:'#8bc34a', gbc:'#e056fd', snes:'#f2c14e', md:'#3b82f6', ms:'#ff4d4d', gg:'#38bdf8' })[id] || '#b48bff';
+const FX = window.dzEmuFx || null;
+const fxSurf = FX ? FX.register(ov, $('emuBg')) : null;
+const fxPanel = FX ? FX.panel($('emuBox'), { onToggle: o => { try{ listEl.inert = !!o; }catch(e){} } }) : null;
+let hubFilter = null;   /* null = todos; função = só os que passam (a aba EXTRAS mostra só os liberados) */
 function build(){
   $('emuTitle').textContent = tr('EMULADORES', 'EMULATORS');
-  $('emuClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
+  $('emuSub').textContent = tr('ESCOLHA UM CONSOLE', 'PICK A CONSOLE');
+  $('emuGear').title = tr('Ajustes', 'Settings'); $('emuClose').title = tr('Fechar', 'Close');
   listEl.innerHTML = '';
-  (window.dzEmus || []).forEach(e => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'lgb';
-    b.textContent = (e.icon ? e.icon + ' ' : '') + e.name;
+  const items = (window.dzEmus || []).filter(e => !hubFilter || hubFilter(e));
+  if(!items.length){ const d = document.createElement('div'); d.id = 'emuEmpty'; d.textContent = tr('Nenhum emulador liberado ainda.', 'No emulator unlocked yet.'); listEl.appendChild(d); return; }
+  items.forEach(e => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'emuCard';
     b.style.setProperty('--xc', window.dzEmuColor(e.id));
-    b.addEventListener('click', () => { selMuted = false; close(true); window.dzEmuFromSel = true; try{ e.open(); }catch(err){ window.dzEmuFromSel = false; try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(_){} } });
+    const ic = document.createElement('span'); ic.className = 'emuIco'; ic.textContent = e.icon || '🎮';
+    const tx = document.createElement('span'); tx.className = 'emuTx';
+    const nm = document.createElement('b'); nm.textContent = e.name; tx.appendChild(nm);
+    if(e.sub){ const sm = document.createElement('small'); sm.textContent = e.sub; tx.appendChild(sm); }
+    const go = document.createElement('span'); go.className = 'emuGo'; go.textContent = '▶';
+    b.appendChild(ic); b.appendChild(tx); b.appendChild(go);
+    b.addEventListener('click', () => {
+      snd('menuAccept');
+      selMuted = false; close(true, true); window.dzEmuFromSel = true;   /* o mudo e a música continuam: o emulador assume */
+      try{ e.open(); }catch(err){ window.dzEmuFromSel = false; if(FX) FX.off(); try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(_){} }
+    });
     listEl.appendChild(b);
   });
 }
-function open(){
+function open(filter){
+  hubFilter = (typeof filter === 'function') ? filter : null;
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
   selMute(); build(); ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
+  if(FX) FX.on(fxSurf);
 }
-function close(quiet){ if(!isOpen()) return; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); selUnmute(); if(!quiet) snd('menuBack'); }
+function close(quiet, keepFx){
+  if(!isOpen()) return;
+  if(fxPanel) fxPanel.close();
+  ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true');
+  if(!keepFx && FX) FX.off();
+  selUnmute(); if(!quiet) snd('menuBack');
+}
+function back(){ if(fxPanel && fxPanel.isOpen()){ fxPanel.close(); return; } close(); }
+$('emuGear').addEventListener('click', () => { snd('menuSelect'); if(fxPanel) fxPanel.toggle(); });
 $('emuClose').addEventListener('click', () => close());
-ov.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Escape'){ e.preventDefault(); close(); } });
+ov.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Escape'){ e.preventDefault(); back(); } });
 ov.addEventListener('keyup', e => e.stopPropagation());
 ov.addEventListener('keypress', e => e.stopPropagation());
 ['keydown', 'keyup', 'keypress'].forEach(t => window.addEventListener(t, e => {
   if(!isOpen() || ov.contains(e.target)) return;
-  if(e.type === 'keydown' && e.key === 'Escape'){ close(); }
+  if(e.type === 'keydown' && e.key === 'Escape'){ back(); }
   e.stopImmediatePropagation();
 }, true));
 window.dzEmuTry = function(v){
   if(String(v || '').trim().toLowerCase() !== EMU_SECRET_CODE.toLowerCase()) return false;
   open(); return true;
 };
-window.dzEmuBack = () => close();
-window.dzEmuReopen = () => open();   /* o emulador chama isto ao sair, se foi aberto por aqui */
+window.dzEmuBack = () => back();
+window.dzEmuOpenHub = open;   /* a aba EXTRAS abre o hub por aqui */
+window.dzEmuReopen = () => open(hubFilter);   /* o emulador chama isto ao sair, se foi aberto por aqui */
 })();
 </script>
 
@@ -22835,7 +22924,9 @@ function build(){
   if(emus.length){
     const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.classList.add('xt-h-emu'); h.textContent = tr('EMULADORES', 'EMULATORS'); p.appendChild(h);
     const r = document.createElement('div'); r.className = 'xt-row';
-    emus.forEach(e => { const b = mk((e.icon ? e.icon + ' ' : '') + e.name, () => e.open(), 'xt-emu'); b.style.setProperty('--xc', (window.dzEmuColor ? window.dzEmuColor(e.id) : '#b48bff')); r.appendChild(b); });
+    const ids = emus.map(e => e.id);
+    const hb = mk('🎮 ' + tr('ABRIR EMULADORES', 'OPEN EMULATORS') + '  ·  ' + emus.length, () => { if(window.dzEmuOpenHub) window.dzEmuOpenHub(e => ids.indexOf(e.id) >= 0); }, 'xt-emu xt-hub');
+    hb.style.setProperty('--xc', '#8b6bff'); r.appendChild(hb);
     p.appendChild(r);
   }
   const hint = document.createElement('div'); hint.className = 'xt-hint';
@@ -23594,22 +23685,74 @@ help(); refresh();
 })();
 </script>
 
-<style id="dzGbaThemeStyle">
+<style id="dzEmuFxStyle">
+/* fundo animado (canvas) e painel de ajustes ⚙, compartilhados pelo hub e pela lista de jogos */
+.fxBg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;border-radius:inherit;display:none}
+.fxBg.on{display:block}
+#gbaOverlay:not(.playing) #gbaBg.on{display:block}
+#gbaOverlay.playing #gbaBg{display:none}
 #gbaBody{position:relative}
 #gbaList{position:relative;z-index:1}
-#gbaBg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;border-radius:12px;display:none}
-#gbaOverlay:not(.playing) #gbaBg.on{display:block}
-#gbaThemes{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.gbachip{font:inherit;font-size:11px;font-weight:700;letter-spacing:.5px;color:#f1eaff;background:rgba(20,14,40,.78);border:1px solid rgba(139,107,255,.45);border-radius:999px;padding:0 12px;min-height:34px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.gbachip.sel{background:rgba(139,107,255,.6);border-color:#e8b93a}
-.gbachip:active{transform:scale(.97)}
-@media (pointer:coarse){.gbachip{min-height:40px}}
-html.console .gbachip{font-size:clamp(13px,2vh,18px);min-height:clamp(40px,6vh,56px);padding:0 clamp(14px,2vw,26px)}
+#gbaBox{position:relative}
 #gbaOverlay[data-theme]:not([data-theme=off]) .gbarom{background:rgba(14,9,30,.8)}
-#gbaOverlay[data-theme=neon] #gbaBox{border-color:#ff3cc8;box-shadow:0 0 30px rgba(255,60,200,.45)}
-#gbaOverlay[data-theme=stars] #gbaBox{border-color:#7f9bff;box-shadow:0 0 30px rgba(127,155,255,.4)}
-#gbaOverlay[data-theme=rain] #gbaBox{border-color:#8b6bff;box-shadow:0 0 30px rgba(232,185,58,.3)}
-#gbaOverlay[data-theme=aurora] #gbaBox{border-color:#28dcbe;box-shadow:0 0 30px rgba(40,220,190,.4)}
+#gbaFx{font-size:18px;padding:0 12px}
+.fxPanel{position:absolute;top:64px;right:12px;z-index:6;width:min(380px,calc(100% - 24px));max-height:calc(100% - 76px);overflow:auto;display:none;flex-direction:column;gap:10px;padding:16px;box-sizing:border-box;border-radius:16px;background:rgba(12,8,28,.97);border:1px solid rgba(139,107,255,.6);box-shadow:0 18px 50px rgba(0,0,0,.75);color:#f1eaff}
+.fxPanel.open{display:flex}
+.fxTitle{font-size:13px;font-weight:800;letter-spacing:3px}
+.fxSec{font-size:11px;letter-spacing:2px;color:#e8b93a;margin-top:2px}
+.fxRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fxChip{font:inherit;font-size:12px;font-weight:700;letter-spacing:.5px;color:#f1eaff;background:rgba(40,28,80,.8);border:1px solid rgba(139,107,255,.45);border-radius:999px;padding:0 14px;min-height:40px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.fxChip.sel{background:rgba(139,107,255,.65);border-color:#e8b93a}
+.fxChip.fxSmall{min-width:44px;padding:0;font-size:18px}
+.fxChip:active{transform:scale(.97)}
+.fxDone{margin-top:4px;background:rgba(47,217,196,.22);border-color:#2fd9c4}
+.fxPct{min-width:46px;text-align:center;font-weight:800;font-size:13px}
+.fxHint{font-size:12px;opacity:.75;line-height:1.4}
+@media (pointer:coarse){.fxChip{min-height:46px}}
+html.console .fxPanel{width:min(clamp(420px,40vw,620px),calc(100% - 24px));gap:clamp(10px,1.6vh,18px);padding:clamp(16px,2.4vh,28px)}
+html.console .fxTitle{font-size:clamp(15px,2.4vh,22px)}
+html.console .fxSec{font-size:clamp(12px,1.9vh,17px)}
+html.console .fxChip{font-size:clamp(13px,2.1vh,19px);min-height:clamp(44px,6.4vh,62px);padding:0 clamp(14px,1.8vw,26px)}
+/* bordas coloridas por tema */
+#gbaOverlay[data-theme=neon] #gbaBox,#emuOverlay[data-theme=neon] #emuBox{border-color:#ff3cc8;box-shadow:0 0 30px rgba(255,60,200,.45)}
+#gbaOverlay[data-theme=stars] #gbaBox,#emuOverlay[data-theme=stars] #emuBox{border-color:#7f9bff;box-shadow:0 0 30px rgba(127,155,255,.4)}
+#gbaOverlay[data-theme=rain] #gbaBox,#emuOverlay[data-theme=rain] #emuBox{border-color:#8b6bff;box-shadow:0 0 30px rgba(232,185,58,.3)}
+#gbaOverlay[data-theme=aurora] #gbaBox,#emuOverlay[data-theme=aurora] #emuBox{border-color:#28dcbe;box-shadow:0 0 30px rgba(40,220,190,.4)}
+
+/* ===== HUB DE EMULADORES ===== */
+#emuOverlay #emuBox{position:relative;z-index:1;width:min(100%,820px);max-height:100%;display:flex;flex-direction:column;gap:16px;padding:18px;box-sizing:border-box;overflow:hidden}
+#emuHead{display:flex;align-items:center;gap:10px}
+#emuTitleBox{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+#emuLogo{font-size:32px;line-height:1;filter:drop-shadow(0 0 10px rgba(139,107,255,.9))}
+#emuOverlay #emuTitle{display:block;margin:0;font-size:17px;font-weight:800;letter-spacing:4px;color:#fff}
+#emuOverlay #emuTitle::before,#emuOverlay #emuTitle::after{display:none}
+#emuSub{font-size:11px;letter-spacing:2px;color:#a39bc9;margin-top:3px}
+.emuIcoBtn{font:inherit;font-size:20px;line-height:1;width:48px;height:48px;border-radius:50%;flex:none;color:#f1eaff;background:rgba(40,28,80,.8);border:1px solid rgba(139,107,255,.5);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.emuIcoBtn:hover{border-color:#e8b93a}
+.emuIcoBtn:active{transform:scale(.94)}
+.emuIcoBtn.clr{background:rgba(120,30,20,.5);border-color:rgba(255,120,95,.6);color:#ffb7a5}
+#emuList{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:12px;overflow:auto;padding:2px 2px 6px;align-content:start;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+#emuEmpty{grid-column:1/-1;text-align:center;padding:30px 10px;opacity:.7}
+.emuCard{--xc:#b48bff;font:inherit;position:relative;display:flex;align-items:center;gap:14px;text-align:left;width:100%;box-sizing:border-box;min-height:84px;padding:14px 16px;border-radius:16px;color:#f1eaff;cursor:pointer;border:1px solid rgba(255,255,255,.12);border-left:6px solid var(--xc);background:linear-gradient(90deg,rgba(40,28,80,.85),rgba(14,9,30,.85));background:linear-gradient(90deg,color-mix(in srgb,var(--xc) 28%,rgba(14,9,30,.9)),rgba(14,9,30,.88));-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s}
+.emuCard:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.55),0 0 0 1px var(--xc)}
+.emuCard:active{transform:scale(.985)}
+.emuIco{flex:none;width:52px;height:52px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--xc)}
+.emuTx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.emuTx b{font-size:14px;letter-spacing:.6px;color:#fff;word-break:break-word}
+.emuTx small{font-size:11px;letter-spacing:1px;color:var(--xc);font-weight:700}
+.emuGo{flex:none;font-size:13px;color:var(--xc);opacity:.8}
+#emuOverlay .gp-focus.emuCard,#emuOverlay .gp-focus.emuIcoBtn{outline:none;box-shadow:0 0 0 2px #39ff14,0 0 18px rgba(57,255,20,.5)}
+@media (max-height:520px){#emuOverlay #emuBox{padding:10px;gap:10px}.emuCard{min-height:68px;padding:10px 12px}.emuIco{width:42px;height:42px;font-size:22px}.emuIcoBtn{width:40px;height:40px}}
+html.console #emuOverlay #emuBox{width:min(100%,clamp(720px,70vw,1100px));padding:clamp(20px,3vh,36px);gap:clamp(14px,2.2vh,26px)}
+html.console #emuOverlay #emuTitle{font-size:clamp(18px,3vh,30px)}
+html.console #emuSub{font-size:clamp(12px,1.9vh,17px)}
+html.console #emuLogo{font-size:clamp(34px,5vh,52px)}
+html.console #emuList{grid-template-columns:repeat(auto-fill,minmax(min(clamp(300px,30vw,440px),100%),1fr));gap:clamp(12px,2vh,22px)}
+html.console .emuCard{min-height:clamp(96px,14vh,132px);padding:clamp(14px,2vh,22px) clamp(16px,2vw,28px)}
+html.console .emuIco{width:clamp(58px,8vh,84px);height:clamp(58px,8vh,84px);font-size:clamp(30px,4.6vh,46px)}
+html.console .emuTx b{font-size:clamp(17px,2.8vh,27px)}
+html.console .emuTx small{font-size:clamp(13px,2vh,19px)}
+html.console .emuIcoBtn{width:clamp(52px,7vh,76px);height:clamp(52px,7vh,76px);font-size:clamp(22px,3.2vh,34px)}
 </style>
 <style id="dzExtrasColors">
 /* aba EXTRAS: utilidades = verde-água · emuladores = rosa/roxo, cada console com a cor da sua lateral */
@@ -23621,7 +23764,7 @@ html.console .gbachip{font-size:clamp(13px,2vh,18px);min-height:clamp(40px,6vh,5
 #tabExtras .xt-row .btn.xt-emu{--xc:#b48bff;border:1px solid rgba(255,122,217,.35);border-left:6px solid var(--xc);background:linear-gradient(90deg,rgba(139,107,255,.28),rgba(255,122,217,.06));background:linear-gradient(90deg,color-mix(in srgb,var(--xc) 32%,transparent),rgba(255,122,217,.06))}
 #tabExtras .xt-row .btn.xt-util:hover{border-color:#2fd9c4}
 #tabExtras .xt-row .btn.xt-emu:hover{border-color:var(--xc)}
-#emuList .lgb{--xc:#b48bff;border-left:6px solid var(--xc)}
+#tabExtras .xt-row .btn.xt-hub{min-height:64px;font-weight:800;letter-spacing:1px}
 </style>
 </body>
 </html>
