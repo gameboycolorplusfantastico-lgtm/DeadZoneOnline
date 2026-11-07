@@ -118,6 +118,31 @@
     "system": "nes"
   },
   {
+    "file": "PKMB.gb",
+    "title": "PKMB",
+    "system": "gb"
+  },
+  {
+    "file": "PKMR.gb",
+    "title": "PKMR",
+    "system": "gb"
+  },
+  {
+    "file": "PKMYSP.gb",
+    "title": "PKMYSP",
+    "system": "gb"
+  },
+  {
+    "file": "SML.gb",
+    "title": "SML",
+    "system": "gb"
+  },
+  {
+    "file": "TTRS.gb",
+    "title": "TTRS",
+    "system": "gb"
+  },
+  {
     "file": "SMASSMW.sfc",
     "title": "SMASSMW",
     "system": "snes"
