@@ -13854,7 +13854,7 @@ function cycleWeapon(dir){
 
 function pollGamepad(){
   if(!navigator.getGamepads) return;
-  if(window.dzGbaPlaying && window.dzGbaPlaying()) return;   // emulador de GBA aberto e rodando: o controle é dele
+  if(window.dzGbaPlaying && window.dzGbaPlaying()){ window.__dzGbaWas = true; return; }   // emulador de GBA aberto e rodando: o controle é dele
   if(gamepadIndex === null){
     // alguns navegadores só avisam do controle depois de um botão; varre a cada 1 s
     const t = performance.now();
@@ -13867,6 +13867,8 @@ function pollGamepad(){
   const pads = navigator.getGamepads();
   const gp = pads[gamepadIndex];
   if(!gp || !gp.connected) return;
+  // voltou do emulador (ex.: SELECT+START ainda apertados): registra o estado atual como "já apertado" para não disparar botões nos menus
+  if(window.__dzGbaWas){ window.__dzGbaWas = false; gpPrevButtons = gp.buttons.map(b => b.pressed); gpNavKey = ''; return; }
 
   if(!usingGamepad){
     usingGamepad = true;
@@ -14287,9 +14289,10 @@ function gpMenuUpdate(gp, root, btn, prev){
   }
 
   // analógico direito rola a janela do menu
-  const box = root.querySelector('.modal-box');
-  const sy = applyDeadzone(gp.axes[3] || 0);
+  const box = root.querySelector('.modal-box, #gbaList, #emuBox, #lgBox');
+  const sy = applyDeadzone(gp.axes[3] || 0), sx = applyDeadzone(gp.axes[2] || 0);
   if(box && sy) box.scrollTop += sy * 14;
+  if(box && sx) box.scrollLeft += sx * 14;   // analógico direito ← → : rola para o lado (rodapé, linhas largas)
 }
 
 const joyZone = document.getElementById('joyZone');
@@ -21981,6 +21984,8 @@ const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catc
 const isOpen = () => ov.classList.contains('open');
 const isPlaying = () => ov.classList.contains('playing');
 let blobUrl = null, romsLoaded = false, gameMuted = false, watchTimer = 0, padRaf = 0, padInit = false, startTimer = 0, playTok = 0;
+let padIgnore = 0, padFirst = false;   /* botões já apertados ao abrir o jogo (ex.: o A que escolheu a ROM) só valem depois de soltos */
+const root = document.documentElement;
 
 /* ---- som do jogo: mudo enquanto o emulador está aberto ---- */
 function muteGame(){
@@ -22091,9 +22096,10 @@ function exitHintTip(){   /* aviso ao iniciar um jogo */
 function padLoop(){
   padRaf = requestAnimationFrame(padLoop);
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-  let m = 0, combo = false;
+  let m = 0, combo = false, anyBtn = false;
   for(const gp of pads){
     if(!gp || !gp.connected) continue;
+    if(gp.buttons.some(x => x && x.pressed)) anyBtn = true;
     const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed);
     if(b(0) || b(2)) m |= 1 << 0;
     if(b(1) || b(3)) m |= 1 << 8;
@@ -22108,6 +22114,9 @@ function padLoop(){
        Vários combos porque alguns controles/navegadores não entregam SELECT/START (botões 8/9) para a página. */
     if((b(8) && b(9)) || (b(10) && b(11)) || (b(4) && b(5) && b(6) && b(7)) || b(16)) combo = true;
   }
+  if(anyBtn || m) window.dzPadT = performance.now();   /* avisa o resto do jogo (e o filtro de teclas falsas) que o controle está em uso */
+  if(padFirst){ padFirst = false; padIgnore = m; }
+  if(padIgnore){ padIgnore &= m; m &= ~padIgnore; }
   if(m && ov.classList.contains('showpad')) ov.classList.remove('showpad');   /* usando controle: some com os botões na tela */
   src.pad = m; sync();
   /* segurar SELECT + START (ou o botão central do controle) volta para a lista de jogos */
@@ -22124,6 +22133,9 @@ function onKey(e){
   if(!isOpen()) return;
   if(isPlaying()){
     const down = e.type === 'keydown';
+    /* Xbox/PS no navegador: o controle também gera Enter/Esc/setas "falsas". O controle já entra pela Gamepad API,
+       então enquanto ele estiver em uso as teclas são ignoradas (senão o A viraria A + START, o B sairia do jogo etc.) */
+    if(down && window.DZ_CONSOLE && window.dzPadT && performance.now() - window.dzPadT < 600){ e.preventDefault(); e.stopImmediatePropagation(); return; }
     if(down && e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); goBack(); return; }
     if(down && !e.repeat && e.code === 'KeyF' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); e.stopImmediatePropagation(); toggleFs(); return; }
     const i = KEYMAP[e.code];
@@ -22171,7 +22183,7 @@ function stop(){
   try{ frame.src = 'about:blank'; frame.removeAttribute('srcdoc'); }catch(e){}
   frame.style.display = 'none'; frame.style.pointerEvents = '';
   if(blobUrl){ try{ URL.revokeObjectURL(blobUrl); }catch(e){} blobUrl = null; }
-  ov.classList.remove('playing'); list.classList.remove('full');
+  ov.classList.remove('playing'); list.classList.remove('full'); root.classList.remove('dz-gba-play');
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function onEmuReady(){
@@ -22188,15 +22200,19 @@ function onEmuReady(){
 function play(url, name){
   stop(); initPad(); regSw();
   const cfg = { core:'gba', url:url, name:name || 'game', cdn:EJS_CDN };
+  const legacy = !!(window.DZ_CONSOLE && window.DZ_CONSOLE.legacy);   /* Xbox One / PS4: hardware fraco */
+  /* sem barra/menus do EmulatorJS (menos DOM e menos CPU); em Xbox One/PS4 também frameskip automático e remoção de loops ociosos do mGBA */
+  const perf = 'EJS_Buttons={playPause:false,restart:false,mute:false,settings:false,fullscreen:false,saveState:false,loadState:false,screenRecord:false,gamepad:false,cheat:false,volume:false,saveSavFiles:false,loadSavFiles:false,quickSave:false,quickLoad:false,screenshot:false,cacheManager:false,exitEmulation:false,netplay:false,diskButton:false,contextMenuButton:false};' +
+    (legacy ? 'EJS_defaultOptions={"mgba_frameskip":"auto","mgba_idle_optimization":"Remove Known","mgba_audio_low_pass_filter":"disabled","mgba_interframe_blending":"disabled"};' : '');
   const html = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div>' +
-    '<script>var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +
+    '<script>try{navigator.getGamepads=function(){return[]};}catch(x){}var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +   /* o iframe NÃO lê o controle: só o app lê (evita botão duplicado/conflitante) */
     'EJS_player="#game";EJS_core=C.core;EJS_gameUrl=C.url;EJS_gameName=C.name;EJS_pathtodata=C.cdn;EJS_startOnLoaded=true;EJS_color="#6a4bd8";' +
-    'EJS_language="pt-BR";EJS_threads=false;<\/script>' +
+    'EJS_language="pt-BR";EJS_threads=false;' + perf + '<\/script>' +
     '<script src="' + esc(EJS_CDN) + 'loader.js"><\/script></body></html>';
   const tok = playTok;
   startTimer = setTimeout(() => { startTimer = 0; if(tok !== playTok) return; frame.srcdoc = html; frame.style.display = 'block'; }, 600);   /* dá tempo de liberar o jogo anterior */
-  ov.classList.add('playing');
+  ov.classList.add('playing'); root.classList.add('dz-gba-play'); padFirst = true; padIgnore = 0;
   labels();
   enterFs();                                  /* tela cheia ao iniciar (o clique do jogador libera) */
   padRaf = requestAnimationFrame(padLoop);
@@ -22833,5 +22849,28 @@ try{ new MutationObserver(fit).observe(ov, { attributes:true, attributeFilter:['
 })();
 </script>
 
+
+<style id="dzFixCtl">
+/* ===== Menus: rodapé (APLICAR / RESTAURAR…) e grades do DEBUG sem cortar nas laterais ===== */
+#settingsModal .modal-footer-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.modal-footer-actions .btn,.debug-section .btn{min-width:0;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+.debug-section [style*="grid-template-columns"]>*,.modal-box .setting-group>*{min-width:0}
+@media (max-width:440px){#settingsModal .modal-footer-actions{grid-template-columns:minmax(0,1fr)!important}}
+/* ===== Emulador de GBA no console (Xbox One / PS4): tela inteira para o jogo, nada pesado por baixo ===== */
+html.console #gbaOverlay.playing{background:#000}
+html.console #gbaOverlay.playing #gbaHead{display:none}      /* no console a saída é por combo de botões (aviso na tela) */
+html.console #gbaOverlay.playing #gbaBox{box-shadow:none;border-color:transparent;border-radius:0;background:#000;padding:0;gap:0}
+html.console.dz-gba-play body>*:not(#gbaOverlay){visibility:hidden}   /* o DEAD ZONE parado não gasta GPU desenhando por baixo */
+</style>
+<script id="dzFixCtlScript">
+/* Console: o menu de contexto do navegador (aparece ao segurar botões do controle) não deve abrir por cima do jogo/menus. */
+(function(){
+  if(!window.DZ_CONSOLE) return;
+  window.addEventListener('contextmenu', function(e){
+    var t = e.target; if(t && t.closest && t.closest('input,textarea')) return;
+    e.preventDefault();
+  }, true);
+})();
+</script>
 </body>
 </html>
