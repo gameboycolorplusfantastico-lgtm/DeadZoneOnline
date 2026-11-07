@@ -86,7 +86,11 @@ for(const file of walk(ROOT).sort((a, b) => a.localeCompare(b))){
   if(!ALLEXT.includes(ext)) continue;
   if(/^(readme|license|licenca|leia-?me)/i.test(path.posix.basename(file))) continue;   /* README.md não é jogo de Mega Drive (.md) */
   const mine = prev.get(file) || {};
-  const g = Object.assign({ file, title:titleOf(file), system:systemOf(file) }, mine);   /* o que você escreveu à mão vence */
+  const det = systemOf(file);
+  const g = Object.assign({ file, title:titleOf(file), system:det }, mine);
+  /* console vem do ARQUIVO (extensão/pasta). Um "system" antigo/errado no roms.json (ex.: tudo "gba") é corrigido.
+     Para forçar à mão, escreva "manual": true na entrada do roms.json. */
+  if(det && !mine.manual) g.system = det;
   if(!g.system) console.warn('⚠ sem console definido (fica fora das listas): ' + file + '  → renomeie para "' + path.posix.basename(file).replace(/\.(zip|7z)$/i, '') + '.<console>.zip" (ex.: .psx.zip, .n64.zip) ou ponha em subpasta, ou escreva "system" no roms.json');
   games.push(g);
 }
