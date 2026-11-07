@@ -22743,5 +22743,95 @@ html.console #gbaOverlay.open #gbaBox,html.console #emuOverlay.open #emuBox,html
 html.console #calcOverlay.open #calcBox,html.console #edOverlay.open #edBox,html.console #jdOverlay.open #jdBox{animation:none}
 </style>
 
+
+<style id="dzEdMobile">
+/* ===== EDITOR DE TEXTO: ADAPTAÇÃO EXCLUSIVA PARA CELULAR/TABLET (aparelhos de toque) =====
+   Só vale em tela de toque e nunca no console. PC e console ficam como estavam. */
+#edActs{display:contents}
+#edToolsBtn{display:none}
+@media (hover:none) and (pointer:coarse){
+  html:not(.console) #edBox{border-radius:14px;padding:8px;gap:8px}
+  /* cabeçalho em 2 linhas: nome + fechar em cima; ações rolando de lado embaixo */
+  html:not(.console) #edHead{gap:8px;padding-bottom:8px}
+  html:not(.console) #edTitle{display:none}
+  html:not(.console) #edName{order:1;flex:1 1 0;min-width:0;height:44px;font-size:16px;padding:0 12px}
+  html:not(.console) #edClose{order:2;flex:0 0 44px;width:44px;padding:0}
+  html:not(.console) #edActs{display:flex;order:3;flex:0 0 100%;gap:6px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:1px 1px 3px}
+  html:not(.console) #edActs::-webkit-scrollbar{display:none}
+  html:not(.console) #edActs .eb{flex:0 0 auto;min-height:42px}
+  html:not(.console) #edToolsBtn{display:inline-flex}
+  /* ferramentas de formatação: uma faixa só, rolando de lado (e dá para esconder no botão "Aa") */
+  html:not(.console) #edTools{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-height:none;gap:6px;padding:6px;border-radius:12px;
+    background:rgba(255,255,255,.04);border:1px solid var(--xw-line);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  html:not(.console) #edTools::-webkit-scrollbar{display:none}
+  html:not(.console) #edTools .eg{flex:0 0 auto;gap:4px;padding-right:8px;margin-right:2px}
+  html:not(.console) .es{font-size:16px;max-width:130px}
+  html:not(.console) #edBox[data-tools="off"] #edTools{display:none}
+  html:not(.console) #edBox[data-tools="on"] #edTools{display:flex}
+  /* localizar / substituir */
+  html:not(.console) #edFind{gap:6px}
+  html:not(.console) #edFind input{flex:1 1 100%;height:44px;font-size:16px}
+  html:not(.console) #edFind .eb{flex:1 1 auto}
+  /* folha de escrita: menos margem, letra confortável, folga embaixo para o teclado */
+  html:not(.console) #edRich{padding:16px 16px 56px;font-size:17px;line-height:1.6}
+  html:not(.console) #edPlain{padding:14px 14px 56px;font-size:16px}
+  html:not(.console) #edStatus{padding:0 6px max(2px,env(safe-area-inset-bottom));font-size:11px}
+  /* menus e paleta de cores viram uma "gaveta" colada embaixo, fácil de alcançar com o polegar */
+  html:not(.console) #edPop.open{position:absolute!important;left:8px!important;right:8px!important;top:auto!important;bottom:8px!important;max-width:none!important;
+    max-height:46%;overflow:auto;padding:10px;gap:8px;border-radius:16px;box-shadow:0 -8px 30px rgba(0,0,0,.6)}
+  html:not(.console) #edPop .eb{min-height:46px}
+  html:not(.console) #edPop.menu .eb{width:100%}
+  html:not(.console) .sw{width:40px;height:40px}
+  html:not(.console) #edDlgIn{height:44px;font-size:16px}
+  html:not(.console) #edPad .eb{flex:1 1 auto;min-height:46px}
+}
+/* celular deitado: tudo numa linha só e ferramentas escondidas até tocar em "Aa" */
+@media (hover:none) and (pointer:coarse) and (orientation:landscape) and (max-height:520px){
+  html:not(.console) #edBox{padding:6px;gap:6px}
+  html:not(.console) #edHead{flex-wrap:nowrap;padding-bottom:6px}
+  html:not(.console) #edName{flex:0 0 clamp(120px,22vw,200px);height:38px}
+  html:not(.console) #edActs{order:2;flex:1 1 0;min-width:0}
+  html:not(.console) #edClose{order:3;height:38px}
+  html:not(.console) #edActs .eb,html:not(.console) #edClose{min-height:38px}
+  html:not(.console) #edBox:not([data-tools]) #edTools{display:none}
+  html:not(.console) #edRich{padding:12px 14px 40px}
+}
+</style>
+<script id="dzEdMobileScript">
+/* Ajustes do editor de texto no celular: agrupa as ações numa faixa rolável, cria o botão "Aa" (mostrar/esconder
+   ferramentas) e acompanha o teclado virtual para o texto não ficar escondido embaixo dele. No PC e no console as
+   ações continuam no cabeçalho, como antes (o agrupamento usa display:contents e não muda o layout). */
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const head = $('edHead'), name = $('edName'), box = $('edBox'), tools = $('edTools'), ov = $('edOverlay');
+if(!head || !name || !box || !tools || !ov) return;
+const acts = document.createElement('div'); acts.id = 'edActs';
+['edNew', 'edOpen', 'edSave', 'edCopy', 'edMode', 'edTheme', 'edPadBtn'].forEach(id => { const b = $(id); if(b) acts.appendChild(b); });
+name.insertAdjacentElement('afterend', acts);
+const tb = document.createElement('button');
+tb.type = 'button'; tb.className = 'eb'; tb.id = 'edToolsBtn';
+tb.textContent = 'Aa ' + ((typeof LT === 'function') ? LT('FORMATAR', 'FORMAT') : 'FORMATAR');
+acts.insertBefore(tb, acts.firstChild);
+function syncBtn(){ tb.classList.toggle('on', getComputedStyle(tools).display !== 'none'); }
+tb.addEventListener('click', () => {
+  const vis = getComputedStyle(tools).display !== 'none';
+  box.setAttribute('data-tools', vis ? 'off' : 'on'); syncBtn();
+});
+syncBtn();
+window.addEventListener('resize', syncBtn);
+
+/* teclado virtual: a tela do editor passa a ter a altura da área realmente visível */
+const vv = window.visualViewport;
+const touch = () => !!(window.matchMedia && matchMedia('(hover:none) and (pointer:coarse)').matches) && !document.documentElement.classList.contains('console');
+function fit(){
+  if(!vv || !touch() || !ov.classList.contains('open')){ if(ov.style.height){ ov.style.height = ''; ov.style.top = ''; } return; }
+  ov.style.height = vv.height + 'px'; ov.style.top = vv.offsetTop + 'px';
+}
+if(vv){ vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+try{ new MutationObserver(fit).observe(ov, { attributes:true, attributeFilter:['class'] }); }catch(e){}
+})();
+</script>
+
 </body>
 </html>
