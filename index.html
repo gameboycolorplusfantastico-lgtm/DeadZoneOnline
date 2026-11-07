@@ -14467,11 +14467,11 @@ document.getElementById('debugPassInput').addEventListener('keydown', e => {
 document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   const inputPass = document.getElementById('debugPassInput').value.trim();
   if (window.dzCalcTry && window.dzCalcTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc']); document.getElementById('debugPassInput').value = ''; return; }   // código da calculadora
-  if (window.dzLgTry && window.dzLgTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc', 'ed', 'jd', 'w95']); document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
+  if (window.dzLgTry && window.dzLgTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc', 'ed', 'jd']); document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
   if (window.dzJdTry && window.dzJdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['jd']); document.getElementById('debugPassInput').value = ''; return; }   // código do JDoodle
   if (window.dzEdTry && window.dzEdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['ed']); document.getElementById('debugPassInput').value = ''; return; }   // código do editor de texto
   if (window.dzEmuTry && window.dzEmuTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['emu']); document.getElementById('debugPassInput').value = ''; return; }   // seletor de emuladores
-  if (window.dzW95Try && window.dzW95Try(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['w95']); document.getElementById('debugPassInput').value = ''; return; }   // código do Windows 95
+  if (window.dzW95Try && window.dzW95Try(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do Windows 95
   if (window.dzGbaTry && window.dzGbaTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['gba']); document.getElementById('debugPassInput').value = ''; return; }   // código do emulador de GBA
   if (inputPass === '31082007') {
     SFX.menuAccept();
@@ -22416,7 +22416,7 @@ function save(list){
   mem = list.slice();
   try{ localStorage.setItem(KEY, JSON.stringify(list)); }catch(e){}
 }
-let have = load();
+let have = load().filter(id => id !== 'w95');   /* Windows 95 escondido: só abre digitando win95 */
 
 /* ---- apps de utilidade ---- */
 const APPS = [
@@ -22937,7 +22937,7 @@ html.console.dz-gba-play #gbaOverlay{visibility:visible}   /* o DEAD ZONE parado
    Emulador de PC x86 em JavaScript (v86), baixado da internet quando você aperta INICIAR. O Windows em si NÃO vem
    no jogo: você escolhe a SUA imagem de disco (.img de um Windows 95 já instalado, ou um .iso de CD + disquete de boot).
    O emulador roda dentro de um iframe, então o teclado e o mouse vão só para o Windows (nada move o personagem).
-   Libere com o código W95_SECRET_CODE no campo de SENHA do menu DEBUG (o código "utility" também libera). */
+   Libere com o código W95_SECRET_CODE no campo de SENHA do menu DEBUG (o código "utility" NÃO libera mais; o Windows 95 não aparece na aba EXTRAS). */
 (function(){
 'use strict';
 const W95_SECRET_CODE = 'win95';
@@ -23006,7 +23006,9 @@ function frameMain(){
         try{
           var cs = emu.v86.cpu.sreg[1] >>> 0;
           if(cs === 0x28) inPM = 1;
-          else if(cs === 0xf000 && inPM){ inPM = 0; exc.resets++; exc.pre = exc.last.join(' '); }
+          else if(cs === 0xf000 && inPM){ inPM = 0; exc.resets++; exc.pre = exc.last.join(' ');
+            if(exc.resets <= 3) setTimeout(function(){ try{ emu.restart(); }catch(e){ exc.err = 'restart: ' + e; } }, 800);
+          }
         }catch(e){}
       }, 250);
       if(cfg.hd) o.hda = { url: cfg.hd };
