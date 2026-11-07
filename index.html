@@ -22769,6 +22769,55 @@ const EMU_IMGS = {
   nes:'https://i.postimg.cc/RZht3v0G/NES.png'
 };
 SYS_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, img:EMU_IMGS[id] || '', icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, sub:SYSTEMS[id].coreName, open: () => open(id) }));
+
+/* ---- PREPARO DOS EMULADORES: baixa o motor e os núcleos dos consoles liberados (NES, GB, GBC, GBA, SNES, Mega Drive).
+   1) Em segundo plano: 6 s depois do Dead Zone carregar, um arquivo por vez e com o navegador ocioso.
+   2) Ao abrir a aba EMULADORES: se ainda falta algo, o seletor mostra um pequeno "carregando" até terminar (dzEmuPrep.ensure).
+   Os dois usam as mesmas requisições (nada é baixado duas vezes). Se um arquivo falhar, ignora e o jogo abre normal. */
+const EJS_CORE_FILE = { nes:'fceumm', gb:'gambatte', gbc:'gambatte', gba:'mgba', snes:'snes9x', md:'genesis_plus_gx' };
+function prepUrls(){
+  const urls = [EJS_CDN + 'loader.js', EJS_CDN + 'emulator.min.js', EJS_CDN + 'emulator.min.css'], seen = {};
+  SHOWN.forEach(id => { const c = EJS_CORE_FILE[id]; if(!c || seen[c]) return; seen[c] = 1; urls.push(EJS_CDN + 'cores/' + c + '-wasm.data'); });
+  return urls;
+}
+const prepMemo = {}, prepSettled = {};
+function prepFetch(u){
+  return prepMemo[u] || (prepMemo[u] = fetch(u, { mode:'cors', credentials:'omit' }).then(r => r.arrayBuffer()).catch(() => null).then(() => { prepSettled[u] = 1; }));
+}
+const prepReady = () => prepUrls().every(u => prepSettled[u]);
+/* onProg(feitos, total) a cada arquivo; resolve quando termina ou depois de maxMs (o download segue em segundo plano) */
+function prepEnsure(onProg, maxMs){
+  return new Promise(resolve => {
+    const urls = prepUrls(); let k = 0, fin = false;
+    const done = () => urls.filter(u => prepSettled[u]).length;
+    const finish = ok => { if(fin) return; fin = true; clearTimeout(tm); resolve(ok); };
+    const tm = setTimeout(() => finish(false), maxMs || 25000);
+    if(onProg) onProg(done(), urls.length);
+    if(done() >= urls.length){ finish(true); return; }
+    const worker = () => {
+      if(k >= urls.length) return;
+      prepFetch(urls[k++]).then(() => { if(onProg) onProg(done(), urls.length); if(done() >= urls.length) finish(true); else worker(); });
+    };
+    for(let w = 0; w < 3; w++) worker();
+  });
+}
+window.dzEmuPrep = { ready: prepReady, ensure: prepEnsure };
+function preloadEmus(){
+  try{
+    const nc = navigator.connection;
+    if(nc && (nc.saveData || /(^|-)2g$/.test(nc.effectiveType || ''))) return;
+    const urls = prepUrls(); let i = 0;
+    const idle = fn => { if(window.requestIdleCallback) requestIdleCallback(fn, { timeout: 4000 }); else setTimeout(fn, 600); };
+    const next = () => {
+      if(i >= urls.length) return;
+      if(document.hidden || isPlaying()){ setTimeout(next, 5000); return; }   /* durante um jogo de emulador a banda é dele */
+      prepFetch(urls[i++]).then(() => idle(next));
+    };
+    idle(next);
+  }catch(e){}
+}
+const startPreload = () => setTimeout(preloadEmus, 6000);
+if(document.readyState === 'complete') startPreload(); else window.addEventListener('load', startPreload, { once:true });
 })();
 </script>
 
@@ -22844,8 +22893,35 @@ function open(filter){
   hubFilter = (typeof filter === 'function') ? filter : null;
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
-  selMute(); build(); ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
+  selMute(); ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
   if(FX) FX.on(fxSurf);
+  const P = window.dzEmuPrep, tok = ++prepTok;
+  if(!P || P.ready()){ build(); return; }
+  /* ainda falta baixar algum emulador: se for rápido (já em cache) nem aparece; se demorar, mostra o carregando */
+  $('emuTitle').textContent = tr('EMULADORES', 'EMULATORS'); $('emuSub').textContent = '';
+  listEl.innerHTML = '';
+  let shown = false, last = [0, 1];
+  const showTimer = setTimeout(() => { if(tok === prepTok && isOpen()){ shown = true; showPrep(last[0], last[1]); } }, 300);
+  P.ensure((d, t) => { last = [d, t]; if(shown && tok === prepTok) showPrep(d, t); }, 25000).then(() => {
+    clearTimeout(showTimer);
+    if(tok === prepTok && isOpen()) build();
+  });
+}
+let prepTok = 0;
+function showPrep(done, total){
+  let w = $('emuPrep');
+  if(!w){
+    listEl.innerHTML = '';
+    w = document.createElement('div'); w.id = 'emuPrep';
+    w.innerHTML = '<b id="emuPrepT"></b><div id="emuPrepBar"><i></i></div><small id="emuPrepS"></small><button type="button" id="emuPrepSkip"></button>';
+    listEl.appendChild(w);
+    const sk = $('emuPrepSkip'); sk.textContent = tr('ENTRAR MESMO ASSIM', 'CONTINUE ANYWAY'); sk.style.display = 'none';
+    setTimeout(() => { if($('emuPrepSkip') === sk) sk.style.display = ''; }, 5000);
+    sk.addEventListener('click', () => { snd('menuAccept'); prepTok++; build(); });
+  }
+  $('emuPrepT').textContent = tr('PREPARANDO OS EMULADORES…', 'GETTING THE EMULATORS READY…');
+  $('emuPrepS').textContent = tr('Baixando o necessário pra rodar sem engasgar (só na primeira vez).', 'Downloading what is needed to run smoothly (first time only).') + '  ' + done + '/' + total;
+  $('emuPrepBar').firstChild.style.width = Math.max(6, Math.round(100 * done / Math.max(1, total))) + '%';
 }
 function close(quiet, keepFx){
   if(!isOpen()) return;
@@ -23772,6 +23848,12 @@ html.console .fxChip{font-size:clamp(13px,2.1vh,19px);min-height:clamp(44px,6.4v
 .emuCard{--xc:#b48bff;font:inherit;position:relative;display:flex;align-items:center;gap:14px;text-align:left;width:100%;box-sizing:border-box;min-height:84px;padding:14px 16px;border-radius:16px;color:#f1eaff;cursor:pointer;border:1px solid rgba(255,255,255,.12);border-left:6px solid var(--xc);background:linear-gradient(90deg,rgba(40,28,80,.85),rgba(14,9,30,.85));background:linear-gradient(90deg,color-mix(in srgb,var(--xc) 28%,rgba(14,9,30,.9)),rgba(14,9,30,.88));-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s}
 .emuCard:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.55),0 0 0 1px var(--xc)}
 .emuCard:active{transform:scale(.985)}
+#emuPrep{display:flex;flex-direction:column;align-items:center;gap:14px;padding:34px 16px;text-align:center;color:#f1eaff}
+#emuPrep b{font-size:15px;letter-spacing:.06em}
+#emuPrep small{opacity:.75;font-size:12px;max-width:340px;line-height:1.4}
+#emuPrepBar{width:min(320px,80%);height:8px;border-radius:6px;background:rgba(0,0,0,.45);box-shadow:inset 0 0 0 1px rgba(139,107,255,.5);overflow:hidden}
+#emuPrepBar i{display:block;height:100%;width:6%;background:linear-gradient(90deg,#8b6bff,#e8b93a);transition:width .35s ease}
+#emuPrepSkip{font:inherit;font-size:12px;padding:8px 14px;border-radius:10px;color:#f1eaff;background:rgba(40,28,80,.8);border:1px solid rgba(139,107,255,.5);cursor:pointer}
 .emuIco img{max-width:82%;max-height:82%;width:auto;height:auto;object-fit:contain;display:block;pointer-events:none}
 .emuIco{flex:none;width:52px;height:52px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--xc)}
 .emuTx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
