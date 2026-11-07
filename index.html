@@ -21896,6 +21896,9 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
 #gbaMsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;font-size:13px;line-height:1.5;color:#b8a878;pointer-events:none}
 #gbaOverlay.playing #gbaMsg{display:none}
 #gbaOverlay .gp-focus{outline:3px solid #39ff14;outline-offset:1px;position:relative;z-index:2}
+#gbaExitHint{position:absolute;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);z-index:20;display:none;max-width:90%;box-sizing:border-box;padding:8px 14px;border-radius:8px;background:rgba(13,11,7,.92);border:2px solid #6a4bd8;color:#f0d9a0;font-size:13px;font-weight:700;letter-spacing:.4px;text-align:center;pointer-events:none;overflow:hidden}
+#gbaExitHint.show{display:block}
+#gbaExitHint i{position:absolute;left:0;bottom:0;height:4px;width:0;background:#39ff14}
 /* ===== controles na tela (layout do Game Boy Advance) ===== */
 #gbaPad{display:none;flex:none;position:relative;height:clamp(190px,34vh,250px);--dp:clamp(108px,31vmin,156px);--ab:clamp(54px,15vmin,72px);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #gbaOverlay.playing.showpad #gbaPad{display:block}
@@ -21954,6 +21957,7 @@ html.console #gbaOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0
     </div>
     <input type="file" id="gbaFile" accept=".gba,.zip,.7z,.agb,.bin" style="display:none">
   </div>
+  <div id="gbaExitHint"><span id="gbaExitTxt"></span><i id="gbaExitBar"></i></div>
 </div>
 <script id="dzGbaScript">
 /* ===== EMULADOR DE GAME BOY ADVANCE (menu DEBUG) =====
@@ -22071,11 +22075,20 @@ function initPad(){
 }
 
 /* controle USB/Bluetooth: layout padrão (0=B, 1=A, 2=B, 3=A, LB/LT=L, RB/RT=R, Select, Start, direcional e analógico) */
-let exitHold = 0;
+let exitHold = 0, hintTimer = 0;
+function exitHint(txt, prog){
+  const h = $('gbaExitHint'); $('gbaExitTxt').textContent = txt; $('gbaExitBar').style.width = Math.round((prog || 0) * 100) + '%';
+  h.classList.add('show'); clearTimeout(hintTimer);
+}
+function exitHintHide(){ clearTimeout(hintTimer); $('gbaExitHint').classList.remove('show'); }
+function exitHintTip(){   /* aviso ao iniciar um jogo */
+  exitHint(tr('Para voltar à lista: segure SELECT + START (ou L3 + R3) por 1 segundo', 'To go back to the list: hold SELECT + START (or L3 + R3) for 1 second'), 0);
+  $('gbaExitBar').style.width = '0%'; hintTimer = setTimeout(exitHintHide, 5000);
+}
 function padLoop(){
   padRaf = requestAnimationFrame(padLoop);
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-  let m = 0, selStart = false, guide = false;
+  let m = 0, combo = false;
   for(const gp of pads){
     if(!gp || !gp.connected) continue;
     const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed);
@@ -22088,14 +22101,19 @@ function padLoop(){
     if(b(12)) m |= 1 << 4; if(b(13)) m |= 1 << 5; if(b(14)) m |= 1 << 6; if(b(15)) m |= 1 << 7;
     const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
     if(ay < -.5) m |= 1 << 4; if(ay > .5) m |= 1 << 5; if(ax < -.5) m |= 1 << 6; if(ax > .5) m |= 1 << 7;
-    if(b(8) && b(9)) selStart = true;
-    if(b(16)) guide = true;
+    /* combos para voltar à lista de jogos (segurar ~1 s): SELECT+START · L3+R3 (apertar os dois analógicos) · L1+R1+L2+R2 · botão central (guide).
+       Vários combos porque alguns controles/navegadores não entregam SELECT/START (botões 8/9) para a página. */
+    if((b(8) && b(9)) || (b(10) && b(11)) || (b(4) && b(5) && b(6) && b(7)) || b(16)) combo = true;
   }
   if(m && ov.classList.contains('showpad')) ov.classList.remove('showpad');   /* usando controle: some com os botões na tela */
   src.pad = m; sync();
   /* segurar SELECT + START (ou o botão central do controle) volta para a lista de jogos */
-  if(selStart || guide){ if(!exitHold) exitHold = performance.now(); if(guide || performance.now() - exitHold > 1200){ exitHold = 0; showList(); } }
-  else exitHold = 0;
+  if(combo){
+    if(!exitHold) exitHold = performance.now();
+    const t = performance.now() - exitHold;
+    exitHint(tr('Segure para voltar à lista de jogos…', 'Keep holding to go back to the game list…'), Math.min(1, t / 1000));
+    if(t > 1000){ exitHold = 0; exitHintHide(); showList(); }
+  } else { if(exitHold) exitHintHide(); exitHold = 0; }
 }
 
 /* teclado (PC) */
@@ -22125,7 +22143,7 @@ window.addEventListener('blur', () => { if(isPlaying()) releaseAll(); });
 function stop(){
   clearInterval(watchTimer); watchTimer = 0;
   if(padRaf){ cancelAnimationFrame(padRaf); padRaf = 0; }
-  releaseAll(); touchBtn.clear(); touchDp = 0; exitHold = 0;
+  releaseAll(); touchBtn.clear(); touchDp = 0; exitHold = 0; exitHintHide();
   try{ frame.src = 'about:blank'; frame.removeAttribute('srcdoc'); }catch(e){}
   frame.style.display = 'none'; frame.style.pointerEvents = '';
   if(blobUrl){ try{ URL.revokeObjectURL(blobUrl); }catch(e){} blobUrl = null; }
@@ -22157,6 +22175,7 @@ function play(url, name){
   labels();
   enterFs();                                  /* tela cheia ao iniciar (o clique do jogador libera) */
   padRaf = requestAnimationFrame(padLoop);
+  exitHintTip();
   let tries = 0;
   watchTimer = setInterval(() => {
     if(emuApi()){ clearInterval(watchTimer); watchTimer = 0; onEmuReady(); }
@@ -22196,8 +22215,8 @@ function renderList(){
     list.appendChild(b);
   });
   const h = document.createElement('div'); h.id = 'gbaHelp';
-  h.textContent = tr('Teclado: setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar. Controle: botões padrão; segure SELECT + START para voltar à lista.',
-                     'Keyboard: arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back. Controller: standard buttons; hold SELECT + START to go back to the list.') +
+  h.textContent = tr('Teclado: setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar. Controle: botões padrão; segure SELECT + START (ou L3 + R3, ou L1+R1+L2+R2) por 1 s para voltar à lista; na lista, B fecha o emulador.',
+                     'Keyboard: arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back. Controller: standard buttons; hold SELECT + START (or L3 + R3, or L1+R1+L2+R2) for 1 s to go back to the list; on the list, B closes the emulator.') +
     ' ' + (offlineReady() ? tr('✓ Offline pronto: já funciona sem internet.', '✓ Offline ready: works without internet.') : tr('Para usar offline: abra um jogo uma vez com internet.', 'To use offline: open a game once while online.'));
   list.appendChild(h);
 }
