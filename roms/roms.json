@@ -15,6 +15,11 @@
     "author": ""
   },
   {
+    "file": "GTA3PCR.gba",
+    "title": "GTA3PCR",
+    "author": ""
+  },
+  {
     "file": "GTAA.gba",
     "title": "GTAA",
     "author": ""
@@ -22,6 +27,11 @@
   {
     "file": "MKSC.gba",
     "title": "MKSC",
+    "author": ""
+  },
+  {
+    "file": "MRA.gba",
+    "title": "MRA",
     "author": ""
   },
   {
@@ -67,6 +77,11 @@
   {
     "file": "TTRSWRLD.gba",
     "title": "TTRSWRLD",
+    "author": ""
+  },
+  {
+    "file": "VR3.gba",
+    "title": "VR3",
     "author": ""
   }
 ]
