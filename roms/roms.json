@@ -173,6 +173,11 @@
     "system": "snes"
   },
   {
+    "file": "SMTRD.sfc",
+    "title": "SMTRD",
+    "system": "snes"
+  },
+  {
     "file": "STH.md",
     "title": "STH",
     "system": "md"
