@@ -22069,21 +22069,47 @@ function gfxStart(){
 }
 
 /* ---- música (o elemento leva __dzKeep: o mudo do Dead Zone não pega nele) ---- */
-function nextTrack(){ idx = (idx + 1) % TRACKS.length; if(audio){ audio.src = TRACKS[idx]; const p = audio.play(); if(p && p.catch) p.catch(() => {}); } }
+/* fade: entra devagar (início de cada faixa e ao abrir o menu) e sai devagar (fim da faixa e ao fechar o menu).
+   volume final = vol * (mul * envelope)^2 ; mul = fade de abrir/fechar o menu ; envelope = início/fim da faixa */
+const FADE_IN_S = 1.8, FADE_OUT_S = 2.2, FADE_STOP_MS = 1000;
+let mul = 1, mulTo = 1, fadeTick = 0, stopAfter = false;
+function envOf(){
+  if(!audio) return 1;
+  const d = audio.duration, t = audio.currentTime || 0;
+  let e = Math.min(1, t / FADE_IN_S);
+  if(isFinite(d) && d > FADE_IN_S + FADE_OUT_S) e = Math.min(e, Math.max(0, (d - t) / FADE_OUT_S));
+  return Math.max(0, Math.min(1, e));
+}
+function applyVol(){ if(audio){ const m = mul * envOf(); audio.volume = Math.max(0, Math.min(1, vol * m * m)); } }
+function fadeRun(){
+  if(fadeTick) return;
+  fadeTick = setInterval(() => {
+    const step = 60 / FADE_STOP_MS;
+    if(mul < mulTo) mul = Math.min(mulTo, mul + step); else if(mul > mulTo) mul = Math.max(mulTo, mul - step);
+    applyVol();
+    if(stopAfter && mul <= 0){ stopAfter = false; try{ audio.pause(); }catch(e){} }
+    if((!audio || audio.paused) && mul === mulTo){ clearInterval(fadeTick); fadeTick = 0; }
+  }, 60);
+}
+function nextTrack(){ idx = (idx + 1) % TRACKS.length; if(audio){ audio.src = TRACKS[idx]; if(act){ applyVol(); const p = audio.play(); if(p && p.catch) p.catch(() => {}); fadeRun(); } } }
 function musicStart(){
   if(!mOn || missing || !act) return;
   try{
     if(!audio){
-      audio = new Audio(TRACKS[idx]); audio.__dzKeep = true; audio.volume = vol;
+      audio = new Audio(TRACKS[idx]); audio.__dzKeep = true; audio.volume = 0;
       audio.addEventListener('ended', () => { fails = 0; nextTrack(); });
       audio.addEventListener('playing', () => { fails = 0; });
       audio.addEventListener('error', () => { if(++fails >= TRACKS.length){ missing = true; refreshPanels(); return; } nextTrack(); });
     }
-    audio.volume = vol;
+    stopAfter = false; mulTo = 1;
+    if(audio.paused) mul = 0;          /* começando do zero: sobe devagar */
+    applyVol();
     const p = audio.play(); if(p && p.catch) p.catch(() => {});
+    fadeRun();
   }catch(e){}
 }
-function musicStop(){ try{ if(audio) audio.pause(); }catch(e){} }
+function musicStop(){ try{ stopAfter = false; if(audio) audio.pause(); }catch(e){} }
+function musicFadeOut(){ if(audio && !audio.paused){ mulTo = 0; stopAfter = true; fadeRun(); } }
 
 /* ---- ligar / desligar (desligar tem um pequeno atraso: ao passar de um menu para outro a música não pica) ---- */
 function on(surf){
@@ -22092,7 +22118,7 @@ function on(surf){
 }
 function off(){
   clearTimeout(stopTimer);
-  stopTimer = setTimeout(() => { stopTimer = 0; gfxStop(); musicStop(); act = null; }, 200);
+  stopTimer = setTimeout(() => { stopTimer = 0; gfxStop(); musicFadeOut(); act = null; }, 200);
 }
 document.addEventListener('visibilitychange', () => {
   if(!act) return;
@@ -22101,7 +22127,7 @@ document.addEventListener('visibilitychange', () => {
 
 function setTheme(t){ theme = t; save('dz_gba_theme', t); surfaces.forEach(s => { s.ov.dataset.theme = t; }); if(act) gfxStart(); refreshPanels(); }
 function setMusicOn(v){ mOn = !!v; save('dz_gba_music', mOn ? '1' : '0'); if(mOn) musicStart(); else musicStop(); refreshPanels(); }
-function setVol(v){ vol = Math.max(0, Math.min(1, Math.round(v * 10) / 10)); save('dz_gba_vol', String(vol)); if(audio) audio.volume = vol; refreshPanels(); }
+function setVol(v){ vol = Math.max(0, Math.min(1, Math.round(v * 10) / 10)); save('dz_gba_vol', String(vol)); applyVol(); refreshPanels(); }
 
 /* ---- painel de ajustes (botão ⚙) ---- */
 function mkb(cls, txt, fn){
@@ -22734,7 +22760,15 @@ window.dzEmuSysTry = function(v){
 window.dzGba = { open, close, isOpen };
 window.dzGbaBack = () => { if(!isPlaying()) goBack(); };    /* durante o jogo o controle é do emulador */
 window.dzGbaPlaying = isPlaying;
-SYS_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, sub:SYSTEMS[id].coreName, open: () => open(id) }));
+const EMU_IMGS = {
+  gba:'https://i.postimg.cc/qvF3yWt8/Game-Boy-Advance.png',
+  gbc:'https://i.postimg.cc/Z5QdpX96/Game-Boy-Color.png',
+  gb:'https://i.postimg.cc/t4J619g5/Game-Boy.png',
+  md:'https://i.postimg.cc/JzFkZSyZ/Mega-Drive.png',
+  snes:'https://i.postimg.cc/zGQgK4Lg/Super-Nintendo.png',
+  nes:'https://i.postimg.cc/RZht3v0G/NES.png'
+};
+SYS_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, img:EMU_IMGS[id] || '', icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, sub:SYSTEMS[id].coreName, open: () => open(id) }));
 })();
 </script>
 
@@ -22790,7 +22824,9 @@ function build(){
   items.forEach(e => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'emuCard';
     b.style.setProperty('--xc', window.dzEmuColor(e.id));
-    const ic = document.createElement('span'); ic.className = 'emuIco'; ic.textContent = e.icon || '🎮';
+    const ic = document.createElement('span'); ic.className = 'emuIco';
+    if(e.img){ const im = document.createElement('img'); im.src = e.img; im.alt = ''; im.draggable = false; im.onerror = () => { im.remove(); ic.textContent = e.icon || '🎮'; }; ic.appendChild(im); }
+    else ic.textContent = e.icon || '🎮';
     const tx = document.createElement('span'); tx.className = 'emuTx';
     const nm = document.createElement('b'); nm.textContent = e.name; tx.appendChild(nm);
     if(e.sub){ const sm = document.createElement('small'); sm.textContent = e.sub; tx.appendChild(sm); }
@@ -23736,6 +23772,7 @@ html.console .fxChip{font-size:clamp(13px,2.1vh,19px);min-height:clamp(44px,6.4v
 .emuCard{--xc:#b48bff;font:inherit;position:relative;display:flex;align-items:center;gap:14px;text-align:left;width:100%;box-sizing:border-box;min-height:84px;padding:14px 16px;border-radius:16px;color:#f1eaff;cursor:pointer;border:1px solid rgba(255,255,255,.12);border-left:6px solid var(--xc);background:linear-gradient(90deg,rgba(40,28,80,.85),rgba(14,9,30,.85));background:linear-gradient(90deg,color-mix(in srgb,var(--xc) 28%,rgba(14,9,30,.9)),rgba(14,9,30,.88));-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s}
 .emuCard:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.55),0 0 0 1px var(--xc)}
 .emuCard:active{transform:scale(.985)}
+.emuIco img{max-width:82%;max-height:82%;width:auto;height:auto;object-fit:contain;display:block;pointer-events:none}
 .emuIco{flex:none;width:52px;height:52px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--xc)}
 .emuTx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .emuTx b{font-size:14px;letter-spacing:.6px;color:#fff;word-break:break-word}
