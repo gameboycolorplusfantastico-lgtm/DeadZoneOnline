@@ -3748,7 +3748,29 @@ const SFX = (function(){
     if(crowdEl && crowdEl.paused){ const p = crowdEl.play(); if(p && p.catch) p.catch(()=>{}); }
     if(reactEl && reactEl.paused && !reactEl.ended){ const p2 = reactEl.play(); if(p2 && p2.catch) p2.catch(()=>{}); }
   }
-  return { waterJump, socKick, socGoal, socWhistle, socCrowdStart, socCrowdSet, socCrowdStop, socReact, unlock, testClip, testMusic, testMusicOn, testStop: ()=>testAudioStop(false), shoot, botShoot, noAmmo, reloadStart, reloadDone, hit, kill, hurt, zombieScream, pickupAmmo, pickupHealth, pickupWeapon, menuAccept, menuBack, menuSelect, footstep, gameOverJingle, victoryJingle, waveStart, gameStartGeneric, modeStart, modeOver, teamWin, botPain, gunShell, hostageCT, hostageT, botFootstep, fnafAmbient, fnafQuote, fnafDoor, fnafJumpscare, fnafPowerDown, fnafEnergyZero, fnafLaugh, fnafWindowScare, fnafKeepAmbient, fnafStopAmbient, fnafStopLoops, fnafRobotStep, fnafClick, fnafDeny, fnafSixAM, fnafGameOver, zombieStart, stopModeOver, releaseEnd, setEnabled, setVolume, playMusic, stopMusic, pauseMusic, resumeMusic, setMusicVolume, setMusicMuted, playMenuMusic, stopMenuMusic };
+  // ----- MUDO TOTAL (usado pelo emulador): silencia o áudio do Dead Zone de verdade -----
+  // Só zerar o volume não basta (iOS/Safari ignora HTMLMediaElement.volume). Aqui tudo é pausado e
+  // marcado como muted, o AudioContext é suspenso e `enabled` fica false, então nenhum som novo
+  // (clipes, música, torcida, sons sintetizados) toca até desligar o mudo.
+  let hardMuted = false, enabledBeforeHard = true;
+  function setHardMute(on){
+    on = !!on;
+    if(on === hardMuted) return;
+    hardMuted = on;
+    const els = [musicEl, dmMusicEl, menuMusicEl, zIntroEl, fnafAmbEl, modeOverEl, crowdEl, reactEl, testMusicEl]
+      .concat(Object.values(audioCache), [...gameNodes], [...endNodes], [...testNodes], Object.values(fnafStepNodes));
+    if(on){
+      enabledBeforeHard = enabled; enabled = false;
+      els.forEach(e=>{ if(e){ try{ e.pause(); }catch(_){} try{ e.muted = true; }catch(_){} } });
+      try{ if(ctx && ctx.state === 'running') ctx.suspend(); }catch(_){}
+    } else {
+      enabled = enabledBeforeHard;
+      els.forEach(e=>{ if(e){ try{ e.muted = false; }catch(_){} } });
+      try{ if(ctx && ctx.state === 'suspended') ctx.resume(); }catch(_){}
+      if(enabled){ if(menuMusicWanted) playMenuMusic(); else resumeMusic(); }
+    }
+  }
+  return { setHardMute, waterJump, socKick, socGoal, socWhistle, socCrowdStart, socCrowdSet, socCrowdStop, socReact, unlock, testClip, testMusic, testMusicOn, testStop: ()=>testAudioStop(false), shoot, botShoot, noAmmo, reloadStart, reloadDone, hit, kill, hurt, zombieScream, pickupAmmo, pickupHealth, pickupWeapon, menuAccept, menuBack, menuSelect, footstep, gameOverJingle, victoryJingle, waveStart, gameStartGeneric, modeStart, modeOver, teamWin, botPain, gunShell, hostageCT, hostageT, botFootstep, fnafAmbient, fnafQuote, fnafDoor, fnafJumpscare, fnafPowerDown, fnafEnergyZero, fnafLaugh, fnafWindowScare, fnafKeepAmbient, fnafStopAmbient, fnafStopLoops, fnafRobotStep, fnafClick, fnafDeny, fnafSixAM, fnafGameOver, zombieStart, stopModeOver, releaseEnd, setEnabled, setVolume, playMusic, stopMusic, pauseMusic, resumeMusic, setMusicVolume, setMusicMuted, playMenuMusic, stopMenuMusic };
 })();
 
 function loadTexture(key, url) {
@@ -21923,13 +21945,11 @@ let blobUrl = null, romsLoaded = false, gameMuted = false, watchTimer = 0, padRa
 /* ---- som do jogo: mudo enquanto o emulador está aberto ---- */
 function muteGame(){
   if(gameMuted) return; gameMuted = true;
-  try{ SFX.setMusicMuted(true); }catch(e){}
-  try{ SFX.setVolume(0); }catch(e){}
+  try{ SFX.setHardMute(true); }catch(e){}
 }
 function unmuteGame(){
   if(!gameMuted) return; gameMuted = false;
-  try{ const mo = $('optMusicOff'); SFX.setMusicMuted(!!(mo && mo.checked)); }catch(e){}
-  try{ const r = $('sfxVolumeRange'); SFX.setVolume(r ? parseFloat(r.value) : 0.8); }catch(e){}
+  try{ SFX.setHardMute(false); }catch(e){}
 }
 
 /* ---- offline (service worker) ---- */
