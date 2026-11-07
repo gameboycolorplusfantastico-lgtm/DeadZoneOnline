@@ -178,6 +178,11 @@
     "system": "gbc"
   },
   {
+    "file": "DKC.smc",
+    "title": "DKC",
+    "system": "snes"
+  },
+  {
     "file": "SMASSMW.sfc",
     "title": "SMASSMW",
     "system": "snes"
@@ -190,6 +195,11 @@
   {
     "file": "SMTRD.sfc",
     "title": "SMTRD",
+    "system": "snes"
+  },
+  {
+    "file": "SMW2YI.smc",
+    "title": "SMW2YI",
     "system": "snes"
   },
   {
