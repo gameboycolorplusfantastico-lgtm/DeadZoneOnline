@@ -178,8 +178,18 @@
     "system": "snes"
   },
   {
+    "file": "SKSTH3.md",
+    "title": "SKSTH3",
+    "system": "md"
+  },
+  {
     "file": "STH.md",
     "title": "STH",
+    "system": "md"
+  },
+  {
+    "file": "STH2.md",
+    "title": "STH2",
     "system": "md"
   },
   {
