@@ -22964,6 +22964,7 @@ function frameMain(){
     { l: C + 'build/libv86.js', w: C + 'build/v86.wasm', b: C + 'bios/seabios.bin', v: C + 'bios/vgabios.bin' }
   ];
   var sw = 640, sh = 400, emu = null;
+  var exc = { pf: 0, n: {}, last: [], resets: 0, pre: '' };
   function fit(){
     if(!emu) return;
     var s = Math.max(0.1, Math.min(window.innerWidth / sw, window.innerHeight / sh));
@@ -22987,6 +22988,24 @@ function frameMain(){
       status('Iniciando o PC virtual…');
       o = { wasm_path: c.w, memory_size: cfg.mem * 1048576, vga_memory_size: 8 * 1048576, screen_container: document.getElementById('sc'),
             bios: { url: c.b }, vga_bios: { url: c.v }, autostart: true };
+      o.cpu_exception_hook = function(n){
+        try{
+          if(n === 14){ exc.pf++; return false; }
+          var c = emu && emu.v86 && emu.v86.cpu;
+          exc.n[n] = (exc.n[n] || 0) + 1;
+          exc.last.push('#' + n + '@' + (c ? ((c.sreg[1] >>> 0).toString(16) + ':' + (c.instruction_pointer[0] >>> 0).toString(16)) : '?'));
+          if(exc.last.length > 8) exc.last.shift();
+        }catch(e){}
+        return false;
+      };
+      var inPM = 0;
+      setInterval(function(){
+        try{
+          var cs = emu.v86.cpu.sreg[1] >>> 0;
+          if(cs === 0x28) inPM = 1;
+          else if(cs === 0xf000 && inPM){ inPM = 0; exc.resets++; exc.pre = exc.last.join(' '); }
+        }catch(e){}
+      }, 250);
       if(cfg.hd) o.hda = { url: cfg.hd };
       if(cfg.cd) o.cdrom = { url: cfg.cd };
       if(cfg.fd) o.fda = { url: cfg.fd };
@@ -23045,6 +23064,10 @@ function frameMain(){
       tx = tx.replace(/ +\n/g, '\n').replace(/\n+/g, '\n').trim();
       r.push('memória de texto (B8000): ' + (tx ? '\n' + tx.slice(0, 400) : '(vazia)'));
     }catch(e){ r.push('memória de texto: erro ' + e); }
+    r.push('reinícios do Windows: ' + exc.resets + ' | PF: ' + exc.pf);
+    r.push('exceções: ' + JSON.stringify(exc.n));
+    r.push('últimas: ' + (exc.last.join(' ') || '-'));
+    if(exc.pre) r.push('antes do reinício: ' + exc.pre);
     try{
       var cpu = emu.v86.cpu, vga = cpu.devices.vga;
       r.push('VGA: gráfico=' + vga.graphical_mode + ' svga=' + vga.svga_enabled + ' ' + (vga.svga_width || 0) + 'x' + (vga.svga_height || 0));
