@@ -108,6 +108,11 @@
     "author": ""
   },
   {
+    "file": "MTRD.nes",
+    "title": "MTRD",
+    "system": "nes"
+  },
+  {
     "file": "SMB3.nes",
     "title": "SMB3",
     "system": "nes"
