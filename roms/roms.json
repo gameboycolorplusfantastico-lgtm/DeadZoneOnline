@@ -183,6 +183,21 @@
     "system": "snes"
   },
   {
+    "file": "DKC2DKQ.sfc",
+    "title": "DKC2DKQ",
+    "system": "snes"
+  },
+  {
+    "file": "DKC3DKDT.sfc",
+    "title": "DKC3DKDT",
+    "system": "snes"
+  },
+  {
+    "file": "SF2T.smc",
+    "title": "SF2T",
+    "system": "snes"
+  },
+  {
     "file": "SMASSMW.sfc",
     "title": "SMASSMW",
     "system": "snes"
@@ -200,6 +215,11 @@
   {
     "file": "SMW2YI.smc",
     "title": "SMW2YI",
+    "system": "snes"
+  },
+  {
+    "file": "TPGR.sfc",
+    "title": "TPGR",
     "system": "snes"
   },
   {
