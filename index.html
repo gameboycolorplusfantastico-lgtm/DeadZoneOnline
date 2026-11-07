@@ -22964,7 +22964,10 @@ function frameMain(){
     { l: C + 'build/libv86.js', w: C + 'build/v86.wasm', b: C + 'bios/seabios.bin', v: C + 'bios/vgabios.bin' }
   ];
   var sw = 640, sh = 400, emu = null;
-  var exc = { pf: 0, n: {}, last: [], resets: 0, pre: '' };
+  var exc = { pf: 0, n: {}, last: [], resets: 0, pre: '', rb: [], err: '', hook: '?' };
+  var cl = [];
+  ['log', 'warn', 'error'].forEach(function(k){ var f0 = console[k]; console[k] = function(){ try{ cl.push(k + ': ' + Array.prototype.slice.call(arguments).join(' ').slice(0, 110)); if(cl.length > 6) cl.shift(); }catch(e){} return f0.apply(console, arguments); }; });
+  window.addEventListener('error', function(e){ try{ cl.push('ERRO: ' + String(e.message).slice(0, 110)); if(cl.length > 6) cl.shift(); }catch(x){} });
   function fit(){
     if(!emu) return;
     var s = Math.max(0.1, Math.min(window.innerWidth / sw, window.innerHeight / sh));
@@ -23011,6 +23014,17 @@ function frameMain(){
       if(cfg.fd) o.fda = { url: cfg.fd };
       try{ emu = new V(o); }catch(e){ status('Erro ao criar o emulador: ' + (e && e.message || e), 1); return; }
       window.emu = emu;
+      try{
+        var cp = emu.v86 && emu.v86.cpu;
+        if(cp){
+          cp.cpu_exception_hook = o.cpu_exception_hook; exc.hook = typeof cp.cpu_exception_hook;
+          ['reboot_internal', 'reset_cpu'].forEach(function(k){
+            if(typeof cp[k] !== 'function') return;
+            var f = cp[k];
+            cp[k] = function(){ try{ exc.rb.push(k + ' <- ' + String(new Error().stack).split('\n').slice(2, 5).join(' | ').replace(/https?:\/\/[^ )]*\//g, '')); if(exc.rb.length > 4) exc.rb.shift(); }catch(e){} return f.apply(this, arguments); };
+          });
+        } else exc.err = 'sem cpu';
+      }catch(e){ exc.err = String(e); }
       var failed = false;
       emu.add_listener('download-progress', function(e){
         var mb = function(n){ return (n / 1048576).toFixed(1) + ' MB'; };
@@ -23066,7 +23080,9 @@ function frameMain(){
     }catch(e){ r.push('memória de texto: erro ' + e); }
     r.push('reinícios do Windows: ' + exc.resets + ' | PF: ' + exc.pf);
     r.push('exceções: ' + JSON.stringify(exc.n));
-    r.push('últimas: ' + (exc.last.join(' ') || '-'));
+    r.push('últimas: ' + (exc.last.join(' ') || '-') + ' | hook: ' + exc.hook + (exc.err ? ' | ' + exc.err : ''));
+    r.push('reset por: ' + (exc.rb.join(' ## ') || '-'));
+    r.push('console: ' + (cl.join(' ## ') || '-'));
     if(exc.pre) r.push('antes do reinício: ' + exc.pre);
     try{
       var cpu = emu.v86.cpu, vga = cpu.devices.vga;
