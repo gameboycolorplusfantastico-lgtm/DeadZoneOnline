@@ -3753,12 +3753,31 @@ const SFX = (function(){
   // marcado como muted, o AudioContext é suspenso e `enabled` fica false, então nenhum som novo
   // (clipes, música, torcida, sons sintetizados) toca até desligar o mudo.
   let hardMuted = false, enabledBeforeHard = true;
+  // Trava geral: enquanto o mudo estiver ligado, NENHUM elemento de áudio/vídeo desta página consegue tocar
+  // (nem música retomada por timers, eventos de foco, fade da intro etc.). O iframe do emulador tem o próprio
+  // window e não é afetado, então o som do emulador continua normal.
+  try{
+    const _mediaPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function(){
+      if(hardMuted){ try{ this.pause(); }catch(_){} return Promise.resolve(); }
+      return _mediaPlay.apply(this, arguments);
+    };
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(AC && AC.prototype.resume){
+      const _ctxResume = AC.prototype.resume;
+      AC.prototype.resume = function(){
+        if(hardMuted && this === ctx) return Promise.resolve();
+        return _ctxResume.apply(this, arguments);
+      };
+    }
+  }catch(_){}
   function setHardMute(on){
     on = !!on;
     if(on === hardMuted) return;
     hardMuted = on;
     const els = [musicEl, dmMusicEl, menuMusicEl, zIntroEl, fnafAmbEl, modeOverEl, crowdEl, reactEl, testMusicEl]
       .concat(Object.values(audioCache), [...gameNodes], [...endNodes], [...testNodes], Object.values(fnafStepNodes));
+    try{ document.querySelectorAll('audio,video').forEach(e=>els.push(e)); }catch(_){}
     if(on){
       enabledBeforeHard = enabled; enabled = false;
       els.forEach(e=>{ if(e){ try{ e.pause(); }catch(_){} try{ e.muted = true; }catch(_){} } });
@@ -22238,6 +22257,9 @@ const ov = $('emuOverlay'), listEl = $('emuList');
 const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const isOpen = () => ov.classList.contains('open');
+let selMuted = false;   /* o seletor silencia o áudio do Dead Zone; ao abrir um emulador, ele assume o mudo */
+function selMute(){ if(selMuted) return; selMuted = true; try{ SFX.setHardMute(true); }catch(e){} }
+function selUnmute(){ if(!selMuted) return; selMuted = false; try{ SFX.setHardMute(false); }catch(e){} }
 function build(){
   $('emuTitle').textContent = tr('EMULADORES', 'EMULATORS');
   $('emuClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
@@ -22245,16 +22267,16 @@ function build(){
   (window.dzEmus || []).forEach(e => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lgb';
     b.textContent = (e.icon ? e.icon + ' ' : '') + e.name;
-    b.addEventListener('click', () => { close(true); try{ e.open(); }catch(err){} });
+    b.addEventListener('click', () => { selMuted = false; close(true); try{ e.open(); }catch(err){ try{ SFX.setHardMute(false); }catch(_){} } });
     listEl.appendChild(b);
   });
 }
 function open(){
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
-  build(); ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); snd('menuAccept');
+  selMute(); build(); ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
 }
-function close(quiet){ if(!isOpen()) return; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); if(!quiet) snd('menuBack'); }
+function close(quiet){ if(!isOpen()) return; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); selUnmute(); if(!quiet) snd('menuBack'); }
 $('emuClose').addEventListener('click', () => close());
 ov.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Escape'){ e.preventDefault(); close(); } });
 ov.addEventListener('keyup', e => e.stopPropagation());
