@@ -3,6 +3,179 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<script id="dzTvScript">
+/* ===== MODO TV (secreto): suporte a Smart TV e controle remoto =====
+   Liga sozinho em Smart TVs (Tizen/Samsung, webOS/LG, Android TV/Fire TV, Vidaa/Hisense, Roku, Sony, Philips...)
+   ou por um código secreto: ● vermelho → ● verde → ● amarelo → ● azul (nessa ordem) no controle remoto, ou digitar "tv" no campo de senha do menu debug.
+   Faz o controle remoto virar um GAMEPAD virtual: o jogo, os menus e os emuladores já sabem usar gamepad.
+   Só vale se NÃO houver um controle de verdade ligado (se houver, o controle de verdade manda). */
+(function(){
+  'use strict';
+  const T = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : en; }catch(e){ return en; } };
+  const TV_UA = /(Tizen|Web0S|WebOS|SMART-?TV|HbbTV|NetCast|VIDAA|BRAVIA|SonyDTV|Viera|NETTV|Roku|GoogleTV|AFT[A-Z0-9]|Android[^)]*\sTV|Large Screen)/i;
+  let tvOn = false; const held = new Set(); let seq = [], seqT = 0, helpT = 0;
+  const realGet = (navigator.getGamepads ? navigator.getGamepads.bind(navigator) : function(){ return []; });
+
+  /* tecla do controle remoto -> nome lógico */
+  function logical(e){
+    const c = e.keyCode, k = e.key;
+    if(c === 38 || k === 'ArrowUp') return 'up';
+    if(c === 40 || k === 'ArrowDown') return 'down';
+    if(c === 37 || k === 'ArrowLeft') return 'left';
+    if(c === 39 || k === 'ArrowRight') return 'right';
+    if(c === 13 || c === 23 || k === 'Enter') return 'ok';
+    if(c === 461 || c === 10009 || c === 4 || c === 27 || k === 'GoBack' || k === 'BrowserBack' || k === 'Escape') return 'back';
+    if(c === 403 || k === 'ColorF0Red') return 'red';
+    if(c === 404 || k === 'ColorF1Green') return 'green';
+    if(c === 405 || k === 'ColorF2Yellow') return 'yellow';
+    if(c === 406 || k === 'ColorF3Blue') return 'blue';
+    if(c === 415 || c === 19 || c === 10252 || k === 'MediaPlay' || k === 'MediaPause' || k === 'MediaPlayPause') return 'play';
+    if(c === 413 || k === 'MediaStop') return 'stop';
+    if(c === 417 || k === 'MediaFastForward') return 'ff';
+    if(c === 412 || k === 'MediaRewind') return 'rw';
+    if(c === 427 || c === 33 || k === 'ChannelUp' || k === 'PageUp') return 'chup';
+    if(c === 428 || c === 34 || k === 'ChannelDown' || k === 'PageDown') return 'chdn';
+    if(c === 457 || k === 'Info') return 'info';
+    if(k === '4') return 'n4';
+    if(k === '6') return 'n6';
+    return '';
+  }
+  function typing(t){ return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable); }
+  function inGame(){
+    try{
+      return started && !gameOver && !shopOpen && !chatOpen && settingsModal.style.display !== 'flex' && !gpActiveMenuRoot()
+        && !(window.dzGbaPlaying && window.dzGbaPlaying()) && !(window.dzVk && window.dzVk.isOpen());
+    }catch(e){ return false; }
+  }
+  function realPad(){ try{ return Array.from(realGet() || []).some(g => g && g.connected); }catch(e){ return false; } }
+
+  /* gamepad virtual (mapa "standard": 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT, 8 SELECT, 9 START, 12-15 D-pad) */
+  function tvPad(){
+    const h = n => held.has(n), b = new Array(17).fill(false), ax = [0, 0, 0, 0];
+    if(inGame()){
+      if(h('up')) ax[1] = -1; if(h('down')) ax[1] = 1;         /* ▲▼ andar */
+      if(h('left')) ax[2] = -1; if(h('right')) ax[2] = 1;      /* ◀▶ girar */
+      if(h('n4')) ax[0] = -1; if(h('n6')) ax[0] = 1;           /* 4 / 6 = andar de lado */
+      b[7] = h('ok'); b[2] = h('red'); b[3] = h('green'); b[0] = h('yellow');
+      b[9] = h('blue') || h('back') || h('play');              /* azul / voltar / play = pausa */
+      b[5] = h('chup'); b[4] = h('chdn'); b[6] = h('ff'); b[15] = h('rw'); b[13] = h('stop');
+    } else {
+      b[12] = h('up'); b[13] = h('down'); b[14] = h('left'); b[15] = h('right');
+      b[0] = h('ok'); b[1] = h('back'); b[2] = h('red'); b[3] = h('green'); b[8] = h('yellow'); b[9] = h('blue') || h('play');
+      b[5] = h('chup'); b[4] = h('chdn'); b[7] = h('ff'); b[6] = h('rw');
+    }
+    return { id: 'TV Remote (virtual)', index: 0, connected: true, mapping: 'standard', timestamp: performance.now(), axes: ax,
+             buttons: b.map(p => ({ pressed: p, touched: p, value: p ? 1 : 0 })) };
+  }
+  try{
+    navigator.getGamepads = function(){
+      const r = Array.from(realGet() || []);
+      if(!tvOn || r.some(g => g && g.connected)) return r;
+      return [tvPad()];
+    };
+  }catch(e){}
+
+  /* painel de ajuda (aparece ao ligar e com o botão INFO) */
+  function help(show){
+    let d = document.getElementById('tvHelp');
+    if(!show){ if(d) d.style.display = 'none'; return; }
+    if(!d){
+      d = document.createElement('div'); d.id = 'tvHelp';
+      d.style.cssText = 'position:fixed;left:50%;bottom:4%;transform:translateX(-50%);z-index:99999;background:rgba(0,0,0,.82);border:2px solid #9fe3ff;border-radius:14px;padding:14px 22px;color:#fff;font:bold clamp(13px,1.7vw,22px)/1.5 sans-serif;text-align:center;pointer-events:none;max-width:92vw;';
+      document.body.appendChild(d);
+    }
+    d.innerHTML = '<div style="color:#9fe3ff;margin-bottom:4px">' + T('MODO TV ATIVADO', 'TV MODE ON') + '</div>'
+      + T('OK = atirar · ◀▶ girar · ▲▼ andar · 4/6 de lado', 'OK = fire · ◀▶ turn · ▲▼ move · 4/6 strafe') + '<br>'
+      + '<span style="color:#ff6b6b">●</span> ' + T('recarregar', 'reload') + ' &nbsp; <span style="color:#6bff8a">●</span> ' + T('interagir', 'use') + ' &nbsp; <span style="color:#ffe14d">●</span> ' + T('pular', 'jump') + ' &nbsp; <span style="color:#6bb8ff">●</span> ' + T('pausa', 'pause') + '<br>'
+      + T('CH+/CH− arma · ⏩ zoom · ⏪ modo de tiro · INFO ajuda', 'CH+/CH− weapon · ⏩ zoom · ⏪ fire mode · INFO help');
+    d.style.display = 'block'; clearTimeout(helpT); helpT = setTimeout(() => help(false), 9000);
+  }
+  function setTv(on){
+    tvOn = !!on; held.clear();
+    try{ localStorage.setItem('dz_tv', on ? '1' : '0'); }catch(e){}
+    try{
+      tvTab(on);
+      if(on){ if(!realPad() && typeof gpAdopt === 'function') gpAdopt(tvPad()); help(true); }
+      else { help(false); if(!realPad() && gamepadIndex !== null){ gamepadIndex = null; usingGamepad = false; applyControlScheme(); } if(typeof uiToast === 'function') uiToast(T('MODO TV DESLIGADO', 'TV MODE OFF')); }
+    }catch(e){}
+  }
+
+  /* ===== aba "TV" no menu de configurações/pausa: lista dos botões. SÓ existe com o Modo TV ligado ===== */
+  function tvTab(on){
+    const first = document.querySelector('.tab-btn[data-tab="tabGeneral"]'); if(!first) return;
+    const row = first.parentNode; let b = document.getElementById('tvTabBtn'), p = document.getElementById('tabTv');
+    if(!on){ if(b) b.style.display = 'none'; if(p){ p.classList.remove('active'); p.style.display = 'none'; } if(b && b.classList.contains('active')) first.click(); return; }
+    if(!b){
+      b = document.createElement('button'); b.className = 'tab-btn'; b.id = 'tvTabBtn'; b.type = 'button'; b.setAttribute('data-tab', 'tabTv'); row.appendChild(b);
+      p = document.createElement('div'); p.className = 'tab-panel'; p.id = 'tabTv';
+      const dbg = document.getElementById('tabDebug'); if(dbg && dbg.parentNode) dbg.parentNode.insertBefore(p, dbg.nextSibling); else row.parentNode.appendChild(p);
+      b.addEventListener('click', () => {
+        row.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('active', x === b));
+        document.querySelectorAll('.tab-panel').forEach(x => x.classList.toggle('active', x.id === 'tabTv'));
+        tvTabBuild();
+      });
+    }
+    b.style.display = ''; b.textContent = 'TV'; if(p) p.style.display = '';
+  }
+  function tvTabBuild(){
+    const p = document.getElementById('tabTv'); if(!p) return;
+    const R = '<span style="color:#ff6b6b">●</span>', G = '<span style="color:#6bff8a">●</span>', Y = '<span style="color:#ffe14d">●</span>', B = '<span style="color:#6bb8ff">●</span>';
+    const sec = [
+      [T('NOS MENUS', 'IN MENUS'), [
+        ['▲ ▼ ◀ ▶', T('mover', 'move')], ['OK', T('confirmar', 'confirm')], [T('VOLTAR', 'BACK'), T('voltar', 'back')],
+        ['CH+ / CH−', T('trocar de aba', 'switch tab')], ['⏩ / ⏪', T('trocar o modo de jogo', 'change game mode')]]],
+      [T('NO JOGO', 'IN GAME'), [
+        ['▲ ▼', T('andar para frente / trás', 'move forward / back')], ['◀ ▶', T('girar a câmera', 'turn the camera')], ['4 / 6', T('andar de lado', 'strafe')],
+        ['OK', T('atirar', 'fire')], [R, T('recarregar', 'reload')], [G, T('interagir / pegar arma', 'use / pick up weapon')], [Y, T('pular', 'jump')],
+        [B + ' / ' + T('VOLTAR', 'BACK') + ' / ▶❚❚', T('pausa', 'pause')], ['CH+ / CH−', T('próxima / anterior arma', 'next / previous weapon')],
+        ['⏩', T('zoom da sniper (ou agarrar na Gravity Gun)', 'sniper zoom (or grab with the Gravity Gun)')], ['⏪', T('modo de tiro (auto / semi / rajada)', 'fire mode (auto / semi / burst)')], ['■', T('loja', 'shop')]]],
+      [T('NOS EMULADORES', 'IN EMULATORS'), [
+        ['▲ ▼ ◀ ▶', T('direcional', 'D-pad')], ['OK / ' + T('VOLTAR', 'BACK'), 'A / B'], [R + ' / ' + G, 'X / Y'], ['CH+ / CH−', 'R / L'],
+        [Y, 'SELECT'], [B, 'START'], [Y + ' + ' + B + ' (1 s)', T('sair do emulador', 'exit the emulator')]]]
+    ];
+    let h = '<div style="opacity:.8;margin:2px 0 8px">' + T('Controle remoto da TV (Modo TV). Botão INFO mostra esta ajuda rápida.', 'TV remote (TV Mode). The INFO button shows a quick help.') + '</div>';
+    sec.forEach(s => {
+      h += '<div class="set-sec" style="margin-top:12px">' + s[0] + '</div>';
+      s[1].forEach(r => { h += '<div style="display:flex;justify-content:space-between;gap:14px;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,.12);font-weight:bold"><span style="white-space:nowrap">' + r[0] + '</span><span style="text-align:right;opacity:.92">' + r[1] + '</span></div>'; });
+    });
+    p.innerHTML = h;
+  }
+
+  window.dzTvTry = function(s){ if(String(s || '').trim().toLowerCase() === 'tv'){ setTv(!tvOn); return true; } return false; };
+  window.dzTvOn = () => tvOn;
+
+  /* Tizen só entrega as teclas coloridas/mídia se forem registradas */
+  try{
+    if(window.tizen && tizen.tvinputdevice){
+      ['ColorF0Red','ColorF1Green','ColorF2Yellow','ColorF3Blue','MediaPlay','MediaPause','MediaPlayPause','MediaStop','MediaFastForward','MediaRewind','ChannelUp','ChannelDown','Info'].forEach(k => { try{ tizen.tvinputdevice.registerKey(k); }catch(e){} });
+    }
+  }catch(e){}
+
+  const SEQ = ['red', 'green', 'yellow', 'blue'];
+  function onKey(e){
+    const n = logical(e); if(!n) return;
+    if(e.type === 'keydown' && !e.repeat && SEQ.indexOf(n) >= 0){      /* código secreto: vermelho, verde, amarelo, azul */
+      const now = performance.now(); if(now - seqT > 5000) seq = []; seqT = now;
+      seq.push(n); if(seq.join() !== SEQ.slice(0, seq.length).join()) seq = (n === 'red') ? ['red'] : [];
+      if(seq.length === 4){ seq = []; setTv(!tvOn); e.preventDefault(); e.stopImmediatePropagation(); return; }
+    }
+    if(!tvOn || typing(e.target)) return;
+    if(n === 'info'){ if(e.type === 'keydown') help(true); e.preventDefault(); e.stopImmediatePropagation(); return; }
+    if(n === 'n4' || n === 'n6'){ if(!inGame()) return; }              /* 4 e 6 só viram "andar de lado" durante o jogo */
+    if(e.type === 'keydown') held.add(n); else held.delete(n);
+    e.preventDefault(); e.stopImmediatePropagation();                  /* o gamepad virtual cuida: evita entrada em dobro */
+  }
+  window.addEventListener('keydown', onKey, true);
+  window.addEventListener('keyup', onKey, true);
+  window.addEventListener('blur', () => held.clear());
+
+  /* liga sozinho em Smart TV (a menos que a pessoa tenha desligado) */
+  window.addEventListener('DOMContentLoaded', () => {
+    let st = null; try{ st = localStorage.getItem('dz_tv'); }catch(e){}
+    if(st === '1' || (st !== '0' && TV_UA.test(navigator.userAgent || ''))) setTimeout(() => setTv(true), 600);
+  });
+})();
+</script>
 <script>
 /* === CONSOLE (Xbox Edge / PlayStation) — detecção e proteção de entrada ===
    Teste no PC: abra o jogo com ?console=xbox ou ?console=ps */
@@ -14520,6 +14693,7 @@ document.getElementById('debugPassInput').addEventListener('keydown', e => {
 });
 document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   const inputPass = document.getElementById('debugPassInput').value.trim();
+  if (window.dzTvTry && window.dzTvTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código "tv": liga/desliga o Modo TV
   if (window.dzCalcTry && window.dzCalcTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc']); document.getElementById('debugPassInput').value = ''; return; }   // código da calculadora
   if (window.dzLgTry && window.dzLgTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc', 'ed', 'jd']); document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
   if (window.dzJdTry && window.dzJdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['jd']); document.getElementById('debugPassInput').value = ''; return; }   // código do JDoodle
