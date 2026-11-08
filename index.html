@@ -22646,8 +22646,11 @@ function playFile(f){
   if(!f) return;
   stop();
   const ext = (f.name.split('.').pop() || '').toLowerCase();
-  blobUrl = URL.createObjectURL(f);
-  play(blobUrl + '#rom.' + (ext === 'zip' || ext === '7z' || cur.exts.indexOf(ext) >= 0 ? ext : cur.exts[0]), f.name.replace(/\.[^.]+$/, ''));
+  const useExt = (ext === 'zip' || ext === '7z' || cur.exts.indexOf(ext) >= 0) ? ext : cur.exts[0];
+  const url = URL.createObjectURL(f);
+  const name = f.name.replace(/\.[^.]+$/, '');
+  play(url + '#rom.' + useExt, name);
+  blobUrl = url;   // define DEPOIS do play(), senão o stop() interno apaga o link
 }
 function showList(){ stop(); list.classList.add('full'); renderList(); labels(); $('gbaMsg').textContent = ''; menuFx(true); }
 
