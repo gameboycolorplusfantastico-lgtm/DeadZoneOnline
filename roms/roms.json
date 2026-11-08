@@ -138,6 +138,11 @@
     "system": "nes"
   },
   {
+    "file": "DRMR.gb",
+    "title": "DRMR",
+    "system": "gb"
+  },
+  {
     "file": "PKMB.gb",
     "title": "PKMB",
     "system": "gb"
