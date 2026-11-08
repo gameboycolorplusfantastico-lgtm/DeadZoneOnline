@@ -203,6 +203,11 @@
     "system": "gbc"
   },
   {
+    "file": "CHRNTRGGR.sfc",
+    "title": "CHRNTRGGR",
+    "system": "snes"
+  },
+  {
     "file": "DKC.smc",
     "title": "DKC",
     "system": "snes"
@@ -215,6 +220,36 @@
   {
     "file": "DKC3DKDT.sfc",
     "title": "DKC3DKDT",
+    "system": "snes"
+  },
+  {
+    "file": "EARTHBND.sfc",
+    "title": "EARTHBND",
+    "system": "snes"
+  },
+  {
+    "file": "FZ3R0.sfc",
+    "title": "FZ3R0",
+    "system": "snes"
+  },
+  {
+    "file": "KSS.sfc",
+    "title": "KSS",
+    "system": "snes"
+  },
+  {
+    "file": "MMX.sfc",
+    "title": "MMX",
+    "system": "snes"
+  },
+  {
+    "file": "MMX3.sfc",
+    "title": "MMX3",
+    "system": "snes"
+  },
+  {
+    "file": "SF2.sfc",
+    "title": "SF2",
     "system": "snes"
   },
   {
@@ -240,6 +275,16 @@
   {
     "file": "SMW2YI.smc",
     "title": "SMW2YI",
+    "system": "snes"
+  },
+  {
+    "file": "SSF2TNC.smc",
+    "title": "SSF2TNC",
+    "system": "snes"
+  },
+  {
+    "file": "STRFX.sfc",
+    "title": "STRFX",
     "system": "snes"
   },
   {
