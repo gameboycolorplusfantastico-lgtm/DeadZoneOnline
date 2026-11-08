@@ -338,7 +338,7 @@ window.addEventListener('keydown', function(e){
   #waterShade::after{content:"";position:absolute;left:-6%;right:-6%;bottom:-6%;height:30%;transform:translateY(var(--wy,0px));
     background:linear-gradient(to bottom,rgba(150,215,245,.06),rgba(60,150,210,.30) 20%,rgba(12,78,140,.52));
     border-top:2px solid rgba(190,235,255,.30);border-radius:50% 50% 0 0 / 16px 16px 0 0;}
-  #touchLayer{position:absolute;inset:0;z-index:20;display:none;touch-action:none;}
+  #touchLayer{position:absolute;inset:0;z-index:24;display:none;touch-action:none;}   /* acima da mira da sniper (#scopeOv, z 10) */
   #joyZone{position:absolute;left:0;bottom:0;width:45%;height:100%;touch-action:none;}
   #lookZone{position:absolute;right:0;bottom:0;width:55%;height:100%;touch-action:none;}
   #joyBase{
@@ -1094,6 +1094,22 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
   }
   #swapBtn:active{transform:scale(.94);}
 
+  /* ===== MIRA SNIPER (zoom + overlay) e botões de modo de tiro ===== */
+  #scopeOv{position:absolute;inset:0;display:none;pointer-events:none;z-index:10;
+    background:radial-gradient(circle at 50% 50%, transparent 0, transparent 38vmin, rgba(0,0,0,.9) 38.6vmin, #000 40vmin);}
+  #scopeOv:before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.85);}
+  #scopeOv:after{content:'';position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(0,0,0,.85);}
+  #scopeOv i{position:absolute;left:50%;top:50%;width:76vmin;height:76vmin;margin:-38vmin 0 0 -38vmin;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(0,0,0,.9);}
+  body.scoped #scopeOv{display:block;}
+  body.scoped #viewmodelWrapper,body.scoped #crosshair{display:none !important;}
+  body.scoped canvas#screen{image-rendering:auto;will-change:transform;}
+  #scopeBtn,#modeBtn{position:absolute;width:58px;height:58px;border-radius:50%;display:none;align-items:center;justify-content:center;
+    background-color:rgba(20,60,90,.45);border:2px solid var(--cs-hud,#9fe3ff);box-shadow:0 0 12px var(--cs-hud-glow,rgba(70,185,255,.5));
+    color:#fff;font:bold 11px sans-serif;text-shadow:1px 1px 0 #000;z-index:22;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;}
+  #scopeBtn{right:190px;bottom:calc(16% + 90px);} #modeBtn{right:275px;bottom:calc(16% + 20px);}
+  #scopeBtn{background-image:url('https://i.postimg.cc/rmf85KMs/HUDMOBILEAIM.png');background-repeat:no-repeat;background-position:center;background-size:62%;font-size:0;color:transparent;text-shadow:none;}
+  #scopeBtn:active,#modeBtn:active{transform:scale(.94);background-color:rgba(70,185,255,.45);}
+
   /* ===== BOTÕES MOBILE: círculo na cor da HUD com o desenho dentro ===== */
   #fireBtn,#reloadBtn,#swapBtn{
     background-color:rgba(20,60,90,.45);
@@ -1504,6 +1520,7 @@ html.console #deathFx,#deathFx.noblur{-webkit-backdrop-filter:none;backdrop-filt
     <img id="viewmodel" src="" alt="Weapon Viewmodel">
   </div>
   <div id="crosshair"><span class="ch-dot"></span></div>
+  <div id="scopeOv"><i></i></div>
   <div id="msgFlash"></div>
   <div id="killFeed"></div>
   <div id="swapPrompt"></div>
@@ -1569,6 +1586,8 @@ html.console #deathFx,#deathFx.noblur{-webkit-backdrop-filter:none;backdrop-filt
     <div id="joyStick"></div>
     <div id="reloadBtn"></div>
     <div id="swapBtn"></div>
+    <div id="scopeBtn">ZOOM</div>
+    <div id="modeBtn">AUTO</div>
     <div id="useBtn"></div>
     <div id="fireBtn"></div>
     <div id="kickBtn"></div>
@@ -1786,7 +1805,7 @@ html #swapPrompt,html #usePrompt{background:var(--hud-dark);border-color:rgba(va
 html #fpsCounter{color:var(--cs-hud);}
 html #socHud .soc-board{border-color:rgba(var(--hud-rgb),.55);}
 html #socHud .soc-clock.golden{color:var(--cs-hud);}
-html #fireBtn,html #reloadBtn,html #swapBtn,html #useBtn,html #kickBtn,html #jumpBtn,html #shopBtn.icon,html body.touch-ui #menuBtn,html body.touch-ui #chatBtn{background-color:var(--hud-btn);}
+html #fireBtn,html #reloadBtn,html #swapBtn,html #scopeBtn,html #modeBtn,html #useBtn,html #kickBtn,html #jumpBtn,html #shopBtn.icon,html body.touch-ui #menuBtn,html body.touch-ui #chatBtn{background-color:var(--hud-btn);}
 html #fireBtn:active,html #reloadBtn:active,html #swapBtn:active,html #useBtn:active,html #kickBtn:active,html #jumpBtn:active,html #shopBtn.icon:active,html body.touch-ui #menuBtn:active,html body.touch-ui #chatBtn:active{background-color:var(--hud-act);}
 
 /* --- MENUS: itens que ainda tinham azul fixo --- */
@@ -5435,6 +5454,8 @@ function trEn(en, lang){
 }
 // LT(pt, en): devolve o texto no idioma atual (pt/en direto; es/fr/it/ja pela tabela, senão inglês)
 function LT(pt, en){ return currentLang === 'pt' ? pt : (currentLang === 'en' ? en : trEn(en, currentLang)); }
+/* Menus Extras (calculadora, editor, JDoodle, emuladores...): só PT e EN. Qualquer outro idioma do jogo (fr, it, ja, es...) mostra inglês. */
+function LTX(pt, en){ return currentLang === 'pt' ? pt : en; }
 function LD(o){ return LT(o.pt, o.en); }   // objetos { pt, en }
 ['es', 'fr', 'it', 'ja'].forEach(function(l){
   const d = Object.assign({}, I18N.en);
@@ -10313,7 +10334,7 @@ function updateFps(now){
 function applyDebugFog(){
   if(fnaf) return;
   const bright = isTestMapNow() && ['ceil', 'roof'].indexOf((testZoneAt(player.x, player.y) || {}).id) >= 0;   // salão de tetos e telhados: sempre claros
-  const want = (debugOptions.fog || 1) * userFogMul * ((isTestMapNow() && !testLightsOn && !bright) ? 0.35 : 1);
+  const want = (debugOptions.fog || 1) * userFogMul * (function(){ try{ return scopeLvl ? 2.5 : 1; }catch(e){ return 1; } })() * ((isTestMapNow() && !testLightsOn && !bright) ? 0.35 : 1);
   if(fogScale !== want) fogScale = want;
 }
 function applyDebugWorldOptions(){
@@ -13612,6 +13633,8 @@ window.addEventListener('keydown', e => {
   }
   if(k === 'r' && player.weapon !== 'gravgun') reloadWeapon();   // R = recarregar (agarrar/soltar da Gravity Gun fica só no botão direito do mouse)
   if(k === 'b' && started && !gameOver) shopToggle();
+  if(k === 'v' && started && !gameOver && settingsModal.style.display !== 'flex') cycleFireMode();   // V = modo de tiro (auto / semi / rajada)
+  if(k === 'z' && started && !gameOver && settingsModal.style.display !== 'flex') toggleScope();   // Z = zoom da sniper (alternativa)
   if(k === 'escape' && shopOpen){ e.preventDefault(); shopClose(); return; }   // ESC fecha a loja e devolve o controle do mouse
   if((k === 'c' || k === 'home') && started && !gameOver && settingsModal.style.display !== 'flex') recenterCam();
   if(k === 'pageup' || k === 'pagedown') e.preventDefault();
@@ -13651,10 +13674,13 @@ window.addEventListener('mousemove', e=>{
   if(Math.abs(mx) > MOUSE_SPIKE_PX || Math.abs(my) > MOUSE_SPIKE_PX) return;
   mouseDX += mx; mouseDY += my;
 });
-window.addEventListener('contextmenu', e=>{ if(started && player.weapon === 'gravgun') e.preventDefault(); });
+window.addEventListener('contextmenu', e=>{ if(started && (player.weapon === 'gravgun' || SCOPE_WEAPONS[player.weapon])) e.preventDefault(); });
 window.addEventListener('mousedown', e=>{
   if(e.button === 2 && started && !gameOver && player.weapon === 'gravgun' && document.pointerLockElement === document.getElementById('screen')){
     e.preventDefault(); ggSecondary(); return;   // botão direito = agarrar / soltar
+  }
+  if(e.button === 2 && started && !gameOver && SCOPE_WEAPONS[player.weapon] && document.pointerLockElement === document.getElementById('screen')){
+    e.preventDefault(); toggleScope(); return;   // botão direito = zoom da sniper
   }
   if(started && !gameOver && document.pointerLockElement===document.getElementById('screen')){
     fireHeld = true; tryFire();
@@ -13933,6 +13959,8 @@ function pollGamepad(){
     if(gpFireHeld && !gpTriggerWasHeld){ fireHeld = true; tryFire(); }
     else if(!gpFireHeld && gpTriggerWasHeld){ fireHeld = false; }
     gpTriggerWasHeld = gpFireHeld;
+    if(btn(6) && !prev(6) && SCOPE_WEAPONS[player.weapon]) toggleScope();   // LT = zoom da sniper
+    if(btn(15) && !prev(15)) cycleFireMode();                                  // D-pad → = modo de tiro
 
     // ===== MAPA ÚNICO DE BOTÕES (igual em TODOS os modos; cada botão faz uma coisa só) =====
     //  A / ✕  pular            B / ○  chutar (Futebol)      X / □  recarregar       Y / △  interagir (portas, luzes, arma do chão)
@@ -14009,7 +14037,8 @@ function gpGlyph(k){
   return '<span class="gpb ' + g[0] + '">' + g[1] + '</span>';
 }
 function gpHintsHtml(rootId){
-  const d = I18N[currentLang];
+  const exRoot = ['emuOverlay','gbaOverlay','lgOverlay','edOverlay','calcOverlay','jdOverlay'].indexOf(rootId) >= 0;
+  const d = I18N[(exRoot && currentLang !== 'pt') ? 'en' : currentLang];   /* telas Extras: só PT/EN */
   const it = (keys, label) => keys.map(gpGlyph).join('') + ' ' + label;
   const L = [];
   L.push(it(['DPAD'], d.gpNav), it(['A'], d.gpConfirm));
@@ -14020,17 +14049,17 @@ function gpHintsHtml(rootId){
     if(typeof isDmModeSelected === 'function' && isDmModeSelected()) L.push(it(['X'], d.gpSide));
     L.push(it(['START'], d.gpPlay));
   } else if(rootId === 'edOverlay'){
-    L.push(it(['B'], d.gpBack), it(['X'], LT('ABRIR', 'OPEN')), it(['Y'], LT('DIGITAR', 'TYPE')), it(['START'], LT('BAIXAR', 'DOWNLOAD')));
+    L.push(it(['B'], d.gpBack), it(['X'], LTX('ABRIR', 'OPEN')), it(['Y'], LTX('DIGITAR', 'TYPE')), it(['START'], LTX('BAIXAR', 'DOWNLOAD')));
   } else if(rootId === 'emuOverlay'){
     L.push(it(['B'], d.gpBack));
   } else if(rootId === 'gbaOverlay'){
-    L.push(it(['B'], d.gpBack), it(['X'], LT('ABRIR', 'OPEN')));
+    L.push(it(['B'], d.gpBack), it(['X'], LTX('ABRIR', 'OPEN')));
   } else if(rootId === 'lgOverlay'){
     L.push(it(['B'], d.gpBack));
   } else if(rootId === 'jdOverlay'){
-    L.push(it(['B'], d.gpBack), it(['X'], 'STDIN'), it(['Y'], LT('DIGITAR', 'TYPE')), it(['START'], LT('EXECUTAR', 'RUN')));
+    L.push(it(['B'], d.gpBack), it(['X'], 'STDIN'), it(['Y'], LTX('DIGITAR', 'TYPE')), it(['START'], LTX('EXECUTAR', 'RUN')));
   } else if(rootId === 'calcOverlay'){
-    L.push(it(['B'], d.gpBack), it(['X'], LT('APAGAR', 'ERASE')), it(['Y'], 'AC'), it(['START'], '='));
+    L.push(it(['B'], d.gpBack), it(['X'], LTX('APAGAR', 'ERASE')), it(['Y'], 'AC'), it(['START'], '='));
   } else if(rootId === 'settingsModal'){
     L.push(it(['B'], d.gpBack), it(['LB','RB'], d.gpTabs), it(['START'], d.gpClose));
   } else if(rootId === 'gameOverOverlay'){
@@ -14104,6 +14133,27 @@ function gpMenuMove(root, dx, dy){
   if(!gpMenuEl || !list.includes(gpMenuEl)){ gpSetFocus(gpDefaultFocus(list), true); return; }
   const cr = gpMenuEl.getBoundingClientRect();
   const cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2;
+  /* 1º: vizinho ALINHADO (mesma linha para esq/dir, mesma coluna para cima/baixo), o mais próximo.
+     Sem isso, em grades e listas com quebra de linha um item da linha de baixo pontuava melhor que o do lado
+     e o foco "pulava" ou travava (menu de emuladores, chips do menu debug). */
+  if((dx !== 0) !== (dy !== 0)){
+    let al = null, alD = Infinity;
+    for(const el of list){
+      if(el === gpMenuEl) continue;
+      const r = el.getBoundingClientRect();
+      const mx = r.left + r.width / 2, my = r.top + r.height / 2;
+      let a;
+      if(dx !== 0){
+        if(!((my >= cr.top && my <= cr.bottom) || (cy >= r.top && cy <= r.bottom))) continue;
+        a = (mx - cx) * dx;
+      } else {
+        if(!((mx >= cr.left && mx <= cr.right) || (cx >= r.left && cx <= r.right))) continue;
+        a = (my - cy) * dy;
+      }
+      if(a > 1 && a < alD){ alD = a; al = el; }
+    }
+    if(al){ gpSetFocus(al); return; }
+  }
   let best = null, bestScore = Infinity;
   for(const el of list){
     if(el === gpMenuEl) continue;
@@ -14390,6 +14440,8 @@ reloadBtn.addEventListener('pointerdown', e=>{
   e.preventDefault(); e.stopPropagation();
 },{passive:false});
 
+document.getElementById('scopeBtn').addEventListener('pointerdown', e=>{ toggleScope(); e.preventDefault(); e.stopPropagation(); },{passive:false});
+document.getElementById('modeBtn').addEventListener('pointerdown', e=>{ cycleFireMode(); e.preventDefault(); e.stopPropagation(); },{passive:false});
 document.getElementById('swapBtn').addEventListener('pointerdown', e=>{
   if(!zomUse()) trySwapWeapon();
   e.preventDefault(); e.stopPropagation();
@@ -14479,7 +14531,7 @@ document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   if (inputPass === '31082007') {
     SFX.menuAccept();
     document.getElementById('debugSection').style.display = 'block';
-    document.getElementById('debugLockContainer').style.display = 'none';
+    document.getElementById('debugPassInput').value = '';   // o campo de senha continua visível: dá para digitar os códigos dos menus secretos
     uiToast(LT('MENU DEBUG DESBLOQUEADO', 'DEBUG MENU UNLOCKED'), 'ok');
   } else {
     SFX.menuBack();
@@ -15543,7 +15595,40 @@ resizeCanvas();
 
 let FOV = 66 * Math.PI/180;
 let HALF_FOV = FOV/2;
-function setFov(deg){ FOV = deg * Math.PI/180; HALF_FOV = FOV/2; skyColAng = []; }
+let baseFovDeg = 66, scopeMul = 1, scopeLvl = 0, scopeSensMul = 1;
+function setFov(deg){ baseFovDeg = deg; FOV = deg * scopeMul * Math.PI/180; HALF_FOV = FOV/2; skyColAng = []; }
+// ===== MODO DE TIRO (só armas que têm mais de um) e MIRA SNIPER =====
+const FIRE_MODES = { smg:['auto','semi'], mp5n:['auto','semi'], rifle:['auto','semi'], aug:['auto','semi','burst'], m4a1:['auto','semi','burst'] };
+const SCOPE_WEAPONS = { sniper:1, awsm:1, sg550:1, g3sg1:1, m200:1 };
+const SCOPE_MULS = [1, 2.5, 4.5];   // ampliação da imagem (1x, 2,5x, 4,5x)
+const fireModeSel = {}; let burstLeft = 0, burstNext = 0;
+function curFireMode(w){ const m = FIRE_MODES[w || player.weapon]; return m ? (fireModeSel[w || player.weapon] || m[0]) : null; }
+function weaponIsAuto(w){ const fm = curFireMode(w); return fm ? fm === 'auto' : !!WEAPON_CONFIG[w].auto; }
+function cycleFireMode(){
+  const w = player.weapon, m = FIRE_MODES[w];
+  if(!m || !started || gameOver || player.isReloading) return;
+  fireModeSel[w] = m[(m.indexOf(curFireMode(w)) + 1) % m.length]; burstLeft = 0;
+  const nm = { auto:['AUTOMÁTICO','AUTO'], semi:['TIRO ÚNICO','SEMI-AUTO'], burst:['RAJADA (3)','BURST (3)'] }[fireModeSel[w]];
+  flashMsg(LT('MODO: ' + nm[0], 'MODE: ' + nm[1])); SFX.menuSelect();
+}
+function setScope(l){
+  scopeLvl = l; scopeSensMul = 1 / SCOPE_MULS[l];
+  const cv = document.getElementById('screen'); cv.style.transformOrigin = '50% 50%'; cv.style.transform = l > 0 ? 'scale(' + SCOPE_MULS[l] + ')' : '';
+  document.body.classList.toggle('scoped', l > 0);
+}
+function toggleScope(){
+  if(!SCOPE_WEAPONS[player.weapon] || !started || gameOver || player.isReloading || shopOpen) return;
+  setScope((scopeLvl + 1) % SCOPE_MULS.length); SFX.menuSelect();
+}
+function scopeTick(){
+  const ok = SCOPE_WEAPONS[player.weapon] && started && !gameOver && !player.isReloading && !shopOpen && !countdownActive && settingsModal.style.display !== 'flex';
+  if(!ok && scopeLvl) setScope(0);
+  if(burstLeft > 0 && (!started || gameOver || player.isReloading || shopOpen)) burstLeft = 0;
+  const sb = document.getElementById('scopeBtn'), mb = document.getElementById('modeBtn');
+  if(sb) sb.style.display = (usingTouch && SCOPE_WEAPONS[player.weapon]) ? 'flex' : 'none';
+  if(mb){ const fm = curFireMode(); mb.style.display = (usingTouch && fm) ? 'flex' : 'none'; if(fm) mb.textContent = fm === 'auto' ? 'AUTO' : fm === 'semi' ? 'SEMI' : 'x3'; }
+  if(burstLeft > 0 && performance.now() >= burstNext){ burstLeft--; burstNext = performance.now() + WEAPON_CONFIG[player.weapon].rate; tryFire(true); }
+}
 let zbuffer = [];
 
 // ===== RENDERIZAÇÃO COM DEGRAUS REAIS =====
@@ -16852,12 +16937,12 @@ function updatePlayer(dt){
     if(keys['s']||keys['arrowdown']) moveF -= 1;
     if(keys['pageup'])   lookPitch( 0.9*dt*pitchSens);   // olhar para cima
     if(keys['pagedown']) lookPitch(-0.9*dt*pitchSens);   // olhar para baixo
-    if(pointerLocked && settingsModal.style.display !== 'flex'){ turn += Math.max(-0.6, Math.min(0.6, mouseDX * 0.0028 * mouseSensitivity)); mouseDX=0; lookPitch(-Math.max(-60, Math.min(60, mouseDY)) * 0.0011 * mouseSensitivity * pitchSens * (invertY ? -1 : 1)); mouseDY=0; }
+    if(pointerLocked && settingsModal.style.display !== 'flex'){ turn += Math.max(-0.6, Math.min(0.6, mouseDX * 0.0028 * mouseSensitivity * scopeSensMul)); mouseDX=0; lookPitch(-Math.max(-60, Math.min(60, mouseDY)) * 0.0011 * mouseSensitivity * scopeSensMul * pitchSens * (invertY ? -1 : 1)); mouseDY=0; }
   }
   if(usingTouch && settingsModal.style.display !== 'flex'){
     moveF += -joyVec.y;
     strafe += joyVec.x;
-    turn += Math.max(-0.6, Math.min(0.6, lookDX * 0.0045 * mouseSensitivity)); lookDX=0;
+    turn += Math.max(-0.6, Math.min(0.6, lookDX * 0.0045 * mouseSensitivity * scopeSensMul)); lookDX=0;
     lookPitch(-Math.max(-60, Math.min(60, lookDY)) * 0.0016 * mouseSensitivity * pitchSens * (invertY ? -1 : 1)); lookDY=0;
   }
   if(usingGamepad && settingsModal.style.display !== 'flex'){
@@ -16955,7 +17040,8 @@ function updatePlayer(dt){
     }
   });
 
-  if(fireHeld && WEAPON_CONFIG[player.weapon].auto){
+  scopeTick();
+  if(fireHeld && weaponIsAuto(player.weapon)){
     tryFire();
   }
 }
@@ -17423,7 +17509,8 @@ function addAmmoAll(pentes) {
   });
 }
 
-function tryFire(){
+function tryFire(fromBurst){
+  if(burstLeft > 0 && !fromBurst) return;   // rajada em andamento
   if(AssetLoader.isHolding()) return;   // tela de loading: o jogo inteiro fica em pausa
   if(shopOpen) return;
   if(gameOver || countdownActive || dmPlayerDead || player.isReloading || settingsModal.style.display === 'flex') return;
@@ -17434,12 +17521,13 @@ function tryFire(){
   if(wConfig.special === 'gravgun'){ player.lastShot = now; ggPrimary(); return; }
   
   if(player.ammo[player.weapon] <= 0 && !debugOptions.infAmmo){
-    flashMsg(I18N[currentLang].noAmmo);
+    burstLeft = 0; flashMsg(I18N[currentLang].noAmmo);
     SFX.noAmmo();
     return;
   }
 
   player.lastShot = now;
+  if(!fromBurst && curFireMode() === 'burst'){ burstLeft = 2; burstNext = now + wConfig.rate; }
   if (!debugOptions.infAmmo) {
     player.ammo[player.weapon] -= wConfig.ammoUse;
   }
@@ -19887,7 +19975,7 @@ html.console #calcOverlay{padding:calc(8px + var(--sy,0px)) calc(8px + var(--sx,
 const CALC_SECRET_CODE = 'calc123';
 const $ = id => document.getElementById(id);
 const overlay = $('calcOverlay'), box = $('calcBox'), exprEl = $('calcExpr'), resEl = $('calcRes'), indEl = $('calcInd');
-const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };   /* menus Extras: só português ou inglês */
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const S = { expr:'', ans:0, mem:0, hasMem:false, deg:true, sci:null, done:false, err:null, resText:'0', lastPrev:'0', hist:[] };
 try{
@@ -20362,7 +20450,7 @@ const ED_SECRET_CODE = 'word123';
 const KEY = 'dz_editor_v1';
 const $ = id => document.getElementById(id);
 const ov = $('edOverlay'), rich = $('edRich'), plain = $('edPlain'), area = $('edArea'), pop = $('edPop');
-const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };   /* menus Extras: só português ou inglês */
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const S = { mode:'rich', ext:'txt', dirty:false, dark:false, wrap:true, padForce:false, findCase:false, pendingSize:12 };
 let saved = null, msgT = 0, saveT = 0, cntT = 0, toolT = 0, composing = false;
@@ -21486,7 +21574,7 @@ html.console #jdOverlay{padding:calc(6px + var(--sy,0px)) calc(6px + var(--sx,0p
 const JD_SECRET_CODE = 'jdoodle123';
 const $ = id => document.getElementById(id);
 const ov = $('jdOverlay'), ta = $('jdCode'), hl = $('jdHl'), gut = $('jdGut'), outT = $('jdOutT'), frame = $('jdFrame'), sin = $('jdIn'), sel = $('jdLang');
-const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };   /* menus Extras: só português ou inglês */
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const toast = (m, k) => { try{ if(typeof uiToast === 'function') uiToast(m, k || 'ok'); }catch(e){} };
 const LANGS = {
@@ -21834,7 +21922,7 @@ html.console #lgOverlay{padding:calc(8px + var(--sy,0px)) calc(8px + var(--sx,0p
 const LG_SECRET_CODE = 'utility';
 const $ = id => document.getElementById(id);
 const ov = $('lgOverlay');
-const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };   /* menus Extras: só português ou inglês */
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const isOpen = () => ov.classList.contains('open');
 function labels(){
@@ -21973,7 +22061,7 @@ const TRACKS = [
   'https://file.garden/aoj4oJPXcy0zW16k/secretmenuemu2.mp3'
 ];
 const THEMES = [['neon', '🌆', 'NEON'], ['stars', '🌌', 'ESTRELAS'], ['rain', '🌧', 'CHUVA PIXEL'], ['aurora', '🌈', 'AURORA'], ['off', '⛔', 'SEM ANIMAÇÃO']];
-const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };   /* menus Extras: só português ou inglês */
 const snd = () => { try{ if(typeof SFX !== 'undefined' && SFX.menuSelect) SFX.menuSelect(); }catch(e){} };
 let theme = 'neon', mOn = true, vol = .5, missing = false;
 try{
@@ -22337,7 +22425,7 @@ function applySys(){
 const $ = id => document.getElementById(id);
 const ov = $('gbaOverlay'), list = $('gbaList');
 let frame = $('gbaFrame');
-const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };   /* menus Extras: só português ou inglês */
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const isOpen = () => ov.classList.contains('open');
 const isPlaying = () => ov.classList.contains('playing');
@@ -22648,9 +22736,8 @@ function playFile(f){
   const ext = (f.name.split('.').pop() || '').toLowerCase();
   const useExt = (ext === 'zip' || ext === '7z' || cur.exts.indexOf(ext) >= 0) ? ext : cur.exts[0];
   const url = URL.createObjectURL(f);
-  const name = f.name.replace(/\.[^.]+$/, '');
-  play(url + '#rom.' + useExt, name);
-  blobUrl = url;   // define DEPOIS do play(), senão o stop() interno apaga o link
+  play(url + '#rom.' + useExt, f.name.replace(/\.[^.]+$/, ''));
+  blobUrl = url;   // depois do play(): o stop() interno não apaga mais o link da ROM
 }
 function showList(){ stop(); list.classList.add('full'); renderList(); labels(); $('gbaMsg').textContent = ''; menuFx(true); }
 
@@ -23011,7 +23098,7 @@ html.console #emuOverlay{padding:calc(8px + var(--sy,0px)) calc(8px + var(--sx,0
 const EMU_SECRET_CODE = 'emu';
 const $ = id => document.getElementById(id);
 const ov = $('emuOverlay'), listEl = $('emuList');
-const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };   /* menus Extras: só português ou inglês */
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const isOpen = () => ov.classList.contains('open');
 let selMuted = false;   /* o seletor silencia o áudio do Dead Zone; ao abrir um emulador, ele assume o mudo */
@@ -23131,7 +23218,7 @@ window.dzEmuReopen = () => open(hubFilter);   /* o emulador chama isto ao sair, 
 'use strict';
 const KEY = 'dz_extras_v1';
 const $ = id => document.getElementById(id);
-const tr = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };   /* menus Extras: só português ou inglês */
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const row = $('settingsTabRow'); if(!row) return;
 
