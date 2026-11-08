@@ -168,6 +168,16 @@
     "system": "gb"
   },
   {
+    "file": "GTA.gbc",
+    "title": "GTA",
+    "system": "gbc"
+  },
+  {
+    "file": "GTA2.gbc",
+    "title": "GTA2",
+    "system": "gbc"
+  },
+  {
     "file": "PKMC.gbc",
     "title": "PKMC",
     "system": "gbc"
@@ -180,6 +190,16 @@
   {
     "file": "PKMS.gbc",
     "title": "PKMS",
+    "system": "gbc"
+  },
+  {
+    "file": "SHNT.gbc",
+    "title": "SHNT",
+    "system": "gbc"
+  },
+  {
+    "file": "UN0.gbc",
+    "title": "UN0",
     "system": "gbc"
   },
   {
