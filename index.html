@@ -22277,19 +22277,27 @@ window.dzEmuFx = { register, on, off, panel, refresh: refreshPanels, setTheme, s
     <div id="gbaHead">
       <div id="gbaLogo"><b id="gbaLogoName" style="font:inherit">GAME BOY ADVANCE</b><span id="gbaLogoCore">mGBA</span></div>
       <button type="button" class="gbab nopl" id="gbaOpen">📂 ABRIR .GBA</button>
-      <button type="button" class="gbab nopl" id="gbaFx" aria-label="Ajustes do menu" title="Ajustes do menu">⚙</button>
       <button type="button" class="gbab" id="gbaMenuBtn">☰ JOGOS</button>
-      <button type="button" class="gbab onpl" id="gbaPadBtn">🕹 CONTROLES</button>
-      <button type="button" class="gbab onpl" id="gbaHelpBtn">❓ AJUDA</button>
-      <button type="button" class="gbab onpl" id="gbaSaveOut">💾 BAIXAR SAVE</button>
-      <button type="button" class="gbab onpl" id="gbaSaveIn">📥 ENVIAR SAVE</button>
-      <button type="button" class="gbab onpl" id="gbaStateOut">⬇ BAIXAR ESTADO</button>
-      <button type="button" class="gbab onpl" id="gbaStateIn">⬆ ENVIAR ESTADO</button>
+      <button type="button" class="gbab" id="gbaEmuBtn">🎮 EMULADORES</button>
+      <div id="gbaMoreWrap">
+        <button type="button" class="gbab" id="gbaMoreBtn" aria-haspopup="true" aria-expanded="false">☰ MENU</button>
+        <div id="gbaMore" role="menu">
+          <div id="gbaMoreTxt"></div>
+          <div id="gbaMoreGrid">
+            <button type="button" class="gbab" id="gbaPadBtn">🕹 CONTROLES</button>
+            <button type="button" class="gbab" id="gbaHelpBtn">❓ AJUDA</button>
+            <button type="button" class="gbab" id="gbaSaveOut">💾 BAIXAR SAVE</button>
+            <button type="button" class="gbab" id="gbaSaveIn">📥 ENVIAR SAVE</button>
+            <button type="button" class="gbab" id="gbaStateOut">⬇ BAIXAR ESTADO</button>
+            <button type="button" class="gbab" id="gbaStateIn">⬆ ENVIAR ESTADO</button>
+            <button type="button" class="gbab" id="gbaQSave">⚡ SALVAR RÁPIDO</button>
+            <button type="button" class="gbab" id="gbaQLoad">⚡ CARREGAR RÁPIDO</button>
+            <button type="button" class="gbab" id="gbaFpsBtn">📊 FPS</button>
+            <button type="button" class="gbab" id="gbaFs">⛶ TELA CHEIA</button>
+          </div>
+        </div>
+      </div>
       <input type="file" id="gbaSaveFile" style="display:none">
-      <button type="button" class="gbab onpl" id="gbaQSave">⚡ SALVAR RÁPIDO</button>
-      <button type="button" class="gbab onpl" id="gbaQLoad">⚡ CARREGAR RÁPIDO</button>
-      <button type="button" class="gbab onpl" id="gbaFpsBtn">📊 FPS</button>
-      <button type="button" class="gbab" id="gbaFs">⛶ TELA CHEIA</button>
       <span class="sp"></span>
       <button type="button" class="gbab clr" id="gbaClose">✕ FECHAR</button>
     </div>
@@ -22497,6 +22505,7 @@ function labels(){
   $('gbaPadBtn').textContent = '🕹 ' + tr('CONTROLES', 'CONTROLS');
   $('gbaHelpBtn').textContent = '❓ ' + tr('AJUDA', 'HELP');
   $('gbaClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
+  try{ moreLabels(); }catch(e){}
   $('gbaQSave').textContent = '⚡ ' + tr('SALVAR RÁPIDO', 'QUICK SAVE'); $('gbaQLoad').textContent = '⚡ ' + tr('CARREGAR RÁPIDO', 'QUICK LOAD');
   fsLabel();
   if(!isPlaying())
@@ -23103,12 +23112,12 @@ function cfgPanel(ex){
 /* ---- MENU BONITINHO: temas e música ficam no motor compartilhado (dzEmuFxScript). Aqui só liga/desliga e o botão ⚙ ---- */
 const FX = window.dzEmuFx || null;
 const fxSurf = FX ? FX.register(ov, $('gbaBg')) : null;
-const fxPanel = FX ? FX.panel($('gbaBox'), { onToggle: o => { try{ $('gbaBody').inert = !!o; }catch(e){} }, extra: cfgPanel }) : null;
+const fxPanel = null;   /* os ajustes do emulador agora ficam no ⚙ da tela de escolher o console (hub) */
+window.dzEmuCfgPanel = cfgPanel;
 function menuFx(on){
   if(!FX) return;
   if(on && isOpen() && !isPlaying()) FX.on(fxSurf); else FX.off();
 }
-$('gbaFx').addEventListener('click', () => { if(fxPanel) fxPanel.toggle(); });
 
 /* ---- medidor de desempenho (botão 📊 FPS): mostra quadros por segundo e o pior quadro do último segundo.
    Mede o ritmo da página (que divide o mesmo processador com o emulador): se o "pior" passa de ~40 ms, houve engasgo. ---- */
@@ -23156,6 +23165,37 @@ window.dzEmuSysTry = function(v){
   for(const id of SYS_ORDER) if(id !== 'gba' && SHOWN.indexOf(id) >= 0 && t === id + '123'){ open(id); return id; }
   return '';
 };
+
+/* ---- menu único (☰ MENU): botões + texto dos controles; saídas diretas: JOGOS e EMULADORES ---- */
+const moreWrap = $('gbaMoreWrap'), moreBtn = $('gbaMoreBtn');
+function moreOpen(){ return moreWrap.classList.contains('open'); }
+function moreSet(on){
+  moreWrap.classList.toggle('open', !!on); moreBtn.setAttribute('aria-expanded', on ? 'true' : 'false');
+  if(on){
+    const kt = (cur && cur.keyTxt) ? tr(cur.keyTxt[0], cur.keyTxt[1]) : '';
+    $('gbaMoreTxt').innerHTML = '<b>' + tr('CONTROLES', 'CONTROLS') + '</b>'
+      + '<div>⌨️ ' + kt + '</div>'
+      + '<div>📱 ' + tr('Toque nos botões da tela (🕹 CONTROLES mostra/esconde).', 'Tap the on-screen buttons (🕹 CONTROLS shows/hides them).') + '</div>'
+      + '<div>🎮 ' + tr('Voltar à lista: segure SELECT + START (ou L3 + R3) por 1 s · Salvar/carregar: segure LB + RB e aperte X / Y', 'Back to the list: hold SELECT + START (or L3 + R3) for 1 s · Save/load: hold LB + RB and press X / Y') + '</div>'
+      + '<div>⚡ ' + tr('Esc = voltar à lista · F5 salva · F9 carrega · F = tela cheia', 'Esc = back to the list · F5 save · F9 load · F = fullscreen') + '</div>';
+  }
+}
+function moreLabels(){
+  moreBtn.textContent = '☰ ' + tr('MENU', 'MENU');
+  $('gbaEmuBtn').textContent = '🎮 ' + tr('EMULADORES', 'EMULATORS');
+}
+moreBtn.addEventListener('click', e => { e.stopPropagation(); moreSet(!moreOpen()); });
+$('gbaMoreGrid').addEventListener('click', e => { if(e.target.closest('button')) setTimeout(() => moreSet(false), 0); });
+document.addEventListener('pointerdown', e => { if(moreOpen() && !moreWrap.contains(e.target)) moreSet(false); }, true);
+$('gbaMenuBtn').addEventListener('click', () => moreSet(false));
+$('gbaEmuBtn').addEventListener('click', () => {
+  moreSet(false);
+  const viaHub = !!(window.dzEmuFromSel && typeof window.dzEmuReopen === 'function');   /* aberto pelo hub: o close() já volta pra ele */
+  close();
+  if(!viaHub && typeof window.dzEmuOpenHub === 'function') setTimeout(() => { try{ window.dzEmuOpenHub(); }catch(e){} }, 0);
+});
+new MutationObserver(() => { if(moreOpen() && !isPlaying()) moreSet(false); }).observe(ov, { attributes:true, attributeFilter:['class'] });
+moreLabels();
 window.dzGba = { open, close, isOpen };
 window.dzGbaBack = () => { if(!isPlaying()) goBack(); };    /* durante o jogo o controle é do emulador */
 window.dzGbaPlaying = isPlaying;
@@ -23261,7 +23301,7 @@ function selUnmute(){ if(!selMuted) return; selMuted = false; try{ window.dzAudi
 window.dzEmuColor = id => ({ gba:'#8b6bff', nes:'#ff5a5a', gb:'#8bc34a', gbc:'#e056fd', snes:'#f2c14e', md:'#3b82f6', ms:'#ff4d4d', gg:'#38bdf8' })[id] || '#b48bff';
 const FX = window.dzEmuFx || null;
 const fxSurf = FX ? FX.register(ov, $('emuBg')) : null;
-const fxPanel = FX ? FX.panel($('emuBox'), { onToggle: o => { try{ listEl.inert = !!o; }catch(e){} } }) : null;
+const fxPanel = FX ? FX.panel($('emuBox'), { onToggle: o => { try{ listEl.inert = !!o; }catch(e){} }, extra: window.dzEmuCfgPanel || null }) : null;
 let hubFilter = null;   /* null = todos; função = só os que passam (a aba EXTRAS mostra só os liberados) */
 function build(){
   $('emuTitle').textContent = tr('EMULADORES', 'EMULATORS');
@@ -24289,6 +24329,28 @@ html.console .emuIcoBtn{width:clamp(52px,7vh,76px);height:clamp(52px,7vh,76px);f
 #tabExtras .xt-row .btn.xt-util:hover{border-color:#2fd9c4}
 #tabExtras .xt-row .btn.xt-emu:hover{border-color:var(--xc)}
 #tabExtras .xt-row .btn.xt-hub{min-height:64px;font-weight:800;letter-spacing:1px}
+
+/* ===== CONTRASTE DAS LISTAS SUSPENSAS DOS MENUS EXTRAS (JDoodle, editor, Windows 95) ===== */
+#jdLang,.jsel,.es,#w95Mem,#jdOverlay select,#edOverlay select,#tabExtras select{color-scheme:dark;color:#fbefd9 !important;background-color:#1a120a !important}
+#jdLang option,.jsel option,.es option,#w95Mem option,#jdOverlay select option,#edOverlay select option,#tabExtras select option,
+#jdLang optgroup,.jsel optgroup,.es optgroup,#w95Mem optgroup{background-color:#1a120a !important;color:#fbefd9 !important;font-weight:700;padding:6px 10px}
+#jdLang option:checked,.jsel option:checked,.es option:checked,#w95Mem option:checked,
+#jdLang option:hover,.jsel option:hover,.es option:hover,#w95Mem option:hover{background-color:#e8b93a !important;background-image:linear-gradient(#e8b93a,#e8b93a) !important;color:#140d05 !important}
+#jdLang option:disabled,.jsel option:disabled,.es option:disabled,#w95Mem option:disabled{color:#8c7a58 !important}
+
+/* ===== EMULADOR: menu único (☰ MENU) ===== */
+#gbaMoreWrap{display:none;position:relative}
+#gbaOverlay.playing #gbaMoreWrap{display:block}
+#gbaMore{display:none;position:absolute;left:0;top:calc(100% + 8px);z-index:60;width:min(92vw,470px);max-height:72vh;overflow:auto;box-sizing:border-box;padding:12px;border-radius:16px;background:#150f2b;border:1px solid rgba(232,185,58,.55);box-shadow:0 14px 40px rgba(0,0,0,.7)}
+#gbaMoreWrap.open #gbaMore{display:block}
+#gbaMoreTxt{font-size:12px;line-height:1.5;color:#e9ddff;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.14)}
+#gbaMoreTxt b{display:block;color:#ffd35a;letter-spacing:1px;margin-bottom:4px}
+#gbaMoreTxt div{margin:3px 0}
+#gbaMoreGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#gbaMoreGrid .gbab{display:inline-flex !important;width:100%;justify-content:flex-start;border-radius:12px;white-space:nowrap}
+@media (max-width:420px){#gbaMoreGrid{grid-template-columns:1fr}}
+#gbaMoreBtn.open,#gbaMoreWrap.open #gbaMoreBtn{border-color:#ffd35a;color:#ffd35a}
+html.console #gbaMoreWrap{display:none !important}
 </style>
 </body>
 </html>
