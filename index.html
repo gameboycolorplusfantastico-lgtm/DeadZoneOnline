@@ -2475,6 +2475,7 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
           <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys">F</span></div>
           <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys">ESPAÇO</span></div>
           <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys">ESC</span></div>
+          <div class="controls-row"><span id="ctlHelpKeyTxt">Ajuda de controles (no jogo)</span><span class="controls-keys">H</span></div>
           <div class="controls-row"><span data-i18n="ctlChat">Abrir chat (online)</span><span class="controls-keys">ENTER</span></div>
         </div>
         <div class="controls-scheme-col" id="colTouch">
@@ -13639,6 +13640,11 @@ window.addEventListener('keydown', e => {
   if((k === 'c' || k === 'home') && started && !gameOver && settingsModal.style.display !== 'flex') recenterCam();
   if(k === 'pageup' || k === 'pagedown') e.preventDefault();
   if(started && !gameOver && settingsModal.style.display !== 'flex'){ if(soc && k === 'f') socPlayerKick(); if(k === ' '){ socPlayerJump(); e.preventDefault(); } }
+  if(k === 'h' && started && !gameOver && !shopOpen && !e.repeat){   // H = ajuda de controles (teclado/mouse): abre o menu de pausa na aba CONTROLES; H de novo volta ao jogo
+    e.preventDefault();
+    if(settingsModal.style.display === 'flex'){ resumeGame(); }
+    else{ if(document.pointerLockElement) document.exitPointerLock(); openSettingsMenu(); switchSettingsTab('tabControls'); }
+  }
   if(k === 'e'){ if(!fnafTryUse() && !testTryUse() && !zomUse()) trySwapWeapon(); }   // E = interagir (portas/luzes/arma do chão)
   if(k === 'q' && started && !gameOver && !shopOpen && settingsModal.style.display !== 'flex') quickSwapWeapon();   // Q = volta à arma anterior
   if(k === 'escape') {
@@ -14491,6 +14497,7 @@ document.querySelectorAll('#settingsTabRow .tab-btn').forEach(btn => {
   btn.addEventListener('click', () => { SFX.menuSelect(); switchSettingsTab(btn.getAttribute('data-tab')); });
 });
 
+window.addEventListener('load', () => { try{ const el = document.getElementById('ctlHelpKeyTxt'); if(el && typeof LT === 'function') el.textContent = LT('Ajuda de controles (no jogo)', 'Controls help (in game)'); }catch(e){} });
 function openSettingsMenu() {
   if (started && !gameOver) {
     resumeGameBtn.style.display = 'block';
@@ -22730,7 +22737,7 @@ function play(url, name, useAlt){
   curGameName = name || 'game';
   menuFx(false);   /* entrou no jogo: para a música e a animação do menu */
   stop(); initPad(); regSw();
-  const cfg = { core:(useAlt && cur.alt) ? cur.alt : cur.core, url:url, name:name || 'game', cdn:EJS_CDN, native:!!cur.native, bios:'', vol:ecfg.vol };
+  const cfg = { core:(useAlt && cur.alt) ? cur.alt : cur.core, url:(() => { try{ return new URL(url, location.href).href; }catch(e){ return url; } })(), name:name || 'game', cdn:EJS_CDN, native:!!cur.native, bios:'', vol:ecfg.vol };
   const legacy = !!(window.DZ_CONSOLE && window.DZ_CONSOLE.legacy);   /* Xbox One / PS4: hardware fraco */
   /* sem barra/menus do EmulatorJS (menos DOM e menos CPU); em Xbox One/PS4 também frameskip automático e remoção de loops ociosos do mGBA */
   const perf = '';   /* (sem opções extras do EmulatorJS: as interface dele já fica escondida pelo CSS) */
