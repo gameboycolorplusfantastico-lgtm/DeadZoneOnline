@@ -3,181 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<script id="dzTvScript">
-/* ===== MODO TV (secreto): suporte a Smart TV e controle remoto =====
-   Liga sozinho em Smart TVs (Tizen/Samsung, webOS/LG, Android TV/Fire TV, Vidaa/Hisense, Roku, Sony, Philips...)
-   ou por um código secreto: ● vermelho → ● verde → ● amarelo → ● azul (nessa ordem) no controle remoto, ou digitar "tv" no campo de senha do menu debug.
-   Faz o controle remoto virar um GAMEPAD virtual: o jogo, os menus e os emuladores já sabem usar gamepad.
-   Só vale se NÃO houver um controle de verdade ligado (se houver, o controle de verdade manda). */
-(function(){
-  'use strict';
-  const T = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : en; }catch(e){ return en; } };
-  const TV_UA = /(Tizen|Web0S|WebOS|SMART-?TV|HbbTV|NetCast|VIDAA|BRAVIA|SonyDTV|Viera|NETTV|Roku|GoogleTV|AFT[A-Z0-9]|Android[^)]*\sTV|Large Screen)/i;
-  let tvOn = false; const held = new Set(); let seq = [], seqT = 0, helpT = 0;
-  const realGet = (navigator.getGamepads ? navigator.getGamepads.bind(navigator) : function(){ return []; });
-
-  /* tecla do controle remoto -> nome lógico */
-  function logical(e){
-    const c = e.keyCode, k = e.key;
-    if(c === 38 || k === 'ArrowUp') return 'up';
-    if(c === 40 || k === 'ArrowDown') return 'down';
-    if(c === 37 || k === 'ArrowLeft') return 'left';
-    if(c === 39 || k === 'ArrowRight') return 'right';
-    if(c === 13 || c === 23 || k === 'Enter') return 'ok';
-    if(c === 461 || c === 10009 || c === 4 || c === 27 || k === 'GoBack' || k === 'BrowserBack' || k === 'Escape') return 'back';
-    if(c === 403 || k === 'ColorF0Red') return 'red';
-    if(c === 404 || k === 'ColorF1Green') return 'green';
-    if(c === 405 || k === 'ColorF2Yellow') return 'yellow';
-    if(c === 406 || k === 'ColorF3Blue') return 'blue';
-    if(c === 415 || c === 19 || c === 10252 || k === 'MediaPlay' || k === 'MediaPause' || k === 'MediaPlayPause') return 'play';
-    if(c === 413 || k === 'MediaStop') return 'stop';
-    if(c === 417 || k === 'MediaFastForward') return 'ff';
-    if(c === 412 || k === 'MediaRewind') return 'rw';
-    if(c === 427 || c === 33 || k === 'ChannelUp' || k === 'PageUp') return 'chup';
-    if(c === 428 || c === 34 || k === 'ChannelDown' || k === 'PageDown') return 'chdn';
-    if(c === 457 || k === 'Info') return 'info';
-    if(k === '4') return 'n4';
-    if(k === '6') return 'n6';
-    if(k === '5') return 'n5';
-    return '';
-  }
-  function typing(t){ return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable); }
-  function inGame(){
-    try{
-      return started && !gameOver && !shopOpen && !chatOpen && settingsModal.style.display !== 'flex' && !gpActiveMenuRoot()
-        && !(window.dzGbaPlaying && window.dzGbaPlaying()) && !(window.dzVk && window.dzVk.isOpen());
-    }catch(e){ return false; }
-  }
-  function realPad(){ try{ return Array.from(realGet() || []).some(g => g && g.connected); }catch(e){ return false; } }
-
-  /* gamepad virtual (mapa "standard": 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT, 8 SELECT, 9 START, 12-15 D-pad) */
-  function tvPad(){
-    const h = n => held.has(n), b = new Array(17).fill(false), ax = [0, 0, 0, 0];
-    if(inGame()){
-      if(h('up')) ax[1] = -1; if(h('down')) ax[1] = 1;         /* ▲▼ andar */
-      if(h('left')) ax[2] = -1; if(h('right')) ax[2] = 1;      /* ◀▶ girar */
-      if(h('n4')) ax[0] = -1; if(h('n6')) ax[0] = 1;           /* 4 / 6 = andar de lado */
-      b[10] = h('n5');                                         /* 5 = segurar o fôlego (sniper) */
-      b[7] = h('ok'); b[2] = h('red'); b[3] = h('green'); b[0] = h('yellow');
-      b[9] = h('blue') || h('back') || h('play');              /* azul / voltar / play = pausa */
-      b[5] = h('chup'); b[4] = h('chdn'); b[6] = h('ff'); b[15] = h('rw'); b[13] = h('stop');
-    } else {
-      b[12] = h('up'); b[13] = h('down'); b[14] = h('left'); b[15] = h('right');
-      b[0] = h('ok'); b[1] = h('back'); b[2] = h('red'); b[3] = h('green'); b[8] = h('yellow'); b[9] = h('blue') || h('play');
-      b[5] = h('chup'); b[4] = h('chdn'); b[7] = h('ff'); b[6] = h('rw');
-    }
-    return { id: 'TV Remote (virtual)', index: 0, connected: true, mapping: 'standard', timestamp: performance.now(), axes: ax,
-             buttons: b.map(p => ({ pressed: p, touched: p, value: p ? 1 : 0 })) };
-  }
-  try{
-    navigator.getGamepads = function(){
-      const r = Array.from(realGet() || []);
-      if(!tvOn || r.some(g => g && g.connected)) return r;
-      return [tvPad()];
-    };
-  }catch(e){}
-
-  /* painel de ajuda (aparece ao ligar e com o botão INFO) */
-  function help(show){
-    let d = document.getElementById('tvHelp');
-    if(!show){ if(d) d.style.display = 'none'; return; }
-    if(!d){
-      d = document.createElement('div'); d.id = 'tvHelp';
-      d.style.cssText = 'position:fixed;left:50%;bottom:4%;transform:translateX(-50%);z-index:99999;background:rgba(0,0,0,.82);border:2px solid #9fe3ff;border-radius:14px;padding:14px 22px;color:#fff;font:bold clamp(13px,1.7vw,22px)/1.5 sans-serif;text-align:center;pointer-events:none;max-width:92vw;';
-      document.body.appendChild(d);
-    }
-    d.innerHTML = '<div style="color:#9fe3ff;margin-bottom:4px">' + T('MODO TV ATIVADO', 'TV MODE ON') + '</div>'
-      + T('OK = atirar · ◀▶ girar · ▲▼ andar · 4/6 de lado', 'OK = fire · ◀▶ turn · ▲▼ move · 4/6 strafe') + '<br>'
-      + '<span style="color:#ff6b6b">●</span> ' + T('recarregar', 'reload') + ' &nbsp; <span style="color:#6bff8a">●</span> ' + T('interagir', 'use') + ' &nbsp; <span style="color:#ffe14d">●</span> ' + T('pular', 'jump') + ' &nbsp; <span style="color:#6bb8ff">●</span> ' + T('pausa', 'pause') + '<br>'
-      + T('CH+/CH− arma · ⏩ zoom · ⏪ modo de tiro · INFO ajuda', 'CH+/CH− weapon · ⏩ zoom · ⏪ fire mode · INFO help');
-    d.style.display = 'block'; clearTimeout(helpT); helpT = setTimeout(() => help(false), 9000);
-  }
-  function setTv(on){
-    tvOn = !!on; held.clear();
-    try{ localStorage.setItem('dz_tv', on ? '1' : '0'); }catch(e){}
-    try{
-      tvTab(on);
-      if(on){ if(!realPad() && typeof gpAdopt === 'function') gpAdopt(tvPad()); help(true); }
-      else { help(false); if(!realPad() && gamepadIndex !== null){ gamepadIndex = null; usingGamepad = false; applyControlScheme(); } if(typeof uiToast === 'function') uiToast(T('MODO TV DESLIGADO', 'TV MODE OFF')); }
-    }catch(e){}
-  }
-
-  /* ===== aba "TV" no menu de configurações/pausa: lista dos botões. SÓ existe com o Modo TV ligado ===== */
-  function tvTab(on){
-    const first = document.querySelector('.tab-btn[data-tab="tabGeneral"]'); if(!first) return;
-    const row = first.parentNode; let b = document.getElementById('tvTabBtn'), p = document.getElementById('tabTv');
-    if(!on){ if(b) b.style.display = 'none'; if(p){ p.classList.remove('active'); p.style.display = 'none'; } if(b && b.classList.contains('active')) first.click(); return; }
-    if(!b){
-      b = document.createElement('button'); b.className = 'tab-btn'; b.id = 'tvTabBtn'; b.type = 'button'; b.setAttribute('data-tab', 'tabTv'); row.appendChild(b);
-      p = document.createElement('div'); p.className = 'tab-panel'; p.id = 'tabTv';
-      const dbg = document.getElementById('tabDebug'); if(dbg && dbg.parentNode) dbg.parentNode.insertBefore(p, dbg.nextSibling); else row.parentNode.appendChild(p);
-      b.addEventListener('click', () => {
-        row.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('active', x === b));
-        document.querySelectorAll('.tab-panel').forEach(x => x.classList.toggle('active', x.id === 'tabTv'));
-        tvTabBuild();
-      });
-    }
-    b.style.display = ''; b.textContent = 'TV'; if(p) p.style.display = '';
-  }
-  function tvTabBuild(){
-    const p = document.getElementById('tabTv'); if(!p) return;
-    const R = '<span style="color:#ff6b6b">●</span>', G = '<span style="color:#6bff8a">●</span>', Y = '<span style="color:#ffe14d">●</span>', B = '<span style="color:#6bb8ff">●</span>';
-    const sec = [
-      [T('NOS MENUS', 'IN MENUS'), [
-        ['▲ ▼ ◀ ▶', T('mover', 'move')], ['OK', T('confirmar', 'confirm')], [T('VOLTAR', 'BACK'), T('voltar', 'back')],
-        ['CH+ / CH−', T('trocar de aba', 'switch tab')], ['⏩ / ⏪', T('trocar o modo de jogo', 'change game mode')]]],
-      [T('NO JOGO', 'IN GAME'), [
-        ['▲ ▼', T('andar para frente / trás', 'move forward / back')], ['◀ ▶', T('girar a câmera', 'turn the camera')], ['4 / 6', T('andar de lado', 'strafe')], ['5', T('segurar o fôlego (sniper)', 'hold breath (sniper)')],
-        ['OK', T('atirar', 'fire')], [R, T('recarregar', 'reload')], [G, T('interagir / pegar arma', 'use / pick up weapon')], [Y, T('pular', 'jump')],
-        [B + ' / ' + T('VOLTAR', 'BACK') + ' / ▶❚❚', T('pausa', 'pause')], ['CH+ / CH−', T('próxima / anterior arma', 'next / previous weapon')],
-        ['⏩', T('zoom da sniper (ou agarrar na Gravity Gun)', 'sniper zoom (or grab with the Gravity Gun)')], ['⏪', T('modo de tiro (auto / semi / rajada)', 'fire mode (auto / semi / burst)')], ['■', T('loja', 'shop')]]],
-      [T('NOS EMULADORES', 'IN EMULATORS'), [
-        ['▲ ▼ ◀ ▶', T('direcional', 'D-pad')], ['OK / ' + T('VOLTAR', 'BACK'), 'A / B'], [R + ' / ' + G, 'X / Y'], ['CH+ / CH−', 'R / L'],
-        [Y, 'SELECT'], [B, 'START'], [Y + ' + ' + B + ' (1 s)', T('abrir o menu do emulador (sair, salvar...)', 'open the emulator menu (exit, save...)')]]]
-    ];
-    let h = '<div style="opacity:.8;margin:2px 0 8px">' + T('Controle remoto da TV (Modo TV). Botão INFO mostra esta ajuda rápida.', 'TV remote (TV Mode). The INFO button shows a quick help.') + '</div>';
-    sec.forEach(s => {
-      h += '<div class="set-sec" style="margin-top:12px">' + s[0] + '</div>';
-      s[1].forEach(r => { h += '<div style="display:flex;justify-content:space-between;gap:14px;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,.12);font-weight:bold"><span style="white-space:nowrap">' + r[0] + '</span><span style="text-align:right;opacity:.92">' + r[1] + '</span></div>'; });
-    });
-    p.innerHTML = h;
-  }
-
-  window.dzTvTry = function(s){ if(String(s || '').trim().toLowerCase() === 'tv'){ setTv(!tvOn); return true; } return false; };
-  window.dzTvOn = () => tvOn;
-
-  /* Tizen só entrega as teclas coloridas/mídia se forem registradas */
-  try{
-    if(window.tizen && tizen.tvinputdevice){
-      ['ColorF0Red','ColorF1Green','ColorF2Yellow','ColorF3Blue','MediaPlay','MediaPause','MediaPlayPause','MediaStop','MediaFastForward','MediaRewind','ChannelUp','ChannelDown','Info'].forEach(k => { try{ tizen.tvinputdevice.registerKey(k); }catch(e){} });
-    }
-  }catch(e){}
-
-  const SEQ = ['red', 'green', 'yellow', 'blue'];
-  function onKey(e){
-    const n = logical(e); if(!n) return;
-    if(e.type === 'keydown' && !e.repeat && SEQ.indexOf(n) >= 0){      /* código secreto: vermelho, verde, amarelo, azul */
-      const now = performance.now(); if(now - seqT > 5000) seq = []; seqT = now;
-      seq.push(n); if(seq.join() !== SEQ.slice(0, seq.length).join()) seq = (n === 'red') ? ['red'] : [];
-      if(seq.length === 4){ seq = []; setTv(!tvOn); e.preventDefault(); e.stopImmediatePropagation(); return; }
-    }
-    if(!tvOn || typing(e.target)) return;
-    if(n === 'info'){ if(e.type === 'keydown') help(true); e.preventDefault(); e.stopImmediatePropagation(); return; }
-    if(n === 'n4' || n === 'n6' || n === 'n5'){ if(!inGame()) return; }              /* 4 e 6 só viram "andar de lado" durante o jogo */
-    if(e.type === 'keydown') held.add(n); else held.delete(n);
-    e.preventDefault(); e.stopImmediatePropagation();                  /* o gamepad virtual cuida: evita entrada em dobro */
-  }
-  window.addEventListener('keydown', onKey, true);
-  window.addEventListener('keyup', onKey, true);
-  window.addEventListener('blur', () => held.clear());
-
-  /* liga sozinho em Smart TV (a menos que a pessoa tenha desligado) */
-  window.addEventListener('DOMContentLoaded', () => {
-    let st = null; try{ st = localStorage.getItem('dz_tv'); }catch(e){}
-    if(st === '1' || (st !== '0' && TV_UA.test(navigator.userAgent || ''))) setTimeout(() => setTv(true), 600);
-  });
-})();
-</script>
 <script>
 /* === CONSOLE (Xbox Edge / PlayStation) — detecção e proteção de entrada ===
    Teste no PC: abra o jogo com ?console=xbox ou ?console=ps */
@@ -14695,7 +14520,6 @@ document.getElementById('debugPassInput').addEventListener('keydown', e => {
 });
 document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   const inputPass = document.getElementById('debugPassInput').value.trim();
-  if (window.dzTvTry && window.dzTvTry(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código "tv": liga/desliga o Modo TV
   if (window.dzCalcTry && window.dzCalcTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc']); document.getElementById('debugPassInput').value = ''; return; }   // código da calculadora
   if (window.dzLgTry && window.dzLgTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['calc', 'ed', 'jd']); document.getElementById('debugPassInput').value = ''; return; }   // seletor dos apps legais
   if (window.dzJdTry && window.dzJdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['jd']); document.getElementById('debugPassInput').value = ''; return; }   // código do JDoodle
@@ -15797,7 +15621,6 @@ function toggleScope(){
   setScope((scopeLvl + 1) % SCOPE_MULS.length); SFX.menuSelect();
 }
 function scopeTick(){
-  if(window.dzBreathTick) window.dzBreathTick();
   const ok = SCOPE_WEAPONS[player.weapon] && started && !gameOver && !player.isReloading && !shopOpen && !countdownActive && settingsModal.style.display !== 'flex';
   if(!ok && scopeLvl) setScope(0);
   if(burstLeft > 0 && (!started || gameOver || player.isReloading || shopOpen)) burstLeft = 0;
@@ -17757,7 +17580,6 @@ function tryFire(fromBurst){
       closestEnemy.health -= dbgDmg(wConfig.dmg);
       if(closestEnemy.health <= 0){
         closestEnemy.alive = false;
-        try{ if(window.dzStat && !closestEnemy.testDummy) window.dzStat.kill(player.weapon); }catch(e){}
         gpRumble(0.3, 0.8, 110);
         if (closestEnemy.testDummy) {
           // alvo do mapa de testes: sem pontos de modo; renasce sozinho depois
@@ -22458,7 +22280,6 @@ window.dzEmuFx = { register, on, off, panel, refresh: refreshPanels, setTheme, s
       <input type="file" id="gbaSaveFile" style="display:none">
       <button type="button" class="gbab onpl" id="gbaQSave">⚡ SALVAR RÁPIDO</button>
       <button type="button" class="gbab onpl" id="gbaQLoad">⚡ CARREGAR RÁPIDO</button>
-      <button type="button" class="gbab onpl" id="gbaSlots">💾 SLOTS</button>
       <button type="button" class="gbab onpl" id="gbaFpsBtn">📊 FPS</button>
       <button type="button" class="gbab" id="gbaFs">⛶ TELA CHEIA</button>
       <span class="sp"></span>
@@ -22732,7 +22553,7 @@ function exitHint(txt, prog){
 }
 function exitHintHide(){ clearTimeout(hintTimer); $('gbaExitHint').classList.remove('show'); }
 function exitHintTip(){   /* aviso ao iniciar um jogo */
-  exitHint(tr('Menu do emulador: botão ☰ · Esc · ou segure SELECT + START (ou L3 + R3)', 'Emulator menu: ☰ button · Esc · or hold SELECT + START (or L3 + R3)'), 0);
+  exitHint(tr('Para voltar à lista: segure SELECT + START (ou L3 + R3) por 1 segundo', 'To go back to the list: hold SELECT + START (or L3 + R3) for 1 second'), 0);
   $('gbaExitBar').style.width = '0%'; hintTimer = setTimeout(exitHintHide, 5000);
 }
 /* o controle está sendo usado AGORA? (olha o estado ao vivo, não o do último quadro: a tecla "falsa" pode chegar antes do próximo quadro) */
@@ -22776,16 +22597,14 @@ function padLoop(){
   if(padFirst){ padFirst = false; padIgnore = m; }
   if(padIgnore){ padIgnore &= m; m &= ~padIgnore; }
   if(m && ov.classList.contains('showpad')) ov.classList.remove('showpad');   /* usando controle: some com os botões na tela */
-  if(anyBtn || m){ if(!ov.classList.contains('dzpad')){ ov.classList.add('dzpad'); mHint.textContent = '☰ SELECT + START'; } }   /* usando controle: o botão ☰ some e vira esta dica */
-  if(menuOpen){ m = 0; dzMenuPad(pads); }
   src.pad = m; sync();
-  /* segurar SELECT + START (ou L3 + R3, ou L1 + R1 + L2 + R2, ou o botão central) abre o MENU do emulador (pausa; lá tem "sair") */
-  if(combo && !menuOpen && !comboLock){
+  /* segurar SELECT + START (ou o botão central do controle) volta para a lista de jogos */
+  if(combo){
     if(!exitHold) exitHold = performance.now();
     const t = performance.now() - exitHold;
-    exitHint(tr('Segure para abrir o menu…', 'Keep holding to open the menu…'), Math.min(1, t / 600));
-    if(t > 600){ exitHold = 0; exitHintHide(); comboLock = true; menuToggle(true); }
-  } else { if(exitHold && !menuOpen) exitHintHide(); exitHold = 0; if(!combo) comboLock = false; }
+    exitHint(tr('Segure para voltar à lista de jogos…', 'Keep holding to go back to the game list…'), Math.min(1, t / 1000));
+    if(t > 1000){ exitHold = 0; exitHintHide(); showList(); }
+  } else { if(exitHold) exitHintHide(); exitHold = 0; }
 }
 
 /* teclado (PC) */
@@ -22797,14 +22616,7 @@ function onKey(e){
     /* Xbox/PS no navegador: o controle também gera Enter/Esc/setas "falsas". O controle já entra pela Gamepad API,
        então enquanto ele estiver em uso as teclas são ignoradas (senão o A viraria A + START, o B sairia do jogo etc.) */
     if(down && window.DZ_CONSOLE && ((window.dzPadT && performance.now() - window.dzPadT < 600) || padBusyNow())){ e.preventDefault(); e.stopImmediatePropagation(); return; }
-    if(menuOpen){
-      e.preventDefault(); e.stopImmediatePropagation();
-      if(down){ const k = e.key;
-        if(k === 'ArrowUp' || k === 'ArrowLeft') mFocus(menuIdx - 1); else if(k === 'ArrowDown' || k === 'ArrowRight') mFocus(menuIdx + 1);
-        else if(k === 'Enter' || k === ' '){ if(mItems[menuIdx]) mItems[menuIdx].click(); } else if(k === 'Escape') menuToggle(false); }
-      return;
-    }
-    if(down && e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); menuToggle(true); return; }
+    if(down && e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); goBack(); return; }
     if(down && !e.repeat && e.code === 'KeyF' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); e.stopImmediatePropagation(); toggleFs(); return; }
     if(down && !e.repeat && (e.code === 'F5' || e.code === 'F9')){ e.preventDefault(); e.stopImmediatePropagation(); if(e.code === 'F5') quickSave(); else quickLoad(); return; }   /* F5 salva · F9 carrega (e o F5 não recarrega a página) */
     const i = cur.keys[e.code];
@@ -22847,7 +22659,6 @@ function killEmu(){
   }catch(x){}
 }
 function stop(){
-  try{ menuToggle(false, true); }catch(e){}
   blurPaused = false;
   clearInterval(watchTimer); watchTimer = 0; clearTimeout(startTimer); startTimer = 0; playTok++;
   killEmu();
@@ -22879,8 +22690,6 @@ function onEmuReady(){
   applied = 0; shownMask = -1; sync();   /* se já tinha botão apertado enquanto o emulador subia, manda agora */
 }
 function play(url, name){
-  try{ if(window.dzStat) window.dzStat.emu(); }catch(e){}
-  try{ window.dzCurtainFlash && window.dzCurtainFlash(); }catch(e){}
   curGameName = name || 'game';
   menuFx(false);   /* entrou no jogo: para a música e a animação do menu */
   stop(); initPad(); regSw();
@@ -22961,35 +22770,17 @@ function renderList(){
     e.style.whiteSpace = 'pre-line';
     list.appendChild(e);
   }
-  /* favoritos (★) primeiro, depois os 3 últimos jogados, depois o resto */
-  const favS = (() => { try{ return JSON.parse(localStorage.getItem('dz_emu_fav') || '[]'); }catch(e){ return []; } })();
-  const recM = (() => { try{ return JSON.parse(localStorage.getItem('dz_emu_recent') || '{}'); }catch(e){ return {}; } })();
-  const kOf = g => cur.id + '|' + g.file, nmOf = g => g.title || g.file.replace(/\.[^.]+$/, '');
-  const favs = mine.filter(g => favS.indexOf(kOf(g)) >= 0);
-  const recs = mine.filter(g => favS.indexOf(kOf(g)) < 0 && recM[kOf(g)]).sort((x, y) => recM[kOf(y)] - recM[kOf(x)]).slice(0, 3);
-  const rest = mine.filter(g => favs.indexOf(g) < 0 && recs.indexOf(g) < 0);
-  const head = txt => { const d = document.createElement('div'); d.className = 'gbaSecH'; d.style.cssText = 'margin:10px 4px 4px;font-weight:bold;opacity:.85;letter-spacing:1px;font-size:13px'; d.textContent = txt; list.appendChild(d); };
-  const addRom = g => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'gbarom'; b.style.position = 'relative'; const isFav = favS.indexOf(kOf(g)) >= 0;
-    b.innerHTML = '<b>' + esc(nmOf(g)) + '</b>' + (g.author ? '<small>' + esc(g.author) + '</small>' : '') + '<span class="dzFav" title="' + tr('Favorito (tecla F)', 'Favorite (F key)') + '" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:24px;padding:6px 8px;color:' + (isFav ? '#ffd84d' : 'rgba(255,255,255,.55)') + '">' + (isFav ? '★' : '☆') + '</span>';
-    const toggleFav = () => { const i = favS.indexOf(kOf(g)); if(i >= 0) favS.splice(i, 1); else favS.push(kOf(g)); try{ localStorage.setItem('dz_emu_fav', JSON.stringify(favS)); }catch(e){} snd('menuSelect'); renderList(); };
-    b.addEventListener('click', ev => {
-      if(ev.target && ev.target.classList && ev.target.classList.contains('dzFav')){ ev.stopPropagation(); toggleFav(); return; }
-      recM[kOf(g)] = Date.now(); try{ localStorage.setItem('dz_emu_recent', JSON.stringify(recM)); }catch(e){}
-      play(ROMS_DIR + encodeURIComponent(g.file).replace(/%2F/g, '/'), nmOf(g));
-    });
-    b.addEventListener('keydown', ev => { if((ev.key === 'f' || ev.key === 'F') && !ev.ctrlKey && !ev.metaKey){ ev.preventDefault(); toggleFav(); } });
+  mine.forEach(g => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'gbarom';
+    b.innerHTML = '<b>' + esc(g.title || g.file.replace(/\.[^.]+$/, '')) + '</b>' + (g.author ? '<small>' + esc(g.author) + '</small>' : '');
+    b.addEventListener('click', () => { play(ROMS_DIR + encodeURIComponent(g.file).replace(/%2F/g, '/'), g.title || g.file.replace(/\.[^.]+$/, '')); });
     list.appendChild(b);
-  };
-  const grouped = favs.length || recs.length;
-  if(favs.length){ head('★ ' + tr('FAVORITOS', 'FAVORITES')); favs.forEach(addRom); }
-  if(recs.length){ head('🕘 ' + tr('JOGADOS RECENTEMENTE', 'RECENTLY PLAYED')); recs.forEach(addRom); }
-  if(rest.length){ if(grouped) head('🎮 ' + tr('TODOS OS JOGOS', 'ALL GAMES')); rest.forEach(addRom); }
+  });
   const h = document.createElement('div'); h.id = 'gbaHelp';
   const off = offlineReady();
   [
     ['⌨️', tr('TECLADO', 'KEYBOARD'), tr(cur.keyTxt[0], cur.keyTxt[1])],
-    ['🎮', tr('CONTROLE', 'CONTROLLER'), tr('botões padrão (clicar o analógico esquerdo = SELECT, o direito = START). Para abrir o menu (pausa, salvar, sair), segure por 1 s: SELECT + START, L3 + R3 ou L1 + R1 + L2 + R2. Na lista, B fecha o emulador.', 'standard buttons (click the left stick = SELECT, the right stick = START). To open the menu (pause, save, exit), hold for 1 s: SELECT + START, L3 + R3 or L1 + R1 + L2 + R2. On the list, B closes the emulator.')],
+    ['🎮', tr('CONTROLE', 'CONTROLLER'), tr('botões padrão (clicar o analógico esquerdo = SELECT, o direito = START). Para voltar à lista, segure por 1 s: SELECT + START, L3 + R3 ou L1 + R1 + L2 + R2. Na lista, B fecha o emulador.', 'standard buttons (click the left stick = SELECT, the right stick = START). To go back to the list, hold for 1 s: SELECT + START, L3 + R3 or L1 + R1 + L2 + R2. On the list, B closes the emulator.')],
     ['⚡', tr('SAVE RÁPIDO', 'QUICK SAVE'), tr('F5 salva · F9 carrega. No controle: segure LB + RB e aperte X (salva) ou Y (carrega). Um slot por jogo, fica no aparelho.', 'F5 saves · F9 loads. On a gamepad: hold LB + RB and press X (save) or Y (load). One slot per game, kept on this device.')],
     ['💾', off ? tr('OFFLINE PRONTO', 'OFFLINE READY') : tr('OFFLINE', 'OFFLINE'), off ? tr('já funciona sem internet.', 'works without internet.') : tr('abra um jogo uma vez com internet para usar offline.', 'open a game once while online to use it offline.')]
   ].forEach(r => {
@@ -23092,118 +22883,6 @@ async function quickLoad(){
 }
 $('gbaQSave').addEventListener('click', () => quickSave());
 $('gbaQLoad').addEventListener('click', () => quickLoad());
-
-/* ---- SLOTS DE SAVE STATE (5 por jogo) com data e miniatura, guardados no aparelho (mesmo banco do save rápido) ---- */
-const SLOT_N = 5, slotKey = n => cur.id + '|' + curGameName + '|slot' + n;
-function slotThumb(){
-  try{ const cv = frame.contentDocument && frame.contentDocument.querySelector('canvas'); if(!cv || !cv.width) return '';
-    const c = document.createElement('canvas'); c.width = 96; c.height = Math.max(1, Math.round(96 * cv.height / cv.width)); c.getContext('2d').drawImage(cv, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', 0.6); }catch(e){ return ''; }
-}
-async function slotsOpen(){
-  if(!needGame()) return; if(typeof window.dzOverlay !== 'function') return;
-  loopPause(true);
-  const o = window.dzOverlay('dzSlotsOv', '💾 ' + tr('SLOTS DE SAVE', 'SAVE SLOTS') + ' — ' + esc(curGameName), '<div data-x="list"></div><small data-x="msg"></small>');
-  try{ new MutationObserver(() => { if(!o.classList.contains('on')) loopPause(false); }).observe(o, { attributes: true, attributeFilter: ['class'] }); }catch(e){}   /* retoma o jogo ao fechar (botão ou toque fora) */
-  const msg = t => { const m = o.querySelector('[data-x="msg"]'); if(m) m.textContent = t; };
-  const draw = async () => {
-    const box = o.querySelector('[data-x="list"]'); box.innerHTML = '';
-    for(let n = 1; n <= SLOT_N; n++){
-      let meta = null; try{ meta = await qsGet(slotKey(n) + '|m'); }catch(e){}
-      const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;align-items:center;margin:6px 0;padding:6px;border:1px solid rgba(159,227,255,.35);border-radius:10px';
-      const img = meta && meta.img ? '<img src="' + meta.img + '" style="width:72px;height:54px;object-fit:cover;border-radius:6px;background:#000">' : '<div style="width:72px;height:54px;border-radius:6px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;opacity:.6">—</div>';
-      row.innerHTML = img + '<div style="flex:1;font-weight:bold">SLOT ' + n + '<br><small style="margin:0;font-weight:normal">' + (meta ? new Date(meta.t).toLocaleString() : tr('vazio', 'empty')) + '</small></div>'
-        + '<button type="button" data-a="s">' + tr('SALVAR', 'SAVE') + '</button><button type="button" data-a="l"' + (meta ? '' : ' disabled style="opacity:.4"') + '>' + tr('CARREGAR', 'LOAD') + '</button><button type="button" data-a="d"' + (meta ? '' : ' disabled style="opacity:.4"') + '>🗑</button>';
-      row.querySelector('[data-a="s"]').addEventListener('click', async () => {
-        const g = needGame(); if(!g) return;
-        try{ const d = g.getState(); if(!d || !d.length) throw 0; await qsPut(slotKey(n), new Uint8Array(d)); await qsPut(slotKey(n) + '|m', { t: Date.now(), img: slotThumb() }); msg(tr('Salvo no slot ' + n, 'Saved to slot ' + n)); snd('menuAccept'); draw(); }
-        catch(e){ msg(tr('Não consegui salvar neste jogo.', 'Could not save this game.')); } });
-      row.querySelector('[data-a="l"]').addEventListener('click', async () => {
-        const g = needGame(); if(!g) return;
-        try{ const d = await qsGet(slotKey(n)); if(!d) return msg(tr('Slot vazio.', 'Empty slot.')); g.loadState(d); msg(tr('Slot ' + n + ' carregado', 'Slot ' + n + ' loaded')); snd('menuAccept'); }
-        catch(e){ msg(tr('Não consegui carregar o slot.', 'Could not load the slot.')); } });
-      row.querySelector('[data-a="d"]').addEventListener('click', async () => { try{ await qsPut(slotKey(n), null); await qsPut(slotKey(n) + '|m', null); }catch(e){} msg(tr('Slot ' + n + ' apagado', 'Slot ' + n + ' deleted')); draw(); });
-      box.appendChild(row);
-    }
-  };
-  draw();
-}
-$('gbaSlots').addEventListener('click', () => slotsOpen());
-
-/* ---- MENU DO EMULADOR EM JOGO: um botão só (☰) ou o combo do controle; pausa o jogo e tem tudo + sair ---- */
-let menuOpen = false, comboLock = false, menuIdx = 0, mPrev = {}, mRep = 0, mDirHeld = false;
-const mItems = [];
-const mBtn = document.createElement('button'); mBtn.type = 'button'; mBtn.id = 'dzEmuMenuBtn'; mBtn.setAttribute('aria-label', 'Menu'); mBtn.textContent = '☰';
-const mHint = document.createElement('div'); mHint.id = 'dzEmuMenuHint';
-const mCur = document.createElement('div'); mCur.id = 'dzCurtain';
-const mWrap = document.createElement('div'); mWrap.id = 'dzEmuMenu'; mWrap.innerHTML = '<div class="dzEmCard"><h4></h4><div class="dzEmList"></div></div>';
-[mBtn, mHint, mCur, mWrap].forEach(x => ov.appendChild(x));
-function mFocus(i){
-  if(!mItems.length) return; menuIdx = (i + mItems.length) % mItems.length;
-  mItems.forEach((b, k) => b.classList.toggle('foc', k === menuIdx));
-  try{ mItems[menuIdx].scrollIntoView({ block:'nearest' }); }catch(e){}
-}
-function mBuild(){
-  const list = mWrap.querySelector('.dzEmList'); list.innerHTML = ''; mItems.length = 0;
-  mWrap.querySelector('h4').textContent = '☰ ' + curGameName;
-  const sec = t => { const d = document.createElement('div'); d.className = 'sec'; d.textContent = t; list.appendChild(d); };
-  const add = (ic, pt, en, fn, cls) => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = cls || ''; b.innerHTML = '<span>' + ic + '</span><span>' + tr(pt, en) + '</span>';
-    b.addEventListener('click', () => { snd('menuSelect'); fn(); }); b.addEventListener('mouseenter', () => mFocus(mItems.indexOf(b))); list.appendChild(b); mItems.push(b);
-  };
-  add('▶', 'CONTINUAR', 'RESUME', () => menuToggle(false), 'wide');
-  sec(tr('SALVAR', 'SAVE'));
-  add('⚡', 'SALVAR RÁPIDO', 'QUICK SAVE', () => quickSave());
-  add('⚡', 'CARREGAR RÁPIDO', 'QUICK LOAD', () => { menuToggle(false); quickLoad(); });
-  add('💾', 'SLOTS DE SAVE', 'SAVE SLOTS', () => { menuToggle(false, true); slotsOpen(); }, 'wide');
-  sec(tr('TELA E CONTROLES', 'SCREEN AND CONTROLS'));
-  add('🕹', 'CONTROLES NA TELA', 'ON-SCREEN PAD', () => { $('gbaPadBtn').click(); menuToggle(false); });
-  add('⛶', 'TELA CHEIA', 'FULLSCREEN', () => $('gbaFs').click());
-  add('📊', 'FPS', 'FPS', () => $('gbaFpsBtn').click(), 'wide');
-  sec(tr('ARQUIVOS', 'FILES'));
-  add('⬇', 'BAIXAR SAVE', 'DOWNLOAD SAVE', () => $('gbaSaveOut').click());
-  add('📥', 'ENVIAR SAVE', 'UPLOAD SAVE', () => $('gbaSaveIn').click());
-  add('⬇', 'BAIXAR ESTADO', 'DOWNLOAD STATE', () => $('gbaStateOut').click());
-  add('⬆', 'ENVIAR ESTADO', 'UPLOAD STATE', () => $('gbaStateIn').click());
-  sec(tr('SAIR', 'EXIT'));
-  add('☰', 'LISTA DE JOGOS', 'GAME LIST', () => { menuToggle(false, true); curtainIn(() => showList()); });
-  const fromSel = !!window.dzEmuFromSel;
-  add('✕', fromSel ? 'MENU DE EMULADORES' : 'SAIR DO EMULADOR', fromSel ? 'EMULATOR MENU' : 'EXIT EMULATOR', () => { menuToggle(false, true); curtainIn(() => close()); }, 'danger');
-}
-function menuToggle(on, keep){
-  if(!!on === menuOpen) return;
-  if(on){
-    if(!isPlaying()) return;
-    menuOpen = true; mBuild(); mWrap.classList.add('show'); requestAnimationFrame(() => mWrap.classList.add('in'));
-    loopPause(true); try{ releaseAll(); }catch(e){} mPrev = { up:1, dn:1, a:1, b:1 }; mDirHeld = true; mFocus(0);
-  }else{
-    menuOpen = false; mWrap.classList.remove('in'); setTimeout(() => { if(!menuOpen) mWrap.classList.remove('show'); }, 200);
-    if(!keep){ loopPause(false); padFirst = true; try{ frame.blur(); window.focus(); }catch(e){} }   /* botões ainda apertados não vão para o jogo */
-  }
-}
-function curtainIn(cb){   /* escurece, troca de tela por baixo e clareia mostrando a nova tela */
-  mCur.style.transition = 'opacity .2s ease'; mCur.style.opacity = '1';
-  setTimeout(() => {
-    try{ cb(); }catch(e){}
-    requestAnimationFrame(() => { mCur.style.transition = 'opacity .5s ease'; mCur.style.opacity = '0';
-      const l = $('gbaList'); if(l){ l.classList.remove('dzRise'); void l.offsetWidth; l.classList.add('dzRise'); } });
-  }, 220);
-}
-window.dzCurtainFlash = () => { mCur.style.transition = 'none'; mCur.style.opacity = '1'; setTimeout(() => { mCur.style.transition = 'opacity .6s ease'; mCur.style.opacity = '0'; }, 350); };
-function dzMenuPad(pads){   /* controle dentro do menu: direcional/analógico move, A confirma, B ou START fecha */
-  let up = 0, dn = 0, lf = 0, rt = 0, a = 0, b = 0;
-  for(const gp of pads){
-    if(!gp || !gp.connected) continue; const bt = i => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
-    up |= bt(12) || ay < -.6; dn |= bt(13) || ay > .6; lf |= bt(14) || ax < -.6; rt |= bt(15) || ax > .6; a |= bt(0); b |= bt(1) || bt(9);
-  }
-  const now = performance.now(), edge = (k, v) => { const e = !!v && !mPrev[k]; mPrev[k] = !!v; return e; };
-  if(edge('a', a)){ if(mItems[menuIdx]) mItems[menuIdx].click(); return; }
-  if(edge('b', b)){ menuToggle(false); return; }
-  const dir = (up || lf) ? -1 : ((dn || rt) ? 1 : 0);
-  if(dir){ if(!mDirHeld || now > mRep){ mFocus(menuIdx + dir); mRep = now + (mDirHeld ? 150 : 350); mDirHeld = true; } } else mDirHeld = false;
-}
-mBtn.addEventListener('click', () => menuToggle(true));
-mWrap.addEventListener('click', e => { if(e.target === mWrap) menuToggle(false); });
-['pointerdown', 'mousemove', 'touchstart'].forEach(t => ov.addEventListener(t, () => { if(!(window.dzPadT && performance.now() - window.dzPadT < 800)) ov.classList.remove('dzpad'); }, { passive: true }));
 
 /* ---- AJUSTES DO EMULADOR (botão ⚙ → painel): ficam salvos e valem para todos os jogos.
    Tudo é opcional e protegido: se o emulador não tiver o recurso, simplesmente não faz nada (nada quebra o jogo). ---- */
@@ -23560,17 +23239,14 @@ const APPS = [
   { id:'calc', icon:'🧮', pt:'CALCULADORA LEGAL', en:'COOL CALCULATOR', open: () => window.dzCalc.open() },
   { id:'ed',   icon:'📝', pt:'EDITOR DE TEXTO LEGAL', en:'COOL TEXT EDITOR', open: () => window.dzEd.open() },
   { id:'jd',   icon:'💻', pt:'CÓDIGO LEGAL', en:'COOL CODE', open: () => window.dzJd.open() },
-  { id:'w95',  icon:'🪟', pt:'WINDOWS 95', en:'WINDOWS 95', open: () => window.dzW95.open() },
-  { id:'backup', free:true, icon:'💾', pt:'BACKUP', en:'BACKUP', open: () => window.dzBackup.open() },
-  { id:'mini', free:true, icon:'🧰', pt:'MINI APPS', en:'MINI APPS', open: () => window.dzMini.open() },
-  { id:'ach', free:true, icon:'🏆', pt:'RECORDES', en:'RECORDS', open: () => window.dzStat.open() }
+  { id:'w95',  icon:'🪟', pt:'WINDOWS 95', en:'WINDOWS 95', open: () => window.dzW95.open() }
 ];
 function emuList(){
   const all = window.dzEmus || [];
   if(have.indexOf('emu') >= 0) return all;
   return all.filter(e => have.indexOf(e.id) >= 0);
 }
-const hasAny = () => APPS.some(a => !a.free && have.indexOf(a.id) >= 0) || emuList().length > 0;
+const hasAny = () => APPS.some(a => have.indexOf(a.id) >= 0) || emuList().length > 0;
 
 /* ---- aba + painel (criados na hora, só quando liberados) ---- */
 function ensureDom(){
@@ -23596,7 +23272,7 @@ function mk(label, fn, cls){
 function build(){
   const p = $('tabExtras'); if(!p) return;
   p.innerHTML = '';
-  const apps = APPS.filter(a => a.free || have.indexOf(a.id) >= 0);
+  const apps = APPS.filter(a => have.indexOf(a.id) >= 0);
   if(apps.length){
     const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.classList.add('xt-h-util'); h.textContent = tr('UTILIDADES', 'UTILITIES'); p.appendChild(h);
     const r = document.createElement('div'); r.className = 'xt-row';
@@ -24460,342 +24136,5 @@ html.console .emuIcoBtn{width:clamp(52px,7vh,76px);height:clamp(52px,7vh,76px);f
 #tabExtras .xt-row .btn.xt-emu:hover{border-color:var(--xc)}
 #tabExtras .xt-row .btn.xt-hub{min-height:64px;font-weight:800;letter-spacing:1px}
 </style>
-<style id="dzPlusCss">
-/* ===== editor de botões do celular, backup, mini apps, respiração da sniper ===== */
-body.dzEditing #touchLayer{display:block !important;}
-body.dzEditing #fireBtn,body.dzEditing #reloadBtn,body.dzEditing #swapBtn,body.dzEditing #useBtn,body.dzEditing #kickBtn,
-body.dzEditing #jumpBtn,body.dzEditing #scopeBtn,body.dzEditing #modeBtn,body.dzEditing #breathBtn{display:flex !important;outline:2px dashed #ffe14d;outline-offset:3px;}
-#btnEdBar{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:100000;display:none;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;
-  background:rgba(0,0,0,.88);border:2px solid #9fe3ff;border-radius:12px;padding:8px 14px;color:#fff;font:bold 13px sans-serif;max-width:96vw;}
-body.dzEditing #btnEdBar{display:flex;}
-#btnEdBar button{font:bold 13px sans-serif;padding:8px 14px;border-radius:8px;border:2px solid #9fe3ff;background:#123;color:#fff;}
-#btnEdBar button#btnEdDone{background:#1a6a2f;border-color:#6bff8a;}
-#breathBtn{position:absolute;right:275px;bottom:calc(16% + 90px);width:58px;height:58px;border-radius:50%;display:none;align-items:center;justify-content:center;
-  background:rgba(20,60,90,.45);border:2px solid var(--cs-hud,#9fe3ff);color:#fff;font:bold 10px sans-serif;text-shadow:1px 1px 0 #000;z-index:22;pointer-events:auto;touch-action:none;}
-#breathBtn:active{background:rgba(70,185,255,.5);transform:scale(.94);}
-#breathBar{position:absolute;left:50%;top:calc(50% + 40vmin);transform:translateX(-50%);width:26vmin;height:6px;border-radius:4px;background:rgba(255,255,255,.25);z-index:11;display:none;pointer-events:none;}
-#breathBar i{display:block;height:100%;width:100%;border-radius:4px;background:#9fe3ff;}
-#breathBar.hold i{background:#6bff8a;} #breathBar.gasp i{background:#ff6b6b;}
-.dzOv{position:fixed;inset:0;z-index:100001;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.78);font-family:sans-serif;}
-.dzOv.on{display:flex;}
-.dzBox{width:min(94vw,520px);max-height:92vh;overflow:auto;background:#0d1b2a;border:2px solid #9fe3ff;border-radius:14px;padding:16px;color:#fff;}
-.dzBox h3{margin:0 0 10px;color:#9fe3ff;font-size:18px;}
-.dzBox button,.dzBox select,.dzBox input,.dzBox textarea{font:bold 14px sans-serif;border-radius:8px;border:2px solid #9fe3ff;background:#123;color:#fff;padding:8px 10px;margin:3px 0;box-sizing:border-box;}
-.dzBox button{cursor:pointer;} .dzBox textarea{width:100%;min-height:110px;font-weight:normal;}
-.dzBox .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;} .dzBox .row>*{flex:1;min-width:90px;}
-.dzBox .tabs button{flex:1;padding:8px 4px;font-size:13px;} .dzBox .tabs button.on{background:#9fe3ff;color:#012;}
-.dzBox .big{font-size:38px;text-align:center;font-variant-numeric:tabular-nums;margin:8px 0;} .dzBox small{opacity:.75;display:block;margin-top:6px;}
-</style>
-<script id="dzPlus">
-(function(){
-'use strict';
-const $ = id => document.getElementById(id);
-const L = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
-const X = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : en; }catch(e){ return en; } };   /* Extras: só PT/EN */
-const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} } };
-const toast = m => { try{ if(typeof uiToast === 'function') uiToast(m, 'ok'); }catch(e){} };
-const el = (tag, css, html) => { const d = document.createElement(tag); if(css) d.style.cssText = css; if(html != null) d.innerHTML = html; return d; };
-
-/* ================= 1) EDITOR DE BOTÕES DO CELULAR ================= */
-const BTN = { fireBtn:75, reloadBtn:58, swapBtn:58, useBtn:62, kickBtn:68, jumpBtn:58, scopeBtn:58, modeBtn:58, breathBtn:58 };
-let pos = {}, scale = 1, drag = null;
-try{ pos = JSON.parse(store.get('dz_btnpos') || '{}') || {}; }catch(e){ pos = {}; }
-scale = parseFloat(store.get('dz_btnscale')) || 1;
-const inEdit = () => document.body.classList.contains('dzEditing');
-function applyOne(id){
-  const b = $(id); if(!b) return; const s = Math.round(BTN[id] * scale), p = pos[id], im = 'important';
-  if(scale !== 1){ b.style.setProperty('width', s + 'px', im); b.style.setProperty('height', s + 'px', im); } else { b.style.removeProperty('width'); b.style.removeProperty('height'); }
-  if(p){
-    const W = innerWidth, H = innerHeight;
-    b.style.setProperty('right', Math.max(0, Math.min(W - s, p.r)) + 'px', im); b.style.setProperty('bottom', Math.max(0, Math.min(H - s, p.b)) + 'px', im);
-    b.style.setProperty('left', 'auto', im); b.style.setProperty('top', 'auto', im);
-  } else ['right', 'bottom', 'left', 'top'].forEach(k => b.style.removeProperty(k));
-}
-const applyAll = () => Object.keys(BTN).forEach(applyOne);
-function ensureBar(){
-  if($('btnEdBar')) return;
-  const b = el('div'); b.id = 'btnEdBar';
-  b.innerHTML = '<span id="btnEdTxt"></span><label>' + L('TAMANHO', 'SIZE') + ' <input id="btnEdSize" type="range" min="70" max="150" step="5" style="width:110px;padding:0"></label>'
-    + '<button id="btnEdReset" type="button">' + L('RESETAR', 'RESET') + '</button><button id="btnEdDone" type="button">' + L('CONCLUÍDO', 'DONE') + '</button>';
-  document.body.appendChild(b);
-  $('btnEdTxt').textContent = L('ARRASTE OS BOTÕES', 'DRAG THE BUTTONS');
-  $('btnEdSize').addEventListener('input', e => { scale = e.target.value / 100; store.set('dz_btnscale', String(scale)); applyAll(); });
-  $('btnEdReset').addEventListener('click', () => { pos = {}; scale = 1; $('btnEdSize').value = 100; store.set('dz_btnpos', '{}'); store.set('dz_btnscale', '1'); applyAll(); });
-  $('btnEdDone').addEventListener('click', stopEdit);
-}
-function startEdit(){
-  ensureBar(); const m = $('settingsModal');
-  if(m){ m.style.visibility = 'hidden'; m.style.pointerEvents = 'none'; }   /* o jogo continua pausado: o menu só fica invisível */
-  $('btnEdSize').value = Math.round(scale * 100); document.body.classList.add('dzEditing');
-}
-function stopEdit(){
-  document.body.classList.remove('dzEditing'); const m = $('settingsModal'); if(m){ m.style.visibility = ''; m.style.pointerEvents = ''; }
-  drag = null; applyAll(); toast(L('Botões salvos', 'Buttons saved')); try{ window.dzStat.edit(); }catch(e){}
-}
-const ids = '#' + Object.keys(BTN).join(',#'), inBar = t => t && t.closest && t.closest('#btnEdBar');
-window.addEventListener('pointerdown', e => {
-  if(!inEdit() || inBar(e.target)) return;
-  e.preventDefault(); e.stopImmediatePropagation();
-  const b = e.target.closest && e.target.closest(ids); if(!b) return;
-  const r = b.getBoundingClientRect(); drag = { b, id: b.id, dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height, pid: e.pointerId };
-  try{ b.setPointerCapture(e.pointerId); }catch(_){}
-}, true);
-window.addEventListener('pointermove', e => {
-  if(!inEdit() || inBar(e.target)) return; e.stopImmediatePropagation();
-  if(!drag || e.pointerId !== drag.pid) return; e.preventDefault();
-  const W = innerWidth, H = innerHeight, left = Math.max(0, Math.min(W - drag.w, e.clientX - drag.dx)), top = Math.max(0, Math.min(H - drag.h, e.clientY - drag.dy));
-  pos[drag.id] = { r: Math.round(W - left - drag.w), b: Math.round(H - top - drag.h) }; applyOne(drag.id);
-}, true);
-['pointerup', 'pointercancel'].forEach(t => window.addEventListener(t, e => {
-  if(!inEdit() || inBar(e.target)) return; e.stopImmediatePropagation();
-  if(drag){ store.set('dz_btnpos', JSON.stringify(pos)); drag = null; }
-}, true));
-['touchstart', 'touchmove', 'touchend', 'touchcancel', 'mousedown', 'mouseup', 'click'].forEach(t => window.addEventListener(t, e => {
-  if(!inEdit() || inBar(e.target)) return; e.preventDefault(); e.stopImmediatePropagation();
-}, { capture: true, passive: false }));
-window.addEventListener('resize', applyAll);
-
-/* ================= 2) BACKUP ================= */
-function snapshot(){ const o = {}; try{ for(let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); o[k] = localStorage.getItem(k); } }catch(e){} return { app: 'deadzone', v: 1, date: new Date().toISOString(), data: o }; }
-function overlay(id, title, html){
-  let o = $(id); if(!o){ o = el('div'); o.id = id; o.className = 'dzOv'; document.body.appendChild(o); o.addEventListener('pointerdown', e => { if(e.target === o) o.classList.remove('on'); }); }
-  o.innerHTML = '<div class="dzBox"><h3>' + title + '</h3>' + html + '<div class="row" style="margin-top:10px"><button type="button" data-x="close">' + X('FECHAR', 'CLOSE') + '</button></div></div>';
-  o.querySelector('[data-x="close"]').addEventListener('click', () => { o.classList.remove('on'); if(id === 'dzMiniOv') stopMini(); }); o.classList.add('on'); return o;
-}
-window.dzOverlay = overlay;
-function importText(txt){
-  let j; try{ j = JSON.parse(txt); }catch(e){ toast(X('Arquivo inválido', 'Invalid file')); return; }
-  if(!j || j.app !== 'deadzone' || !j.data || typeof j.data !== 'object'){ toast(X('Esse não é um backup do jogo', 'Not a game backup')); return; }
-  const n = Object.keys(j.data).length;
-  if(typeof confirm === 'function' && !confirm(X('Restaurar ' + n + ' itens? Isso substitui os dados atuais deste aparelho.', 'Restore ' + n + ' items? This replaces the current data on this device.'))) return;
-  Object.keys(j.data).forEach(k => store.set(k, String(j.data[k])));
-  toast(X('Backup restaurado. Recarregando...', 'Backup restored. Reloading...')); setTimeout(() => location.reload(), 900);
-}
-window.dzBackup = { open(){
-  const o = overlay('dzBkOv', '💾 ' + X('BACKUP', 'BACKUP'),
-    '<div class="row"><button type="button" data-x="exp">' + X('⬇ EXPORTAR ARQUIVO', '⬇ EXPORT FILE') + '</button><button type="button" data-x="copy">' + X('📋 COPIAR TEXTO', '📋 COPY TEXT') + '</button></div>'
-    + '<div class="row"><label style="flex:1;text-align:center;border:2px solid #9fe3ff;border-radius:8px;padding:8px 10px;margin:3px 0;cursor:pointer">' + X('⬆ IMPORTAR ARQUIVO', '⬆ IMPORT FILE') + '<input type="file" accept=".json,application/json" data-x="file" style="display:none"></label></div>'
-    + '<textarea data-x="txt" placeholder="' + X('Ou cole aqui o texto do backup...', 'Or paste the backup text here...') + '"></textarea>'
-    + '<div class="row"><button type="button" data-x="imp">' + X('IMPORTAR TEXTO COLADO', 'IMPORT PASTED TEXT') + '</button></div>'
-    + '<small>' + X('Salva configurações, botões, recordes e códigos liberados deste aparelho. Os saves dentro dos emuladores não entram.', 'Saves settings, buttons, records and unlocked codes from this device. Saves inside the emulators are not included.') + '</small>');
-  const q = s => o.querySelector('[data-x="' + s + '"]');
-  q('exp').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(snapshot())], { type: 'application/json' }), a = el('a'); a.href = URL.createObjectURL(blob);
-    a.download = 'deadzone-backup-' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-    toast(X('Backup exportado', 'Backup exported')); try{ window.dzStat.bk(); }catch(e){}
-  });
-  q('copy').addEventListener('click', () => { const s = JSON.stringify(snapshot()); q('txt').value = s;
-    try{ navigator.clipboard.writeText(s).then(() => toast(X('Copiado!', 'Copied!')), () => { q('txt').select(); }); }catch(e){ q('txt').select(); } });
-  q('file').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => importText(String(r.result)); r.readAsText(f); });
-  q('imp').addEventListener('click', () => importText(q('txt').value));
-} };
-
-/* ================= 3) MINI APPS (cronômetro, timer, conversor, notas) ================= */
-let swT = 0, swRun = false, swStart = 0, swAcc = 0, laps = [], tmT = 0, tmEnd = 0, tmId = 0, tmLeft = 0;
-const fmt = (ms, cs) => { const t = Math.max(0, ms), m = Math.floor(t / 60000), s = Math.floor(t / 1000) % 60, c = Math.floor(t / 10) % 100; return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + (cs ? '.' + String(c).padStart(2, '0') : ''); };
-function stopMini(){ clearInterval(swT); swT = 0; swRun = false; }   /* o timer continua rodando em segundo plano */
-function beep(){ try{ const A = new (window.AudioContext || window.webkitAudioContext)(); [0, .35, .7].forEach(d => { const o = A.createOscillator(), g = A.createGain(); o.frequency.value = 880; g.gain.value = .15; o.connect(g); g.connect(A.destination); o.start(A.currentTime + d); o.stop(A.currentTime + d + .2); }); }catch(e){} try{ navigator.vibrate && navigator.vibrate([200, 100, 200]); }catch(e){} }
-const UN = { len: { m:1, km:1000, cm:.01, mm:.001, mi:1609.344, ft:.3048, in:.0254 }, mass: { kg:1, g:.001, lb:.45359237, oz:.028349523 } };
-function conv(cat, a, b, v){
-  if(cat === 'temp'){ const c = a === 'C' ? v : a === 'F' ? (v - 32) * 5 / 9 : v - 273.15; return b === 'C' ? c : b === 'F' ? c * 9 / 5 + 32 : c + 273.15; }
-  return v * UN[cat][a] / UN[cat][b];
-}
-window.dzMini = { open(){
-  const o = overlay('dzMiniOv', '🧰 ' + X('MINI APPS', 'MINI APPS'),
-    '<div class="row tabs"><button type="button" data-t="sw" class="on">⏱</button><button type="button" data-t="tm">⏳</button><button type="button" data-t="cv">📏</button><button type="button" data-t="nt">📝</button></div><div data-x="body"></div>');
-  const body = o.querySelector('[data-x="body"]');
-  const show = t => {
-    o.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); stopMini();
-    if(t === 'sw'){
-      body.innerHTML = '<div class="big" data-x="d">' + fmt(swAcc, 1) + '</div><div class="row"><button type="button" data-x="go">' + X('INICIAR', 'START') + '</button><button type="button" data-x="lap">' + X('VOLTA', 'LAP') + '</button><button type="button" data-x="rs">' + X('ZERAR', 'RESET') + '</button></div><div data-x="laps" style="max-height:130px;overflow:auto;margin-top:6px"></div>';
-      const d = body.querySelector('[data-x="d"]'), lp = body.querySelector('[data-x="laps"]'), go = body.querySelector('[data-x="go"]');
-      const draw = () => { d.textContent = fmt(swRun ? swAcc + performance.now() - swStart : swAcc, 1); }, drawLaps = () => { lp.innerHTML = laps.map((l, i) => '<div>#' + (laps.length - i) + ' &nbsp; ' + fmt(l, 1) + '</div>').join(''); };
-      go.addEventListener('click', () => { if(swRun){ swAcc += performance.now() - swStart; swRun = false; clearInterval(swT); go.textContent = X('INICIAR', 'START'); } else { swStart = performance.now(); swRun = true; swT = setInterval(draw, 40); go.textContent = X('PAUSAR', 'PAUSE'); } draw(); });
-      body.querySelector('[data-x="lap"]').addEventListener('click', () => { laps.unshift(swRun ? swAcc + performance.now() - swStart : swAcc); drawLaps(); });
-      body.querySelector('[data-x="rs"]').addEventListener('click', () => { swRun = false; clearInterval(swT); swAcc = 0; laps = []; go.textContent = X('INICIAR', 'START'); draw(); drawLaps(); }); drawLaps();
-    } else if(t === 'tm'){
-      body.innerHTML = '<div class="big" data-x="d">' + fmt(tmId ? tmEnd - performance.now() : tmLeft, 0) + '</div><div class="row"><input data-x="m" type="number" min="0" max="999" placeholder="min" value="1"><input data-x="s" type="number" min="0" max="59" placeholder="seg" value="0"></div><div class="row"><button type="button" data-x="go">' + X('INICIAR', 'START') + '</button><button type="button" data-x="st">' + X('PARAR', 'STOP') + '</button></div>';
-      const d = body.querySelector('[data-x="d"]');
-      const draw = () => { d.textContent = fmt(tmId ? tmEnd - performance.now() : tmLeft, 0); };
-      body.querySelector('[data-x="go"]').addEventListener('click', () => {
-        clearInterval(tmId); const ms = ((+body.querySelector('[data-x="m"]').value || 0) * 60 + (+body.querySelector('[data-x="s"]').value || 0)) * 1000; if(ms <= 0) return;
-        tmEnd = performance.now() + ms; tmId = setInterval(() => { if(performance.now() >= tmEnd){ clearInterval(tmId); tmId = 0; tmLeft = 0; beep(); toast(X('⏳ Timer terminou!', '⏳ Timer finished!')); } draw(); }, 200); draw(); });
-      body.querySelector('[data-x="st"]').addEventListener('click', () => { clearInterval(tmId); tmId = 0; tmLeft = 0; draw(); }); swT = setInterval(draw, 200);
-    } else if(t === 'cv'){
-      const cats = { len: ['m', 'km', 'cm', 'mm', 'mi', 'ft', 'in'], mass: ['kg', 'g', 'lb', 'oz'], temp: ['C', 'F', 'K'] };
-      body.innerHTML = '<div class="row"><select data-x="c"><option value="len">' + X('Comprimento', 'Length') + '</option><option value="mass">' + X('Peso', 'Weight') + '</option><option value="temp">' + X('Temperatura', 'Temperature') + '</option></select></div><div class="row"><input data-x="v" type="number" value="1" step="any"><select data-x="a"></select><select data-x="b"></select></div><div class="big" data-x="r"></div>';
-      const q = s => body.querySelector('[data-x="' + s + '"]'), fill = () => { const u = cats[q('c').value]; q('a').innerHTML = q('b').innerHTML = u.map(x => '<option>' + x + '</option>').join(''); q('b').selectedIndex = 1; calc(); };
-      const calc = () => { const r = conv(q('c').value, q('a').value, q('b').value, parseFloat(q('v').value)); q('r').textContent = isFinite(r) ? (Math.round(r * 1e6) / 1e6) + ' ' + q('b').value : '—'; };
-      q('c').addEventListener('change', fill); ['a', 'b', 'v'].forEach(s => q(s).addEventListener('input', calc)); fill();
-    } else {
-      body.innerHTML = '<textarea data-x="n" placeholder="' + X('Suas notas (salvam sozinhas)...', 'Your notes (auto-saved)...') + '"></textarea>';
-      const n = body.querySelector('[data-x="n"]'); n.value = store.get('dz_notes') || ''; n.addEventListener('input', () => store.set('dz_notes', n.value));
-    }
-  };
-  o.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => show(b.dataset.t))); show('sw');
-} };
-
-/* ================= 4) RESPIRAÇÃO DA SNIPER (balanço da mira + segurar o fôlego) ================= */
-let stam = 1, gasp = 0, lastT = 0, kbHeld = false, touchHeld = false, ap = { a: 0, p: 0 };
-window.addEventListener('keydown', e => { if(e.key === 'Shift') kbHeld = true; });
-window.addEventListener('keyup', e => { if(e.key === 'Shift') kbHeld = false; });
-window.addEventListener('blur', () => { kbHeld = false; touchHeld = false; });
-function ensureBreathUi(){
-  if(!$('breathBar')){ const b = el('div'); b.id = 'breathBar'; b.innerHTML = '<i></i>'; ($('game') || document.body).appendChild(b); }
-  if(!$('breathBtn') && $('touchLayer')){
-    const b = el('div'); b.id = 'breathBtn'; b.textContent = L('FÔLEGO', 'BREATH'); $('touchLayer').appendChild(b);
-    const on = e => { touchHeld = true; e.preventDefault(); e.stopPropagation(); }, off = () => { touchHeld = false; };
-    b.addEventListener('pointerdown', on, { passive: false }); ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => b.addEventListener(t, off)); applyOne('breathBtn');
-  }
-}
-window.dzBreathTick = function(){
-  ensureBreathUi();
-  const now = performance.now(), dt = Math.min(.05, (now - lastT) / 1000 || .016); lastT = now;
-  let sc = 0; try{ sc = scopeLvl; }catch(e){}
-  const bar = $('breathBar'), bb = $('breathBtn');
-  if(bb && !inEdit()) bb.style.display = (sc > 0 && typeof usingTouch !== 'undefined' && usingTouch) ? 'flex' : 'none';
-  if(!sc){
-    if(ap.a || ap.p){ player.angle -= ap.a; addCamPitch(-ap.p); ap.a = ap.p = 0; }
-    stam = Math.min(1, stam + dt / 2); gasp = 0; if(bar) bar.style.display = 'none'; return;
-  }
-  let pad = false; try{ const g = (navigator.getGamepads() || [])[typeof gamepadIndex === 'number' && gamepadIndex !== null ? gamepadIndex : 0]; pad = !!(g && g.buttons[10] && g.buttons[10].pressed); }catch(e){}
-  const held = kbHeld || touchHeld || pad, holding = held && stam > 0 && gasp <= 0;
-  if(holding) stam = Math.max(0, stam - dt / 3.2); else stam = Math.min(1, stam + dt / (gasp > 0 ? 4 : 2.5));
-  if(holding && stam < .75){ try{ window.dzStat.breath(); }catch(e){} }
-  if(stam <= 0 && held && gasp <= 0) gasp = 1.6; if(gasp > 0) gasp -= dt;
-  const t = now / 1000, amp = (holding ? .08 : (gasp > 0 ? 1.8 : 1)) * (sc === 2 ? 1.3 : 1);
-  const ta = (Math.sin(t * 1.3) * .0042 + Math.sin(t * 2.7 + 1) * .0021) * amp, tp = (Math.cos(t * 1.7) * .0035 + Math.sin(t * 3.1) * .0015) * amp;
-  player.angle += ta - ap.a; addCamPitch(tp - ap.p); ap.a = ta; ap.p = tp;
-  if(bar){ bar.style.display = 'block'; bar.firstChild.style.width = (stam * 100) + '%'; bar.className = gasp > 0 ? 'gasp' : (holding ? 'hold' : ''); }
-};
-
-/* ================= grupo no menu CONTROLES ================= */
-function addGroup(){
-  const p = $('tabControls'); if(!p || $('dzPlusGroup')) return;
-  const g = el('div'); g.id = 'dzPlusGroup'; g.className = 'setting-group'; g.innerHTML = '<div class="set-sec">' + L('FERRAMENTAS', 'TOOLS') + '</div>';
-  [[L('✋ EDITAR BOTÕES DO CELULAR', '✋ EDIT MOBILE BUTTONS'), startEdit], [L('💾 BACKUP (EXPORTAR / IMPORTAR)', '💾 BACKUP (EXPORT / IMPORT)'), () => window.dzBackup.open()], [L('🧰 MINI APPS', '🧰 MINI APPS'), () => window.dzMini.open()], [L('🏆 RECORDES E CONQUISTAS', '🏆 RECORDS AND ACHIEVEMENTS'), () => window.dzStat.open()]].forEach(a => {
-    const b = el('button', 'width:100%;margin-top:6px'); b.type = 'button'; b.className = 'btn btn-secondary'; b.textContent = a[0]; b.addEventListener('click', a[1]); g.appendChild(b);
-  });
-  p.appendChild(g);
-}
-const boot = () => { addGroup(); applyAll(); ensureBreathUi(); };
-if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-window.addEventListener('load', boot);
-})();
-</script>
-
-<script id="dzPlus2">
-/* ===== RECORDES E CONQUISTAS ===== */
-(function(){
-'use strict';
-const L = (pt, en) => { try{ return (typeof LT === 'function') ? LT(pt, en) : pt; }catch(e){ return pt; } };
-const store = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} } };
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
-const toast = m => { try{ if(typeof uiToast === 'function') uiToast(m, 'ok'); }catch(e){} };
-let ST = { kills:0, sniper:0, time:0, runs:0, breath:0, edit:0, bk:0, emu:0, modes:{}, ach:{}, rec:{} };
-try{ Object.assign(ST, JSON.parse(store.get('dz_stats') || '{}')); }catch(e){}
-const save = () => store.set('dz_stats', JSON.stringify(ST));
-let run = null, runBest = 0;
-const nModes = () => Object.keys(ST.modes).length;
-const ACH = [
-  { id:'first', i:'🎯', pt:'Primeiro abate', en:'First blood', dp:'Abata 1 inimigo', de:'Take down 1 enemy', ok:() => ST.kills >= 1 },
-  { id:'k50',  i:'🔫', pt:'Caçador', en:'Hunter', dp:'50 abates no total', de:'50 kills in total', ok:() => ST.kills >= 50, pr:() => [ST.kills, 50] },
-  { id:'k250', i:'💀', pt:'Exterminador', en:'Exterminator', dp:'250 abates no total', de:'250 kills in total', ok:() => ST.kills >= 250, pr:() => [ST.kills, 250] },
-  { id:'k1000', i:'👑', pt:'Lenda', en:'Legend', dp:'1000 abates no total', de:'1000 kills in total', ok:() => ST.kills >= 1000, pr:() => [ST.kills, 1000] },
-  { id:'snp',  i:'🔭', pt:'Olho de águia', en:'Eagle eye', dp:'10 abates com sniper', de:'10 sniper kills', ok:() => ST.sniper >= 10, pr:() => [ST.sniper, 10] },
-  { id:'s1k',  i:'💯', pt:'Mil pontos', en:'Thousand points', dp:'1000 pontos em uma partida', de:'1000 points in one match', ok:() => runBest >= 1000 || Object.keys(ST.rec).some(k => ST.rec[k].score >= 1000) },
-  { id:'s5k',  i:'🏅', pt:'Cinco mil', en:'Five thousand', dp:'5000 pontos em uma partida', de:'5000 points in one match', ok:() => runBest >= 5000 || Object.keys(ST.rec).some(k => ST.rec[k].score >= 5000) },
-  { id:'brt',  i:'🫁', pt:'Respire fundo', en:'Deep breath', dp:'Segure o fôlego com a sniper', de:'Hold your breath while scoped', ok:() => ST.breath >= 1 },
-  { id:'t30',  i:'⏱', pt:'Maratonista', en:'Marathoner', dp:'30 minutos jogando', de:'30 minutes played', ok:() => ST.time >= 1800, pr:() => [Math.floor(ST.time / 60), 30] },
-  { id:'m3',   i:'🧭', pt:'Explorador', en:'Explorer', dp:'Jogue 3 modos diferentes', de:'Play 3 different modes', ok:() => nModes() >= 3, pr:() => [nModes(), 3] },
-  { id:'edt',  i:'✋', pt:'Do meu jeito', en:'My way', dp:'Edite a posição dos botões', de:'Edit the button layout', ok:() => ST.edit >= 1 },
-  { id:'bkp',  i:'💾', pt:'Precavido', en:'Cautious', dp:'Exporte um backup', de:'Export a backup', ok:() => ST.bk >= 1 },
-  { id:'emu',  i:'🕹', pt:'Retrô', en:'Retro', dp:'Abra um jogo no emulador', de:'Open a game in the emulator', ok:() => ST.emu >= 1 }
-];
-function check(){
-  let ch = false;
-  ACH.forEach(a => { if(!ST.ach[a.id] && a.ok()){ ST.ach[a.id] = Date.now(); ch = true; toast('🏆 ' + L('CONQUISTA: ', 'ACHIEVEMENT: ') + L(a.pt, a.en)); try{ if(typeof SFX !== 'undefined' && SFX.menuAccept) SFX.menuAccept(); }catch(e){} } });
-  if(ch) save();
-}
-function endRun(){
-  if(!run) return;
-  if(run.kills > 0 || run.best > 0){
-    const r = ST.rec[run.mode] || { score:0, kills:0, time:0 }; let nr = false;
-    if(run.best > r.score){ r.score = run.best; nr = true; } if(run.kills > r.kills) r.kills = run.kills; if(run.t > r.time) r.time = Math.round(run.t);
-    ST.rec[run.mode] = r; ST.runs++;
-    if(nr && run.best > 0) toast('🏆 ' + L('NOVO RECORDE: ', 'NEW RECORD: ') + run.best);
-  }
-  save(); run = null;
-}
-setInterval(() => {
-  let st, go, sc, md, paused = false;
-  try{ st = started; go = gameOver; sc = score; md = String(currentGameMode || 'normal'); }catch(e){ return; }
-  try{ paused = settingsModal.style.display === 'flex'; }catch(e){}
-  const inRun = !!st && !go;
-  if(inRun && !run){ run = { mode: md, t: 0, kills: 0, best: 0 }; runBest = 0; ST.modes[md] = 1; }
-  if(run && inRun){ run.mode = md; run.best = Math.max(run.best, sc || 0); runBest = run.best; if(!paused){ run.t += .5; ST.time += .5; } }
-  if(run && !inRun) endRun();
-  check();
-}, 500);
-window.addEventListener('pagehide', () => { try{ endRun(); save(); }catch(e){} });
-
-function open(){
-  if(typeof window.dzOverlay !== 'function') return;
-  const rows = Object.keys(ST.rec).sort().map(k => { const r = ST.rec[k];
-    return '<tr><td>' + esc(k.toUpperCase()) + '</td><td>' + r.score + '</td><td>' + r.kills + '</td><td>' + Math.floor(r.time / 60) + ':' + String(r.time % 60).padStart(2, '0') + '</td></tr>'; }).join('');
-  const got = ACH.filter(a => ST.ach[a.id]).length;
-  const list = ACH.map(a => { const d = !!ST.ach[a.id], p = (!d && a.pr) ? a.pr() : null;
-    return '<div style="display:flex;gap:10px;align-items:center;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,.12);opacity:' + (d ? 1 : .6) + '"><span style="font-size:26px">' + (d ? a.i : '🔒') + '</span><span style="flex:1"><b>' + esc(L(a.pt, a.en)) + '</b><br><small style="margin:0">' + esc(L(a.dp, a.de)) + (p ? ' — ' + Math.min(p[0], p[1]) + '/' + p[1] : '') + '</small></span><span>' + (d ? '✔' : '') + '</span></div>'; }).join('');
-  const o = window.dzOverlay('dzAchOv', '🏆 ' + L('RECORDES E CONQUISTAS', 'RECORDS AND ACHIEVEMENTS'),
-    '<div style="margin-bottom:6px">' + L('Abates: ', 'Kills: ') + '<b>' + ST.kills + '</b> &nbsp; ' + L('Partidas: ', 'Matches: ') + '<b>' + ST.runs + '</b> &nbsp; ' + L('Tempo: ', 'Time: ') + '<b>' + Math.floor(ST.time / 60) + ' min</b></div>'
-    + '<table style="width:100%;border-collapse:collapse;text-align:center;margin-bottom:10px"><tr style="color:#9fe3ff"><th>' + L('MODO', 'MODE') + '</th><th>' + L('PONTOS', 'SCORE') + '</th><th>' + L('ABATES', 'KILLS') + '</th><th>' + L('TEMPO', 'TIME') + '</th></tr>'
-    + (rows || '<tr><td colspan="4" style="opacity:.7;padding:8px">' + L('Jogue uma partida para criar recordes.', 'Play a match to set records.') + '</td></tr>') + '</table>'
-    + '<div style="color:#9fe3ff;font-weight:bold;margin:6px 0">' + L('CONQUISTAS ', 'ACHIEVEMENTS ') + got + '/' + ACH.length + '</div>' + list
-    + '<div class="row" style="margin-top:8px"><button type="button" data-x="rs">' + L('ZERAR RECORDES E CONQUISTAS', 'RESET RECORDS AND ACHIEVEMENTS') + '</button></div>');
-  o.querySelector('[data-x="rs"]').addEventListener('click', () => { if(typeof confirm === 'function' && !confirm(L('Apagar todos os recordes e conquistas?', 'Erase all records and achievements?'))) return;
-    ST = { kills:0, sniper:0, time:0, runs:0, breath:0, edit:0, bk:0, emu:0, modes:{}, ach:{}, rec:{} }; save(); open(); });
-}
-window.dzStat = {
-  kill(w){ ST.kills++; try{ if(typeof SCOPE_WEAPONS !== 'undefined' && SCOPE_WEAPONS[w]) ST.sniper++; }catch(e){} if(run) run.kills++; check(); save(); },
-  breath(){ if(!ST.breath){ ST.breath = 1; check(); save(); } }, edit(){ if(!ST.edit){ ST.edit = 1; check(); save(); } },
-  bk(){ if(!ST.bk){ ST.bk = 1; check(); save(); } }, emu(){ if(!ST.emu){ ST.emu = 1; check(); save(); } }, open
-};
-})();
-</script>
-
-<style id="dzEmuMenuCss">
-/* ===== EMULADOR EM JOGO: sem barra de botões; um botão ☰ (ou combo do controle) abre o menu e pausa ===== */
-#gbaOverlay.playing #gbaHead{display:none !important;}
-#gbaOverlay.playing #gbaBox{padding:0;border:0;border-radius:0;box-shadow:none;background:#000;gap:0;}
-#gbaOverlay.playing #gbaExitHint{top:max(52px,calc(env(safe-area-inset-top) + 44px));}
-#dzEmuMenuBtn{position:absolute;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:25;width:46px;height:30px;border-radius:15px;
-  border:1px solid rgba(255,255,255,.35);background:rgba(10,8,24,.55);color:#fff;font-size:18px;line-height:1;cursor:pointer;display:none;
-  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);opacity:.45;transition:opacity .2s;padding:0;-webkit-tap-highlight-color:transparent;}
-#gbaOverlay.playing #dzEmuMenuBtn{display:block;}
-#dzEmuMenuBtn:hover,#dzEmuMenuBtn:active{opacity:1;}
-#gbaOverlay.dzpad #dzEmuMenuBtn{opacity:0;pointer-events:none;}
-#dzEmuMenuHint{position:absolute;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:24;padding:5px 12px;border-radius:15px;
-  background:rgba(10,8,24,.7);color:#fff;font:bold 12px sans-serif;opacity:0;pointer-events:none;display:none;white-space:nowrap;}
-#gbaOverlay.playing.dzpad #dzEmuMenuHint{display:block;animation:dzHint 4.5s ease forwards;}
-@keyframes dzHint{0%{opacity:0}10%,75%{opacity:.85}100%{opacity:0}}
-#dzEmuMenu{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:rgba(5,4,15,.72);
-  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .2s;}
-#dzEmuMenu.show{display:flex;} #dzEmuMenu.in{opacity:1;}
-.dzEmCard{width:min(92vw,430px);max-height:92%;overflow:auto;background:rgba(18,14,40,.97);border:1px solid #6a4bd8;border-radius:16px;padding:14px;
-  box-shadow:0 12px 40px rgba(0,0,0,.6);transform:scale(.94);transition:transform .2s;}
-#dzEmuMenu.in .dzEmCard{transform:scale(1);}
-.dzEmCard h4{margin:0 0 8px;color:#cdbcff;font:bold 14px sans-serif;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.dzEmList{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.dzEmList button{display:flex;gap:8px;align-items:center;text-align:left;padding:9px 11px;min-height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.06);color:#fff;font:bold 13px sans-serif;cursor:pointer;}
-.dzEmList button.wide{grid-column:1/-1;}
-.dzEmList button.foc,.dzEmList button:hover{background:rgba(106,75,216,.6);border-color:#cdbcff;}
-.dzEmList button.danger{border-color:rgba(255,107,107,.55);}
-.dzEmList .sec{grid-column:1/-1;color:#9a8fcc;font:bold 11px sans-serif;letter-spacing:1px;margin-top:6px;}
-#dzCurtain{position:absolute;inset:0;z-index:40;background:#000;opacity:0;pointer-events:none;}
-#gbaList.dzRise{animation:dzRise .45s ease both;}
-@keyframes dzRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-</style>
-
 </body>
 </html>
