@@ -22348,7 +22348,7 @@ addSys({ id:'gba', icon:'🎮', name:'GAME BOY ADVANCE', core:'gba', coreName:'m
   keys:{ ArrowUp:4, ArrowDown:5, ArrowLeft:6, ArrowRight:7, KeyX:8, KeyZ:0, KeyA:10, KeyS:11, Enter:3, NumpadEnter:3, Backspace:2 },
   keyTxt:['setas = direcional · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · Z = B · X = A · A = L · S = R · Enter = START · Backspace = SELECT · F = fullscreen · Esc = back'],
   labels:{ 8:'A', 0:'B' }, gp:{ 0:0, 2:0, 1:8, 3:8, 4:10, 6:10, 5:11, 7:11 } });
-addSys({ id:'nes', icon:'🕹️', name:'NINTENDO (NES)', core:'nes', coreName:'FCEUmm', exts:['nes','fds','unf','unif'], hints:['nes','famicom','nintendo'], lay:'ab',
+addSys({ id:'nes', icon:'🕹️', name:'NINTENDO (NES)', core:'nes', alt:'nestopia', coreName:'FCEUmm', exts:['nes','fds','unf','unif'], hints:['nes','famicom','nintendo'], lay:'ab',
   keys:KEYS_AB, keyTxt:KEY_TXT_AB, labels:{ 8:'A', 0:'B' }, gp:GP_AB });
 addSys({ id:'gb', icon:'🟩', name:'GAME BOY', core:'gb', coreName:'Gambatte', exts:['gb'], hints:['gb','gameboy'], lay:'ab',
   keys:KEYS_AB, keyTxt:KEY_TXT_AB, labels:{ 8:'A', 0:'B' }, gp:GP_AB });
@@ -22552,9 +22552,36 @@ function exitHint(txt, prog){
   h.classList.add('show'); clearTimeout(hintTimer);
 }
 function exitHintHide(){ clearTimeout(hintTimer); $('gbaExitHint').classList.remove('show'); }
-function exitHintTip(){   /* aviso ao iniciar um jogo */
-  exitHint(tr('Para voltar à lista: segure SELECT + START (ou L3 + R3) por 1 segundo', 'To go back to the list: hold SELECT + START (or L3 + R3) for 1 second'), 0);
-  $('gbaExitBar').style.width = '0%'; hintTimer = setTimeout(exitHintHide, 5000);
+function exitHintTip(){   /* dicas de botões ao iniciar um jogo: PC, console (Xbox/PS) ou Android/celular */
+  const tok = playTok;
+  const lay = cur.lay;
+  let padHas = false; try{ padHas = Array.from(navigator.getGamepads ? navigator.getGamepads() : []).some(g => g && g.connected); }catch(e){}
+  const isConsole = !!window.DZ_CONSOLE, isTouch = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
+  const padTxt = {
+    gba: ['A/B = A/B · LB/RB = L/R · direcional ou analógico move · clicar analógico esq. = SELECT, dir. = START', 'A/B = A/B · LB/RB = L/R · D-pad or stick moves · click left stick = SELECT, right = START'],
+    ab: ['A/B = A/B · direcional ou analógico move · clicar analógico esq. = SELECT, dir. = START', 'A/B = A/B · D-pad or stick moves · click left stick = SELECT, right = START'],
+    snes: ['A/B/X/Y = A/B/X/Y · LB/RB = L/R · direcional ou analógico move · analógico esq. = SELECT, dir. = START', 'A/B/X/Y = A/B/X/Y · LB/RB = L/R · D-pad or stick moves · left stick click = SELECT, right = START'],
+    md3: ['X = A · A = B · B = C · direcional ou analógico move · analógico esq. = MODE, dir. = START', 'X = A · A = B · B = C · D-pad or stick moves · left stick click = MODE, right = START'],
+    native: ['controles padrão do emulador no seu controle', 'the emulator default controls on your gamepad']
+  }[lay] || null;
+  const touchTxt = lay === 'native'
+    ? [tr('use os botões que aparecem na tela do celular', 'use the buttons shown on the phone screen')]
+    : [tr('Toque nos botões da tela: direcional à esquerda, ações à direita. 🕹 CONTROLES mostra/esconde os botões.', 'Tap the on-screen buttons: D-pad on the left, actions on the right. 🕹 CONTROLS shows/hides them.')];
+  let tip1;
+  if(isConsole || padHas) tip1 = '🎮 ' + (padTxt ? tr(padTxt[0], padTxt[1]) : '');
+  else if(isTouch) tip1 = '📱 ' + touchTxt[0];
+  else tip1 = '⌨️ ' + tr(cur.keyTxt[0], cur.keyTxt[1]);
+  const tip2 = isConsole || padHas
+    ? tr('Voltar à lista: segure SELECT + START (ou L3 + R3) por 1 s · Salvar/carregar: segure LB + RB e aperte X / Y', 'Back to the list: hold SELECT + START (or L3 + R3) for 1 s · Save/load: hold LB + RB and press X / Y')
+    : (isTouch
+      ? tr('☰ JOGOS volta à lista · ⚡ SALVAR RÁPIDO / CARREGAR RÁPIDO guardam seu progresso', '☰ GAMES goes back to the list · ⚡ QUICK SAVE / QUICK LOAD keep your progress')
+      : tr('Esc = voltar à lista · F5 salva · F9 carrega · F = tela cheia', 'Esc = back to the list · F5 save · F9 load · F = fullscreen'));
+  exitHint(tip1, 0); $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => {
+    if(tok !== playTok || !isPlaying()) return;
+    exitHint(tip2, 0); $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer);
+    hintTimer = setTimeout(exitHintHide, 6000);
+  }, 7000);
 }
 /* o controle está sendo usado AGORA? (olha o estado ao vivo, não o do último quadro: a tecla "falsa" pode chegar antes do próximo quadro) */
 function padBusyNow(){
@@ -22689,17 +22716,17 @@ function onEmuReady(){
   try{ localStorage.setItem('dz_gba_ready', '1'); }catch(e){}
   applied = 0; shownMask = -1; sync();   /* se já tinha botão apertado enquanto o emulador subia, manda agora */
 }
-function play(url, name){
+function play(url, name, useAlt){
   curGameName = name || 'game';
   menuFx(false);   /* entrou no jogo: para a música e a animação do menu */
   stop(); initPad(); regSw();
-  const cfg = { core:cur.core, url:url, name:name || 'game', cdn:EJS_CDN, native:!!cur.native, bios:'', vol:ecfg.vol };
+  const cfg = { core:(useAlt && cur.alt) ? cur.alt : cur.core, url:url, name:name || 'game', cdn:EJS_CDN, native:!!cur.native, bios:'', vol:ecfg.vol };
   const legacy = !!(window.DZ_CONSOLE && window.DZ_CONSOLE.legacy);   /* Xbox One / PS4: hardware fraco */
   /* sem barra/menus do EmulatorJS (menos DOM e menos CPU); em Xbox One/PS4 também frameskip automático e remoção de loops ociosos do mGBA */
   const perf = '';   /* (sem opções extras do EmulatorJS: as interface dele já fica escondida pelo CSS) */
   const mkHtml = () => '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div>' +
-    '<script>' + (cfg.native ? '' : 'try{navigator.getGamepads=function(){return[]};}catch(x){}') + 'var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +   /* o iframe NÃO lê o controle: só o app lê (evita botão duplicado/conflitante) */
+    '<script>window.onerror=function(m){try{parent.dzEmuErr&&parent.dzEmuErr(String(m))}catch(x){}};window.addEventListener("unhandledrejection",function(e){try{parent.dzEmuErr&&parent.dzEmuErr(String(e.reason&&e.reason.message||e.reason))}catch(x){}});' + (cfg.native ? '' : 'try{navigator.getGamepads=function(){return[]};}catch(x){}') + 'var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +   /* o iframe NÃO lê o controle: só o app lê (evita botão duplicado/conflitante) */
     'EJS_player="#game";EJS_core=C.core;EJS_gameUrl=C.url;EJS_gameName=C.name;EJS_pathtodata=C.cdn;EJS_startOnLoaded=true;EJS_color="#6a4bd8";' +
     'EJS_language="pt-BR";EJS_threads=false;EJS_volume=C.vol;' + (cfg.bios ? 'EJS_biosUrl=C.bios;' : '') + perf + '<\/script>' +
     '<script src="' + esc(EJS_CDN) + 'loader.js"><\/script></body></html>';
@@ -22725,11 +22752,13 @@ function play(url, name){
     if(emuApi()){ clearInterval(watchTimer); watchTimer = 0; onEmuReady(); }
     else{
       ++tries;
+      if(tries === 70 && cur.alt && !useAlt){ clearInterval(watchTimer); watchTimer = 0; exitHint(tr('Núcleo não iniciou, tentando outro…', 'Core did not start, trying another…'), 0); setTimeout(() => play(url, name, true), 300); return; }
       if(tries === 100) exitHint(tr('Está demorando… Se ficar parado, segure SELECT + START (ou L3 + R3) e abra o jogo de novo.', 'Taking long… If it stays stuck, hold SELECT + START (or L3 + R3) and open the game again.'), 0);
       if(tries > 300){ clearInterval(watchTimer); watchTimer = 0; }
     }
   }, 300);
 }
+window.dzEmuErr = m => { try{ if(isPlaying()) exitHint('⚠ ' + String(m).slice(0, 160), 0); }catch(e){} };
 function playFile(f){
   if(!f) return;
   stop();
