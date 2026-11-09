@@ -22273,6 +22273,7 @@ window.dzEmuFx = { register, on, off, panel, refresh: refreshPanels, setTheme, s
       <button type="button" class="gbab nopl" id="gbaFx" aria-label="Ajustes do menu" title="Ajustes do menu">⚙</button>
       <button type="button" class="gbab" id="gbaMenuBtn">☰ JOGOS</button>
       <button type="button" class="gbab onpl" id="gbaPadBtn">🕹 CONTROLES</button>
+      <button type="button" class="gbab onpl" id="gbaHelpBtn">❓ AJUDA</button>
       <button type="button" class="gbab onpl" id="gbaSaveOut">💾 BAIXAR SAVE</button>
       <button type="button" class="gbab onpl" id="gbaSaveIn">📥 ENVIAR SAVE</button>
       <button type="button" class="gbab onpl" id="gbaStateOut">⬇ BAIXAR ESTADO</button>
@@ -22487,6 +22488,7 @@ function labels(){
   $('gbaOpen').textContent = '📂 ' + tr('ABRIR ARQUIVO', 'OPEN FILE');
   $('gbaMenuBtn').textContent = '☰ ' + tr('JOGOS', 'GAMES');
   $('gbaPadBtn').textContent = '🕹 ' + tr('CONTROLES', 'CONTROLS');
+  $('gbaHelpBtn').textContent = '❓ ' + tr('AJUDA', 'HELP');
   $('gbaClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
   $('gbaQSave').textContent = '⚡ ' + tr('SALVAR RÁPIDO', 'QUICK SAVE'); $('gbaQLoad').textContent = '⚡ ' + tr('CARREGAR RÁPIDO', 'QUICK LOAD');
   fsLabel();
@@ -22599,7 +22601,7 @@ let qsPX = false, qsPY = false;
 function padLoop(){
   padRaf = requestAnimationFrame(padLoop);
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-  let m = 0, combo = false, anyBtn = false, qsHold = false, qsX = false, qsY = false;
+  let m = 0, combo = false, anyBtn = false, qsHold = false, qsX = false, qsY = false, hc = false, hb = false;
   for(const gp of pads){
     if(!gp || !gp.connected) continue;
     if(gp.buttons.some(x => x && x.pressed)) anyBtn = true;
@@ -22613,9 +22615,14 @@ function padLoop(){
     if(ay < -.5) m |= 1 << 4; if(ay > .5) m |= 1 << 5; if(ax < -.5) m |= 1 << 6; if(ax > .5) m |= 1 << 7;
     /* combos para voltar à lista de jogos (segurar ~1 s): SELECT+START · L3+R3 (apertar os dois analógicos) · L1+R1+L2+R2 · botão central (guide).
        Vários combos porque alguns controles/navegadores não entregam SELECT/START (botões 8/9) para a página. */
+    if(b(4) && b(6) && !b(5) && !b(7)) hc = true;   /* LB + LT: abre/fecha a ajuda */
+    if(b(1)) hb = true;
     if(b(4) && b(5) && !(b(6) && b(7))){ qsHold = true; if(b(2)) qsX = true; if(b(3)) qsY = true; }   /* LB+RB segurados: X salva, Y carrega */
     if((b(8) && b(9)) || (b(10) && b(11)) || (b(4) && b(5) && b(6) && b(7)) || b(16)) combo = true;
   }
+  if(hc && !helpPC) toggleHelp(); else if(helpOpen && hb && !helpPB) toggleHelp();
+  helpPC = hc; helpPB = hb;
+  if(hc || helpOpen) m = 0;
   if(qsHold) m = 0;   /* durante o atalho de save rápido o jogo não recebe botões */
   if(qsHold && qsX && !qsPX) quickSave();
   if(qsHold && qsY && !qsPY) quickLoad();
@@ -22646,6 +22653,8 @@ function onKey(e){
     if(down && e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); goBack(); return; }
     if(down && !e.repeat && e.code === 'KeyF' && !e.ctrlKey && !e.metaKey && !e.altKey){ e.preventDefault(); e.stopImmediatePropagation(); toggleFs(); return; }
     if(down && !e.repeat && (e.code === 'F5' || e.code === 'F9')){ e.preventDefault(); e.stopImmediatePropagation(); if(e.code === 'F5') quickSave(); else quickLoad(); return; }   /* F5 salva · F9 carrega (e o F5 não recarrega a página) */
+    if(down && !e.repeat && (e.code === 'KeyH' || e.code === 'F1')){ e.preventDefault(); e.stopImmediatePropagation(); toggleHelp(); return; }
+    if(helpOpen){ e.preventDefault(); e.stopImmediatePropagation(); return; }
     const i = cur.keys[e.code];
     if(i !== undefined){
       e.preventDefault(); e.stopImmediatePropagation();
@@ -22694,6 +22703,7 @@ function stop(){
   try{ frame.src = 'about:blank'; frame.removeAttribute('srcdoc'); }catch(e){}
   frame.style.display = 'none'; frame.style.pointerEvents = '';
   if(blobUrl){ try{ URL.revokeObjectURL(blobUrl); }catch(e){} blobUrl = null; }
+  try{ if(helpOpen){ helpOpen = false; helpEl.style.display = 'none'; } }catch(e){}
   ov.classList.remove('playing'); list.classList.remove('full'); root.classList.remove('dz-gba-play');
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -22740,6 +22750,24 @@ function play(url, name, useAlt){
       }catch(e){}
       if(tok !== playTok) return;
     }
+    /* confere a ROM antes de abrir: arquivo não encontrado (o site devolve uma página HTML), vazio ou, no NES, sem o cabeçalho iNES */
+    try{
+      const r = await fetch(url.split('#')[0], { cache:'no-store' });
+      const ct = r.headers.get('content-type') || '';
+      const bytes = r.ok ? new Uint8Array(await r.arrayBuffer()) : new Uint8Array(0);
+      if(tok !== playTok) return;
+      if(!r.ok || /html/i.test(ct) || bytes.length < 16){
+        exitHint(tr('⚠ Arquivo da ROM não encontrado ou vazio: ' + (name || '') + '. Confira o nome em roms/ e o roms.json no GitHub.', '⚠ ROM file not found or empty: ' + (name || '') + '. Check the name in roms/ and roms.json on GitHub.'), 0);
+        $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer); return;
+      }
+      if(cur.id === 'nes' && /\.nes$/i.test(url.split('#')[0].split('?')[0] + (url.split('#')[1] ? '' : '')) || (cur.id === 'nes' && /#rom\.nes$/i.test(url))){
+        if(!(bytes[0] === 0x4E && bytes[1] === 0x45 && bytes[2] === 0x53 && bytes[3] === 0x1A)){
+          exitHint(tr('⚠ Esta ROM de NES não tem o cabeçalho iNES válido (arquivo corrompido ou de outro formato).', '⚠ This NES ROM has no valid iNES header (corrupted or another format).'), 0);
+          $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer);
+        }
+      }
+    }catch(e){}
+    if(tok !== playTok) return;
     frame.srcdoc = mkHtml(); frame.style.display = 'block';
   }, 600);   /* dá tempo de liberar o jogo anterior */
   ov.classList.add('playing'); root.classList.add('dz-gba-play'); padFirst = true; padIgnore = 0;
@@ -22752,6 +22780,14 @@ function play(url, name, useAlt){
     if(emuApi()){ clearInterval(watchTimer); watchTimer = 0; onEmuReady(); }
     else{
       ++tries;
+      let failed = false;
+      try{ const d = frame.contentDocument, t = (d && d.body && d.body.innerText) || ''; failed = /falha ao iniciar|failed to start/i.test(t); }catch(e){}
+      if(failed){
+        clearInterval(watchTimer); watchTimer = 0;
+        if(cur.alt && !useAlt){ exitHint(tr('Núcleo falhou, tentando outro…', 'Core failed, trying another…'), 0); setTimeout(() => play(url, name, true), 300); }
+        else{ exitHint(tr('⚠ Falha ao iniciar: a ROM pode estar corrompida ou usar um mapper não suportado. Tente outra ROM.', '⚠ Failed to start: the ROM may be corrupted or use an unsupported mapper. Try another ROM.'), 0); $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer); }
+        return;
+      }
       if(tries === 70 && cur.alt && !useAlt){ clearInterval(watchTimer); watchTimer = 0; exitHint(tr('Núcleo não iniciou, tentando outro…', 'Core did not start, trying another…'), 0); setTimeout(() => play(url, name, true), 300); return; }
       if(tries === 100) exitHint(tr('Está demorando… Se ficar parado, segure SELECT + START (ou L3 + R3) e abra o jogo de novo.', 'Taking long… If it stays stuck, hold SELECT + START (or L3 + R3) and open the game again.'), 0);
       if(tries > 300){ clearInterval(watchTimer); watchTimer = 0; }
@@ -22759,6 +22795,68 @@ function play(url, name, useAlt){
   }, 300);
 }
 window.dzEmuErr = m => { try{ if(isPlaying()) exitHint('⚠ ' + String(m).slice(0, 160), 0); }catch(e){} };
+
+/* ---- AJUDA DE BOTÕES (❓): teclado, controle e toque do console aberto. Pausa o jogo enquanto aberta ---- */
+let helpOpen = false, helpPC = false, helpPB = false;
+const helpEl = document.createElement('div'); helpEl.id = 'gbaHelpPanel'; helpEl.style.display = 'none'; ov.appendChild(helpEl);
+(function(){
+  const st = document.createElement('style');
+  st.textContent = '#gbaHelpPanel{position:absolute;inset:0;z-index:30;background:rgba(6,4,14,.94);color:#f0d9a0;overflow:auto;padding:max(14px,env(safe-area-inset-top)) 16px 16px;box-sizing:border-box;font-size:14px}' +
+    '#gbaHelpPanel .hw{max-width:760px;margin:0 auto}#gbaHelpPanel h2{margin:0 0 10px;font-size:16px;letter-spacing:2px;text-align:center;color:#e8b93a}' +
+    '#gbaHelpPanel h3{margin:14px 0 6px;font-size:13px;letter-spacing:1.5px;color:#b48bff;border-bottom:1px solid rgba(180,139,255,.35);padding-bottom:4px}' +
+    '#gbaHelpPanel .hr2{display:flex;gap:10px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)}#gbaHelpPanel .hr2 b{flex:0 0 46%;color:#fff;font-weight:700}' +
+    '#gbaHelpPanel .hx{display:block;margin:16px auto 0;font:inherit;font-weight:700;letter-spacing:1px;color:#f0d9a0;background:#17130b;border:1px solid #6a4bd8;border-radius:999px;padding:10px 22px;cursor:pointer;min-height:40px}' +
+    'html.console #gbaHelpPanel{font-size:clamp(16px,2.4vh,22px)}';
+  document.head.appendChild(st);
+})();
+function helpRows(){
+  const L = cur.labels || {}, nm = bit => L[bit] || ({ 0:'B', 1:'Y', 8:'A', 9:'X', 10:'L', 11:'R' })[bit] || String(bit);
+  const dirs = [['Setas', 'Arrows']];
+  /* teclado */
+  const kb = [];
+  if(cur.native){ kb.push([tr('Teclado e controle', 'Keyboard and gamepad'), tr('controles padrão do próprio emulador', 'the emulator default controls')]); }
+  else{
+    kb.push([tr('Setas', 'Arrow keys'), tr('Direcional', 'D-pad')]);
+    const nice = c => c.replace(/^Key/, '');
+    Object.keys(cur.keys).forEach(c => {
+      if(/^Arrow/.test(c) || c === 'NumpadEnter') return;
+      const b = cur.keys[c], lab = c === 'Enter' ? 'START' : (c === 'Backspace' ? cur.sel : nm(b));
+      kb.push([c === 'Backspace' ? 'Backspace' : nice(c), lab]);
+    });
+  }
+  kb.push(['H / F1', tr('Abrir/fechar esta ajuda', 'Open/close this help')], ['F5 / F9', tr('Salvar / carregar rápido', 'Quick save / load')], ['F', tr('Tela cheia', 'Fullscreen')], ['Esc', tr('Voltar à lista de jogos', 'Back to the game list')]);
+  /* controle */
+  const pn = { 0:'A (✕)', 1:'B (○)', 2:'X (□)', 3:'Y (△)', 4:'LB (L1)', 5:'RB (R1)', 6:'LT (L2)', 7:'RT (R2)' };
+  const pad = [];
+  if(cur.native){ pad.push([tr('Controle', 'Gamepad'), tr('botões padrão do próprio emulador', 'the emulator default buttons')]); }
+  else{
+    pad.push([tr('Direcional / analógico esq.', 'D-pad / left stick'), tr('Direcional', 'D-pad')]);
+    const by = {};
+    Object.keys(cur.gp).forEach(g => { const t = nm(cur.gp[g]); (by[t] = by[t] || []).push(pn[g] || g); });
+    Object.keys(by).forEach(t => pad.push([by[t].join(' / '), t]));
+  }
+  pad.push([tr('Clicar analógico esq. (L3)', 'Click left stick (L3)'), cur.sel], [tr('Clicar analógico dir. (R3)', 'Click right stick (R3)'), 'START'],
+    ['SELECT + START (' + tr('1 s', '1 s') + ') / L3 + R3', tr('Voltar à lista de jogos', 'Back to the game list')],
+    [tr('LB + RB, depois X / Y', 'LB + RB, then X / Y'), tr('Salvar / carregar rápido', 'Quick save / load')], ['LB + LT', tr('Abrir/fechar esta ajuda', 'Open/close this help')]);
+  /* toque */
+  const tc = [[tr('Direcional (esquerda)', 'D-pad (left)'), tr('Mover — aceita diagonais', 'Move — diagonals work')], [tr('Botões (direita)', 'Buttons (right)'), cur.native ? tr('os do próprio emulador', 'the emulator ones') : tr('Ações do jogo', 'Game actions')],
+    ['🕹 ' + tr('CONTROLES', 'CONTROLS'), tr('Mostra/esconde os botões na tela', 'Shows/hides the on-screen buttons')], ['☰ ' + tr('JOGOS', 'GAMES'), tr('Voltar à lista', 'Back to the list')], ['⚡', tr('Salvar / carregar rápido', 'Quick save / load')]];
+  return [['⌨️ ' + tr('TECLADO (PC)', 'KEYBOARD (PC)'), kb], ['🎮 ' + tr('CONTROLE (CONSOLE / PC)', 'GAMEPAD (CONSOLE / PC)'), pad], ['📱 ' + tr('TOQUE (ANDROID / CELULAR)', 'TOUCH (ANDROID / PHONE)'), tc]];
+}
+function paintHelp(){
+  const esc2 = t => String(t).replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' })[c]);
+  helpEl.innerHTML = '<div class="hw"><h2>❓ ' + esc2(tr('AJUDA DE BOTÕES', 'BUTTON HELP')) + ' · ' + esc2(cur.name) + '</h2>' +
+    helpRows().map(sec => '<h3>' + esc2(sec[0]) + '</h3>' + sec[1].map(r => '<div class="hr2"><b>' + esc2(r[0]) + '</b><span>' + esc2(r[1]) + '</span></div>').join('')).join('') +
+    '<button type="button" class="hx" id="gbaHelpX">✕ ' + esc2(tr('FECHAR (B / Esc)', 'CLOSE (B / Esc)')) + '</button></div>';
+  $('gbaHelpX').addEventListener('click', () => toggleHelp());
+}
+function toggleHelp(){
+  if(!isPlaying() && !helpOpen) return;
+  helpOpen = !helpOpen;
+  if(helpOpen){ releaseAll(); paintHelp(); helpEl.style.display = 'block'; loopPause(true); exitHintHide(); }
+  else{ helpEl.style.display = 'none'; loopPause(false); try{ frame.blur(); window.focus(); }catch(e){} }
+}
+$('gbaHelpBtn').addEventListener('click', () => toggleHelp());
 function playFile(f){
   if(!f) return;
   stop();
@@ -22838,7 +22936,7 @@ function close(quiet){
   if(!quiet) snd('menuBack');
   if(back) setTimeout(() => { try{ window.dzEmuReopen(); }catch(e){} }, 0);
 }
-function goBack(){ if(fxPanel && fxPanel.isOpen()){ fxPanel.close(); return; } if(isPlaying()) showList(); else close(); }
+function goBack(){ if(helpOpen){ toggleHelp(); return; } if(fxPanel && fxPanel.isOpen()){ fxPanel.close(); return; } if(isPlaying()) showList(); else close(); }
 
 $('gbaOpen').addEventListener('click', () => $('gbaFile').click());
 $('gbaFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if(f) playFile(f); });
