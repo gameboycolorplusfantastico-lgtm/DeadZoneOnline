@@ -22785,7 +22785,10 @@ function play(url, name, useAlt){
       if(failed){
         clearInterval(watchTimer); watchTimer = 0;
         if(cur.alt && !useAlt){ exitHint(tr('Núcleo falhou, tentando outro…', 'Core failed, trying another…'), 0); setTimeout(() => play(url, name, true), 300); }
-        else{ exitHint(tr('⚠ Falha ao iniciar: a ROM pode estar corrompida ou usar um mapper não suportado. Tente outra ROM.', '⚠ Failed to start: the ROM may be corrupted or use an unsupported mapper. Try another ROM.'), 0); $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer); }
+        else{
+          exitHint(tr('Testando a conexão com o emulador…', 'Testing the connection to the emulator…'), 0); $('gbaExitBar').style.width = '0%';
+          diagNet(useAlt).then(msg => { if(tok !== playTok) return; exitHint(msg, 0); $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer); });
+        }
         return;
       }
       if(tries === 70 && cur.alt && !useAlt){ clearInterval(watchTimer); watchTimer = 0; exitHint(tr('Núcleo não iniciou, tentando outro…', 'Core did not start, trying another…'), 0); setTimeout(() => play(url, name, true), 300); return; }
@@ -22793,6 +22796,23 @@ function play(url, name, useAlt){
       if(tries > 300){ clearInterval(watchTimer); watchTimer = 0; }
     }
   }, 300);
+}
+
+/* diagnóstico de rede: descobre se o motor/núcleo do EmulatorJS está sendo bloqueado (escola, faculdade, firewall, DNS) */
+async function diagNet(useAlt){
+  const file = (cur.alt && useAlt) ? cur.alt : (typeof EJS_CORE_FILE !== 'undefined' && EJS_CORE_FILE[cur.id]) || cur.core;
+  const coreFile = ({ nes:'fceumm', nestopia:'nestopia' })[file] || file;
+  const probe = async u => {
+    const ac = new AbortController(), t = setTimeout(() => ac.abort(), 12000);
+    try{ const r = await fetch(u + (u.indexOf('?') < 0 ? '?' : '&') + 'dz=' + Date.now(), { mode:'cors', cache:'no-store', credentials:'omit', signal:ac.signal }); const st = r.status, ct = r.headers.get('content-type') || ''; ac.abort(); return { ok:r.ok && !/html/i.test(ct), st:st, ct:ct }; }
+    catch(e){ return { ok:false, st:0, err:true }; }
+    finally{ clearTimeout(t); }
+  };
+  const core = await probe(EJS_CDN + 'cores/' + coreFile + '-wasm.data');
+  const eng = await probe(EJS_CDN + 'emulator.min.js');
+  if(core.err || eng.err) return tr('⚠ Não consegui baixar o emulador de cdn.emulatorjs.org: a rede (escola/faculdade/firewall) pode estar bloqueando. Teste com dados móveis ou outra rede.', '⚠ Could not download the emulator from cdn.emulatorjs.org: the network (school/office/firewall) may be blocking it. Try mobile data or another network.');
+  if(!core.ok || !eng.ok) return tr('⚠ O servidor do emulador respondeu com erro (núcleo ' + core.st + ', motor ' + eng.st + '). Tente de novo mais tarde ou limpe o cache do site.', '⚠ The emulator server answered with an error (core ' + core.st + ', engine ' + eng.st + '). Try again later or clear the site cache.');
+  return tr('⚠ A rede está OK (o núcleo ' + coreFile + ' baixa normalmente), então a ROM é que não roda: corrompida ou mapper não suportado. Se outras ROMs abrem, é só essa. Se nenhuma abre, limpe o cache/service worker do site.', '⚠ The network is fine (core ' + coreFile + ' downloads normally), so the ROM itself does not run: corrupted or unsupported mapper. If other ROMs open, it is only this one. If none opens, clear the site cache/service worker.');
 }
 window.dzEmuErr = m => { try{ if(isPlaying()) exitHint('⚠ ' + String(m).slice(0, 160), 0); }catch(e){} };
 
