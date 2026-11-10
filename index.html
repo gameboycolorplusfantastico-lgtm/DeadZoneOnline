@@ -27433,7 +27433,7 @@ html.dz-xp :is(#calcHead,#edHead,#jdHead,#paintHead,#mgHead){background:linear-g
 html.dz-xp :is(#calcTitle,#edTitle,#paintTitle,#mgTitle){display:none!important}
 html.dz-xp :is(#calcClose,#edClose,#jdClose,#paintClose,#mgClose,#emuClose,#lgClose,#gbaClose){display:none!important}
 /* contraste: botões, campos e textos dos apps claros */
-html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:not(#paintPal *){background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)!important;color:#000!important;border:1px solid #003c74!important;border-radius:3px!important;box-shadow:none!important;text-shadow:none!important}
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:not(#paintPal *):not(.xpB){background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)!important;color:#000!important;border:1px solid #003c74!important;border-radius:3px!important;box-shadow:none!important;text-shadow:none!important}
 html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:disabled{color:#777!important}
 html.dz-xp :is(#edBox,#jdBox,#paintBox,#calcBox) :is(select,input:not([type=range],[type=color],[type=file],[type=checkbox],[type=radio])){background:#fff!important;color:#000!important;border:1px solid #7f9db9!important;border-radius:2px!important;box-shadow:none!important}
 html.dz-xp :is(#edTools,#edFind){background:transparent!important;border-color:#aca899!important}
@@ -27505,6 +27505,44 @@ html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,#xpWins) :is(button,input,select,textare
 #xpStart:hover{background-image:url(assets/winxp/UI/start_h.png)}
 #xpStart.on,#xpStart:active{filter:none;background-image:url(assets/winxp/UI/start_p.png)}
 #xpTray{border-left:0;background:url(assets/winxp/UI/tray.png) 0 0/100% 100% no-repeat,#0d8fe8}
+
+/* ===== tela de inicialização: logo + barra de blocos azuis do XP ===== */
+#xpBoot{display:none;position:fixed;inset:0;z-index:99999;background:#000 url(assets/winxp/Logo/boot.png) center/contain no-repeat;--xb-top:78%;opacity:1;transition:opacity .4s;cursor:wait}
+#xpBoot.on{display:block}
+#xpBoot.xp-done{opacity:0}
+#xpBoot .xbBar{position:absolute;left:50%;top:var(--xb-top);width:min(190px,46vw);height:19px;transform:translateX(-50%);border:2px solid #b2b2b2;border-radius:7px;background:#000;overflow:hidden}
+#xpBoot .xbRun{position:absolute;top:2px;bottom:2px;left:-40px;display:flex;gap:2px;animation:xbRun 1.7s linear infinite}
+#xpBoot .xbRun i{display:block;width:9px;height:100%;border-radius:1px;background:linear-gradient(180deg,#2a3cc4 0,#6a8bf5 45%,#2a3cc4 100%)}
+@keyframes xbRun{from{left:-40px}to{left:100%}}
+#xpBoot .xbMsg{position:absolute;left:0;right:0;top:calc(var(--xb-top) + 34px);text-align:center;color:rgba(255,255,255,.4);font:11px 'XP Tahoma',Tahoma,Verdana,sans-serif}
+#xpBoot .xbFall{display:none;position:absolute;left:0;right:0;top:34%;text-align:center;color:#fff;font:italic 700 clamp(30px,9vh,56px) 'XP Franklin','Trebuchet MS',Tahoma,sans-serif}
+#xpBoot .xbFall b{color:#ff6a1a;margin-left:6px}
+html.xp-nologo #xpBoot .xbFall{display:block}
+@media (prefers-reduced-motion:reduce){#xpBoot .xbRun{animation-duration:3.4s}}
+
+/* ===== reserva: se as imagens dos botões da janela não carregarem, desenha em CSS ===== */
+html.xp-noimg .xpB.mn,html.xp-noimg .xpB.mx,html.xp-noimg .xpB.cl{border:1px solid #fff;border-radius:4px;color:#fff;font-size:13px;text-shadow:none;background:radial-gradient(circle at 90% 90%,#0054e9 0,#2263d5 55%,#4479e4 70%,#a3bbec 100%)}
+html.xp-noimg .xpB.cl{background:radial-gradient(circle at 90% 90%,#cc4600 0,#dc6527 55%,#cd7546 70%,#ffccb2 100%)}
+html.xp-noimg .xpB.mn{padding-bottom:5px}
+html.xp-noimg .xpB.mn:hover,html.xp-noimg .xpB.mx:hover,html.xp-noimg .xpB.cl:hover{filter:brightness(1.12)}
+html.xp-noimg .xpB.mn:active,html.xp-noimg .xpB.mx:active,html.xp-noimg .xpB.cl:active{filter:brightness(.88)}
+
+/* ===== correções de interface nos apps em janela ===== */
+/* barra de título fica fixa no topo quando o conteúdo do app rola (calculadora, editor, código, paint, jogos) */
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox)>.xpTb.app{position:sticky;top:0;z-index:50}
+/* celular deitado (tela baixa): barra de título e teclas da calculadora mais compactas, para a janela caber sem cortar */
+@media (max-height:560px){
+  html.dz-xp .xpTb{height:28px}
+  html.dz-xp .xpB.mn,html.dz-xp .xpB.mx,html.dz-xp .xpB.cl{width:22px;height:22px}
+  html.dz-xp #calcBox{gap:3px!important}
+  html.dz-xp #calcBox .calc-pad{grid-auto-rows:clamp(22px,calc((100vh - 215px) / 6.3),54px);gap:3px}
+  html.dz-xp #calcKeys{gap:4px}
+  html.dz-xp #calcRes{font-size:clamp(20px,6vh,34px)}
+  html.dz-xp #calcDisp{padding:3px 10px}
+  html.dz-xp #calcBox .ck{font-size:clamp(11px,3.2vh,16px)}
+  html.dz-xp #xpMenu{max-height:calc(100% - 32px)}
+  html.dz-xp .xpWin .xpMain{padding:6px 8px}
+}
 </style>
 <script id="dzXpScript">
 /* ===== ESTILO WINDOWS XP (aba EXTRAS) =====
@@ -27540,12 +27578,60 @@ function xps(name, vol){
 /* papéis de parede (arquivos em assets/winxp/Wallpapers) */
 const WALLS = [['bliss','Bliss'],['ascent','Ascent'],['autumn','Autumn'],['azul','Azul'],['crystal','Crystal'],['follow','Follow'],['friend','Friend'],['home','Home'],['moon_flower','Moon Flower'],['peace','Peace'],['power','Power'],['purple_flower','Purple Flower'],['radiance','Radiance'],['red_moon_desert','Red Moon Desert'],['ripple','Ripple'],['stonehenge','Stonehenge'],['tulips','Tulips'],['vortec_space','Vortec Space'],['wind','Wind'],['windows_xp_home_edition','XP Home Edition'],['windows_xp_professional','XP Professional']];
 const wpThumb = k => '<b class="xpWpT" style="background-image:url(' + AS + 'Wallpapers/' + k + '.jpg)"></b>';
-/* tela de inicialização ao abrir a área de trabalho */
-function boot(){
-  let b = $('xpBoot'); if(!b){ b = document.createElement('div'); b.id = 'xpBoot'; document.body.appendChild(b); b.onclick = () => b.classList.remove('on'); }
-  b.classList.add('on'); xps('windows_xp_startup', .6); setTimeout(() => b.classList.remove('on'), 2800);
+/* ===== TELA DE INICIALIZAÇÃO (estilo Windows XP) =====
+   Pré-carrega TUDO que o estilo XP usa (imagens da interface, ícones, fontes, sons e o papel de parede) e só mostra a área de
+   trabalho quando tudo terminou ou deu erro/tempo esgotado. Se algo não carregar, o estilo cai num visual de reserva (CSS puro). */
+let booting = false;
+const PRE_UI = ['Logo/boot.png', 'Icons/WinIcons_32.png', 'UI/title_right.png', 'UI/taskbar.png', 'UI/tray.png', 'UI/flag.png', 'UI/start_n.png', 'UI/start_h.png', 'UI/start_p.png']
+  .concat(['min', 'max', 'close', 'restore'].reduce((a, k) => a.concat(['n', 'h', 'p'].map(s => 'UI/cap_' + k + '_' + s + '.png')), []));
+const PRE_SND = ['windows_xp_startup', 'windows_xp_minimize', 'windows_xp_menu_command', 'windows_xp_ding', 'windows_xp_logoff_sound', 'windows_xp_shutdown'];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const withTimeout = (p, ms, fb) => Promise.race([p, sleep(ms).then(() => fb)]);
+const loadImg = (src, ms) => withTimeout(new Promise(res => {
+  const im = new Image(); im.onload = () => res({ ok: im.naturalWidth > 0, src }); im.onerror = () => res({ ok: false, src }); im.src = AS + src;
+}), ms || 9000, { ok: false, src });
+const loadSnd = name => withTimeout(new Promise(res => {
+  try{
+    const a = sndCache[name] || (sndCache[name] = new Audio(AS + 'Sounds/' + name + '.wav'));
+    if(a.readyState >= 3) return res({ ok: true, src: name });
+    const ok = () => res({ ok: true, src: name }), bad = () => res({ ok: false, src: name });
+    a.addEventListener('canplaythrough', ok, { once: true }); a.addEventListener('loadeddata', ok, { once: true }); a.addEventListener('error', bad, { once: true });
+    a.preload = 'auto';
+  }catch(e){ res({ ok: false, src: name }); }
+}), 5000, { ok: false, src: name, soft: true });   /* som lento não trava a inicialização */
+const loadFonts = () => (!document.fonts || !document.fonts.load) ? Promise.resolve({ ok: true, src: 'fonts' })
+  : withTimeout(Promise.all([document.fonts.load("700 13px 'XP Tahoma'"), document.fonts.load("italic 700 17px 'XP Franklin'")]).then(() => document.fonts.ready)
+      .then(() => ({ ok: true, src: 'fonts' }), () => ({ ok: false, src: 'fonts' })), 8000, { ok: false, src: 'fonts', soft: true });
+async function boot(){
+  if(booting) return; booting = true;
+  let b = $('xpBoot');
+  if(!b){
+    b = document.createElement('div'); b.id = 'xpBoot';
+    b.innerHTML = '<div class="xbFall">Windows<b>xp</b></div><div class="xbBar"><div class="xbRun"><i></i><i></i><i></i></div></div><div class="xbMsg"></div>';
+    document.body.appendChild(b);
+  }
+  const msg = b.querySelector('.xbMsg'); b.classList.remove('xp-done'); b.classList.add('on');
+  const t0 = Date.now(), list = PRE_UI.map(s => () => loadImg(s));
+  if(wp !== 'blue' && wp !== 'teal') list.push(() => loadImg('Wallpapers/' + wp + '.jpg', 15000));
+  list.push(loadFonts); if(sndOn) PRE_SND.forEach(n => list.push(() => loadSnd(n)));
+  let n = 0; const say = () => { msg.textContent = tr('Carregando recursos… ', 'Loading resources… ') + n + '/' + list.length; }; say();
+  const res = await Promise.all(list.map(f => f().then(r => { n++; say(); return r; })));
+  const bad = res.filter(r => !r.ok && !r.soft);
+  root.classList.toggle('xp-noimg', res.some(r => /cap_|title_right|taskbar|start_n/.test(r.src || '') && !r.ok));   /* botões/barras sem imagem: usa o visual em CSS */
+  root.classList.toggle('xp-nologo', res.some(r => /boot\.png/.test(r.src || '') && !r.ok));
+  for(let i = 0; i < 30 && !($('xpIcons') && $('xpIcons').children.length && $('xpBar')); i++) await sleep(100);   /* área de trabalho montada */
+  const wait = 2600 - (Date.now() - t0); if(wait > 0) await sleep(wait);   /* a animação aparece por pelo menos ~2,6 s */
+  if(bad.length){ try{ console.warn('[XP] não carregou:', bad.map(r => r.src).join(', ')); }catch(e){} msg.textContent = tr('Aviso: ', 'Warning: ') + bad.length + tr(' arquivo(s) não carregaram — usando visual de reserva', ' file(s) failed to load — using fallback look'); await sleep(1600); }
+  booting = false;
+  if(!root.classList.contains('xp-desk')){ b.classList.remove('on'); return; }   /* a área de trabalho foi fechada durante o carregamento */
+  b.classList.add('xp-done'); xps('windows_xp_startup', .6);
+  setTimeout(() => { if(!booting){ b.classList.remove('on'); b.classList.remove('xp-done'); } }, 450);
 }
+/* ===== BLACKLIST TEMPORÁRIA: estilo Windows XP travado =====
+   Para liberar de novo, troque XP_BLOQUEADO para false. A preferência salva no localStorage NÃO é apagada. */
+const XP_BLOQUEADO = true;
 let style = 'cur'; try{ if(localStorage.getItem(KEY) === 'xp') style = 'xp'; }catch(e){}
+if(XP_BLOQUEADO) style = 'cur';
 let wp = 'bliss'; try{ wp = localStorage.getItem('dz_xp_wp') || 'bliss'; }catch(e){}   /* papel de parede: bliss | blue | teal */
 const applyStyle = () => { root.classList.toggle('dz-xp', style === 'xp'); bgPlace(); };
 
@@ -27589,9 +27675,16 @@ function drag(handle, target, skip){
     if(e.target.closest('button') || (skip && skip())) return;
     const sx = e.clientX, sy = e.clientY, m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(target.style.transform || ''), ox = m ? +m[1] : 0, oy = m ? +m[2] : 0;
     try{ handle.setPointerCapture(e.pointerId); }catch(_){}
-    const mv = ev => { target.style.transform = 'translate(' + (ox + ev.clientX - sx) + 'px,' + (oy + ev.clientY - sy) + 'px)'; };
-    const up = () => { handle.removeEventListener('pointermove', mv); handle.removeEventListener('pointerup', up); };
-    handle.addEventListener('pointermove', mv); handle.addEventListener('pointerup', up);
+    const mv = ev => {
+      let mx = ox + ev.clientX - sx, my = oy + ev.clientY - sy;
+      target.style.transform = 'translate(' + mx + 'px,' + my + 'px)';
+      const r = target.getBoundingClientRect(); let dx = 0, dy = 0;   /* mantém a barra de título sempre ao alcance do dedo */
+      if(r.top < 0) dy = -r.top; else if(r.top > innerHeight - 70) dy = innerHeight - 70 - r.top;
+      if(r.right < 90) dx = 90 - r.right; else if(r.left > innerWidth - 90) dx = innerWidth - 90 - r.left;
+      if(dx || dy) target.style.transform = 'translate(' + (mx + dx) + 'px,' + (my + dy) + 'px)';
+    };
+    const up = () => { handle.removeEventListener('pointermove', mv); handle.removeEventListener('pointerup', up); handle.removeEventListener('pointercancel', up); };
+    handle.addEventListener('pointermove', mv); handle.addEventListener('pointerup', up); handle.addEventListener('pointercancel', up);
   });
 }
 const mkTb = (icon, title, withMax, withFull) => {
@@ -27738,14 +27831,16 @@ function fillIcons(){
   entries().forEach(it => box.appendChild(iconBtn(it)));
 }
 function open(){
-  if(style !== 'xp') return; const was = root.classList.contains('xp-desk'); buildDesk(); fillIcons(); root.classList.add('xp-desk'); sync(); if(!was) boot();
+  if(XP_BLOQUEADO || style !== 'xp') return; const was = root.classList.contains('xp-desk'); buildDesk(); fillIcons(); root.classList.add('xp-desk'); sync(); if(!was) boot();
 }
 function close(){
   menu(false); DEFS.forEach(d => { if(isOpen(d)) closeApp(d); });
   const w = $('xpWins'); if(w) w.innerHTML = ''; const t = $('xpTasks'); if(t) t.innerHTML = '';
+  const bt = $('xpBoot'); if(bt && !booting) bt.classList.remove('on');
   root.classList.remove('xp-desk');
 }
 function setStyle(s){
+  if(XP_BLOQUEADO && s === 'xp'){ try{ flash('Estilo Windows XP temporariamente bloqueado', 'Windows XP style temporarily locked', true); }catch(e){} return; }
   style = s; try{ localStorage.setItem(KEY, s); }catch(e){}
   applyStyle(); if(s !== 'xp') close(); else setTimeout(open, 120);
   const sec = $('xpStyleSec'); if(sec) render(sec);
@@ -27758,7 +27853,8 @@ function render(w){
   const r = document.createElement('div'); r.className = 'xt-row'; w.appendChild(r);
   const mk = (label, on, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary' + (on ? ' xt-on' : ''); b.style.width = '100%'; b.textContent = label; b.onclick = () => { snd('menuAccept'); fn(); }; r.appendChild(b); };
   mk((style === 'cur' ? '✔ ' : '') + '🖥 ' + tr('PADRÃO', 'DEFAULT'), style === 'cur', () => setStyle('cur'));
-  mk((style === 'xp' ? '✔ ' : '') + '🪟 WINDOWS XP', style === 'xp', () => { if(style === 'xp') open(); else setStyle('xp'); });
+  mk(XP_BLOQUEADO ? '🔒 WINDOWS XP (' + tr('BLOQUEADO', 'LOCKED') + ')' : (style === 'xp' ? '✔ ' : '') + '🪟 WINDOWS XP', style === 'xp', () => { if(style === 'xp') open(); else setStyle('xp'); });
+  if(XP_BLOQUEADO){ const xb = r.lastElementChild; xb.disabled = true; xb.style.opacity = '.45'; xb.style.pointerEvents = 'none'; }
   if(style === 'xp') mk('🏞 ' + tr('ABRIR ÁREA DE TRABALHO', 'OPEN DESKTOP'), false, open);
 }
 function section(){ const w = document.createElement('div'); w.id = 'xpStyleSec'; render(w); return w; }
