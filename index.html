@@ -22377,7 +22377,16 @@ window.dzEmuFx = { register, on, off, panel, refresh: refreshPanels, setTheme, s
 (function(){
 'use strict';
 const GBA_SECRET_CODE = 'gba123';
-const EJS_CDN = 'https://cdn.emulatorjs.org/stable/data/';
+/* Motor do emulador: usa a cópia do SEU site (pasta emulatorjs/data/, gerada pela Action "Baixar EmulatorJS" no GitHub).
+   Se essa cópia ainda não existir, usa o CDN. Se um deles falhar no jogo, o app limpa o cache e tenta o outro. */
+const EJS_REMOTE = 'https://cdn.emulatorjs.org/stable/data/';
+const EJS_LOCAL = (() => { try{ return new URL('emulatorjs/data/', location.href).href; }catch(e){ return ''; } })();
+let EJS_CDN = EJS_LOCAL || EJS_REMOTE;
+if(EJS_LOCAL){
+  fetch(EJS_LOCAL + 'loader.js', { method:'HEAD', cache:'no-store' })
+    .then(r => { if(!r.ok || /html/i.test(r.headers.get('content-type') || '')) EJS_CDN = EJS_REMOTE; })
+    .catch(() => { EJS_CDN = EJS_REMOTE; });
+}
 const ROMS_DIR = 'roms/';
 /* ---- consoles: todos usam a MESMA pasta roms/ (e o mesmo roms.json). Cada console só mostra os jogos do seu tipo:
    o tipo vem do campo "system" do roms.json ou, se faltar, da extensão do arquivo (.nes, .sfc, .z64, .cue ...).
@@ -22801,7 +22810,11 @@ async function resetEmuCache(){
 window.dzEmuReset = resetEmuCache;
 function healAndRetry(url, name, tok){
   exitHint(tr('Limpando o cache do emulador e tentando de novo…', 'Clearing the emulator cache and trying again…'), 0); $('gbaExitBar').style.width = '0%';
-  resetEmuCache().then(() => { if(tok !== playTok) return; setTimeout(() => play(url, name, false, true), 300); });
+  resetEmuCache().then(() => {
+    if(tok !== playTok) return;
+    if(EJS_CDN !== EJS_REMOTE) EJS_CDN = EJS_REMOTE;   /* a cópia local falhou: tenta o CDN */
+    setTimeout(() => play(url, name, false, true), 300);
+  });
 }
 function play(url, name, useAlt, healed){
   curGameName = name || 'game';
