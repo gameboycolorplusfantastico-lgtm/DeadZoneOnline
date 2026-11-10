@@ -25135,6 +25135,7 @@ function mk(label, fn, cls){
 function build(){
   const p = $('tabExtras'); if(!p) return;
   p.innerHTML = '';
+  try{ if(window.dzXp) p.appendChild(window.dzXp.section()); }catch(e){}   /* seção ESTILO (padrão / Windows XP) */
   const apps = APPS.filter(a => have.indexOf(a.id) >= 0);
   if(apps.length){
     const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.classList.add('xt-h-util'); h.textContent = tr('UTILIDADES', 'UTILITIES'); p.appendChild(h);
@@ -25183,6 +25184,9 @@ window.dzExtrasGrant = function(ids){
   save(have); refresh();
   if(!had){ try{ if(typeof uiToast === 'function') uiToast(tr('Aba EXTRAS liberada nas configurações', 'EXTRAS tab unlocked in settings'), 'ok'); }catch(e){} }
 };
+
+/* itens liberados, para o estilo Windows XP montar área de trabalho e menu Iniciar */
+window.dzExtrasItems = function(){ return { apps: APPS.filter(a => have.indexOf(a.id) >= 0), games: gamesList(), emus: emuList() }; };
 
 refresh();
 /* o app de emuladores pode se registrar depois: confere de novo quando a página terminar de carregar */
@@ -26088,7 +26092,9 @@ html.console #gbaMoreWrap{display:none !important}
 #dwRollName{color:#ff9a2e;font-weight:700;margin-right:6px}
 #dwRollSc{flex:1;min-height:0;overflow:auto;position:relative;overscroll-behavior:contain}
 #dwRollIn{position:relative;display:flex;width:max-content}
-#dwKeys{position:sticky;left:0;z-index:3;flex:none;cursor:pointer;touch-action:none}
+#dwKeys{position:sticky;left:0;z-index:3;flex:none;cursor:pointer;touch-action:pan-y}
+#dwGrid.pan{touch-action:auto;cursor:grab}
+.dwb.dim{opacity:.4;pointer-events:none}
 #dwGrid{flex:none;touch-action:none;cursor:crosshair}
 #dwPH{position:absolute;top:0;bottom:0;left:0;width:2px;background:#fff;opacity:.85;pointer-events:none;display:none;z-index:2}
 #dwRollEmpty{padding:24px;color:#8d99a1}
@@ -26124,12 +26130,16 @@ html.console #gbaMoreWrap{display:none !important}
     <div class="dw-logo">♪ STUDIO</div>
     <button type="button" class="dwb big" id="dwPlay" title="Play / Pause (Espaço)">▶</button>
     <button type="button" class="dwb big" id="dwStop" title="Stop">■</button>
-    <button type="button" class="dwb" id="dwMode" title="PAT toca o padrão · SONG toca a playlist">PAT</button>
+    <button type="button" class="dwb" id="dwMode" title="PAT toca o padrão · SONG toca a playlist (Tab)">PAT</button>
+    <button type="button" class="dwb sm" id="dwUndo" title="Desfazer (Ctrl+Z)">↶</button>
+    <button type="button" class="dwb sm" id="dwRedo" title="Refazer (Ctrl+Y)">↷</button>
+    <button type="button" class="dwb sm" id="dwMet" title="Metrônomo (T)">🔔</button>
+    <button type="button" class="dwb sm" id="dwTap" title="Tap tempo: toque no ritmo">TAP</button>
     <div class="dw-lcd" id="dwTime">001:01</div>
     <div class="dw-lcd"><input id="dwBpm" type="number" min="40" max="300" step="1" value="130" inputmode="numeric"><span class="dw-u">BPM</span></div>
     <select id="dwPat" title="Padrão"></select>
     <button type="button" class="dwb sm" id="dwPatAdd" title="Novo padrão">＋</button>
-    <button type="button" class="dwb sm" id="dwPatDup" title="Duplicar padrão">⧉</button>
+    <button type="button" class="dwb sm" id="dwPatDup" title="Duplicar padrão">⧉</button><button type="button" class="dwb sm" id="dwPatRen" title="Renomear padrão">✎</button><button type="button" class="dwb sm" id="dwPatDel" title="Excluir padrão">🗑</button><button type="button" class="dwb sm on" id="dwLoop" title="Loop ligado/desligado">🔁</button>
     <canvas id="dwMeter" width="70" height="26"></canvas>
     <input id="dwMaster" type="range" min="0" max="1" step="0.01" value="0.8" title="Volume master">
     <span class="dw-sp"></span>
@@ -26142,6 +26152,8 @@ html.console #gbaMoreWrap{display:none !important}
     <button type="button" class="dwb tab" data-tab="mix" data-pt="MIXER" data-en="MIXER">MIXER</button>
     <span class="dw-sp"></span>
     <label class="dw-tl"><span>STEPS</span><select id="dwSteps"><option value="16">16</option><option value="32">32</option></select></label>
+    <select id="dwTpl" title="Modelos de música prontos"></select>
+    <label class="dw-tl"><span>SWING</span><input id="dwSwing" type="range" min="0" max="0.6" step="0.02" value="0" style="width:64px;accent-color:#ff9a2e"></label>
     <button type="button" class="dwb sm" id="dwNew" data-pt="NOVO" data-en="NEW">NOVO</button>
     <button type="button" class="dwb sm" id="dwOpen" data-pt="ABRIR" data-en="OPEN">ABRIR</button>
     <button type="button" class="dwb sm" id="dwSave" data-pt="SALVAR" data-en="SAVE">SALVAR</button>
@@ -26155,8 +26167,13 @@ html.console #gbaMoreWrap{display:none !important}
         <span id="dwRollName"></span>
         <button type="button" class="dwb sm on" id="dwToolDraw" data-pt="✏ DESENHAR" data-en="✏ DRAW">✏ DESENHAR</button>
         <button type="button" class="dwb sm" id="dwToolErase" data-pt="⌫ APAGAR" data-en="⌫ ERASE">⌫ APAGAR</button>
-        <button type="button" class="dwb sm" id="dwZoomOut">－</button>
+        <button type="button" class="dwb sm" id="dwToolPan" data-pt="✋ MOVER" data-en="✋ PAN" title="Arrastre para rolar o piano roll no celular">✋ MOVER</button>
+        <select id="dwChord" class="dw-sel" title="Carimbo de acorde"><option value="">♪ Nota</option><option value="0,4,7">Acorde Maior</option><option value="0,3,7">Acorde Menor</option><option value="0,4,7,11">Maj7</option><option value="0,3,7,10">m7</option><option value="0,4,7,10">7 (dominante)</option><option value="0,3,6">Dim</option><option value="0,5,7">Sus4</option></select><select id="dwKey" class="dw-sel" title="Tom da escala"><option value="-1">Escala: —</option><option value="0">C</option><option value="1">C#</option><option value="2">D</option><option value="3">D#</option><option value="4">E</option><option value="5">F</option><option value="6">F#</option><option value="7">G</option><option value="8">G#</option><option value="9">A</option><option value="10">A#</option><option value="11">B</option></select><select id="dwScale" class="dw-sel" title="Escala destacada"><option value="maj">Maior</option><option value="min">Menor</option><option value="pmin">Pent. menor</option><option value="blues">Blues</option><option value="dor">Dórico</option><option value="mix">Mixolídio</option></select><label class="dw-tl" title="Velocity das novas notas (roda do mouse sobre uma nota muda a dela)"><span>VEL</span><input id="dwVel" type="range" min="0.1" max="1" step="0.05" value="0.9" style="width:60px;accent-color:#ff9a2e"></label><button type="button" class="dwb sm" id="dwZoomOut">－</button>
         <button type="button" class="dwb sm" id="dwZoomIn">＋</button>
+        <button type="button" class="dwb sm" data-tr="-12" title="Oitava abaixo">−8ª</button>
+        <button type="button" class="dwb sm" data-tr="-1" title="Meio tom abaixo">−1</button>
+        <button type="button" class="dwb sm" data-tr="1" title="Meio tom acima">+1</button>
+        <button type="button" class="dwb sm" data-tr="12" title="Oitava acima">+8ª</button>
         <button type="button" class="dwb sm warn" id="dwRollClear" data-pt="LIMPAR" data-en="CLEAR">LIMPAR</button>
       </div>
       <div id="dwRollSc"><div id="dwRollIn"><canvas id="dwKeys"></canvas><canvas id="dwGrid"></canvas><div id="dwPH"></div></div><div id="dwRollEmpty" style="display:none"></div></div>
@@ -26169,7 +26186,7 @@ html.console #gbaMoreWrap{display:none !important}
 
 <script id="dzDawScript">
 /* ===== ESTÚDIO DE MÚSICA (inspirado no FL Studio) =====
-   Mini DAW dentro do jogo: Channel Rack (step sequencer), Piano Roll, Playlist, Mixer, sintetizador e bateria feitos
+   Mini DAW dentro do jogo: Channel Rack (step sequencer), Piano Roll, Playlist, Mixer, 26 instrumentos (bateria/percussão e synths com presets), modelos prontos, swing, aleatório, sintetizador e bateria feitos
    com Web Audio (sem arquivos de som), exportar WAV e salvar/abrir projeto (.json). Projeto salvo automaticamente
    neste aparelho (localStorage). Código secreto (campo de SENHA do menu DEBUG): music123 — também liberado pelo dev123. */
 (function(){
@@ -26187,6 +26204,7 @@ const clampN = (v, a, b, d) => { v = +v; return isFinite(v) ? Math.max(a, Math.m
 const noteName = m => NN[m % 12] + (Math.floor(m / 12) - 1);
 const isOpen = () => ov.classList.contains('open');
 
+const SY = (wave, cut, att, rel, det, sus, dec, sub) => ({ wave, cut, att, rel, det, sus, dec, sub });
 const KINDS = {
   kick:  { n:'Kick',     t:'drum' },
   snare: { n:'Snare',    t:'drum' },
@@ -26195,11 +26213,44 @@ const KINDS = {
   ohat:  { n:'Open Hat', t:'drum' },
   tom:   { n:'Tom',      t:'drum' },
   rim:   { n:'Rim',      t:'drum' },
-  lead:  { n:'Lead',     t:'synth', p:{ wave:'sawtooth', cut:6000, att:.005, rel:.2,  det:8  } },
-  bass:  { n:'Bass',     t:'synth', p:{ wave:'square',   cut:900,  att:.005, rel:.12, det:0  } },
-  pad:   { n:'Pad',      t:'synth', p:{ wave:'sawtooth', cut:2500, att:.25,  rel:.8,  det:12 } }
+  k808:  { n:'808 Kick',  t:'drum' },
+  crash: { n:'Crash',    t:'drum' },
+  cowbell:{ n:'Cowbell', t:'drum' },
+  shaker:{ n:'Shaker',   t:'drum' },
+  conga: { n:'Conga',    t:'drum' },
+  snap:  { n:'Snap',     t:'drum' },
+  clave: { n:'Clave',    t:'drum' },
+  lead:  { n:'Lead',     t:'synth', p:SY('sawtooth', 6000, .005, .2,  8,  1,   .3, 0) },
+  bass:  { n:'Bass',     t:'synth', p:SY('square',   900,  .005, .12, 0,  1,   .3, 0) },
+  pad:   { n:'Pad',      t:'synth', p:SY('sawtooth', 2500, .25,  .8,  12, 1,   .3, 0), ch:1 },
+  pluck: { n:'Pluck',    t:'synth', p:SY('sawtooth', 3500, .003, .15, 6,  .05, .25, 0),  dp:72 },
+  keys:  { n:'E-Piano',  t:'synth', p:SY('triangle', 3500, .004, .45, 4,  .3,  .9, 0),   dp:60 },
+  organ: { n:'Organ',    t:'synth', p:SY('square',   2000, .01,  .08, 3,  1,   .3, .35), dp:60 },
+  strings:{ n:'Strings', t:'synth', p:SY('sawtooth', 3000, .35,  .9,  14, 1,   .3, 0),   dp:60, ch:1 },
+  brass: { n:'Brass',    t:'synth', p:SY('sawtooth', 2200, .06,  .12, 5,  .8,  .25, 0),  dp:60 },
+  sub:   { n:'Sub Bass', t:'synth', p:SY('sine',     600,  .005, .15, 0,  1,   .3, 0),   dp:45 },
+  bell:  { n:'Bell',     t:'synth', p:SY('triangle', 8000, .002, 1.2, 7,  .05, 1.2, 0),  dp:76 },
+  acid:  { n:'Acid',     t:'synth', p:SY('sawtooth', 1200, .003, .08, 0,  .6,  .15, 0),  dp:45 },
+  chip:  { n:'Chip',     t:'synth', p:SY('pulse',    9000, .002, .05, 0,  .8,  .1,  0),   dp:72 }
 };
-const WAVE_NAME = { sine:'Sine', square:'Square', sawtooth:'Saw', triangle:'Triangle' };
+const WAVE_NAME = { sine:'Sine', square:'Square', sawtooth:'Saw', triangle:'Triangle', pulse:'Pulse 25%' };
+const DRUM_KINDS = ['kick','snare','clap','hat','ohat','tom','rim','k808','crash','cowbell','shaker','conga','snap','clave'];
+const SYNTH_KINDS = ['lead','bass','pad','pluck','keys','organ','strings','brass','sub','bell','acid','chip'];
+const SYN_PRE = [
+  { pt:'Lead Serra',        en:'Saw Lead',       p:SY('sawtooth', 6000, .005, .2,  8,  1,   .3, 0) },
+  { pt:'Lead 8-bit (Pulso)',en:'8-bit Lead',     p:SY('pulse',    9000, .002, .05, 0,  .8,  .1, 0) },
+  { pt:'Onda Suave',        en:'Soft Sine',      p:SY('sine',     5000, .01,  .25, 0,  1,   .3, 0) },
+  { pt:'Pluck Curto',       en:'Short Pluck',    p:SY('sawtooth', 3500, .003, .15, 6,  .05, .25,0) },
+  { pt:'Piano Elétrico',    en:'Electric Piano', p:SY('triangle', 3500, .004, .45, 4,  .3,  .9, 0) },
+  { pt:'Órgão',             en:'Organ',          p:SY('square',   2000, .01,  .08, 3,  1,   .3, .35) },
+  { pt:'Metais',            en:'Brass',          p:SY('sawtooth', 2200, .06,  .12, 5,  .8,  .25,0) },
+  { pt:'Cordas',            en:'Strings',        p:SY('sawtooth', 3000, .35,  .9,  14, 1,   .3, 0) },
+  { pt:'Pad Quente',        en:'Warm Pad',       p:SY('sawtooth', 1800, .5,   1.2, 16, 1,   .3, .2) },
+  { pt:'Sino Cristal',      en:'Crystal Bell',   p:SY('triangle', 8000, .002, 1.2, 7,  .05, 1.2,0) },
+  { pt:'Baixo Sub',         en:'Sub Bass',       p:SY('sine',     600,  .005, .15, 0,  1,   .3, 0) },
+  { pt:'Baixo Acid',        en:'Acid Bass',      p:SY('sawtooth', 1200, .003, .08, 0,  .6,  .15,0) },
+  { pt:'Baixo Gordo (Square)',en:'Fat Square Bass',p:SY('square', 900,  .005, .12, 0,  1,   .3, .5) }
+];
 
 /* ---------------- projeto ---------------- */
 let P = null, selCh = null, curPat = 0, mode = 'pat', tab = 'rack';
@@ -26211,7 +26262,7 @@ function mkCh(kind){
 }
 function D(pi, c){ const p = P.pats[pi]; return p.d[c.id] || (p.d[c.id] = { s: [], n: [] }); }
 function newProject(){
-  P = { v: 1, bpm: 130, steps: 16, master: .8, uid: 1, chs: [], pats: [{ name: 'Pattern 1', d: {} }], pl: [] };
+  P = { v: 1, bpm: 130, steps: 16, swing: 0, eq: [0, 0, 0], master: .8, uid: 1, chs: [], pats: [{ name: 'Pattern 1', d: {} }], pl: [] };
   ['kick','snare','clap','hat','ohat','bass','lead','pad'].forEach(k => P.chs.push(mkCh(k)));
   const by = k => P.chs.find(c => c.kind === k);
   by('snare').rev = .15; by('clap').rev = .2; by('pad').rev = .35; by('pad').vol = .5;
@@ -26228,7 +26279,7 @@ function newProject(){
 }
 function normalize(v){
   if(!v || typeof v !== 'object' || !Array.isArray(v.chs) || !Array.isArray(v.pats) || !v.pats.length) return false;
-  v.bpm = clampN(v.bpm, 40, 300, 130); v.steps = (+v.steps === 32) ? 32 : 16; v.master = clampN(v.master, 0, 1, .8);
+  v.bpm = clampN(v.bpm, 40, 300, 130); v.steps = (+v.steps === 32) ? 32 : 16; v.master = clampN(v.master, 0, 1, .8); v.swing = clampN(v.swing, 0, .6, 0); v.eq = [0, 1, 2].map(i => clampN(v.eq && v.eq[i], -12, 12, 0));
   v.chs = v.chs.filter(c => c && KINDS[c.kind]).slice(0, 24);
   if(!v.chs.length) return false;
   let mx = 0; const seen = new Set();
@@ -26246,6 +26297,7 @@ function normalize(v){
       if(!WAVE_NAME[c.p.wave]) c.p.wave = k.p.wave;
       c.p.cut = clampN(c.p.cut, 200, 12000, k.p.cut); c.p.att = clampN(c.p.att, .002, 1, k.p.att);
       c.p.rel = clampN(c.p.rel, .02, 2, k.p.rel); c.p.det = clampN(c.p.det, 0, 30, k.p.det);
+      c.p.sus = clampN(c.p.sus, .02, 1, k.p.sus); c.p.dec = clampN(c.p.dec, .02, 2, k.p.dec); c.p.sub = clampN(c.p.sub, 0, 1, k.p.sub);
     } else { c.p.tune = clampN(c.p.tune, -12, 12, 0); c.p.dec = clampN(c.p.dec, .4, 2.5, 1); }
   });
   v.uid = Math.max(Math.floor(+v.uid) || 1, mx + 1);
@@ -26256,13 +26308,38 @@ function normalize(v){
       d[id] = {
         s: Array.isArray(e.s) ? e.s.slice(0, 32).map(x => x ? 1 : 0) : [],
         n: (Array.isArray(e.n) ? e.n : []).filter(n => n && isFinite(n.p) && isFinite(n.s) && isFinite(n.l)).slice(0, 512)
-            .map(n => ({ p: Math.max(LO, Math.min(HI, Math.floor(n.p))), s: Math.max(0, Math.min(31, Math.floor(n.s))), l: Math.max(1, Math.min(32, Math.floor(n.l))) }))
+            .map(n => ({ p: Math.max(LO, Math.min(HI, Math.floor(n.p))), s: Math.max(0, Math.min(31, Math.floor(n.s))), l: Math.max(1, Math.min(32, Math.floor(n.l))), v: isFinite(n.v) ? Math.max(.1, Math.min(1, +n.v)) : .9 }))
       };
     });
     return { name: String((p && p.name) || ('Pattern ' + (i + 1))).slice(0, 24), d };
   });
   v.pl = [0,1,2,3].map(r => { const row = Array.isArray(v.pl && v.pl[r]) ? v.pl[r] : []; return Array.from({ length: 16 }, (_, b) => { const x = row[b]; return (Number.isInteger(x) && x >= 0 && x < v.pats.length) ? x : -1; }); });
   return true;
+}
+/* desfazer / refazer (instantâneos do projeto) */
+let undoS = [], redoS = [], lastSnap = '';
+function pushUndo(){
+  if(!P) return;
+  try{
+    const j = JSON.stringify(P); if(j === lastSnap) return;
+    undoS.push(j); if(undoS.length > 60) undoS.shift(); redoS = []; lastSnap = j; refreshUR();
+  }catch(e){}
+}
+function refreshUR(){ const u = $('dwUndo'), r = $('dwRedo'); if(u) u.classList.toggle('dim', !undoS.length); if(r) r.classList.toggle('dim', !redoS.length); }
+function restoreSnap(j){
+  const v = JSON.parse(j); if(!normalize(v)) return false;
+  const was = playing; stop(); P = v; if(!chById(selCh)) selCh = P.chs[0].id; if(curPat >= P.pats.length) curPat = 0;
+  live = null; rebuildAll(); lastSnap = j; if(was) play(); return true;
+}
+function undo(){
+  if(!undoS.length){ say(tr('Nada para desfazer.', 'Nothing to undo.')); return; }
+  try{ const cur = JSON.stringify(P); const j = undoS.pop(); redoS.push(cur); if(restoreSnap(j)) say(tr('Desfeito.', 'Undone.')); }catch(e){}
+  refreshUR();
+}
+function redo(){
+  if(!redoS.length){ say(tr('Nada para refazer.', 'Nothing to redo.')); return; }
+  try{ const cur = JSON.stringify(P); const j = redoS.pop(); undoS.push(cur); if(restoreSnap(j)) say(tr('Refeito.', 'Redone.')); }catch(e){}
+  refreshUR();
 }
 let saveT = 0;
 function save(){ clearTimeout(saveT); saveT = setTimeout(() => { try{ localStorage.setItem(KEY, JSON.stringify(P)); }catch(e){} }, 400); }
@@ -26285,7 +26362,9 @@ function buildGraph(ctx){
   const g = { ctx, ch: {} };
   g.comp = ctx.createDynamicsCompressor(); g.comp.threshold.value = -8; g.comp.ratio.value = 4; g.comp.attack.value = .005; g.comp.release.value = .15;
   g.master = ctx.createGain(); g.master.gain.value = P.master;
-  g.comp.connect(g.master); g.master.connect(ctx.destination);
+  const E = P.eq || [0, 0, 0];
+  g.eq = [['lowshelf', 120], ['peaking', 1000], ['highshelf', 6000]].map((x, i) => { const f = ctx.createBiquadFilter(); f.type = x[0]; f.frequency.value = x[1]; f.gain.value = E[i] || 0; return f; });
+  g.comp.connect(g.eq[0]); g.eq[0].connect(g.eq[1]); g.eq[1].connect(g.eq[2]); g.eq[2].connect(g.master); g.master.connect(ctx.destination);
   g.noise = noiseBuf(ctx);
   g.rin = ctx.createGain(); g.conv = ctx.createConvolver(); g.conv.buffer = impulse(ctx);
   g.rret = ctx.createGain(); g.rret.gain.value = .8;
@@ -26370,10 +26449,46 @@ function drum(G, c, t, vel){
     n.connect(f); f.connect(g); g.connect(out);
   } else if(k === 'tom'){
     osc('sine', 220 * tf, 90 * tf, .25 * dm, .4 * dm, .8 * v);
+  } else if(k === 'k808'){
+    osc('sine', 130 * tf, 36 * tf, .18 * dm, .95 * dm, 1.0 * v);
+    osc('triangle', 600, 80, .015, .03, .25 * v);
+  } else if(k === 'crash'){
+    const dur = 1.2 * dm, n = noise(dur + .05), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'highpass'; f.frequency.value = 4500 * tf; envl(g, t, .5 * v, dur);
+    n.connect(f); f.connect(g); g.connect(out);
+  } else if(k === 'cowbell'){
+    [540 * tf, 810 * tf].forEach(fr => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = 'square'; o.frequency.value = fr; f.type = 'bandpass'; f.frequency.value = 700 * tf; f.Q.value = 1.2;
+      envl(g, t, .3 * v, .28 * dm); o.connect(f); f.connect(g); g.connect(out); o.start(t); o.stop(t + .28 * dm + .05);
+    });
+  } else if(k === 'shaker'){
+    const n = noise(.14 * dm), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'bandpass'; f.frequency.value = 6500 * tf; f.Q.value = .8;
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.4 * v, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .12 * dm);
+    n.connect(f); f.connect(g); g.connect(out);
+  } else if(k === 'conga'){
+    osc('sine', 330 * tf, 250 * tf, .06, .24 * dm, .8 * v);
+    const n = noise(.02), g = ctx.createGain(); envl(g, t, .2 * v, .015); n.connect(g); g.connect(out);
+  } else if(k === 'snap'){
+    const n = noise(.12 * dm), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'bandpass'; f.frequency.value = 2400 * tf; f.Q.value = 1.5; envl(g, t, .6 * v, .08 * dm);
+    n.connect(f); f.connect(g); g.connect(out);
+    osc('sine', 1800 * tf, 900 * tf, .02, .04, .3 * v);
+  } else if(k === 'clave'){
+    osc('sine', 2500 * tf, 0, 0, .08 * dm, .6 * v);
+    osc('sine', 1750 * tf, 0, 0, .05 * dm, .3 * v);
   } else {   /* rim */
     osc('triangle', 1700 * tf, 0, 0, .05 * dm, .6 * v);
     const n = noise(.03), g = ctx.createGain(); envl(g, t, .3 * v, .02); n.connect(g); g.connect(out);
   }
+}
+const pwCache = new WeakMap();
+function pulseWave(ctx, duty){
+  let w = pwCache.get(ctx); if(w) return w;
+  const N = 64, re = new Float32Array(N), im = new Float32Array(N);
+  for(let n = 1; n < N; n++){ const A = 2 / (n * Math.PI) * Math.sin(n * Math.PI * duty); re[n] = A * Math.cos(n * Math.PI * duty); im[n] = A * Math.sin(n * Math.PI * duty); }
+  w = ctx.createPeriodicWave(re, im); pwCache.set(ctx, w); return w;
 }
 function synth(G, c, t, midi, dur, vel){
   const ctx = G.ctx, out = G.ch[c.id] && G.ch[c.id].in; if(!out) return;
@@ -26382,13 +26497,23 @@ function synth(G, c, t, midi, dur, vel){
   flt.frequency.setValueAtTime(Math.min(p.cut * 1.8, 16000), t); flt.frequency.setTargetAtTime(p.cut, t, .08);
   const g = ctx.createGain(); flt.connect(g); g.connect(out);
   const a = Math.max(.002, p.att), r = Math.max(.02, p.rel), pk = .3 * vel;
-  const end = t + Math.max(dur, a + .005);
-  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(pk, t + a);
-  g.gain.setValueAtTime(pk, end); g.gain.linearRampToValueAtTime(.0001, end + r);
-  (p.det > 0 ? [-p.det, p.det] : [0]).forEach(d => {
-    const o = ctx.createOscillator(); o.type = p.wave; o.frequency.value = f; o.detune.value = d;
-    o.connect(flt); o.start(t); o.stop(end + r + .05);
-  });
+  const end = t + Math.max(dur, a + .005), d1 = t + a;
+  const sus = (p.sus == null) ? 1 : Math.max(.02, Math.min(1, p.sus)), dc = Math.max(.02, p.dec || .3);
+  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(pk, d1);
+  let atEnd = pk;
+  if(sus < 1){
+    const lvl = pk * sus, tEnd = d1 + dc;
+    if(end >= tEnd){ g.gain.exponentialRampToValueAtTime(lvl, tEnd); g.gain.setValueAtTime(lvl, end); atEnd = lvl; }
+    else { atEnd = pk * Math.pow(lvl / pk, Math.max(0, end - d1) / dc); g.gain.exponentialRampToValueAtTime(Math.max(.0002, atEnd), end); }
+  } else g.gain.setValueAtTime(pk, end);
+  g.gain.linearRampToValueAtTime(.0001, end + r);
+  const mk = (type, fr, det, dest) => {
+    const o = ctx.createOscillator();
+    if(type === 'pulse') o.setPeriodicWave(pulseWave(ctx, .25)); else o.type = type;
+    o.frequency.value = fr; o.detune.value = det; o.connect(dest); o.start(t); o.stop(end + r + .05);
+  };
+  (p.det > 0 ? [-p.det, p.det] : [0]).forEach(d => mk(p.wave, f, d, flt));
+  if(p.sub > 0){ const sg = ctx.createGain(); sg.gain.value = p.sub; sg.connect(g); mk('sine', f / 2, 0, sg); }
 }
 function schedStep(G, pi, si, t){
   const pat = P.pats[pi]; if(!pat) return;
@@ -26396,7 +26521,7 @@ function schedStep(G, pi, si, t){
   P.chs.forEach(c => {
     const d = pat.d[c.id]; if(!d) return;
     if(c.type === 'drum'){ if(d.s[si]) drum(G, c, t, 1); }
-    else d.n.forEach(n => { if(n.s === si) synth(G, c, t, n.p, n.l * sd, .9); });
+    else d.n.forEach(n => { if(n.s === si) synth(G, c, t, n.p, n.l * sd, n.v || .9); });
   });
 }
 function schedSong(G, bar, si, t){
@@ -26412,10 +26537,13 @@ function preview(c, midi){
 let playing = false, ss = 0, nextT = 0, timer = 0, evq = [], curEv = null;
 function tick(){
   if(!playing || !AC) return;
-  const N = P.steps, now = AC.currentTime;
+  const N = P.steps, now = AC.currentTime, total = mode === 'pat' ? N : Math.max(1, songLen()) * N;
   while(nextT < now + .14){
-    if(mode === 'pat') schedStep(live, curPat, ss % N, nextT);
-    else { const len = Math.max(1, songLen()); schedSong(live, Math.floor(ss / N) % len, ss % N, nextT); }
+    if(!loopOn && ss >= total){ if(now > nextT + .3) stop(); break; }
+    const swT = nextT + ((ss % 2) ? (P.swing || 0) * stepDur() : 0);
+    if(metOn && ss % 4 === 0) click(nextT, ss % N === 0);
+    if(mode === 'pat') schedStep(live, curPat, ss % N, swT);
+    else { const len = Math.max(1, songLen()); schedSong(live, Math.floor(ss / N) % len, ss % N, swT); }
     evq.push({ t: nextT, ss });
     nextT += stepDur(); ss++;
   }
@@ -26438,14 +26566,14 @@ function stop(){
 
 /* ---------------- interface: base ---------------- */
 let statusT = 0;
-const HINT = () => tr('Espaço = tocar/parar · A W S E D F T G Y H U J K = teclado de piano · Esc = fechar', 'Space = play/stop · A W S E D F T G Y H U J K = piano keys · Esc = close');
+const HINT = () => tr('Espaço tocar/parar · A–K piano (Z/X oitava) · 1–4 abas · Ctrl+Z/Y desfazer · M mute · L solo · I metrônomo · ←/→ padrão · ↑/↓ canal · +/− BPM · Esc fechar', 'Space play/stop · A–K piano (Z/X octave) · 1–4 tabs · Ctrl+Z/Y undo · M mute · L solo · I metronome · ←/→ pattern · ↑/↓ channel · +/− BPM · Esc close');
 function say(m){ const s = $('dawStatus'); s.textContent = m; clearTimeout(statusT); statusT = setTimeout(() => { s.textContent = HINT(); }, 4500); }
 function applyI18n(){
   ov.querySelectorAll('[data-pt]').forEach(e => { e.textContent = tr(e.getAttribute('data-pt'), e.getAttribute('data-en') || e.getAttribute('data-pt')); });
   $('dawStatus').textContent = HINT();
 }
 function patColor(i){ return 'hsl(' + ((i * 57) % 360) + ',55%,42%)'; }
-function defPitch(c){ return c.kind === 'bass' ? 45 : (c.kind === 'pad' ? 60 : 72); }
+function defPitch(c){ const dp = KINDS[c.kind] && KINDS[c.kind].dp; if(dp) return dp; return c.kind === 'bass' ? 45 : (c.kind === 'pad' ? 60 : 72); }
 function arm(btn, ms){   /* botão de duas toques para ações destrutivas */
   if(btn.dataset.armed === '1') return true;
   const old = btn.textContent; btn.dataset.armed = '1'; btn.classList.add('armed'); btn.textContent = tr('CERTEZA?', 'SURE?');
@@ -26458,7 +26586,7 @@ function refreshPatSel(){
   $('dwPat').innerHTML = P.pats.map((p, i) => '<option value="' + i + '"' + (i === curPat ? ' selected' : '') + '>' + (i + 1) + '. ' + esc(p.name) + '</option>').join('');
 }
 function refreshTop(){
-  $('dwBpm').value = Math.round(P.bpm); $('dwMaster').value = P.master; $('dwSteps').value = String(P.steps);
+  $('dwBpm').value = Math.round(P.bpm); $('dwMaster').value = P.master; $('dwSteps').value = String(P.steps); $('dwSwing').value = P.swing || 0;
   $('dwMode').textContent = mode === 'pat' ? 'PAT' : 'SONG'; $('dwMode').classList.toggle('on', mode === 'song');
   refreshPatSel();
 }
@@ -26476,10 +26604,12 @@ $('dwStop').addEventListener('click', () => { snd('menuSelect'); stop(); });
 $('dwMode').addEventListener('click', () => { snd('menuSelect'); if(playing) stop(); mode = mode === 'pat' ? 'song' : 'pat'; refreshTop(); say(mode === 'song' ? tr('Modo SONG: toca a Playlist.', 'SONG mode: plays the Playlist.') : tr('Modo PAT: toca só o padrão atual.', 'PAT mode: plays the current pattern only.')); });
 $('dwPat').addEventListener('change', e => { curPat = +e.target.value; refreshAfterPat(); });
 $('dwPatAdd').addEventListener('click', () => {
+  pushUndo();
   if(P.pats.length >= 32){ say(tr('Máximo de 32 padrões.', 'Maximum of 32 patterns.')); return; }
   P.pats.push({ name: 'Pattern ' + (P.pats.length + 1), d: {} }); curPat = P.pats.length - 1; refreshPatSel(); refreshAfterPat(); save();
 });
 $('dwPatDup').addEventListener('click', () => {
+  pushUndo();
   if(P.pats.length >= 32){ say(tr('Máximo de 32 padrões.', 'Maximum of 32 patterns.')); return; }
   const src = P.pats[curPat];
   P.pats.push({ name: (src.name + ' 2').slice(0, 24), d: JSON.parse(JSON.stringify(src.d)) }); curPat = P.pats.length - 1; refreshPatSel(); refreshAfterPat(); save();
@@ -26489,7 +26619,7 @@ $('dwSteps').addEventListener('change', e => { P.steps = +e.target.value === 32 
 $('dwClose').addEventListener('click', () => close());
 $('dwNew').addEventListener('click', e => {
   if(!arm(e.currentTarget)) return;
-  stop(); newProject(); live = null; rebuildAll(); say(tr('Novo projeto criado.', 'New project created.'));
+  pushUndo(); stop(); newProject(); live = null; rebuildAll(); say(tr('Novo projeto criado.', 'New project created.'));
 });
 function rebuildAll(){
   if(AC){ try{ AC.close(); }catch(e){} AC = null; live = null; an = null; }
@@ -26543,7 +26673,7 @@ async function exportWav(){
     say(tr('Renderizando o áudio…', 'Rendering audio…'));
     const G = buildGraph(ctx);
     for(let k = 0; k < steps; k++){
-      const t = k * sd, si = k % N;
+      const t = k * sd + ((k % 2) ? (P.swing || 0) * sd : 0), si = k % N;
       if(useSong) schedSong(G, Math.floor(k / N), si, t); else schedStep(G, curPat, si, t);
     }
     const buf = await ctx.startRendering();
@@ -26593,8 +26723,10 @@ function buildRack(){
   rackList.innerHTML = h;
   const add = $('dwAdd');
   if(!add.options.length){
+    const opt = k => '<option value="' + k + '">' + KINDS[k].n + '</option>';
     add.innerHTML = '<option value="">＋ ' + tr('ADICIONAR CANAL', 'ADD CHANNEL') + '</option>' +
-      Object.keys(KINDS).map(k => '<option value="' + k + '">' + KINDS[k].n + (KINDS[k].t === 'synth' ? ' (synth)' : '') + '</option>').join('');
+      '<optgroup label="' + tr('Bateria / Percussão', 'Drums / Percussion') + '">' + DRUM_KINDS.map(opt).join('') + '</optgroup>' +
+      '<optgroup label="' + tr('Instrumentos (synth)', 'Instruments (synth)') + '">' + SYNTH_KINDS.map(opt).join('') + '</optgroup>';
   }
   lastCol = -2;
 }
@@ -26630,7 +26762,7 @@ function setStep(c, i, val, btn, pv){
 }
 rackList.addEventListener('pointerdown', e => {
   const b = e.target.closest('.dw-st'); if(!b) return;
-  e.preventDefault();
+  e.preventDefault(); pushUndo();
   const row = b.closest('.dw-row'), c = chById(+row.dataset.id); if(!c) return;
   paint = { row, c, val: !b.classList.contains('on') };
   try{ b.releasePointerCapture(e.pointerId); }catch(_){}
@@ -26653,14 +26785,19 @@ function buildSet(){
   if(!c){ box.innerHTML = ''; return; }
   let h = '<div class="dw-sf"><label>' + tr('Nome', 'Name') + '</label><input data-s="name" type="text" maxlength="14" value="' + esc(c.name) + '"></div>';
   if(c.type === 'synth'){
-    h += '<div class="dw-sf"><label>' + tr('Onda', 'Wave') + '</label><select data-s="wave">' +
+    h += '<div class="dw-sf"><label>Preset</label><select data-s="preset"><option value="">' + tr('— escolher —', '— choose —') + '</option>' +
+      SYN_PRE.map((x, i) => '<option value="' + i + '">' + esc(tr(x.pt, x.en)) + '</option>').join('') + '</select></div>' +
+      '<div class="dw-sf"><label>' + tr('Onda', 'Wave') + '</label><select data-s="wave">' +
       Object.keys(WAVE_NAME).map(w => '<option value="' + w + '"' + (c.p.wave === w ? ' selected' : '') + '>' + WAVE_NAME[w] + '</option>').join('') + '</select></div>' +
       slider(c, 'cut', tr('Filtro', 'Cutoff'), 200, 12000, 50) + slider(c, 'att', tr('Ataque', 'Attack'), 0.002, 1, 0.002) +
-      slider(c, 'rel', 'Release', 0.02, 2, 0.01) + slider(c, 'det', tr('Desafino', 'Detune'), 0, 30, 1);
+      slider(c, 'rel', 'Release', 0.02, 2, 0.01) + slider(c, 'det', tr('Desafino', 'Detune'), 0, 30, 1) +
+      slider(c, 'sus', tr('Sustain', 'Sustain'), 0.02, 1, 0.01) + slider(c, 'dec', tr('Decaimento', 'Decay'), 0.02, 2, 0.01) + slider(c, 'sub', 'Sub-osc', 0, 1, 0.01);
   } else {
     h += slider(c, 'tune', tr('Tom', 'Tune'), -12, 12, 1) + slider(c, 'dec', tr('Duração', 'Decay'), 0.4, 2.5, 0.05);
   }
   h += '<button type="button" class="dwb sm" data-s="test">▶ ' + tr('TESTAR', 'TEST') + '</button>' +
+       '<button type="button" class="dwb sm" data-s="rand">🎲 ' + tr('ALEATÓRIO', 'RANDOM') + '</button>' +
+       '<button type="button" class="dwb sm" data-s="clr">' + tr('LIMPAR PADRÃO', 'CLEAR PATTERN') + '</button>' +
        '<button type="button" class="dwb sm warn" data-s="del">' + tr('EXCLUIR CANAL', 'DELETE CHANNEL') + '</button>';
   box.innerHTML = h;
 }
@@ -26673,13 +26810,23 @@ $('dwChSet').addEventListener('input', e => {
   else if(k in c.p) c.p[k] = +b.value;
   save();
 });
-$('dwChSet').addEventListener('change', e => { if(e.target.dataset && e.target.dataset.s === 'wave'){ const c = chById(selCh); if(c) c.p.wave = e.target.value; save(); } });
+$('dwChSet').addEventListener('change', e => {
+  const k = e.target.dataset && e.target.dataset.s, c = chById(selCh); if(!c) return;
+  if(k === 'wave'){ c.p.wave = e.target.value; save(); }
+  else if(k === 'preset' && e.target.value !== ''){
+    const pr = SYN_PRE[+e.target.value]; if(!pr) return;
+    Object.assign(c.p, pr.p); buildSet(); save(); preview(c, defPitch(c));
+  }
+});
 $('dwChSet').addEventListener('click', e => {
   const b = e.target.closest('[data-s]'), c = chById(selCh); if(!b || !c) return;
   if(b.dataset.s === 'test') preview(c, defPitch(c));
+  else if(b.dataset.s === 'rand'){ randomize(c); say(tr('Padrão aleatório gerado neste canal.', 'Random pattern generated for this channel.')); }
+  else if(b.dataset.s === 'clr'){ pushUndo(); const d = D(curPat, c); d.s = []; d.n = []; lights(); drawRoll(); save(); }
   else if(b.dataset.s === 'del'){
     if(P.chs.length <= 1){ say(tr('Precisa de pelo menos 1 canal.', 'At least 1 channel is required.')); return; }
     if(!arm(b)) return;
+    pushUndo();
     const i = P.chs.indexOf(c); P.chs.splice(i, 1);
     P.pats.forEach(p => { delete p.d[c.id]; });
     if(live && live.ch[c.id]){ try{ live.ch[c.id].in.disconnect(); if(live.ch[c.id].pan) live.ch[c.id].pan.disconnect(); live.ch[c.id].rs.disconnect(); live.ch[c.id].ds.disconnect(); }catch(_){} delete live.ch[c.id]; }
@@ -26689,6 +26836,7 @@ $('dwChSet').addEventListener('click', e => {
 $('dwAdd').addEventListener('change', e => {
   const k = e.target.value; e.target.value = ''; if(!k || !KINDS[k]) return;
   if(P.chs.length >= 24){ say(tr('Máximo de 24 canais.', 'Maximum of 24 channels.')); return; }
+  pushUndo();
   const c = mkCh(k), same = P.chs.filter(x => x.kind === k).length; if(same) c.name = (c.name + ' ' + (same + 1)).slice(0, 14);
   P.chs.push(c); if(live) addChNodes(live, c);
   selCh = c.id; buildRack(); buildSet(); save(); preview(c, defPitch(c));
@@ -26698,6 +26846,8 @@ $('dwAdd').addEventListener('change', e => {
 const gridCv = $('dwGrid'), keysCv = $('dwKeys'), sc = $('dwRollSc');
 let cellW = 30, tool = 'draw', lastLen = 1, drag = null, keyFlash = -1, centered = false;
 const rollCh = () => { const c = chById(selCh); return (c && c.type === 'synth') ? c : null; };
+const SCALES = { maj:[0,2,4,5,7,9,11], min:[0,2,3,5,7,8,10], pmin:[0,3,5,7,10], blues:[0,3,5,6,7,10], dor:[0,2,3,5,7,9,10], mix:[0,2,4,5,7,9,10] };
+const inScale = m => { const k = +$('dwKey').value; return k >= 0 && SCALES[$('dwScale').value].indexOf(((m - k) % 12 + 12) % 12) >= 0; };
 function drawRoll(){
   const c = rollCh(), empty = $('dwRollEmpty'), inn = $('dwRollIn');
   if(!c){
@@ -26713,7 +26863,7 @@ function drawRoll(){
   const g = gridCv.getContext('2d'), k = keysCv.getContext('2d');
   for(let m = LO; m <= HI; m++){
     const y = (HI - m) * ROW_H, blk = BLACK.indexOf(m % 12) >= 0;
-    g.fillStyle = blk ? '#252c31' : '#2f373d'; g.fillRect(0, y, W, ROW_H);
+    g.fillStyle = inScale(m) ? (blk ? '#2b4033' : '#38523f') : (blk ? '#252c31' : '#2f373d'); g.fillRect(0, y, W, ROW_H);
     g.fillStyle = (m % 12 === 0) ? '#556069' : '#1b2125'; g.fillRect(0, y + ROW_H - 1, W, 1);
     k.fillStyle = blk ? '#1d2327' : '#e6ebee'; k.fillRect(0, y, KEYS_W, ROW_H);
     if(m === keyFlash){ k.fillStyle = '#ff9a2e'; k.fillRect(0, y, KEYS_W, ROW_H); }
@@ -26727,7 +26877,7 @@ function drawRoll(){
   const d = P.pats[curPat].d[c.id];
   if(d) d.n.forEach(n => {
     const x = n.s * cellW, y = (HI - n.p) * ROW_H, w = n.l * cellW;
-    g.fillStyle = '#ff9a2e'; g.fillRect(x + 1, y + 1, w - 2, ROW_H - 2);
+    g.globalAlpha = .35 + .65 * (n.v || .9); g.fillStyle = '#ff9a2e'; g.fillRect(x + 1, y + 1, w - 2, ROW_H - 2); g.globalAlpha = 1;
     g.fillStyle = '#ffd08f'; g.fillRect(x + 1, y + 1, w - 2, 3);
     g.fillStyle = '#6d3a06'; g.fillRect(x + w - 4, y + 2, 2, ROW_H - 4);
     if(w > 34){ g.fillStyle = '#2a1500'; g.font = 'bold 10px Arial'; g.textBaseline = 'middle'; g.fillText(noteName(n.p), x + 5, y + ROW_H / 2 + 1); }
@@ -26741,8 +26891,17 @@ function gpos(e){
 function noteAt(d, o){ return d.n.findIndex(n => n.p === o.p && o.s >= n.s && o.s < n.s + n.l); }
 function eraseAt(c, o){ const d = D(curPat, c), i = noteAt(d, o); if(i >= 0){ d.n.splice(i, 1); drawRoll(); } }
 gridCv.addEventListener('contextmenu', e => e.preventDefault());
+gridCv.addEventListener('wheel', e => {
+  const c = rollCh(); if(!c) return;
+  const d = D(curPat, c), i = noteAt(d, gpos(e)); if(i < 0) return;
+  e.preventDefault(); pushUndo(); const n = d.n[i]; n.v = Math.max(.1, Math.min(1, +((n.v || .9) + (e.deltaY < 0 ? .1 : -.1)).toFixed(2)));
+  drawRoll(); save(); say('Velocity: ' + Math.round(n.v * 100) + '%');
+}, { passive: false });
+['dwKey', 'dwScale'].forEach(id => $(id).addEventListener('change', () => { drawRoll(); say(tr('Notas da escala destacadas em verde.', 'Scale notes highlighted in green.')); }));
 gridCv.addEventListener('pointerdown', e => {
   const c = rollCh(); if(!c) return;
+  if(tool === 'pan') return;
+  pushUndo();
   e.preventDefault(); try{ gridCv.setPointerCapture(e.pointerId); }catch(_){}
   const o = gpos(e), d = D(curPat, c);
   if(o.p < LO || o.p > HI || o.s < 0 || o.s >= P.steps) return;
@@ -26753,8 +26912,10 @@ gridCv.addEventListener('pointerdown', e => {
     drag = (o.x > endX - 9) ? { mode: 'resize', n } : { mode: 'move', n, ds: o.s - n.s };
     lastLen = n.l; preview(c, n.p);
   } else {
-    const n = { p: o.p, s: o.s, l: Math.max(1, Math.min(lastLen, P.steps - o.s)) };
-    d.n.push(n); drag = { mode: 'resize', n }; preview(c, n.p);
+    const n = { p: o.p, s: o.s, l: Math.max(1, Math.min(lastLen, P.steps - o.s)), v: +$('dwVel').value || .9 }, ex = [];
+    d.n.push(n);
+    const cs = $('dwChord').value; if(cs) cs.split(',').slice(1).forEach(k => { const p = o.p + +k; if(p <= HI){ const m = { p, s: o.s, l: n.l, v: n.v }; d.n.push(m); ex.push(m); } });
+    drag = { mode: 'resize', n, x: ex }; preview(c, n.p);
   }
   drawRoll();
 });
@@ -26764,7 +26925,7 @@ gridCv.addEventListener('pointermove', e => {
   const o = gpos(e);
   if(drag.mode === 'erase'){ eraseAt(c, o); return; }
   const n = drag.n;
-  if(drag.mode === 'resize'){ n.l = Math.max(1, Math.min(P.steps - n.s, o.s - n.s + 1)); lastLen = n.l; }
+  if(drag.mode === 'resize'){ n.l = Math.max(1, Math.min(P.steps - n.s, o.s - n.s + 1)); lastLen = n.l; (drag.x || []).forEach(m => { m.l = n.l; }); }
   else {
     const ns = Math.max(0, Math.min(P.steps - 1, o.s - drag.ds)), np = Math.max(LO, Math.min(HI, o.p));
     if(np !== n.p) preview(c, np);
@@ -26782,14 +26943,15 @@ keysCv.addEventListener('pointerdown', e => {
   preview(c, p); keyFlash = p; drawRoll(); setTimeout(() => { keyFlash = -1; if(tab === 'roll') drawRoll(); }, 160);
   say(noteName(p));
 });
-function setTool(t){ tool = t; $('dwToolDraw').classList.toggle('on', t === 'draw'); $('dwToolErase').classList.toggle('on', t === 'erase'); }
+function setTool(t){ tool = t; $('dwToolDraw').classList.toggle('on', t === 'draw'); $('dwToolErase').classList.toggle('on', t === 'erase'); $('dwToolPan').classList.toggle('on', t === 'pan'); gridCv.classList.toggle('pan', t === 'pan'); }
+$('dwToolPan').addEventListener('click', () => setTool('pan'));
 $('dwToolDraw').addEventListener('click', () => setTool('draw'));
 $('dwToolErase').addEventListener('click', () => setTool('erase'));
 $('dwZoomIn').addEventListener('click', () => { cellW = Math.min(64, cellW + 6); drawRoll(); });
 $('dwZoomOut').addEventListener('click', () => { cellW = Math.max(14, cellW - 6); drawRoll(); });
 $('dwRollClear').addEventListener('click', e => {
   const c = rollCh(); if(!c || !arm(e.currentTarget)) return;
-  D(curPat, c).n = []; drawRoll(); lights(); save();
+  pushUndo(); D(curPat, c).n = []; drawRoll(); lights(); save();
 });
 
 /* ---------------- Playlist ---------------- */
@@ -26811,6 +26973,7 @@ function buildList(){
 }
 $('dwListGrid').addEventListener('click', e => {
   const b = e.target.closest('.dw-pc'); if(!b) return;
+  pushUndo();
   const r = +b.dataset.t, c = +b.dataset.b;
   P.pl[r][c] = (P.pl[r][c] === curPat) ? -1 : curPat;
   const v = P.pl[r][c];
@@ -26819,7 +26982,7 @@ $('dwListGrid').addEventListener('click', e => {
 });
 $('dwListGrid').addEventListener('contextmenu', e => {
   const b = e.target.closest('.dw-pc'); if(!b) return;
-  e.preventDefault(); P.pl[+b.dataset.t][+b.dataset.b] = -1; b.textContent = ''; b.style.background = ''; save();
+  e.preventDefault(); pushUndo(); P.pl[+b.dataset.t][+b.dataset.b] = -1; b.textContent = ''; b.style.background = ''; save();
 });
 
 /* ---------------- Mixer ---------------- */
@@ -26833,11 +26996,13 @@ function buildMix(){
       '<div class="dw-ml">REVERB</div><input class="h" type="range" data-a="rev" min="0" max="1" step="0.01" value="' + c.rev + '">' +
       '<div class="dw-ml">DELAY</div><input class="h" type="range" data-a="dly" min="0" max="1" step="0.01" value="' + c.dly + '"></div>';
   });
-  h += '<div class="dw-ms master"><div class="dw-mn">MASTER</div><div class="dw-mm"><div class="dw-vf"><input type="range" data-a="master" min="0" max="1" step="0.01" value="' + P.master + '"></div><canvas id="dwMeter2" width="16" height="130"></canvas></div></div>';
+  h += '<div class="dw-ms master"><div class="dw-mn">MASTER</div><div class="dw-mm"><div class="dw-vf"><input type="range" data-a="master" min="0" max="1" step="0.01" value="' + P.master + '"></div><canvas id="dwMeter2" width="16" height="130"></canvas></div>' +
+    ['GRAVE', 'MÉDIO', 'AGUDO'].map((n, i) => '<div class="dw-ml">' + n + ' EQ</div><input class="h" type="range" data-a="eq' + i + '" min="-12" max="12" step="0.5" value="' + ((P.eq || [0, 0, 0])[i] || 0) + '">').join('') + '</div>';
   $('dwMixList').innerHTML = h;
 }
 $('dwMixList').addEventListener('input', e => {
   const b = e.target, a = b.dataset && b.dataset.a; if(!a) return;
+  if(a.slice(0, 2) === 'eq'){ const i = +a[2]; P.eq = P.eq || [0, 0, 0]; P.eq[i] = +b.value; if(live && live.eq) live.eq[i].gain.setTargetAtTime(P.eq[i], AC.currentTime, .01); save(); return; }
   if(a === 'master'){ P.master = +b.value; $('dwMaster').value = P.master; if(live) live.master.gain.setTargetAtTime(P.master, AC.currentTime, .01); save(); return; }
   const s = b.closest('.dw-ms'), c = s && chById(+s.dataset.id); if(!c) return;
   c[a] = +b.value; if(live) applyCh(live, c); save();
@@ -26901,6 +27066,7 @@ window.addEventListener('keydown', e => {
   if(!isOpen()) return;
   if((window.dzIsPadKey && window.dzIsPadKey(e)) || performance.now() - (window.dzPadT || 0) < 450){ e.preventDefault(); e.stopImmediatePropagation(); return; }
   if(isField(e.target)){ if(e.key === 'Escape'){ e.target.blur(); e.preventDefault(); e.stopImmediatePropagation(); } return; }
+  if(extraKeys(e)) return;
   if(e.ctrlKey || e.metaKey || e.altKey) return;
   if(e.key === 'Enter' && e.target && e.target.tagName === 'BUTTON' && ov.contains(e.target)) return;
   const k = e.key;
@@ -26910,11 +27076,243 @@ window.addEventListener('keydown', e => {
   if(k === ' ' || k === 'Enter'){ if(playing) stop(); else play(); return; }
   if(e.repeat) return;
   const m = PIANO[k.toLowerCase()];
-  if(m !== undefined){ const c = chById(selCh); if(c) preview(c, m); }
+  if(m !== undefined){ const c = chById(selCh); if(c) preview(c, Math.max(LO, Math.min(HI, m + octOff))); }
 }, true);
 window.addEventListener('keyup', e => { if(isOpen() && !isField(e.target)){ e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 window.addEventListener('keypress', e => { if(isOpen() && !isField(e.target)){ e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 ['keydown', 'keyup', 'keypress'].forEach(t => ov.addEventListener(t, e => e.stopPropagation()));
+
+/* ---------------- conteúdo extra: modelos prontos, aleatório, transpor, swing ---------------- */
+function randomize(c){
+  pushUndo();
+  const d = D(curPat, c), N = P.steps, r = Math.random, k = c.kind;
+  if(c.type === 'drum'){
+    d.s = [];
+    for(let i = 0; i < N; i++){
+      let pr = .12;
+      if(k === 'kick' || k === 'k808') pr = i % 4 === 0 ? .85 : (i % 2 === 0 ? .12 : .06);
+      else if(k === 'snare' || k === 'clap' || k === 'snap') pr = i % 8 === 4 ? 1 : .07;
+      else if(k === 'hat' || k === 'shaker') pr = i % 2 === 0 ? .9 : .35;
+      else if(k === 'ohat') pr = i % 4 === 2 ? .5 : .03;
+      else if(k === 'crash') pr = i === 0 ? .6 : 0;
+      d.s[i] = r() < pr ? 1 : 0;
+    }
+  } else {
+    d.n = [];
+    const dp = defPitch(c), root = 9 + 12 * Math.floor((dp - 9) / 12), sc = [0, 3, 5, 7, 10, 12, 15], low = dp <= 48;
+    const cl = v => Math.max(LO, Math.min(HI, v));
+    if(KINDS[k].ch){
+      const CH = [{ r: 0, t: [0, 3, 7] }, { r: -4, t: [0, 4, 7] }, { r: -2, t: [0, 4, 7] }, { r: -5, t: [0, 3, 7] }];
+      for(let b = 0; b < N; b += 8){ const x = CH[Math.floor(r() * CH.length)]; x.t.forEach(o => d.n.push({ p: cl(root + x.r + o), s: b, l: Math.min(8, N - b) })); }
+    } else {
+      for(let i = 0; i < N; i++){
+        if(r() < (low ? .4 : .5)){
+          const deg = sc[Math.floor(r() * (low ? 5 : sc.length))], l = Math.min(r() < .3 ? 2 : 1, N - i);
+          d.n.push({ p: cl(root + deg), s: i, l }); i += l - 1;
+        }
+      }
+    }
+  }
+  lights(); drawRoll(); save();
+  if(c.type === 'synth'){ const f = d.n[0]; preview(c, f ? f.p : defPitch(c)); } else preview(c, 0);
+}
+ov.querySelectorAll('#dwRollBar [data-tr]').forEach(b => b.addEventListener('click', () => {
+  const c = rollCh(); if(!c) return;
+  const d = D(curPat, c), k = +b.dataset.tr;
+  if(!d.n.length) return;
+  if(d.n.some(n => n.p + k < LO || n.p + k > HI)){ say(tr('Algumas notas sairiam do limite do teclado.', 'Some notes would go out of the keyboard range.')); return; }
+  pushUndo(); d.n.forEach(n => { n.p += k; });
+  drawRoll(); save(); preview(c, d.n[0].p);
+}));
+$('dwSwing').addEventListener('input', e => { P.swing = clampN(e.target.value, 0, .6, 0); save(); });
+
+/* modelos: bpm, canais (volume/efeitos/som) e padrões já prontos — toque ▶ e edite à vontade */
+const rep16 = (a, b) => { const o = []; for(let i = a; i < 16; i += b) o.push(i); return o; };
+const TPLS = (() => {
+  const T = {};
+  /* Hip-Hop */
+  const hhA = { kick:[0,7,10], snare:[4,12], hat:rep16(0,2),
+    sub:[[45,0,3],[45,6,2],[48,10,2],[43,14,2]],
+    keys:[[57,0,6],[60,0,6],[64,0,6],[67,0,6],[53,8,6],[57,8,6],[60,8,6],[64,8,6]] };
+  T.hiphop = { pt:'Hip-Hop 90 BPM', en:'Hip-Hop 90 BPM', bpm:90,
+    ch:[{k:'kick'},{k:'snare',rev:.12},{k:'hat',vol:.55},{k:'rim',vol:.5},{k:'sub',vol:.9},{k:'keys',vol:.55,rev:.3,dly:.15},{k:'bell',vol:.35,rev:.3,dly:.3}],
+    pats:[{name:'Base',d:hhA},
+          {name:'Variação',d:Object.assign({}, hhA, { kick:[0,7,10,11], snare:[4,12,15], hat:[0,2,4,6,8,10,12,13,14,15], rim:[3,9],
+            bell:[[76,2,1],[72,6,1],[71,10,1],[69,14,2]] })}],
+    pl:[[0,0,0,1,0,0,0,1]] };
+  /* House */
+  const hsA = { kick:rep16(0,4), clap:[4,12], ohat:[2,6,10,14], hat:rep16(1,2),
+    bass:[[45,2,1],[45,6,1],[48,10,1],[43,14,1]],
+    organ:[[57,3,1],[60,3,1],[64,3,1],[57,6,1],[60,6,1],[64,6,1],[55,11,1],[59,11,1],[62,11,1]] };
+  T.house = { pt:'House 124 BPM', en:'House 124 BPM', bpm:124,
+    ch:[{k:'kick'},{k:'clap',rev:.2},{k:'hat',vol:.45},{k:'ohat',vol:.6},{k:'crash',vol:.5},{k:'bass',vol:.8},{k:'organ',vol:.45,rev:.2,dly:.2},{k:'strings',vol:.35,rev:.35}],
+    pats:[{name:'Groove',d:hsA},
+          {name:'Breakdown',d:{ hat:rep16(0,4), clap:[12,14,15], strings:[[57,0,16],[60,0,16],[64,0,16]] }},
+          {name:'Drop',d:Object.assign({}, hsA, { crash:[0], strings:[[57,0,16],[60,0,16],[64,0,16]] })}],
+    pl:[[0,0,0,1,2,2,0,0],[-1,-1,-1,-1,-1,-1,-1,-1]] };
+  /* Trap */
+  const trA = { kick:[0,7,10], clap:[8], hat:rep16(0,2),
+    sub:[[36,0,6],[36,7,2],[39,10,4],[43,14,2]],
+    bell:[[72,0,1],[75,3,1],[79,6,1],[75,10,1],[72,12,2]],
+    strings:[[48,0,16],[51,0,16],[55,0,16]] };
+  T.trap = { pt:'Trap 140 BPM', en:'Trap 140 BPM', bpm:140,
+    ch:[{k:'kick'},{k:'clap',rev:.15},{k:'hat',vol:.5},{k:'ohat',vol:.5},{k:'crash',vol:.45},{k:'sub',name:'808 Bass',vol:.95},{k:'bell',vol:.4,rev:.35,dly:.3},{k:'strings',vol:.3,rev:.4}],
+    pats:[{name:'Base',d:trA},
+          {name:'Hats Roll',d:Object.assign({}, trA, { hat:[0,2,4,6,8,10,12,13,14,15], ohat:[6], snare:[8], crash:[0] })}],
+    pl:[[0,0,1,0,0,0,1,1]] };
+  /* Lo-fi */
+  const lfA = { kick:[0,10], snare:[4,12], hat:rep16(0,2), shaker:[2,6,10,14],
+    sub:[[45,0,4],[45,6,2],[41,8,4],[41,14,2]],
+    keys:[[57,0,7],[60,0,7],[64,0,7],[67,0,7],[53,8,7],[57,8,7],[60,8,7],[64,8,7]],
+    pluck:[[76,2,1],[72,5,1],[69,10,2],[72,13,1]] };
+  T.lofi = { pt:'Lo-fi Chill 78 BPM', en:'Lo-fi Chill 78 BPM', bpm:78,
+    ch:[{k:'kick',vol:.75},{k:'snare',vol:.6,rev:.25},{k:'hat',vol:.35},{k:'shaker',vol:.3},{k:'sub',vol:.85},{k:'keys',vol:.6,rev:.35,dly:.2},{k:'pluck',vol:.4,rev:.3,dly:.35}],
+    pats:[{name:'Acordes A',d:lfA},
+          {name:'Acordes B',d:{ kick:[0,6,10], snare:[4,12], hat:rep16(0,2), shaker:[2,6,10,14],
+            sub:[[38,0,4],[38,6,2],[43,8,4],[43,14,2]],
+            keys:[[50,0,7],[53,0,7],[57,0,7],[60,0,7],[55,8,7],[59,8,7],[62,8,7],[65,8,7]],
+            pluck:[[77,0,1],[74,3,1],[71,6,2],[74,10,1],[77,12,2]] }}],
+    pl:[[0,0,1,1,0,0,1,0]] };
+  /* Drum & Bass */
+  const dbA = { kick:[0,10], snare:[4,12], hat:rep16(0,2), ohat:[7,15],
+    sub:[[45,0,3],[45,3,1],[48,6,2],[43,10,2],[45,13,1],[48,14,2]],
+    strings:[[57,0,16],[60,0,16],[64,0,16]] };
+  T.dnb = { pt:'Drum & Bass 174 BPM', en:'Drum & Bass 174 BPM', bpm:174,
+    ch:[{k:'kick'},{k:'snare',rev:.12},{k:'hat',vol:.5},{k:'ohat',vol:.45},{k:'crash',vol:.5},{k:'sub',vol:.9},{k:'strings',vol:.3,rev:.4}],
+    pats:[{name:'Rolling',d:dbA},
+          {name:'Fill',d:Object.assign({}, dbA, { kick:[0,10,11], snare:[4,12,14], hat:rep16(0,1), crash:[0] })}],
+    pl:[[0,0,0,1,0,0,0,1]] };
+  /* Chiptune */
+  T.chip = { pt:'Chiptune 150 BPM (8-bit)', en:'Chiptune 150 BPM (8-bit)', bpm:150,
+    ch:[{k:'kick',vol:.7},{k:'snare',vol:.6},{k:'hat',vol:.4},{k:'bass',vol:.7},
+        {k:'chip',id:'lead',name:'Chip Lead',vol:.5},{k:'chip',id:'arp',name:'Chip Arp',vol:.35,pan:.3,p:{wave:'square'}}],
+    pats:[{name:'Tema A',d:{ kick:[0,8], snare:[4,12], hat:rep16(0,2),
+            bass:[[45,0,2],[45,2,2],[45,4,2],[45,6,2],[41,8,2],[41,10,2],[41,12,2],[41,14,2]],
+            lead:[[81,0,2],[79,2,2],[76,4,4],[77,8,2],[76,10,2],[72,12,4]],
+            arp:[[69,0,1],[72,1,1],[76,2,1],[72,3,1],[69,4,1],[72,5,1],[76,6,1],[72,7,1],[65,8,1],[69,9,1],[72,10,1],[69,11,1],[65,12,1],[69,13,1],[72,14,1],[69,15,1]] }},
+          {name:'Tema B',d:{ kick:[0,8], snare:[4,12,13,14,15], hat:rep16(0,2),
+            bass:[[45,0,2],[45,2,2],[45,4,2],[45,6,2],[41,8,2],[41,10,2],[43,12,2],[43,14,2]],
+            lead:[[76,0,1],[79,1,1],[81,2,2],[84,4,2],[81,6,2],[79,8,4],[76,12,4]] }}],
+    pl:[[0,0,1,0,0,0,1,1]] };
+  return T;
+})();
+function applyTpl(id){
+  const T = TPLS[id]; if(!T) return;
+  pushUndo(); stop();
+  P = { v: 1, bpm: T.bpm, steps: 16, swing: 0, master: .8, uid: 1, chs: [], pats: [], pl: [] };
+  const by = {};
+  T.ch.forEach(o => {
+    const c = mkCh(o.k); if(o.name) c.name = o.name;
+    ['vol', 'pan', 'rev', 'dly'].forEach(x => { if(o[x] != null) c[x] = o[x]; });
+    if(o.p) Object.assign(c.p, o.p);
+    P.chs.push(c); by[o.id || o.k] = c;
+  });
+  T.pats.forEach((pt, pi) => {
+    P.pats.push({ name: pt.name, d: {} });
+    Object.keys(pt.d).forEach(key => {
+      const c = by[key]; if(!c) return;
+      const dd = D(pi, c), v = pt.d[key];
+      if(c.type === 'drum') v.forEach(x => { dd.s[x] = 1; });
+      else v.forEach(x => dd.n.push({ p: x[0], s: x[1], l: x[2] }));
+    });
+  });
+  P.pl = [0, 1, 2, 3].map(() => Array(16).fill(-1));
+  (T.pl || []).forEach((row, r) => row.forEach((v, b) => { if(r < 4 && b < 16) P.pl[r][b] = v; }));
+  selCh = P.chs[0].id; curPat = 0; mode = 'pat'; live = null;
+  rebuildAll();
+  say(tr('Modelo carregado: ', 'Template loaded: ') + tr(T.pt, T.en) + ' — ' + tr('toque ▶ (use PAT/SONG para ouvir a música toda).', 'press ▶ (use PAT/SONG to hear the whole song).'));
+}
+(function initTpl(){
+  const sel = $('dwTpl');
+  sel.innerHTML = '<option value="">♫ ' + tr('MODELOS', 'TEMPLATES') + '</option>' + Object.keys(TPLS).map(k => '<option value="' + k + '">' + esc(tr(TPLS[k].pt, TPLS[k].en)) + '</option>').join('');
+  sel.addEventListener('change', () => {
+    const k = sel.value; sel.value = ''; if(!k) return;
+    let ok = true;
+    try{ ok = confirm(tr('Carregar este modelo? O projeto atual será substituído (baixe com SALVAR se quiser guardar).', 'Load this template? The current project will be replaced (use SAVE first if you want to keep it).')); }catch(e){}
+    if(ok) applyTpl(k);
+  });
+})();
+
+/* ---------------- controles extras: desfazer, metrônomo, tap tempo, atalhos ---------------- */
+let metOn = false, octOff = 0, tapT = [];
+function click(t, strong){
+  if(!AC) return;
+  try{
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'square'; o.frequency.value = strong ? 1500 : 1000;
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.18, t + .002); g.gain.exponentialRampToValueAtTime(.0001, t + .05);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .07);
+  }catch(e){}
+}
+function toggleMet(){ metOn = !metOn; $('dwMet').classList.toggle('on', metOn); say(metOn ? tr('Metrônomo ligado.', 'Metronome on.') : tr('Metrônomo desligado.', 'Metronome off.')); }
+$('dwMet').addEventListener('click', () => { snd('menuSelect'); toggleMet(); });
+$('dwUndo').addEventListener('click', undo);
+$('dwRedo').addEventListener('click', redo);
+function tapTempo(){
+  const n = performance.now();
+  if(tapT.length && n - tapT[tapT.length - 1] > 2000) tapT = [];
+  tapT.push(n); if(tapT.length > 6) tapT.shift();
+  if(tapT.length >= 2){
+    const iv = (tapT[tapT.length - 1] - tapT[0]) / (tapT.length - 1), bpm = Math.round(60000 / iv);
+    if(bpm >= 40 && bpm <= 300){ setBpm(bpm); $('dwBpm').value = Math.round(P.bpm); say('BPM: ' + Math.round(P.bpm)); }
+  }
+}
+$('dwTap').addEventListener('click', tapTempo);
+function nudgeBpm(d){ pushUndo(); setBpm(P.bpm + d); $('dwBpm').value = Math.round(P.bpm); say('BPM: ' + Math.round(P.bpm)); }
+function gotoPat(d){
+  const n = P.pats.length; curPat = (curPat + d + n) % n; refreshAfterPat(); say(tr('Padrão ', 'Pattern ') + (curPat + 1) + ': ' + P.pats[curPat].name);
+}
+function moveSel(d){
+  const i = P.chs.findIndex(c => c.id === selCh), n = P.chs.length;
+  selCh = P.chs[(i + d + n) % n].id; markSel(); buildSet(); if(tab === 'roll') drawRoll();
+  const c = chById(selCh); if(c) say(c.name);
+}
+/* atalhos que rodam antes do tratamento padrão do teclado */
+function extraKeys(e){
+  const k = e.key, lk = k.toLowerCase();
+  if((e.ctrlKey || e.metaKey) && !e.altKey){
+    if(lk === 'z'){ e.preventDefault(); e.stopImmediatePropagation(); if(e.shiftKey) redo(); else undo(); return true; }
+    if(lk === 'y'){ e.preventDefault(); e.stopImmediatePropagation(); redo(); return true; }
+    if(lk === 's'){ e.preventDefault(); e.stopImmediatePropagation(); $('dwSave').click(); return true; }
+    return false;
+  }
+  if(e.altKey) return false;
+  let used = true;
+  if(k === 'Tab'){ $('dwMode').click(); }
+  else if(k >= '1' && k <= '4'){ showTab(['list', 'roll', 'rack', 'mix'][+k - 1]); }
+  else if(k === 'ArrowUp'){ moveSel(-1); }
+  else if(k === 'ArrowDown'){ moveSel(1); }
+  else if(k === 'ArrowLeft'){ gotoPat(-1); }
+  else if(k === 'ArrowRight'){ gotoPat(1); }
+  else if(k === '+' || k === '='){ nudgeBpm(e.shiftKey ? 10 : 1); }
+  else if(k === '-' || k === '_'){ nudgeBpm(e.shiftKey ? -10 : -1); }
+  else if(lk === 'z'){ octOff = Math.max(-24, octOff - 12); say(tr('Oitava do teclado: ', 'Keyboard octave: ') + (octOff / 12 >= 0 ? '+' : '') + (octOff / 12)); }
+  else if(lk === 'x'){ octOff = Math.min(24, octOff + 12); say(tr('Oitava do teclado: ', 'Keyboard octave: ') + (octOff / 12 >= 0 ? '+' : '') + (octOff / 12)); }
+  else if(lk === 'm'){ const c = chById(selCh); if(c){ c.mute = !c.mute; applyAll(); buildRack(); if(tab === 'mix') buildMix(); save(); say(c.name + (c.mute ? ' — mute' : '')); } }
+  else if(lk === 'l'){ const c = chById(selCh); if(c){ c.solo = !c.solo; applyAll(); if(tab === 'mix') buildMix(); save(); say(c.name + (c.solo ? ' — solo' : '')); } }
+  else if(lk === 'c' ){ $('dwTap').click(); }
+  else if(lk === 'r'){ if(tab === 'roll'){ setTool(tool === 'erase' ? 'draw' : 'erase'); } else used = false; }
+  else if(lk === 'n'){ if(tab === 'roll') setTool('draw'); else used = false; }
+  else if(lk === 'i'){ toggleMet(); }
+  else used = false;
+  if(used){ e.preventDefault(); e.stopImmediatePropagation(); }
+  return used;
+}
+refreshUR();
+
+let loopOn = true;
+$('dwLoop').addEventListener('click', () => { loopOn = !loopOn; $('dwLoop').classList.toggle('on', loopOn); say(loopOn ? tr('Loop ligado.', 'Loop on.') : tr('Loop desligado: toca uma vez e para.', 'Loop off: plays once and stops.')); });
+$('dwPatRen').addEventListener('click', () => {
+  let n = null; try{ n = prompt(tr('Nome do padrão:', 'Pattern name:'), P.pats[curPat].name); }catch(e){}
+  if(n && n.trim()){ pushUndo(); P.pats[curPat].name = n.trim().slice(0, 24); refreshPatSel(); buildList(); save(); }
+});
+$('dwPatDel').addEventListener('click', e => {
+  if(P.pats.length <= 1){ say(tr('Precisa de pelo menos 1 padrão.', 'At least 1 pattern is required.')); return; }
+  if(!arm(e.currentTarget)) return;
+  pushUndo(); stop(); const d = curPat; P.pats.splice(d, 1);
+  P.pl.forEach(r => r.forEach((v, i) => { r[i] = v === d ? -1 : (v > d ? v - 1 : v); }));
+  curPat = Math.min(curPat, P.pats.length - 1); refreshAfterPat(); save();
+});
 
 /* ---------------- abrir / fechar ---------------- */
 function open(){
@@ -26940,6 +27338,432 @@ window.dzDawTry = function(v){
 };
 window.dzDaw = { open, close, isOpen };
 window.dzDawBack = close;
+})();
+</script>
+
+<style id="dzXpStyle">
+@font-face{font-family:'XP Tahoma';src:url('assets/winxp/Fonts/tahoma.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Franklin';src:url('assets/winxp/Fonts/framdit.ttf') format('truetype');font-display:swap}
+/* ===== ESTILO WINDOWS XP (só aba EXTRAS) =====
+   Ligado em EXTRAS > ESTILO. Classes no <html>: dz-xp = estilo escolhido (janelas e botões XP); xp-desk = área de trabalho aberta. */
+#xpDesk,#xpBar,#xpMenu,#xpOff{display:none;font-family:'XP Tahoma',Tahoma,Verdana,Geneva,sans-serif;font-size:12px;color:#000;-webkit-user-select:none;user-select:none}
+#xpDesk *,#xpBar *,#xpMenu *{box-sizing:border-box}
+html.xp-desk #xpDesk{display:block}html.xp-desk #xpBar{display:flex}
+#xpMenu.on{display:flex}#xpOff.on{display:flex}
+#xpDesk{position:fixed;inset:0;z-index:99985;overflow:hidden;background:#3a6ea5 url(assets/winxp/Wallpapers/bliss.jpg) center/cover no-repeat}
+#xpDesk[data-wp=bliss]{background-image:url(assets/winxp/Wallpapers/bliss.jpg)}
+#xpDesk[data-wp=ascent]{background-image:url(assets/winxp/Wallpapers/ascent.jpg)}
+#xpDesk[data-wp=autumn]{background-image:url(assets/winxp/Wallpapers/autumn.jpg)}
+#xpDesk[data-wp=azul]{background-image:url(assets/winxp/Wallpapers/azul.jpg)}
+#xpDesk[data-wp=crystal]{background-image:url(assets/winxp/Wallpapers/crystal.jpg)}
+#xpDesk[data-wp=follow]{background-image:url(assets/winxp/Wallpapers/follow.jpg)}
+#xpDesk[data-wp=friend]{background-image:url(assets/winxp/Wallpapers/friend.jpg)}
+#xpDesk[data-wp=home]{background-image:url(assets/winxp/Wallpapers/home.jpg)}
+#xpDesk[data-wp=moon_flower]{background-image:url(assets/winxp/Wallpapers/moon_flower.jpg)}
+#xpDesk[data-wp=peace]{background-image:url(assets/winxp/Wallpapers/peace.jpg)}
+#xpDesk[data-wp=power]{background-image:url(assets/winxp/Wallpapers/power.jpg)}
+#xpDesk[data-wp=purple_flower]{background-image:url(assets/winxp/Wallpapers/purple_flower.jpg)}
+#xpDesk[data-wp=radiance]{background-image:url(assets/winxp/Wallpapers/radiance.jpg)}
+#xpDesk[data-wp=red_moon_desert]{background-image:url(assets/winxp/Wallpapers/red_moon_desert.jpg)}
+#xpDesk[data-wp=ripple]{background-image:url(assets/winxp/Wallpapers/ripple.jpg)}
+#xpDesk[data-wp=stonehenge]{background-image:url(assets/winxp/Wallpapers/stonehenge.jpg)}
+#xpDesk[data-wp=tulips]{background-image:url(assets/winxp/Wallpapers/tulips.jpg)}
+#xpDesk[data-wp=vortec_space]{background-image:url(assets/winxp/Wallpapers/vortec_space.jpg)}
+#xpDesk[data-wp=wind]{background-image:url(assets/winxp/Wallpapers/wind.jpg)}
+#xpDesk[data-wp=windows_xp_home_edition]{background-image:url(assets/winxp/Wallpapers/windows_xp_home_edition.jpg)}
+#xpDesk[data-wp=windows_xp_professional]{background-image:url(assets/winxp/Wallpapers/windows_xp_professional.jpg)}
+#xpIcons{position:absolute;inset:6px 6px 36px 6px;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:4px}
+.xpIc{width:80px;padding:4px 2px;text-align:center;color:#fff;border:0;background:none;font:inherit;font-size:11px;line-height:1.25;text-shadow:1px 1px 2px #000;cursor:default}
+.xpIc i{display:block;font-style:normal;font-size:32px;line-height:38px}
+.xpIc.sel span{background:#316ac5;outline:1px dotted #fff}
+#xpWins{position:absolute;inset:0 0 30px 0;pointer-events:none}
+.xpWin{pointer-events:auto;position:absolute;display:flex;flex-direction:column;background:#ece9d8;border:3px solid #0a4fd0;border-top:0;border-radius:8px 8px 3px 3px;box-shadow:2px 4px 14px rgba(0,0,0,.5);overflow:hidden}
+.xpWin.min{display:none}
+.xpTb{display:none;align-items:center;gap:3px;flex:none;height:30px;margin:0 -3px 2px;padding:0 5px 0 7px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#0997ff 0,#0053ee 8%,#0050ee 40%,#06f 88%,#06f 93%,#005bff 95%,#003dd7 100%);color:#fff;font:700 13px 'XP Tahoma',Tahoma,Verdana,sans-serif;text-shadow:1px 1px #0a1f6b;touch-action:none}
+.xpWin .xpTb{display:flex}
+.xpTi{font-size:15px}.xpTt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xpB{width:23px;height:23px;padding:0;border:1px solid #fff;border-radius:4px;color:#fff;font:700 13px/1 'XP Tahoma',Tahoma,Verdana,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 90% 90%,#0054e9 0,#2263d5 55%,#4479e4 70%,#a3bbec 100%)}
+.xpB.cl{background:radial-gradient(circle at 90% 90%,#cc4600 0,#dc6527 55%,#cd7546 70%,#ffccb2 100%)}
+.xpBody{flex:1;min-height:0;display:flex;overflow:hidden;background:#fff}
+.xpPane{width:168px;flex:none;padding:10px 8px;overflow:auto;background:linear-gradient(180deg,#7ba2e7,#6375d6)}
+.xpPane h4{margin:0 0 6px;padding:5px 8px;font-size:12px;color:#fff;background:linear-gradient(90deg,#0c3fc0,#4b7ae6);border-radius:5px 5px 0 0}
+.xpPane .bx{background:#d6dff7;padding:7px 8px 8px;margin-bottom:10px;border-radius:0 0 5px 5px}
+.xpPane a,.xpLnk{display:block;padding:2px 0;color:#1c3a9c;cursor:pointer;text-decoration:none;background:none;border:0;font:inherit;text-align:left}
+.xpPane a:hover,.xpLnk:hover{text-decoration:underline;color:#2a5fe0}
+.xpMain{flex:1;min-width:0;overflow:auto;padding:10px 12px;background:#fff}
+.xpMain h3{margin:12px 0 8px;padding-bottom:3px;font-size:13px;color:#1c3a9c;border-bottom:1px solid #b6c8ef}
+.xpMain h3:first-child{margin-top:0}
+.xpGrid{display:flex;flex-wrap:wrap;gap:6px}
+.xpMain .xpIc{color:#000;text-shadow:none;width:92px}
+.xpMain .xpIc.sel span{color:#fff}
+.xpCat{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;margin:4px 0;border:1px solid #b6c8ef;border-radius:6px;background:#f3f7ff;font:inherit;font-size:13px;color:#1c3a9c;text-align:left;cursor:pointer}
+.xpCat i{font-style:normal;font-size:28px}
+.xpCat.on{border-color:#e69b1e;background:#fff3cf}
+@media (max-width:560px){.xpPane{display:none}}
+#xpBar{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:99996;align-items:stretch;background:linear-gradient(180deg,#245edb 0,#3f8cf3 9%,#245edb 18%,#245edb 92%,#1941a5 100%)}
+#xpStart{flex:none;display:flex;align-items:center;gap:5px;padding:0 18px 0 10px;border:0;border-radius:0 12px 12px 0;color:#fff;font:italic 700 17px 'XP Franklin','Trebuchet MS',Tahoma,sans-serif;text-shadow:1px 1px 2px #000;cursor:pointer;background:linear-gradient(180deg,#5cb85c 0,#3c9a3c 12%,#2e8b2e 50%,#2a7d2a 88%,#1e6b1e 100%);box-shadow:inset -2px 0 3px rgba(0,0,0,.3)}
+#xpStart.on{filter:brightness(.85)}
+#xpTasks{flex:1;min-width:0;display:flex;overflow:hidden;padding-left:6px}
+.xpTask{flex:0 1 150px;min-width:50px;height:24px;margin:3px 2px;padding:0 8px;border:1px solid #1c4fbf;border-radius:3px;background:linear-gradient(180deg,#5b9aff,#3a78e8);color:#fff;font:inherit;font-size:11px;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.xpTask.on{background:linear-gradient(180deg,#1e50c0,#2860d8);box-shadow:inset 1px 1px 3px rgba(0,0,0,.5)}
+#xpTray{flex:none;display:flex;align-items:center;gap:8px;padding:0 12px;color:#fff;font-size:11px;border-left:1px solid #1042af;background:linear-gradient(180deg,#0c59b9 0,#139ee9 6%,#18b5f2 10%,#139ee9 14%,#1290e8 20%,#0d8fe8 92%,#0c59b9 100%)}
+#xpMenu{position:fixed;left:0;bottom:30px;z-index:99997;width:min(400px,100vw);max-height:calc(100% - 36px);flex-direction:column;border:2px solid #0a4fd0;border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:3px -3px 12px rgba(0,0,0,.45);background:#fff}
+#xpMenu .mh{display:flex;align-items:center;gap:10px;padding:8px 10px;color:#fff;font:700 15px 'XP Tahoma',Tahoma,sans-serif;text-shadow:1px 1px 2px #002;background:linear-gradient(180deg,#1868ce,#0a3fb0)}
+#xpMenu .mh i{font-style:normal;font-size:28px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #dbe6fb;border-radius:5px}
+#xpMenu .mb{display:flex;min-height:0;flex:1;overflow:hidden}
+#xpMenu .ml{flex:1.25;overflow:auto;padding:6px 4px;background:#fff}
+#xpMenu .mr{flex:1;overflow:auto;padding:6px 4px;background:#d3e5fa;border-left:1px solid #95bdee}
+#xpMenu button.mi{display:flex;align-items:center;gap:8px;width:100%;padding:5px 8px;border:0;background:none;font:inherit;font-size:12px;text-align:left;cursor:pointer;color:#000}
+#xpMenu .mr button.mi{font-weight:700;color:#00136b}
+#xpMenu button.mi i{font-style:normal;font-size:22px;width:26px;text-align:center}
+#xpMenu button.mi:hover{background:#316ac5;color:#fff}
+#xpMenu hr{border:0;border-top:1px solid #c9d6ee;margin:4px 6px}
+#xpMenu .mf{display:flex;justify-content:flex-end;gap:12px;padding:6px 10px;background:linear-gradient(180deg,#4282d6,#3168c8)}
+#xpMenu .mf button{display:flex;align-items:center;gap:5px;border:0;background:none;color:#fff;font:inherit;font-size:12px;cursor:pointer}
+#xpOff{position:fixed;inset:0;z-index:99998;align-items:center;justify-content:center;color:#fff;font:italic 20px 'XP Tahoma',Tahoma,Verdana,sans-serif;background:linear-gradient(180deg,#003cb4,#0a5ad8)}
+/* ---- estilo XP escolhido: moldura das janelas dos apps ---- */
+html.dz-xp .xpTb.app{display:flex}
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay){border:3px solid #0a4fd0!important;border-top:0!important;border-radius:8px 8px 3px 3px!important;padding:0 3px 3px!important;gap:3px!important;box-shadow:2px 4px 14px rgba(0,0,0,.55)!important;font-family:'XP Tahoma',Tahoma,Verdana,sans-serif!important}
+/* apps claros: corpo bege XP, texto preto */
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox){background:#ece9d8!important;color:#000!important}
+/* emuladores e estúdio: mantêm o corpo escuro (texto claro), só ganham a moldura XP */
+html.dz-xp :is(#emuBox,#lgBox,#gbaBox){background:#0b0818!important;color:#f1eaff!important}
+html.dz-xp #dawOverlay{background:#1f2529!important}
+html.dz-xp :is(#calcHead,#edHead,#jdHead,#paintHead,#mgHead){background:linear-gradient(180deg,#fdfdfb,#ece9d8)!important;border:0!important;border-bottom:1px solid #aca899!important;border-radius:0!important;color:#000!important}
+html.dz-xp :is(#calcTitle,#edTitle,#paintTitle,#mgTitle){display:none!important}
+html.dz-xp :is(#calcClose,#edClose,#jdClose,#paintClose,#mgClose,#emuClose,#lgClose,#gbaClose){display:none!important}
+/* contraste: botões, campos e textos dos apps claros */
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:not(#paintPal *){background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)!important;color:#000!important;border:1px solid #003c74!important;border-radius:3px!important;box-shadow:none!important;text-shadow:none!important}
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:disabled{color:#777!important}
+html.dz-xp :is(#edBox,#jdBox,#paintBox,#calcBox) :is(select,input:not([type=range],[type=color],[type=file],[type=checkbox],[type=radio])){background:#fff!important;color:#000!important;border:1px solid #7f9db9!important;border-radius:2px!important;box-shadow:none!important}
+html.dz-xp :is(#edTools,#edFind){background:transparent!important;border-color:#aca899!important}
+html.dz-xp :is(#edStatus,#paintSizeTxt,#paintSizeLbl,#paintHint,#jdLogo span,#edBox label,#jdBox label,#paintBox label){color:#222!important}
+html.dz-xp #jdLogo{color:#000!important;text-shadow:none!important}
+html.dz-xp #jdLogo b{color:#c0390f!important}
+html.dz-xp #paintStage{background:#808080!important}
+/* janela / maximizar (duplo clique na barra de título também) */
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox).xp-max{width:100%!important;max-width:none!important;height:100%!important;max-height:none!important}
+html.dz-xp .xp-min{display:none!important}
+/* emulador GBA/consoles: janela com tamanho próprio (fundo animado fica preso nela) */
+html.dz-xp #gbaOverlay.open{display:flex!important;align-items:center;justify-content:center}
+html.dz-xp #gbaBox{width:min(100%,900px)!important;max-width:none!important;height:min(100%,640px)!important;margin:0!important}
+/* emulador do menu: o fundo animado vive DENTRO da janela, não na tela toda */
+html.dz-xp #emuBox{position:relative!important;overflow:hidden!important}
+html.dz-xp #emuBox>*:not(canvas){position:relative;z-index:1}
+html.dz-xp #emuBox>canvas.fxBg{position:absolute;inset:0;z-index:0}
+/* contraste: avisos e textos da lista do emulador ganham fundo escuro sobre a animação */
+html.dz-xp #gbaOverlay:not(.playing) #gbaList>*:not(.gbarom){background:rgba(8,5,20,.82)!important;border-radius:10px;color:#f1eaff!important}
+/* tela cheia do emulador (cobre a barra de tarefas) */
+html.dz-xp #gbaOverlay.xp-full{bottom:0!important;z-index:99999!important;padding:0!important;background:#000!important}
+html.dz-xp #gbaOverlay.xp-full #gbaBox{width:100%!important;height:100%!important;border:0!important;border-radius:0!important;padding:0!important}
+html.dz-xp #gbaOverlay.xp-full .xpTb{display:none}
+.xpFsX{display:none;position:absolute;top:6px;right:6px;z-index:99999;padding:5px 10px;border:1px solid rgba(255,255,255,.6);border-radius:4px;background:rgba(0,0,0,.55);color:#fff;font:12px 'XP Tahoma',Tahoma,Verdana,sans-serif;cursor:pointer;opacity:.55}
+.xpFsX:hover{opacity:1}
+html.dz-xp #gbaOverlay.xp-full .xpFsX{display:block}
+@media (pointer:coarse){.xpB{width:30px;height:30px}.xpTb{height:36px}}
+#xpDesk[data-wp=blue]{background:linear-gradient(180deg,#0b3f9e,#2f77e0)}
+#xpDesk[data-wp=teal]{background:#008080}
+/* ---- área de trabalho aberta: apps viram janelas sobre o papel de parede, acima da barra de tarefas ---- */
+html.xp-desk :is(#calcOverlay,#edOverlay,#jdOverlay,#paintOverlay,#mgOverlay,#emuOverlay,#lgOverlay,#gbaOverlay){bottom:30px!important;height:auto!important;max-height:none!important}
+html.xp-desk :is(#calcOverlay,#edOverlay,#jdOverlay,#paintOverlay,#mgOverlay,#emuOverlay,#lgOverlay){background:transparent!important;pointer-events:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.xp-desk :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox){pointer-events:auto}
+html.xp-desk #dawOverlay{inset:6px 6px 36px 6px!important;height:auto!important}
+/* ---- aba EXTRAS no estilo XP ---- */
+html.dz-xp #tabExtras{font-family:'XP Tahoma',Tahoma,Verdana,sans-serif}
+html.dz-xp #tabExtras .xt-sec{color:#fff;background:linear-gradient(90deg,#0a4fd0,#3a7bea);padding:4px 10px;border-radius:6px 6px 0 0;letter-spacing:0;font-weight:700;font-size:13px}
+html.dz-xp #tabExtras .xt-sec::after{display:none}
+html.dz-xp #tabExtras .xt-row .btn{background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)!important;color:#000!important;border:1px solid #003c74!important;border-radius:3px!important;box-shadow:none!important;font-family:'XP Tahoma',Tahoma,Verdana,sans-serif!important;min-height:40px!important}
+html.dz-xp #tabExtras .xt-row .btn.xt-on{background:linear-gradient(180deg,#fff3cf,#ffd77a)!important;border-color:#e69b1e!important}
+
+/* ---- texturas do pacote Windows XP (pasta assets/winxp) ---- */
+:root{--xc-arrow:url(assets/winxp/Cursor/default_arrow.png) 11 12,default;--xc-link:url(assets/winxp/Cursor/default_link.png) 10 10,pointer;--xc-text:url(assets/winxp/Cursor/default_ibeam.png) 6 10,text;--xc-wait:url(assets/winxp/Cursor/default_wait.png) 11 12,progress;--xc-busy:url(assets/winxp/Cursor/default_busy.png) 10 10,wait;--xc-no:url(assets/winxp/Cursor/default_no.png) 10 10,not-allowed;--xc-help:url(assets/winxp/Cursor/default_helpsel.png) 11 12,help;--xc-move:url(assets/winxp/Cursor/default_move.png) 10 10,move}
+html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,#xpWins,#xpBoot,#xpOff),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras){cursor:var(--xc-arrow)}
+html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,#xpWins) :is(button,a,select,summary,label[for],[role=button],input[type=checkbox],input[type=radio],input[type=range],input[type=color],input[type=file],.xpIc,.xpCat,.xpTask,.xpB,.xpLnk,.mi),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras) :is(button,a,select,summary,label[for],[role=button],input[type=checkbox],input[type=radio],input[type=range],input[type=color],input[type=file]){cursor:var(--xc-link)}
+html.xp-desk :is(#xpDesk,#xpWins) :is(input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=button],[type=submit]),textarea),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras) :is(input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=button],[type=submit]),textarea){cursor:var(--xc-text)}
+html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,#xpWins) :is(button,input,select,textarea):disabled,html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras) :is(button,input,select,textarea):disabled{cursor:var(--xc-no)}
+#xpOff{cursor:var(--xc-busy)}
+/* ícones e miniaturas */
+.xpSpr{display:inline-block;vertical-align:middle;background-repeat:no-repeat;flex:none}
+.xpIc i.xpSpr{display:block;margin:3px auto}
+.xpTask .xpSpr{margin-right:3px;vertical-align:-4px}
+.xpCat i.xpSpr{margin:0}
+.xpFlag{display:inline-block;width:20px;height:18px;background:url(assets/winxp/UI/flag.png) center/contain no-repeat}
+.xpWpT{display:inline-block;width:44px;height:33px;border:1px solid #7f9db9;background-size:cover;background-position:center;background-repeat:no-repeat}
+.xpCat i{display:flex;align-items:center;justify-content:center;min-width:44px}
+#xpBoot{display:none;position:fixed;inset:0;z-index:99999;background:#000 url(assets/winxp/Logo/boot.png) center/contain no-repeat}
+#xpBoot.on{display:block}
+/* barra de título, botões da janela, barra de tarefas e botão iniciar (folha UI Theme) */
+.xpTb{background:url(assets/winxp/UI/title_right.png) 0 0/100% 100% no-repeat,linear-gradient(180deg,#0997ff 0,#0053ee 8%,#0050ee 40%,#06f 88%,#003dd7 100%)}
+.xpB.mn,.xpB.mx,.xpB.cl{width:21px;height:21px;padding:0;border:0;border-radius:0;font-size:0;color:transparent;text-shadow:none;background:center/100% 100% no-repeat}
+@media (pointer:coarse){.xpB.mn,.xpB.mx,.xpB.cl{width:28px;height:28px}}
+.xpB.mn{background-image:url(assets/winxp/UI/cap_min_n.png)}.xpB.mn:hover{background-image:url(assets/winxp/UI/cap_min_h.png)}.xpB.mn:active{background-image:url(assets/winxp/UI/cap_min_p.png)}
+.xpB.mx{background-image:url(assets/winxp/UI/cap_max_n.png)}.xpB.mx:hover{background-image:url(assets/winxp/UI/cap_max_h.png)}.xpB.mx:active{background-image:url(assets/winxp/UI/cap_max_p.png)}
+.xpB.cl{background-image:url(assets/winxp/UI/cap_close_n.png)}.xpB.cl:hover{background-image:url(assets/winxp/UI/cap_close_h.png)}.xpB.cl:active{background-image:url(assets/winxp/UI/cap_close_p.png)}
+.xp-max .xpB.mx{background-image:url(assets/winxp/UI/cap_restore_n.png)}.xp-max .xpB.mx:hover{background-image:url(assets/winxp/UI/cap_restore_h.png)}.xp-max .xpB.mx:active{background-image:url(assets/winxp/UI/cap_restore_p.png)}
+#xpBar{background:url(assets/winxp/UI/taskbar.png) 0 0/100% 100% no-repeat,linear-gradient(180deg,#245edb,#1941a5)}
+#xpStart{min-width:99px;padding:0 22px 0 10px;border-radius:0;box-shadow:none;background:url(assets/winxp/UI/start_n.png) 0 0/100% 100% no-repeat}
+#xpStart:hover{background-image:url(assets/winxp/UI/start_h.png)}
+#xpStart.on,#xpStart:active{filter:none;background-image:url(assets/winxp/UI/start_p.png)}
+#xpTray{border-left:0;background:url(assets/winxp/UI/tray.png) 0 0/100% 100% no-repeat,#0d8fe8}
+</style>
+<script id="dzXpScript">
+/* ===== ESTILO WINDOWS XP (aba EXTRAS) =====
+   EXTRAS > ESTILO troca entre o estilo padrão e o Windows XP (salvo em localStorage 'dz_extras_style_v1').
+   No XP: papel de parede, ícones, barra de tarefas, menu Iniciar, Meu Computador, Painel de Controle,
+   e os apps/jogos/emuladores abrem como janelas XP. Para incluir um app novo na moldura XP, acrescente em DEFS. */
+(function(){
+'use strict';
+const KEY = 'dz_extras_style_v1', $ = id => document.getElementById(id), root = document.documentElement;
+const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };
+const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
+
+const AS = 'assets/winxp/';
+/* ícones: folha WinIcons_32.png (23 colunas de 32px). Para trocar um ícone, mude o número abaixo. Emoji sem número continua como emoji. */
+const SPR = AS + 'Icons/WinIcons_32.png', SPC = 23, SPR_W = 736, SPR_H = 704;
+const ICN = {'🖥':74,'\u2699\uFE0F':171,'\u2699':171,'🧮':309,'📝':308,'💻':142,'🎨':8,'🎹':23,'🎮':334,'🧩':220,'🪟':247,'🎲':130,'❌':448,'👤':3,'🔑':258,'\u23FB':152,'🔊':23};
+function setIc(el, ic, px){
+  const n = ICN[ic];
+  if(n === undefined){ el.textContent = ic; el.classList.remove('xpSpr'); el.style.cssText = ''; return el; }
+  const k = px / 32, x = (n % SPC) * px, y = Math.floor(n / SPC) * px;
+  el.textContent = ''; el.classList.add('xpSpr');
+  el.style.cssText = 'width:' + px + 'px;height:' + px + 'px;background-image:url(' + SPR + ');background-size:' + (SPR_W * k) + 'px ' + (SPR_H * k) + 'px;background-position:-' + x + 'px -' + y + 'px' + (px === 32 ? ';image-rendering:pixelated' : '');
+  return el;
+}
+const icH = (ic, px) => { const e = document.createElement('i'); setIc(e, ic, px); return e.outerHTML; };
+/* sons do Windows XP (pasta assets/winxp/Sounds); dá para desligar no Painel de Controle */
+let sndOn = true; try{ sndOn = localStorage.getItem('dz_xp_snd') !== '0'; }catch(e){}
+const sndCache = {};
+function xps(name, vol){
+  if(!sndOn) return;
+  try{ const a = sndCache[name] || (sndCache[name] = new Audio(AS + 'Sounds/' + name + '.wav')); a.volume = vol || .6; a.currentTime = 0; const p = a.play(); if(p && p.catch) p.catch(() => {}); }catch(e){}
+}
+/* papéis de parede (arquivos em assets/winxp/Wallpapers) */
+const WALLS = [['bliss','Bliss'],['ascent','Ascent'],['autumn','Autumn'],['azul','Azul'],['crystal','Crystal'],['follow','Follow'],['friend','Friend'],['home','Home'],['moon_flower','Moon Flower'],['peace','Peace'],['power','Power'],['purple_flower','Purple Flower'],['radiance','Radiance'],['red_moon_desert','Red Moon Desert'],['ripple','Ripple'],['stonehenge','Stonehenge'],['tulips','Tulips'],['vortec_space','Vortec Space'],['wind','Wind'],['windows_xp_home_edition','XP Home Edition'],['windows_xp_professional','XP Professional']];
+const wpThumb = k => '<b class="xpWpT" style="background-image:url(' + AS + 'Wallpapers/' + k + '.jpg)"></b>';
+/* tela de inicialização ao abrir a área de trabalho */
+function boot(){
+  let b = $('xpBoot'); if(!b){ b = document.createElement('div'); b.id = 'xpBoot'; document.body.appendChild(b); b.onclick = () => b.classList.remove('on'); }
+  b.classList.add('on'); xps('windows_xp_startup', .6); setTimeout(() => b.classList.remove('on'), 2800);
+}
+let style = 'cur'; try{ if(localStorage.getItem(KEY) === 'xp') style = 'xp'; }catch(e){}
+let wp = 'bliss'; try{ wp = localStorage.getItem('dz_xp_wp') || 'bliss'; }catch(e){}   /* papel de parede: bliss | blue | teal */
+const applyStyle = () => { root.classList.toggle('dz-xp', style === 'xp'); bgPlace(); };
+
+/* apps que ganham moldura/barra de tarefas (ov = overlay, box = janela, api = window.dzXxx, btn = botão de fechar) */
+const DEFS = [
+  { ov:'calcOverlay',  box:'calcBox',  api:'dzCalc',  ic:'🧮', pt:'Calculadora Legal', en:'Cool Calculator' },
+  { ov:'edOverlay',    box:'edBox',    api:'dzEd',    ic:'📝', pt:'Editor de Texto Legal', en:'Cool Text Editor' },
+  { ov:'jdOverlay',    box:'jdBox',    api:'dzJd',    ic:'💻', pt:'Código Legal', en:'Cool Code' },
+  { ov:'paintOverlay', box:'paintBox', api:'dzPaint', ic:'🎨', pt:'Paint', en:'Paint' },
+  { ov:'mgOverlay',    box:'mgBox',    api:'dzMg',    ic:'🎲', pt:'Jogos', en:'Games' },
+  { ov:'dawOverlay',   box:null,       api:'dzDaw',   ic:'🎹', pt:'Estúdio de Música', en:'Music Studio' },
+  { ov:'emuOverlay',   box:'emuBox',   btn:'emuClose',ic:'🎮', pt:'Emuladores', en:'Emulators', bg:'emuBg' },
+  { ov:'lgOverlay',    box:'lgBox',    btn:'lgClose', ic:'🧩', pt:'Apps Legais', en:'Cool Apps' },
+  { ov:'gbaOverlay',   box:'gbaBox',   api:'dzGba',   ic:'🎮', pt:'Emulador', en:'Emulator', full:true }
+];
+const isOpen = d => { const o = $(d.ov); return !!(o && o.classList.contains('open')); };
+const closeApp = d => { try{ if(d.api && window[d.api] && window[d.api].close) window[d.api].close(); else if(d.btn && $(d.btn)) $(d.btn).click(); }catch(e){} };
+const host = d => $(d.box || d.ov);
+/* fundo animado do menu de emuladores: no XP ele fica DENTRO da janela (some junto, acompanha o tamanho); no estilo padrão volta para a tela */
+function bgPlace(){
+  DEFS.forEach(d => { if(!d.bg) return; const cv = $(d.bg), o = $(d.ov), b = $(d.box); if(!cv || !o || !b) return;
+    if(style === 'xp'){ if(cv.parentNode !== b){ const tb = b.querySelector(':scope > .xpTb.app'); b.insertBefore(cv, tb ? tb.nextSibling : b.firstChild); } }
+    else if(cv.parentNode !== o) o.insertBefore(cv, o.firstChild); });
+}
+let zApp = 99990; const front = o => { o.style.zIndex = Math.min(++zApp, 99995); };
+/* tela cheia do app (cobre a barra de tarefas) ou volta para a janela */
+function setFull(d, on){
+  const o = $(d.ov); if(!o) return; o.classList.toggle('xp-full', on);
+  if(on && !o.querySelector('.xpFsX')){ const x = document.createElement('button'); x.type = 'button'; x.className = 'xpFsX'; x.textContent = '🗗 ' + tr('JANELA', 'WINDOW'); x.onclick = () => setFull(d, false); o.appendChild(x); }
+  const de = document.documentElement;
+  try{ if(on){ const f = de.requestFullscreen || de.webkitRequestFullscreen; if(f && !document.fullscreenElement){ const r = f.call(de, { navigationUI:'hide' }); if(r && r.catch) r.catch(() => {}); } }
+       else if(document.fullscreenElement){ const r = document.exitFullscreen(); if(r && r.catch) r.catch(() => {}); } }catch(e){}
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach(t => document.addEventListener(t, () => {   /* botão TELA CHEIA do próprio emulador também vira tela cheia XP */
+  if(style !== 'xp') return; DEFS.forEach(d => { if(d.full && isOpen(d)){ const on = !!document.fullscreenElement; if(on !== $(d.ov).classList.contains('xp-full')) setFull(d, on); } });
+}));
+
+applyStyle();
+function drag(handle, target, skip){
+  handle.addEventListener('pointerdown', e => {
+    if(e.target.closest('button') || (skip && skip())) return;
+    const sx = e.clientX, sy = e.clientY, m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(target.style.transform || ''), ox = m ? +m[1] : 0, oy = m ? +m[2] : 0;
+    try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+    const mv = ev => { target.style.transform = 'translate(' + (ox + ev.clientX - sx) + 'px,' + (oy + ev.clientY - sy) + 'px)'; };
+    const up = () => { handle.removeEventListener('pointermove', mv); handle.removeEventListener('pointerup', up); };
+    handle.addEventListener('pointermove', mv); handle.addEventListener('pointerup', up);
+  });
+}
+const mkTb = (icon, title, withMax, withFull) => {
+  const t = document.createElement('div'); t.className = 'xpTb';
+  t.innerHTML = '<span class="xpTi"></span><span class="xpTt"></span><button type="button" class="xpB mn" title="' + tr('Minimizar', 'Minimize') + '">_</button>' + (withMax ? '<button type="button" class="xpB mx" title="' + tr('Maximizar / restaurar', 'Maximize / restore') + '">▢</button>' : '') + (withFull ? '<button type="button" class="xpB fs" title="' + tr('Tela cheia', 'Full screen') + '">⛶</button>' : '') + '<button type="button" class="xpB cl" title="' + tr('Fechar', 'Close') + '">✕</button>';
+  setIc(t.firstChild, icon, 16); t.children[1].textContent = title; return t;
+};
+
+/* ---- moldura XP nos apps (criada uma vez, mostrada só no estilo XP) ---- */
+function chrome(d){
+  const h = host(d); if(!h || d.nochrome || h.querySelector(':scope > .xpTb.app')) return;
+  const tb = mkTb(d.ic, tr(d.pt, d.en), true, d.full); tb.classList.add('app');
+  h.insertBefore(tb, h.firstChild); bgPlace();
+  h.addEventListener('pointerdown', () => front($(d.ov)));
+  tb.addEventListener('dblclick', e => { if(!e.target.closest('button')) h.classList.toggle('xp-max'); });
+  const fs = tb.querySelector('.fs'); if(fs) fs.onclick = () => setFull(d, !$(d.ov).classList.contains('xp-full'));
+  tb.querySelector('.cl').onclick = () => { snd('menuBack'); closeApp(d); };
+  tb.querySelector('.mn').onclick = () => { xps('windows_xp_minimize', .5); $(d.ov).classList.add('xp-min'); };
+  tb.querySelector('.mx').onclick = () => h.classList.toggle('xp-max');
+  if(d.box) drag(tb, h, () => h.classList.contains('xp-max'));
+}
+
+/* ---- barra de tarefas: um botão por app aberto ---- */
+function sync(){
+  if(style !== 'xp') return;
+  const tasks = $('xpTasks');
+  DEFS.forEach(d => {
+    const o = $(d.ov); if(!o) return;
+    const open = isOpen(d); let b = tasks && tasks.querySelector('[data-k="' + d.ov + '"]');
+    if(open){
+      chrome(d);
+      const t = host(d).querySelector(':scope > .xpTb.app .xpTt'); if(t) t.textContent = tr(d.pt, d.en);
+      if(tasks && !b){ b = document.createElement('button'); b.type = 'button'; b.className = 'xpTask'; b.dataset.k = d.ov; b.onclick = () => { snd('menuSelect'); o.classList.toggle('xp-min'); xps(o.classList.contains('xp-min') ? 'windows_xp_minimize' : 'windows_xp_restore', .5); sync(); }; tasks.appendChild(b); }
+      if(b){ const lbl = tr(d.pt, d.en); if(b.dataset.l !== lbl){ b.dataset.l = lbl; b.textContent = ''; const si = document.createElement('span'); setIc(si, d.ic, 16); b.appendChild(si); b.appendChild(document.createTextNode(' ' + lbl)); } b.classList.toggle('on', !o.classList.contains('xp-min')); }
+    }else{
+      o.classList.remove('xp-min'); o.style.zIndex = ''; if(o.classList.contains('xp-full')) setFull(d, false); const h = host(d); if(h){ h.classList.remove('xp-max'); h.style.transform = ''; }
+      if(b) b.remove();
+    }
+  });
+  const c = $('xpClk'); if(c) c.textContent = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+setInterval(sync, 300);
+
+/* ---- itens liberados na aba EXTRAS ---- */
+function entries(){
+  const x = (window.dzExtrasItems && window.dzExtrasItems()) || { apps:[], games:[], emus:[] }, out = [];
+  x.apps.forEach(a => out.push({ g:tr('Utilidades', 'Utilities'), ic:a.icon, t:tr(a.pt, a.en), run:a.open }));
+  x.games.forEach(g => out.push({ g:tr('Jogos', 'Games'), ic:g.icon, t:tr(g.pt, g.en), run:() => window.dzMg.open(g.id) }));
+  if(x.emus.length){ const ids = x.emus.map(e => e.id); out.push({ g:tr('Emuladores', 'Emulators'), ic:'🎮', t:tr('Emuladores', 'Emulators'), run:() => window.dzEmuOpenHub && window.dzEmuOpenHub(e => ids.indexOf(e.id) >= 0) }); }
+  return out;
+}
+const launch = it => { snd('menuAccept'); xps('windows_xp_menu_command', .5); menu(false); try{ it.run(); }catch(e){} };
+
+/* ---- janelas próprias: Meu Computador e Painel de Controle ---- */
+let zTop = 5, nWin = 0;
+function win(id, icon, title, build){
+  const wins = $('xpWins'); let w = $('xpW_' + id);
+  if(w){ w.classList.remove('min'); w.style.zIndex = ++zTop; return w; }
+  w = document.createElement('div'); w.id = 'xpW_' + id; w.className = 'xpWin';
+  const W = Math.min(580, innerWidth * .94), H = Math.min(400, Math.max(220, innerHeight - 90)), off = (nWin++ % 5) * 22;
+  w.style.cssText = 'width:' + W + 'px;height:' + H + 'px;left:' + Math.max(2, (innerWidth - W) / 2 + off - 30) + 'px;top:' + (16 + off) + 'px;z-index:' + (++zTop);
+  const tb = mkTb(icon, title, false); w.appendChild(tb);
+  const body = document.createElement('div'); body.className = 'xpBody'; w.appendChild(body); build(body);
+  tb.querySelector('.cl').onclick = () => { w.remove(); const b = $('xpTasks').querySelector('[data-w="' + id + '"]'); if(b) b.remove(); };
+  tb.querySelector('.mn').onclick = () => { xps('windows_xp_minimize', .5); w.classList.add('min'); };
+  w.addEventListener('pointerdown', () => { w.style.zIndex = ++zTop; });
+  drag(tb, w); wins.appendChild(w); return w;
+}
+function iconBtn(it, cls){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'xpIc' + (cls ? ' ' + cls : '');
+  b.innerHTML = '<i></i><span></span>'; setIc(b.firstChild, it.ic, 32); b.lastChild.textContent = it.t;
+  let last = 0; const coarse = matchMedia('(pointer:coarse)').matches;
+  b.addEventListener('click', e => {
+    e.stopPropagation(); const now = Date.now();
+    b.parentNode.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel');
+    if(coarse || now - last < 700){ b.classList.remove('sel'); launch(it); } last = now;
+  });
+  return b;
+}
+function myComputer(){
+  win('mc', '🖥', tr('Meu Computador', 'My Computer'), body => {
+    const pane = document.createElement('div'); pane.className = 'xpPane';
+    pane.innerHTML = '<h4>' + tr('Tarefas do Sistema', 'System Tasks') + '</h4><div class="bx"><a data-a="cp">' + tr('Alterar o estilo', 'Change the style') + '</a><a data-a="cp">' + tr('Painel de Controle', 'Control Panel') + '</a></div><h4>' + tr('Outros Locais', 'Other Places') + '</h4><div class="bx"><a data-a="off">' + tr('Voltar às configurações', 'Back to settings') + '</a></div>';
+    pane.querySelectorAll('a[data-a="cp"]').forEach(a => a.onclick = controlPanel); pane.querySelector('[data-a="off"]').onclick = () => close();
+    const main = document.createElement('div'); main.className = 'xpMain'; let g = '', grid;
+    entries().forEach(it => { if(it.g !== g){ g = it.g; const h = document.createElement('h3'); h.textContent = g; main.appendChild(h); grid = document.createElement('div'); grid.className = 'xpGrid'; main.appendChild(grid); } grid.appendChild(iconBtn(it)); });
+    body.appendChild(pane); body.appendChild(main);
+  });
+}
+function controlPanel(){
+  win('cp', '⚙️', tr('Painel de Controle', 'Control Panel'), body => {
+    const main = document.createElement('div'); main.className = 'xpMain'; body.appendChild(main);
+    const home = () => {
+      main.innerHTML = '<h3>' + tr('Escolha uma categoria', 'Pick a category') + '</h3>';
+      const c = document.createElement('button'); c.type = 'button'; c.className = 'xpCat'; c.innerHTML = icH('🎨', 32) + '<span>' + tr('Aparência e Temas', 'Appearance and Themes') + '</span>'; c.onclick = look; main.appendChild(c);
+    };
+    const look = () => {
+      main.innerHTML = '<h3>' + tr('Escolha um estilo', 'Choose a style') + '</h3>';
+      [['cur', '🖥', tr('Padrão', 'Default')], ['xp', '🪟', 'Windows XP']].forEach(s => {
+        const c = document.createElement('button'); c.type = 'button'; c.className = 'xpCat' + (style === s[0] ? ' on' : ''); c.innerHTML = icH(s[1], 32) + '<span>' + s[2] + '</span>';
+        c.onclick = () => setStyle(s[0]); main.appendChild(c);
+      });
+      const h2 = document.createElement('h3'); h2.textContent = tr('Papel de parede', 'Wallpaper'); main.appendChild(h2);
+      WALLS.map(w => [w[0], wpThumb(w[0]), w[1] + (w[0] === 'bliss' ? ' (' + tr('padrão', 'default') + ')' : '')]).concat([['blue', '<b class="xpWpT" style="background:#2f77e0"></b>', tr('Azul Luna', 'Luna blue')], ['teal', '<b class="xpWpT" style="background:#008080"></b>', tr('Verde-água clássico', 'Classic teal')]]).forEach(w => {
+        const c = document.createElement('button'); c.type = 'button'; c.className = 'xpCat' + (wp === w[0] ? ' on' : ''); c.innerHTML = '<i>' + w[1] + '</i><span>' + w[2] + '</span>';
+        c.onclick = () => { wp = w[0]; try{ localStorage.setItem('dz_xp_wp', wp); }catch(e){} const dk = $('xpDesk'); if(dk) dk.dataset.wp = wp; const st = main.scrollTop; look(); main.scrollTop = st; }; main.appendChild(c);
+      });
+      const h3s = document.createElement('h3'); h3s.textContent = tr('Sons', 'Sounds'); main.appendChild(h3s);
+      const sb = document.createElement('button'); sb.type = 'button'; sb.className = 'xpCat' + (sndOn ? ' on' : '');
+      sb.innerHTML = icH('🔊', 32) + '<span>' + tr('Sons do Windows XP: ', 'Windows XP sounds: ') + (sndOn ? tr('LIGADOS', 'ON') : tr('DESLIGADOS', 'OFF')) + '</span>';
+      sb.onclick = () => { sndOn = !sndOn; try{ localStorage.setItem('dz_xp_snd', sndOn ? '1' : '0'); }catch(e){} if(sndOn) xps('windows_xp_ding', .5); const st = main.scrollTop; look(); main.scrollTop = st; }; main.appendChild(sb);
+      const back = document.createElement('button'); back.type = 'button'; back.className = 'xpLnk'; back.textContent = '◀ ' + tr('Voltar', 'Back'); back.onclick = home; main.appendChild(back);
+    };
+    home();
+  });
+}
+
+/* ---- menu Iniciar, desligar, abrir/fechar a área de trabalho ---- */
+function menu(on){ const m = $('xpMenu'); if(!m) return; m.classList.toggle('on', on === undefined ? !m.classList.contains('on') : on); $('xpStart').classList.toggle('on', m.classList.contains('on')); }
+function buildDesk(){
+  if($('xpDesk')) return;
+  const d = document.createElement('div'); d.id = 'xpDesk'; d.dataset.wp = wp; d.innerHTML = '<div id="xpIcons"></div><div id="xpWins"></div>';
+  const bar = document.createElement('div'); bar.id = 'xpBar'; bar.innerHTML = '<button type="button" id="xpStart"><span class="xpFlag"></span>' + tr('iniciar', 'start') + '</button><div id="xpTasks"></div><div id="xpTray"><span>🔊</span><span id="xpClk"></span></div>';
+  const m = document.createElement('div'); m.id = 'xpMenu'; m.innerHTML = '<div class="mh"><i><span></span></i><span>' + tr('Jogador', 'Player') + '</span></div><div class="mb"><div class="ml"></div><div class="mr"></div></div><div class="mf"><button type="button" data-a="logoff">' + icH('🔑', 20) + ' ' + tr('Fazer Logoff', 'Log Off') + '</button><button type="button" data-a="off">' + icH('\u23FB', 20) + ' ' + tr('Desligar', 'Turn Off') + '</button></div>';
+  setIc(m.querySelector('.mh i span'), '👤', 32);
+  const off = document.createElement('div'); off.id = 'xpOff'; off.textContent = tr('Desligando...', 'Shutting down...');
+  document.body.append(d, bar, m, off);
+  d.addEventListener('click', () => { menu(false); d.querySelectorAll('.xpIc.sel').forEach(x => x.classList.remove('sel')); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && m.classList.contains('on')) menu(false); });
+  $('xpStart').onclick = e => { e.stopPropagation(); snd('menuSelect'); fillMenu(); menu(); };
+  m.querySelector('[data-a="logoff"]').onclick = () => { xps('windows_xp_logoff_sound'); close(); };
+  m.querySelector('[data-a="off"]').onclick = () => { menu(false); off.classList.add('on'); xps('windows_xp_shutdown'); setTimeout(() => { off.classList.remove('on'); close(); }, 2600); };
+}
+function fillMenu(){
+  const L = $('xpMenu').querySelector('.ml'), R = $('xpMenu').querySelector('.mr'); L.innerHTML = R.innerHTML = '';
+  const mi = (par, ic, t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'mi'; b.innerHTML = '<i></i><span></span>'; setIc(b.firstChild, ic, 24); b.lastChild.textContent = t; b.onclick = () => { xps('windows_xp_menu_command', .5); menu(false); fn(); }; par.appendChild(b); };
+  entries().forEach(it => mi(L, it.ic, it.t, () => launch(it)));
+  mi(R, '🖥', tr('Meu Computador', 'My Computer'), myComputer); mi(R, '⚙️', tr('Painel de Controle', 'Control Panel'), controlPanel);
+  R.appendChild(document.createElement('hr')); mi(R, '↩', tr('Padrão', 'Default'), () => setStyle('cur'));
+}
+function fillIcons(){
+  const box = $('xpIcons'); box.innerHTML = '';
+  box.appendChild(iconBtn({ ic:'🖥', t:tr('Meu Computador', 'My Computer'), run:myComputer }));
+  entries().forEach(it => box.appendChild(iconBtn(it)));
+}
+function open(){
+  if(style !== 'xp') return; const was = root.classList.contains('xp-desk'); buildDesk(); fillIcons(); root.classList.add('xp-desk'); sync(); if(!was) boot();
+}
+function close(){
+  menu(false); DEFS.forEach(d => { if(isOpen(d)) closeApp(d); });
+  const w = $('xpWins'); if(w) w.innerHTML = ''; const t = $('xpTasks'); if(t) t.innerHTML = '';
+  root.classList.remove('xp-desk');
+}
+function setStyle(s){
+  style = s; try{ localStorage.setItem(KEY, s); }catch(e){}
+  applyStyle(); if(s !== 'xp') close(); else setTimeout(open, 120);
+  const sec = $('xpStyleSec'); if(sec) render(sec);
+}
+
+/* ---- seção ESTILO no topo da aba EXTRAS ---- */
+function render(w){
+  w.innerHTML = '';
+  const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.textContent = tr('ESTILO', 'STYLE'); w.appendChild(h);
+  const r = document.createElement('div'); r.className = 'xt-row'; w.appendChild(r);
+  const mk = (label, on, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary' + (on ? ' xt-on' : ''); b.style.width = '100%'; b.textContent = label; b.onclick = () => { snd('menuAccept'); fn(); }; r.appendChild(b); };
+  mk((style === 'cur' ? '✔ ' : '') + '🖥 ' + tr('PADRÃO', 'DEFAULT'), style === 'cur', () => setStyle('cur'));
+  mk((style === 'xp' ? '✔ ' : '') + '🪟 WINDOWS XP', style === 'xp', () => { if(style === 'xp') open(); else setStyle('xp'); });
+  if(style === 'xp') mk('🏞 ' + tr('ABRIR ÁREA DE TRABALHO', 'OPEN DESKTOP'), false, open);
+}
+function section(){ const w = document.createElement('div'); w.id = 'xpStyleSec'; render(w); return w; }
+
+window.dzXp = { section, open, close, setStyle, isOpen: () => root.classList.contains('xp-desk'), style: () => style };
 })();
 </script>
 
