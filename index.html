@@ -22781,7 +22781,29 @@ function onEmuReady(){
   try{ localStorage.setItem('dz_gba_ready', '1'); }catch(e){}
   applied = 0; shownMask = -1; sync();   /* se já tinha botão apertado enquanto o emulador subia, manda agora */
 }
-function play(url, name, useAlt){
+/* limpa o que pode estar corrompido e fazia o emulador falhar com QUALQUER jogo/rede: service worker, cache do emulador e
+   o núcleo/ROM guardados pelo EmulatorJS no IndexedDB (os saves ficam intactos) */
+async function resetEmuCache(){
+  try{ if(navigator.serviceWorker){ const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.unregister())); } }catch(e){}
+  try{
+    if(window.caches){
+      const ks = await caches.keys();
+      for(const k of ks){ try{ const c = await caches.open(k), reqs = await c.keys(); await Promise.all(reqs.filter(q => /emulatorjs|\/roms\/|loader\.js|emulator\.min/i.test(q.url)).map(q => c.delete(q))); }catch(e){} }
+    }
+  }catch(e){}
+  try{
+    let names = ['EmulatorJS-core', 'EmulatorJS-roms', 'EmulatorJS-bios'];
+    if(indexedDB.databases){ try{ const l = (await indexedDB.databases()).map(d => d.name).filter(n => /^EmulatorJS-(core|roms|bios)/i.test(n || '')); if(l.length) names = l; }catch(e){} }
+    await Promise.all(names.map(n => new Promise(res => { try{ const q = indexedDB.deleteDatabase(n); q.onsuccess = q.onerror = q.onblocked = () => res(); }catch(e){ res(); } })));
+  }catch(e){}
+  try{ localStorage.removeItem('dz_gba_ready'); }catch(e){}
+}
+window.dzEmuReset = resetEmuCache;
+function healAndRetry(url, name, tok){
+  exitHint(tr('Limpando o cache do emulador e tentando de novo…', 'Clearing the emulator cache and trying again…'), 0); $('gbaExitBar').style.width = '0%';
+  resetEmuCache().then(() => { if(tok !== playTok) return; setTimeout(() => play(url, name, false, true), 300); });
+}
+function play(url, name, useAlt, healed){
   curGameName = name || 'game';
   menuFx(false);   /* entrou no jogo: para a música e a animação do menu */
   stop(); initPad(); regSw();
@@ -22839,14 +22861,16 @@ function play(url, name, useAlt){
       try{ const d = frame.contentDocument, t = (d && d.body && d.body.innerText) || ''; failed = /falha ao iniciar|failed to start/i.test(t); }catch(e){}
       if(failed){
         clearInterval(watchTimer); watchTimer = 0;
-        if(cur.alt && !useAlt){ exitHint(tr('Núcleo falhou, tentando outro…', 'Core failed, trying another…'), 0); setTimeout(() => play(url, name, true), 300); }
+        if(cur.alt && !useAlt){ exitHint(tr('Núcleo falhou, tentando outro…', 'Core failed, trying another…'), 0); setTimeout(() => play(url, name, true, healed), 300); }
+        else if(!healed){ healAndRetry(url, name, tok); }
         else{
           exitHint(tr('Testando a conexão com o emulador…', 'Testing the connection to the emulator…'), 0); $('gbaExitBar').style.width = '0%';
           diagNet(useAlt).then(msg => { if(tok !== playTok) return; exitHint(msg, 0); $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer); });
         }
         return;
       }
-      if(tries === 70 && cur.alt && !useAlt){ clearInterval(watchTimer); watchTimer = 0; exitHint(tr('Núcleo não iniciou, tentando outro…', 'Core did not start, trying another…'), 0); setTimeout(() => play(url, name, true), 300); return; }
+      if(tries === 70 && cur.alt && !useAlt){ clearInterval(watchTimer); watchTimer = 0; exitHint(tr('Núcleo não iniciou, tentando outro…', 'Core did not start, trying another…'), 0); setTimeout(() => play(url, name, true, healed), 300); return; }
+      if(tries === 150 && !healed){ clearInterval(watchTimer); watchTimer = 0; healAndRetry(url, name, tok); return; }
       if(tries === 100) exitHint(tr('Está demorando… Se ficar parado, segure SELECT + START (ou L3 + R3) e abra o jogo de novo.', 'Taking long… If it stays stuck, hold SELECT + START (or L3 + R3) and open the game again.'), 0);
       if(tries > 300){ clearInterval(watchTimer); watchTimer = 0; }
     }
