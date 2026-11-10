@@ -108,6 +108,86 @@
     "author": ""
   },
   {
+    "file": "CNTR.nes",
+    "title": "CNTR",
+    "system": "nes"
+  },
+  {
+    "file": "CSTLEVN.nes",
+    "title": "CSTLEVN",
+    "system": "nes"
+  },
+  {
+    "file": "KTBYSADVNTR.nes",
+    "title": "KTBYSADVNTR",
+    "system": "nes"
+  },
+  {
+    "file": "Mega Man 6 (USA).nes",
+    "title": "Mega Man 6",
+    "system": "nes"
+  },
+  {
+    "file": "Metal Gear (USA).nes",
+    "title": "Metal Gear",
+    "system": "nes"
+  },
+  {
+    "file": "Metroid (USA).nes",
+    "title": "Metroid",
+    "system": "nes"
+  },
+  {
+    "file": "MGMN.nes",
+    "title": "MGMN",
+    "system": "nes"
+  },
+  {
+    "file": "MGMN2.nes",
+    "title": "MGMN2",
+    "system": "nes"
+  },
+  {
+    "file": "MGMN3.nes",
+    "title": "MGMN3",
+    "system": "nes"
+  },
+  {
+    "file": "MGMN4.nes",
+    "title": "MGMN4",
+    "system": "nes"
+  },
+  {
+    "file": "MGMN5.nes",
+    "title": "MGMN5",
+    "system": "nes"
+  },
+  {
+    "file": "MTPNCHOUT.nes",
+    "title": "MTPNCHOUT",
+    "system": "nes"
+  },
+  {
+    "file": "SMB.nes",
+    "title": "SMB",
+    "system": "nes"
+  },
+  {
+    "file": "SMB2.nes",
+    "title": "SMB2",
+    "system": "nes"
+  },
+  {
+    "file": "SMB3.nes",
+    "title": "SMB3",
+    "system": "nes"
+  },
+  {
+    "file": "TLOZ.nes",
+    "title": "TLOZ",
+    "system": "nes"
+  },
+  {
     "file": "DRMR.gb",
     "title": "DRMR",
     "system": "gb"
