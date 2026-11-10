@@ -108,11 +108,6 @@
     "author": ""
   },
   {
-    "file": "CNTR.nes",
-    "title": "CNTR",
-    "system": "nes"
-  },
-  {
     "file": "MTRD.nes",
     "title": "MTRD",
     "system": "nes"
@@ -120,16 +115,6 @@
   {
     "file": "SMB3.nes",
     "title": "SMB3",
-    "system": "nes"
-  },
-  {
-    "file": "SMBDH.nes",
-    "title": "SMBDH",
-    "system": "nes"
-  },
-  {
-    "file": "TLOZ.nes",
-    "title": "TLOZ",
     "system": "nes"
   },
   {
