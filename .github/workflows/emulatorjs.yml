@@ -1,1 +1,42 @@
+name: Baixar EmulatorJS
 
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versao do EmulatorJS (ex.: 4.2.3)"
+        default: "4.2.3"
+
+permissions:
+  contents: write
+
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Baixar e extrair so o necessario
+        run: |
+          V="${{ inputs.version }}"
+          sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full rsync
+          curl -fL -o ejs.7z "https://github.com/EmulatorJS/EmulatorJS/releases/download/v${V}/${V}.7z"
+          mkdir ejs && 7z x ejs.7z -oejs -y > /dev/null
+          SRC=$(dirname "$(find ejs -name loader.js | head -n 1)")
+          echo "Pasta data encontrada: $SRC"
+          rm -rf emulatorjs
+          mkdir -p emulatorjs/data/cores
+          rsync -a --exclude 'cores' "$SRC/" emulatorjs/data/
+          for c in fceumm nestopia gambatte mgba snes9x genesis_plus_gx; do
+            cp "$SRC"/cores/${c}* emulatorjs/data/cores/ 2>/dev/null || true
+          done
+          cp -r "$SRC/cores/reports" emulatorjs/data/cores/ 2>/dev/null || true
+          ls -la emulatorjs/data emulatorjs/data/cores
+
+      - name: Salvar no repositorio
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add emulatorjs
+          git commit -m "EmulatorJS ${{ inputs.version }} (copia local)" || echo "nada mudou"
+          git push
