@@ -148,8 +148,23 @@
     "system": "nes"
   },
   {
+    "file": "MGMN6.nes",
+    "title": "MGMN6",
+    "system": "nes"
+  },
+  {
+    "file": "MTLGR.nes",
+    "title": "MTLGR",
+    "system": "nes"
+  },
+  {
     "file": "MTPNCHOUT.nes",
     "title": "MTPNCHOUT",
+    "system": "nes"
+  },
+  {
+    "file": "MTROID.nes",
+    "title": "MTROID",
     "system": "nes"
   },
   {
@@ -165,6 +180,11 @@
   {
     "file": "SMB3.nes",
     "title": "SMB3",
+    "system": "nes"
+  },
+  {
+    "file": "SMBDH.nes",
+    "title": "SMBDH",
     "system": "nes"
   },
   {
