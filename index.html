@@ -25402,6 +25402,95 @@ html #wmpBox.sk .wpi:hover{background:#1c2f58}html #wmpBox.sk .wpi.on{background
 .wsMi.chk::before{content:'✔';position:absolute;left:6px;font-size:10px}
 @media (max-width:640px){#wsRoot.pl #wsPl{position:absolute;right:0;top:0;bottom:0;margin:33px 0 74px;z-index:6}}
 </style>
+<style id="dzIconCss">
+.dzIc{display:inline-flex;flex:none;line-height:0}.dzIc svg{width:36px;height:36px;display:block;filter:drop-shadow(0 3px 5px rgba(0,0,0,.4))}
+.dzEm{display:none}html.dz-xp .dzIc{display:none}html.dz-xp .dzEm{display:inline}
+#tabExtras .xt-row .btn .dzLb{flex:1;min-width:0}
+html:not(.dz-xp) #exBox .exi i{line-height:0;margin-bottom:4px}html:not(.dz-xp) #exBox .exi i svg{width:46px;height:46px;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+</style>
+<style id="dzDefLook">
+/* ===== Visual próprio (menu padrão, fora do XP): Media Player "Neon Deck" e Explorador "Gold Slate". Só CSS, sem imagens. ===== */
+/* --- Explorador --- */
+html:not(.dz-xp) #exBox{padding:0;gap:0;border-radius:18px;border:1px solid rgba(232,185,58,.4);background:#0b1020;overflow:hidden}
+html:not(.dz-xp) #exBox .fxh{padding:12px 16px;background:linear-gradient(90deg,#1c2b57,#0b1020);border-bottom:1px solid rgba(232,185,58,.25)}
+html:not(.dz-xp) #exBox .fxh b{color:#f3c64a;letter-spacing:1.5px;font-size:13px}
+html:not(.dz-xp) #exBox .fxt{padding:10px 14px;gap:8px;background:#0e1730;border-bottom:1px solid rgba(110,160,255,.18)}
+html:not(.dz-xp) #exBox #exAddr{border-radius:999px;background:#070b17;color:#a9c8ff;padding:8px 16px;border-color:rgba(232,185,58,.25)}
+html:not(.dz-xp) #exBox .fxb{border-radius:999px;background:rgba(255,255,255,.06);border-color:rgba(110,160,255,.3);padding:0 14px}
+html:not(.dz-xp) #exBox #exNew{background:linear-gradient(135deg,#e8b93a,#c98a14);color:#1a1200;border:0}
+html:not(.dz-xp) #exBox #exList{border:0;border-radius:0;background:#080c18;padding:16px;gap:12px;grid-template-columns:repeat(auto-fill,minmax(116px,1fr))}
+html:not(.dz-xp) #exBox .exi{padding:14px 6px 10px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(110,160,255,.14);transition:background .12s,border-color .12s,transform .12s}
+html:not(.dz-xp) #exBox .exi i{font-size:40px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+html:not(.dz-xp) #exBox .exi:hover{background:rgba(232,185,58,.1);border-color:rgba(232,185,58,.4);transform:translateY(-1px)}
+html:not(.dz-xp) #exBox .exi.on{background:rgba(232,185,58,.18);border-color:#f3c64a;box-shadow:0 0 0 1px #f3c64a inset}
+html:not(.dz-xp) #exBox #exStat{padding:7px 16px;background:#0e1730;border-top:1px solid rgba(110,160,255,.18);opacity:1;color:#9db4de}
+html:not(.dz-xp) #exBox #exView{border-radius:0}
+/* --- Media Player --- */
+html:not(.dz-xp) #wmpOverlay #wmpBox.sk{width:min(100%,720px);height:min(100%,480px);border-radius:18px!important;background:linear-gradient(180deg,#171236,#090716)!important;border:1px solid rgba(160,120,255,.45)!important;box-shadow:0 20px 60px rgba(0,0,0,.7),0 0 40px rgba(120,80,255,.18)!important;color:#efeaff!important}
+html:not(.dz-xp) #wmpOverlay #wmpBox.sk:has(#wsRoot.cmp){height:auto}
+html:not(.dz-xp) #wmpBox.sk #wsRoot{font:12px system-ui,'Segoe UI',Roboto,Arial,sans-serif}
+html:not(.dz-xp) #wmpBox.sk #wsTop{height:46px;align-items:center;background:linear-gradient(90deg,#2a1a5e,#14102e);border-bottom:1px solid rgba(160,120,255,.3);padding:0 8px 0 12px;border-radius:18px 18px 0 0}
+html:not(.dz-xp) #wmpBox.sk #wsTL,html:not(.dz-xp) #wmpBox.sk #wsTR{width:auto;background:none;display:flex;gap:6px;position:static;align-items:center}
+html:not(.dz-xp) #wmpBox.sk #wsTM{background:none;display:flex;align-items:center;padding-left:10px;color:#b9a6ff;font-weight:700;letter-spacing:2px;font-size:11px;white-space:nowrap;overflow:hidden}
+html:not(.dz-xp) #wmpBox.sk #wsTM::before{content:'♪ MEDIA PLAYER'}
+html:not(.dz-xp) #wmpBox.sk .wsT,html:not(.dz-xp) #wmpBox.sk .wsS{position:relative;left:auto;top:auto;width:34px;height:30px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(160,120,255,.25);color:#d9ceff;font-size:15px;display:flex;align-items:center;justify-content:center}
+html:not(.dz-xp) #wmpBox.sk .wsT:hover,html:not(.dz-xp) #wmpBox.sk .wsS:hover{background:rgba(160,120,255,.25)}html:not(.dz-xp) #wmpBox.sk .wsT.on{background:rgba(61,224,255,.2);border-color:#3de0ff;color:#8be9ff}
+html:not(.dz-xp) #wmpBox.sk #wsOpen::before{content:'📂'}html:not(.dz-xp) #wmpBox.sk #wsPlBtn::before{content:'☰'}html:not(.dz-xp) #wmpBox.sk #wsVis::before{content:'✦'}html:not(.dz-xp) #wmpBox.sk #wsEqBtn::before{content:'🎚'}html:not(.dz-xp) #wmpBox.sk #wsClose::before{content:'✕'}html:not(.dz-xp) #wmpBox.sk #wsMin{display:none}
+html:not(.dz-xp) #wmpBox.sk #wsClose:hover{background:#c0392b}
+html:not(.dz-xp) #wmpBox.sk #wsMid{margin-top:0;background:#000}html:not(.dz-xp) #wmpBox.sk #wsL,html:not(.dz-xp) #wmpBox.sk #wsR,html:not(.dz-xp) #wmpBox.sk #wsBM,html:not(.dz-xp) #wmpBox.sk #wsCM{display:none}
+html:not(.dz-xp) #wmpBox.sk #wsBot{height:34px;background:#0c0a1f;border-top:1px solid rgba(160,120,255,.2);padding:0 14px;align-items:center}
+html:not(.dz-xp) #wmpBox.sk #wsBL{flex:1;width:auto;background:none}html:not(.dz-xp) #wmpBox.sk #wsBR{width:80px;background:none}
+html:not(.dz-xp) #wmpBox.sk #wmpNow{left:0;top:0;right:0;height:34px;color:#d9ceff;font:600 12px/34px system-ui,Arial,sans-serif}
+html:not(.dz-xp) #wmpBox.sk #wmpTime{right:0;top:0;width:80px;height:34px;color:#8be9ff;font:600 12px/34px ui-monospace,Menlo,monospace}
+html:not(.dz-xp) #wmpBox.sk #wsCtl{height:118px;margin:0;display:block;background:#100c28;border-top:1px solid rgba(160,120,255,.25);border-radius:0 0 18px 18px}
+html:not(.dz-xp) #wmpBox.sk #wsCL,html:not(.dz-xp) #wmpBox.sk #wsCR{display:contents}
+html:not(.dz-xp) #wmpBox.sk #wsSeek{left:16px;right:16px;top:12px;height:14px}
+html:not(.dz-xp) #wmpBox.sk #wsSeek::before,html:not(.dz-xp) #wmpBox.sk #wsVol::before{content:'';position:absolute;left:0;right:0;top:5px;height:4px;border-radius:2px;background:rgba(255,255,255,.14)}
+html:not(.dz-xp) #wmpBox.sk #wsSeekF,html:not(.dz-xp) #wmpBox.sk #wsVolF{top:5px;height:4px;border-radius:2px;background:linear-gradient(90deg,#7a5cff,#3de0ff)}
+html:not(.dz-xp) #wmpBox.sk #wsSeekT,html:not(.dz-xp) #wmpBox.sk #wsVolT{background:none}
+html:not(.dz-xp) #wmpBox.sk #wsSeekT::after{content:'';position:absolute;left:5.5px;top:1px;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 8px #3de0ff}
+html:not(.dz-xp) #wmpBox.sk #wsTr{left:50%;top:34px;width:auto;height:50px;transform:translateX(-50%);display:flex;align-items:center;gap:10px}
+html:not(.dz-xp) #wmpBox.sk .wsTx,html:not(.dz-xp) #wmpBox.sk #wsPause{position:relative;left:auto;top:auto;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(160,120,255,.3);color:#efeaff;font-size:15px;display:flex;align-items:center;justify-content:center}
+html:not(.dz-xp) #wmpBox.sk .wsTx:hover{background:rgba(160,120,255,.28)}
+html:not(.dz-xp) #wmpBox.sk #wsPrev{order:1}html:not(.dz-xp) #wmpBox.sk #wsPlay,html:not(.dz-xp) #wmpBox.sk #wsPause{order:2}html:not(.dz-xp) #wmpBox.sk #wsNext{order:3}html:not(.dz-xp) #wmpBox.sk #wsStop{order:4}html:not(.dz-xp) #wmpBox.sk #wsMute{order:5}
+html:not(.dz-xp) #wmpBox.sk #wsPlay,html:not(.dz-xp) #wmpBox.sk #wsPause{width:50px;height:50px;font-size:20px;border:0;color:#fff;background:linear-gradient(135deg,#7a5cff,#3de0ff);box-shadow:0 0 18px rgba(100,160,255,.55)}
+html:not(.dz-xp) #wmpBox.sk #wsPause{display:none}html:not(.dz-xp) #wmpBox.sk #wsRoot.playing #wsPause{display:flex}html:not(.dz-xp) #wmpBox.sk #wsRoot.playing #wsPlay{display:none}
+html:not(.dz-xp) #wmpBox.sk #wsPlay::before{content:'▶'}html:not(.dz-xp) #wmpBox.sk #wsPause::before{content:'⏸'}html:not(.dz-xp) #wmpBox.sk #wsStop::before{content:'⏹'}html:not(.dz-xp) #wmpBox.sk #wsPrev::before{content:'⏮'}html:not(.dz-xp) #wmpBox.sk #wsNext::before{content:'⏭'}html:not(.dz-xp) #wmpBox.sk #wsMute::before{content:'🔊'}html:not(.dz-xp) #wmpBox.sk #wsMute.on::before{content:'🔇'}
+html:not(.dz-xp) #wmpBox.sk #wsRew,html:not(.dz-xp) #wmpBox.sk #wsFf,html:not(.dz-xp) #wmpBox.sk #wsCmp,html:not(.dz-xp) #wmpBox.sk #wsMnu{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid rgba(160,120,255,.25);color:#cfc2ff;font-size:14px;display:flex;align-items:center;justify-content:center}
+html:not(.dz-xp) #wmpBox.sk #wsRew,html:not(.dz-xp) #wmpBox.sk #wsFf{top:42px;width:30px;height:30px}html:not(.dz-xp) #wmpBox.sk #wsRew{left:calc(50% - 160px)}html:not(.dz-xp) #wmpBox.sk #wsFf{left:calc(50% + 130px)}
+html:not(.dz-xp) #wmpBox.sk #wsRew::before{content:'⏪'}html:not(.dz-xp) #wmpBox.sk #wsFf::before{content:'⏩'}
+html:not(.dz-xp) #wmpBox.sk #wsCmp,html:not(.dz-xp) #wmpBox.sk #wsMnu{top:80px}html:not(.dz-xp) #wmpBox.sk #wsCmp{left:16px}html:not(.dz-xp) #wmpBox.sk #wsMnu{left:54px}html:not(.dz-xp) #wmpBox.sk #wsCmp::before{content:'⤢'}html:not(.dz-xp) #wmpBox.sk #wsMnu::before{content:'⋯'}html:not(.dz-xp) #wmpBox.sk #wsCmp.on{background:rgba(61,224,255,.2);border-color:#3de0ff}html:not(.dz-xp) #wmpBox.sk #wsGrip{display:none}
+html:not(.dz-xp) #wmpBox.sk #wsVol{left:auto;right:16px;top:86px;width:120px;height:20px}
+html:not(.dz-xp) #wmpBox.sk #wsVol::before{top:8px}html:not(.dz-xp) #wmpBox.sk #wsVolF{top:8px}html:not(.dz-xp) #wmpBox.sk #wsVolT{top:0;height:20px}
+html:not(.dz-xp) #wmpBox.sk #wsVolT::after{content:'';position:absolute;left:0;top:5px;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 6px #3de0ff}
+html:not(.dz-xp) #wmpBox.sk #wsEq{left:0;right:0;bottom:118px;height:150px;background:rgba(14,10,36,.97);border-top:1px solid rgba(160,120,255,.3)}
+html:not(.dz-xp) #wmpBox.sk #wsEqL,html:not(.dz-xp) #wmpBox.sk #wsEqR{display:none}html:not(.dz-xp) #wmpBox.sk #wsEqM{background:none}
+html:not(.dz-xp) #wmpBox.sk .wsE,html:not(.dz-xp) #wmpBox.sk #wsEqX{top:10px;height:26px;width:30px;border-radius:8px;background:rgba(255,255,255,.08);color:#cfc2ff;font-size:13px;display:flex;align-items:center;justify-content:center}
+html:not(.dz-xp) #wmpBox.sk #wsEqOn{left:12px}html:not(.dz-xp) #wmpBox.sk #wsEqRs{left:48px}html:not(.dz-xp) #wmpBox.sk #wsEqPr{left:84px}html:not(.dz-xp) #wmpBox.sk #wsEqX{right:10px;left:auto}
+html:not(.dz-xp) #wmpBox.sk #wsEqOn::before{content:'⏻'}html:not(.dz-xp) #wmpBox.sk #wsEqRs::before{content:'↺'}html:not(.dz-xp) #wmpBox.sk #wsEqPr::before{content:'☰'}html:not(.dz-xp) #wmpBox.sk #wsEqX::before{content:'✕'}html:not(.dz-xp) #wmpBox.sk #wsEqOn.on{background:#3de0ff;color:#06121c}
+html:not(.dz-xp) #wmpBox.sk #wsBalT{color:#cfc2ff}html:not(.dz-xp) #wmpBox.sk #wsBal{background:none}
+html:not(.dz-xp) #wmpBox.sk #wsBal::before{content:'';position:absolute;left:0;right:0;top:7px;height:4px;border-radius:2px;background:rgba(255,255,255,.18)}
+html:not(.dz-xp) #wmpBox.sk #wsBalT2{background:none}html:not(.dz-xp) #wmpBox.sk #wsBalT2::after{content:'';position:absolute;left:3px;top:3px;width:11px;height:11px;border-radius:50%;background:#fff}
+html:not(.dz-xp) #wmpBox.sk #wsEqS{top:46px;left:18px;right:18px}
+html:not(.dz-xp) #wmpBox.sk .wsEs,html:not(.dz-xp) #wmpBox.sk #wsRoot:not(.eqon) .wsEs{background:none}
+html:not(.dz-xp) #wmpBox.sk .wsEs::before{content:'';position:absolute;left:8px;width:3px;top:0;bottom:0;border-radius:2px;background:rgba(255,255,255,.18)}
+html:not(.dz-xp) #wmpBox.sk .wsEt,html:not(.dz-xp) #wmpBox.sk #wsRoot:not(.eqon) .wsEt{background:none!important}
+html:not(.dz-xp) #wmpBox.sk .wsEt::after{content:'';position:absolute;left:1px;top:2px;width:16px;height:12px;border-radius:5px;background:linear-gradient(#fff,#bfb2ff);box-shadow:0 0 6px rgba(120,200,255,.6)}
+html:not(.dz-xp) #wmpBox.sk #wsRoot:not(.eqon) .wsEt::after{opacity:.35}html:not(.dz-xp) #wmpBox.sk .wsEc i{color:#cfc2ff;top:73px}html:not(.dz-xp) #wmpBox.sk #wsRoot:not(.eqon) .wsEc i{color:#6d6490}
+html:not(.dz-xp) #wmpBox.sk #wsPl{width:250px;margin:0;background:#0d0a22;border-left:1px solid rgba(160,120,255,.25)}
+html:not(.dz-xp) #wmpBox.sk #wsPlT,html:not(.dz-xp) #wmpBox.sk #wsPlM,html:not(.dz-xp) #wmpBox.sk #wsPlB,html:not(.dz-xp) #wmpBox.sk #wsPlG{display:none}
+html:not(.dz-xp) #wmpBox.sk #wmpPl{left:0;right:0;top:44px;bottom:0;padding:4px 6px;background:transparent}
+html:not(.dz-xp) #wmpBox.sk #wsPlHd{left:44px;right:44px;top:8px;width:auto;height:28px;padding:0 6px;color:#e8e0ff;font:700 12px/28px system-ui,Arial,sans-serif}
+html:not(.dz-xp) #wmpBox.sk #wsPlSh,html:not(.dz-xp) #wmpBox.sk #wsPlX{top:8px;width:30px;height:28px;border-radius:8px;background:rgba(255,255,255,.07);color:#cfc2ff;font-size:13px;display:flex;align-items:center;justify-content:center}
+html:not(.dz-xp) #wmpBox.sk #wsPlSh{left:8px}html:not(.dz-xp) #wmpBox.sk #wsPlX{left:auto;right:8px}html:not(.dz-xp) #wmpBox.sk #wsPlSh::before{content:'🔀'}html:not(.dz-xp) #wmpBox.sk #wsPlX::before{content:'✕'}html:not(.dz-xp) #wmpBox.sk #wsPlSh.on{background:rgba(61,224,255,.25)}
+html:not(.dz-xp) #wmpBox.sk .wpi{padding:7px 10px;border-radius:8px;color:#d9ceff;font:12px/1.3 system-ui,Arial,sans-serif}
+html:not(.dz-xp) #wmpBox.sk .wpi:hover{background:rgba(160,120,255,.18)}html:not(.dz-xp) #wmpBox.sk .wpi.on{background:linear-gradient(90deg,#5b3df0,#2aa8d8);color:#fff}
+html:not(.dz-xp) .wsMenu{background:#16103a;border:1px solid rgba(160,120,255,.45);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.6);font:12px system-ui,Arial,sans-serif;padding:4px}
+html:not(.dz-xp) .wsMenu hr{border-top-color:rgba(160,120,255,.25)}
+html:not(.dz-xp) .wsMi{color:#efeaff;border-radius:6px;padding:7px 24px}
+html:not(.dz-xp) .wsMi:hover:not(:disabled){background:linear-gradient(90deg,#5b3df0,#2aa8d8);color:#fff}html:not(.dz-xp) .wsMi:disabled{color:#6d6490}
+@media (max-width:640px){html:not(.dz-xp) #wmpBox.sk #wsRoot.pl #wsPl{margin:46px 0 118px}}
+</style>
 <div id="exOverlay" aria-hidden="true"><div id="exBox" role="dialog" aria-label="Explorer">
   <div class="fxh fxdef"><b id="exTitle">📁 EXPLORADOR</b><button type="button" class="fxb x" id="exClose">✕</button></div>
   <div class="fxt fxdef"><button type="button" class="fxb" id="exUp">⬆</button><div id="exAddr"></div>
@@ -25485,6 +25574,13 @@ html #wmpBox.sk .wpi:hover{background:#1c2f58}html #wmpBox.sk .wpi.on{background
   </div>
   <input type="file" id="wmpFile" accept="audio/*,video/*" multiple style="display:none">
 </div></div>
+<style>
+.xpRenI{font:11px var(--xf);border:1px solid #000;padding:0 2px;width:84px;max-width:100%;background:#fff;color:#000;text-align:center;outline:0;border-radius:0;box-sizing:border-box}
+.xpMain.list .xpRenI,.xpDt .xpRenI{text-align:left;width:170px}
+.xpPr.msg{width:min(330px,96%)}.xpPr.msg .xpPrB{display:flex;gap:12px;align-items:flex-start;padding:14px 12px}.xpPr.msg .xpPrB b{font-size:28px;line-height:1;font-weight:400}.xpPr.msg .xpPrB span{white-space:pre-line;line-height:1.35}
+.xpPr.msg .xpPrF{display:flex;justify-content:center;gap:8px;padding:8px}
+.xpCtx .xpDi{position:relative}.xpCtx .xpDi.bd{font-weight:700}
+</style>
 <script id="dzFxScript">
 /* ===== EXPLORADOR DE ARQUIVOS (aba EXTRAS) — pastas virtuais salvas no aparelho (IndexedDB). Código no campo SENHA do DEBUG: fx123 ===== */
 (function(){
@@ -25524,7 +25620,7 @@ function render(){
   lbl(); $('exAddr').textContent = path(cwd); list.innerHTML = '';
   const ks = nodes.filter(n => n.parent === cwd).sort((a, b) => (a.type === b.type ? 0 : a.type === 'd' ? -1 : 1) || a.name.localeCompare(b.name));
   if(!ks.length){ const e = document.createElement('div'); e.className = 'exempty'; e.textContent = tr('Esta pasta está vazia. Use IMPORTAR (ou arraste arquivos aqui) para trazer arquivos do aparelho.', 'This folder is empty. Use IMPORT (or drop files here) to bring files from your device.'); list.appendChild(e); }
-  ks.forEach(n => { const b = document.createElement('button'); b.type = 'button'; b.className = 'exi' + (n.id === sel ? ' on' : ''); b.dataset.id = n.id; b.innerHTML = '<i>' + ICON[kind(n)] + '</i><span></span><small></small>';
+  ks.forEach(n => { const b = document.createElement('button'); b.type = 'button'; b.className = 'exi' + (n.id === sel ? ' on' : ''); b.dataset.id = n.id; b.innerHTML = '<i>' + ((window.DZI && window.DZI['f_' + kind(n)]) || ICON[kind(n)]) + '</i><span></span><small></small>';
     b.children[1].textContent = n.name; b.children[2].textContent = n.type === 'd' ? '' : fmt(n.size || 0);
     b.onclick = () => { if(sel === n.id && Date.now() - selT < 900){ openNode(n); return; } sel = n.id; selT = Date.now(); list.querySelectorAll('.exi').forEach(x => x.classList.toggle('on', x.dataset.id === sel)); };
     list.appendChild(b); });
@@ -25552,12 +25648,12 @@ function openNode(n){
 async function addFiles(files){ if(cwd === 'mc') cwd = 'root'; for(const f of files){ const n = { id:uid(), parent:cwd, name:f.name, type:'f', mime:f.type, size:f.size, blob:f, t:Date.now() }; nodes.push(n); await put(n); } render(); }
 function delTree(id){ nodes.filter(n => n.parent === id).forEach(c => delTree(c.id)); nodes = nodes.filter(n => n.id !== id); rm(id); }
 $('exUp').onclick = () => { snd('menuBack'); const c = nodes.find(n => n.id === cwd); cwd = c ? c.parent : 'root'; sel = null; render(); };
-$('exNew').onclick = () => { snd('menuAccept'); const v = prompt(tr('Nome da nova pasta:', 'New folder name:'), tr('Nova pasta', 'New folder')); if(!v || !v.trim()) return; const n = { id:uid(), parent:cwd, name:v.trim(), type:'d', t:Date.now() }; nodes.push(n); put(n); render(); };
+$('exNew').onclick = () => { snd('menuAccept'); if(isXp()) return xNew(); const v = prompt(tr('Nome da nova pasta:', 'New folder name:'), tr('Nova pasta', 'New folder')); if(!v || !v.trim()) return; const n = { id:uid(), parent:cwd, name:v.trim(), type:'d', t:Date.now() }; nodes.push(n); put(n); render(); };
 $('exImp').onclick = () => { snd('menuAccept'); $('exFile').click(); };
 $('exFile').onchange = e => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; };
-$('exRen').onclick = () => { const n = selNode(); if(!n) return; const v = prompt(tr('Novo nome:', 'New name:'), n.name); if(!v || !v.trim()) return; n.name = v.trim(); put(n); render(); };
+$('exRen').onclick = () => { const n = selNode(); if(!n) return; if(isXp()) return xRename(n.id); const v = prompt(tr('Novo nome:', 'New name:'), n.name); if(!v || !v.trim()) return; n.name = v.trim(); put(n); render(); };
 $('exDl').onclick = () => download(selNode());
-$('exDel').onclick = () => { const n = selNode(); if(!n) return; if(!confirm(tr('Excluir "', 'Delete "') + n.name + '"?')) return; delTree(n.id); sel = null; render(); };
+$('exDel').onclick = () => { const n = selNode(); if(!n) return; if(isXp()) return xDelete(n); if(!confirm(tr('Excluir "', 'Delete "') + n.name + '"?')) return; delTree(n.id); sel = null; render(); };
 $('exVC').onclick = () => { $('exView').classList.remove('on'); $('exVB').innerHTML = ''; };
 $('exClose').onclick = () => close();
 list.addEventListener('dragover', e => e.preventDefault());
@@ -25589,6 +25685,8 @@ async function open(){
 function close(){ if(!isOpen()) return; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); $('exView').classList.remove('on'); snd('menuBack'); }
 window.addEventListener('keydown', e => {
   if(!isOpen()) return; const a = document.activeElement; if(a && a.closest && a.closest('#wmpOverlay')) return;
+  if(a && a.classList && a.classList.contains('xpRenI')) return;
+  const md = xp.parentNode.querySelector('.xpPr.msg'); if(md){ if(e.key === 'Escape' || e.key === 'Enter'){ e.stopImmediatePropagation(); e.preventDefault(); const b = md.querySelector(e.key === 'Enter' ? '.xpBtn.def' : '.xpBtn:last-child'); if(b) b.click(); } return; }
   if(e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key;
   if(k === 'Escape'){ e.stopImmediatePropagation(); e.preventDefault(); if($('exView').classList.contains('on')) $('exVC').click(); else close(); }
   else if(k === 'Enter'){ const n = selNode(); if(n){ e.stopImmediatePropagation(); e.preventDefault(); openNode(n); } }
@@ -25667,7 +25765,7 @@ function buildXp(){
   const go1 = xmk('span', 'xpGo', '<i>►</i>' + tr('Ir', 'Go')); addr.append(xmk('span', '', tr('Endereço', 'Address')), ab, go1);
   xm.srch = xmk('div', 'xpSrch', '<span>' + tr('Procurar por:', 'Search for:') + '</span>'); xm.srchI = xmk('input'); xm.srchI.type = 'text'; xm.srch.appendChild(xm.srchI); xm.srchI.oninput = () => { srchQ = xm.srchI.value; render(); };
   const body = xmk('div', 'xpBody'); xm.pane = xmk('div', 'xpPane'); xm.main = xmk('div', 'xpMain'); body.append(xm.pane, xm.main);
-  xm.st = xmk('div', 'xpSt', '<span></span><span></span>'); xp.append(bar, tbar, addr, xm.srch, body, xm.st);
+  xm.st = xmk('div', 'xpSt', '<span></span><span></span>'); xp.append(bar, tbar, addr, xm.srch, body, xm.st); xpExtra();
   xm.main.addEventListener('dragover', e => e.preventDefault()); xm.main.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer && e.dataTransfer.files.length) addFiles(Array.from(e.dataTransfer.files)); });
   xm.main.addEventListener('click', e => { if(e.target === xm.main || e.target.classList.contains('xpGrid')){ sel = null; xm.main.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); paintPane(); paintStatus(); } });
 }
@@ -25718,7 +25816,98 @@ function renderXp(skip){
     } else { const g = xmk('div', 'xpGrid'); m.appendChild(g); ks.forEach(n => g.appendChild(xicon(n.id, XI[kind(n)], n.name, () => openNode(n), vmode === 'list' ? 16 : 32))); }
   }
   paintPane(); paintStatus();
-  if(!skip){ try{ navigator.storage.estimate().then(e => { if(e.usage !== est.usage || e.quota !== est.quota){ est = e; if(isOpen() && isXp()) renderXp(true); } }); }catch(e){} }
+  if(!skip){ try{ navigator.storage.estimate().then(e => { if(e.usage !== est.usage || e.quota !== est.quota){ est = e; if(isOpen() && isXp() && !xrn) renderXp(true); } }); }catch(e){} }
+}
+
+/* ---------- XP: criar / renomear / excluir como no original (menu de contexto, renomear no lugar, caixas XP, recortar/copiar/colar, arrastar) ---------- */
+let xrn = false, clip = null, ctxEl = null, dragId = null;
+const BADCH = /[\\\/:*?"<>|]/;
+const sameNm = (a, b) => a.toLowerCase() === b.toLowerCase();
+function uniq(parent, base, skipId){ const has = nm => nodes.some(x => x.parent === parent && x.id !== skipId && sameNm(x.name, nm)); if(!has(base)) return base; let i = 2; while(has(base + ' (' + i + ')')) i++; return base + ' (' + i + ')'; }
+function isUnder(id, anc){ let c = nodes.find(x => x.id === id); while(c){ if(c.parent === anc) return true; c = nodes.find(x => x.id === c.parent); } return false; }
+function xMsg(title, text, btns, ic){
+  const o = xp.parentNode.querySelector('.xpPr.msg'); if(o) o.remove();
+  const d = xmk('div', 'xpPr msg', '<div class="xpPrT"><span></span><button type="button">✕</button></div><div class="xpPrB"><b></b><span></span></div><div class="xpPrF"></div>');
+  d.querySelector('.xpPrT span').textContent = title; d.querySelector('.xpPrB b').textContent = ic || '⚠️'; d.querySelector('.xpPrB span').textContent = text;
+  const f = d.querySelector('.xpPrF'), shut = () => d.remove();
+  btns.forEach(bt => { const b = xmk('button', 'xpBtn' + (bt[2] ? ' def' : ''), bt[0]); b.type = 'button'; b.onclick = () => { shut(); if(bt[1]) bt[1](); }; f.appendChild(b); });
+  d.querySelector('.xpPrT button').onclick = shut;
+  xp.parentNode.appendChild(d); xps('windows_xp_ding'); const df = f.querySelector('.def'); if(df) df.focus();
+}
+function xNew(){
+  if(cwd === 'mc') return; if(srchQ){ srchQ = ''; if(xm.srchI) xm.srchI.value = ''; }
+  const n = { id:uid(), parent:cwd, name:uniq(cwd, tr('Nova pasta', 'New folder')), type:'d', t:Date.now() };
+  nodes.push(n); put(n); sel = n.id; selT = 0; render(); xRename(n.id, true);
+}
+function xRename(id, isNew){
+  const n = nodes.find(x => x.id === id); if(!n || cwd === 'mc') return;
+  const el = xm.main.querySelector('[data-id="' + id + '"]'); if(!el) return;
+  const inp = xmk('input', 'xpRenI'); inp.type = 'text'; inp.value = n.name; inp.maxLength = 120; inp.spellcheck = false; xrn = id;
+  if(el.tagName === 'TR'){ el.querySelector('td span').replaceWith(inp); }
+  else { const box = xmk('div', 'xpIc sel'); box.dataset.id = id; box.appendChild(el.firstChild); box.appendChild(inp); el.replaceWith(box); }
+  let done = false;
+  const retry = (t, m) => { xrn = false; render(); xMsg(t, m, [['OK', () => xRename(id, isNew), true]], '⚠️'); };
+  const finish = ok => {
+    if(done) return; done = true; const v = inp.value.trim();
+    if(!ok || !v || v === n.name){ xrn = false; render(); return; }
+    if(BADCH.test(v)) return retry(tr('Renomear', 'Rename'), tr('Um nome de arquivo não pode conter nenhum dos seguintes caracteres:\n\\ / : * ? " < > |', 'A file name cannot contain any of the following characters:\n\\ / : * ? " < > |'));
+    if(nodes.some(x => x.parent === n.parent && x.id !== id && sameNm(x.name, v))) return retry(tr('Renomear', 'Rename'), tr('Não é possível renomear ' + n.name + ': já existe um arquivo ou pasta com o nome especificado.\nEspecifique um nome diferente.', 'Cannot rename ' + n.name + ': a file or folder with the name you specified already exists.\nSpecify a different name.'));
+    n.name = v; n.t = Date.now(); put(n); sel = id; xrn = false; render();
+  };
+  inp.onkeydown = e => { e.stopPropagation(); if(e.key === 'Enter'){ e.preventDefault(); finish(true); } else if(e.key === 'Escape'){ e.preventDefault(); finish(false); } };
+  inp.onblur = () => finish(true); inp.onclick = e => e.stopPropagation(); inp.ondblclick = e => e.stopPropagation();
+  inp.focus(); const dot = n.type === 'f' ? n.name.lastIndexOf('.') : -1; inp.setSelectionRange(0, dot > 0 ? dot : n.name.length); try{ inp.scrollIntoView({ block:'nearest' }); }catch(e){}
+}
+function xDelete(n){
+  const f = n.type === 'd';
+  xMsg(f ? tr('Confirmar exclusão de pasta', 'Confirm Folder Delete') : tr('Confirmar exclusão de arquivo', 'Confirm File Delete'),
+    f ? tr('Tem certeza de que deseja excluir a pasta "' + n.name + '" e todo o seu conteúdo?', 'Are you sure you want to delete the folder "' + n.name + '" and all its contents?') : tr('Tem certeza de que deseja excluir "' + n.name + '"?', 'Are you sure you want to delete "' + n.name + '"?'),
+    [[tr('Sim', 'Yes'), () => { delTree(n.id); if(clip && clip.id === n.id) clip = null; sel = null; render(); }, true], [tr('Não', 'No'), null]], '❓');
+}
+function xCopy(cut){ const n = selNode(); if(!n) return; clip = { id:n.id, cut:cut }; xm.main.querySelectorAll('[data-id]').forEach(x => { x.style.opacity = ''; }); const el = xm.main.querySelector('[data-id="' + n.id + '"]'); if(el && cut) el.style.opacity = .5; }
+function cloneTree(n, parent, name){ const c = Object.assign({}, n, { id:uid(), parent:parent, t:Date.now() }); if(name) c.name = name; nodes.push(c); put(c); if(n.type === 'd') nodes.filter(k => k.parent === n.id).forEach(k => cloneTree(k, c.id)); return c; }
+function xErr(n, what){ xMsg(tr('Erro ao copiar arquivo ou pasta', 'Error Copying File or Folder'), tr('Não é possível ' + what + ' "' + n.name + '": o destino é uma subpasta da pasta de origem.', 'Cannot ' + (what === 'mover' ? 'move' : 'copy') + ' "' + n.name + '": the destination folder is a subfolder of the source folder.'), [['OK', null, true]], '⚠️'); }
+function moveTo(id, parentId){
+  const n = nodes.find(x => x.id === id); if(!n || n.parent === parentId) return;
+  if(n.type === 'd' && (n.id === parentId || isUnder(parentId, n.id))) return xErr(n, 'mover');
+  n.name = uniq(parentId, n.name, n.id); n.parent = parentId; put(n); sel = null; render();
+}
+function xPaste(){
+  if(!clip || cwd === 'mc') return; const n = nodes.find(x => x.id === clip.id); if(!n){ clip = null; return; }
+  if(clip.cut){ moveTo(n.id, cwd); clip = null; return; }
+  if(n.type === 'd' && (n.id === cwd || isUnder(cwd, n.id))) return xErr(n, 'copiar');
+  const dup = nodes.some(x => x.parent === cwd && sameNm(x.name, n.name)); const c = cloneTree(n, cwd, dup ? uniq(cwd, tr('Cópia de ', 'Copy of ') + n.name) : n.name); sel = c.id; render();
+}
+function closeCtx(){ if(ctxEl){ ctxEl.remove(); ctxEl = null; } }
+function ctx(x, y, items){
+  closeCtx(); const dd = xmk('div', 'xpDd xpCtx');
+  items.forEach(r => { if(r === '-'){ dd.appendChild(xmk('hr')); return; } const b = xmk('button', 'xpDi' + (r[2] ? ' bd' : '')); b.type = 'button'; b.textContent = r[0]; if(!r[1]) b.disabled = true; else b.onclick = ev => { ev.stopPropagation(); closeCtx(); xps('windows_xp_menu_command'); r[1](); }; dd.appendChild(b); });
+  const box = $('exBox'), rc = box.getBoundingClientRect(); box.appendChild(dd); ctxEl = dd;
+  dd.style.left = Math.max(0, Math.min(x - rc.left - box.clientLeft, rc.width - dd.offsetWidth - 6)) + 'px'; dd.style.top = Math.max(0, Math.min(y - rc.top - box.clientTop, rc.height - dd.offsetHeight - 6)) + 'px';
+}
+function xpExtra(){
+  const clr = () => { xm.main.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); };
+  xm.main.addEventListener('contextmenu', e => {
+    e.preventDefault(); e.stopPropagation(); if(xrn) return;
+    const t = e.target.closest && e.target.closest('[data-id]'), n = t && nodes.find(x => x.id === t.dataset.id), X = e.clientX, Y = e.clientY;
+    if(cwd === 'mc'){ if(t && t.dataset.id === 'drv'){ sel = 'drv'; clr(); t.classList.add('sel'); paintPane(); paintStatus(); ctx(X, Y, [[tr('Abrir', 'Open'), () => go('root'), true], '-', [tr('Propriedades', 'Properties'), () => props('drive')]]); } return; }
+    if(n){ sel = n.id; selT = 0; clr(); t.classList.add('sel'); paintPane(); paintStatus();
+      ctx(X, Y, [[tr('Abrir', 'Open'), () => openNode(n), true], '-', [tr('Recortar', 'Cut'), () => xCopy(true)], [tr('Copiar', 'Copy'), () => xCopy(false)], '-', [tr('Excluir', 'Delete'), () => xDelete(n)], [tr('Renomear', 'Rename'), () => xRename(n.id)], '-', [tr('Propriedades', 'Properties'), () => props(n)]]);
+    } else { sel = null; clr(); paintPane(); paintStatus();
+      const mk = (l, m) => [(vmode === m ? '• ' : '') + l, () => { vmode = m; render(); }];
+      ctx(X, Y, [mk(tr('Ícones', 'Icons'), 'icons'), mk(tr('Lista', 'List'), 'list'), mk(tr('Detalhes', 'Details'), 'details'), '-', [tr('Atualizar', 'Refresh'), () => render()], '-', [tr('Colar', 'Paste'), clip ? xPaste : null], '-', [tr('Novo › Pasta', 'New › Folder'), xNew], '-', [tr('Propriedades', 'Properties'), () => props(cwd === 'root' ? 'drive' : nodes.find(x => x.id === cwd))]]);
+    }
+  });
+  $('exBox').addEventListener('pointerdown', e => { if(ctxEl && !e.target.closest('.xpCtx')) closeCtx(); }, true);
+  new MutationObserver(() => xm.main.querySelectorAll('[data-id]:not([draggable])').forEach(x => { if(x.dataset.id !== 'drv' && x.dataset.id !== 'mydocs') x.draggable = true; })).observe(xm.main, { childList:true, subtree:true });
+  xm.main.addEventListener('dragstart', e => { const t = e.target.closest && e.target.closest('[data-id]'); if(!t) return; dragId = t.dataset.id; try{ e.dataTransfer.setData('text/plain', 'xpfx'); e.dataTransfer.effectAllowed = 'move'; }catch(_){} });
+  xm.main.addEventListener('dragend', () => { dragId = null; });
+  xm.main.addEventListener('dragover', e => { if(!dragId) return; const t = e.target.closest && e.target.closest('[data-id]'), d = t && nodes.find(x => x.id === t.dataset.id); if(d && d.type === 'd' && d.id !== dragId) e.preventDefault(); });
+  xm.main.addEventListener('drop', e => { if(!dragId) return; const t = e.target.closest && e.target.closest('[data-id]'), d = t && nodes.find(x => x.id === t.dataset.id); if(d && d.type === 'd'){ e.preventDefault(); const id = dragId; dragId = null; moveTo(id, d.id); } });
+  window.addEventListener('keydown', e => {
+    if(!isOpen() || !isXp() || !(e.ctrlKey || e.metaKey) || xrn) return; const a = document.activeElement; if(a && ((a.closest && a.closest('#wmpOverlay')) || a.tagName === 'INPUT')) return;
+    const k = e.key.toLowerCase(); if(k === 'c'){ e.preventDefault(); xCopy(false); } else if(k === 'x'){ e.preventDefault(); xCopy(true); } else if(k === 'v'){ e.preventDefault(); xPaste(); }
+  });
 }
 window.dzExTry = v => String(v || '').trim().toLowerCase() === 'fx123';
 window.dzEx = { open, close, isOpen, save, library }; window.dzExBack = () => { if($('exView').classList.contains('on')) $('exVC').click(); else close(); };
@@ -25998,6 +26187,35 @@ function save(list){
 let have = load().filter(id => id !== 'w95');   /* Windows 95 escondido: só abre digitando win95 */
 
 /* ---- apps de utilidade ---- */
+/* ---- ícones modernos (estilo padrão): SVG vetorial, sem imagens; no XP continuam os emojis/ícones do Windows ---- */
+window.DZI = (function(){
+  const T = (c, g) => '<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="11" fill="' + c + '"/><path d="M0 11a11 11 0 0 1 11-11h26a11 11 0 0 1 11 11v10H0z" fill="#fff" opacity=".13"/>' + g + '</svg>';
+  const W = 'fill="#fff"', S = 'fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"';
+  const doc = c => T(c, '<rect x="13" y="9" width="22" height="30" rx="3" ' + W + '/><path d="M18 18h12M18 24h12M18 30h7" fill="none" stroke="' + c + '" stroke-width="2.6" stroke-linecap="round"/>');
+  return {
+    calc: T('#14b8a6', '<rect x="12" y="10" width="24" height="10" rx="2.5" ' + W + ' opacity=".95"/>' + [13,21,29].map(x => '<rect x="' + x + '" y="25" width="7" height="6" rx="1.8" ' + W + ' opacity=".92"/><rect x="' + x + '" y="33" width="7" height="6" rx="1.8" ' + W + ' opacity=".92"/>').join('')),
+    ed: doc('#3b82f6'),
+    jd: T('#4f46e5', '<path d="M19 16 11 24l8 8M29 16l8 8-8 8M26 13l-4 22" ' + S + ' stroke-width="4"/>'),
+    daw: T('#ec4899', '<rect x="10" y="11" width="28" height="26" rx="3" ' + W + '/><path d="M17 24v13M24 24v13M31 24v13" stroke="#f472b6" stroke-width="1.5"/>' + [14.5,21.5,28.5].map(x => '<rect x="' + x + '" y="11" width="5" height="15" rx="1.2" fill="#9d174d"/>').join('')),
+    paint: T('#f97316', '<path d="M24 9C14 9 8 16 8 24c0 9 7 15 16 15 3 0 4-2 3-4s0-4 3-4h6c3 0 5-2 5-5 0-8-8-13-17-13z" ' + W + ' opacity=".96"/><circle cx="17" cy="20" r="2.7" fill="#ef4444"/><circle cx="24" cy="15" r="2.7" fill="#eab308"/><circle cx="32" cy="19" r="2.7" fill="#22c55e"/><circle cx="16" cy="29" r="2.7" fill="#3b82f6"/>'),
+    fx: T('#f59e0b', '<path d="M9 14a3 3 0 0 1 3-3h8l4 4h12a3 3 0 0 1 3 3v3H9z" ' + W + ' opacity=".7"/><rect x="9" y="19" width="30" height="19" rx="3" ' + W + '/>'),
+    wmp: T('#8b5cf6', '<circle cx="24" cy="24" r="13" ' + W + ' opacity=".96"/><path d="M21 17.5 31 24l-10 6.5z" fill="#8b5cf6"/>'),
+    w95: T('#0ea5e9', [[11,11],[25,11],[11,25],[25,25]].map(a => '<rect x="' + a[0] + '" y="' + a[1] + '" width="12" height="12" rx="2" ' + W + ' opacity=".95"/>').join('')),
+    hub: T('#6d5dfc', '<path d="M14 18h20a8 8 0 0 1 8 8v2a5 5 0 0 1-9 3l-2-3H17l-2 3a5 5 0 0 1-9-3v-2a8 8 0 0 1 8-8z" ' + W + '/><path d="M13 23h8M17 19v8" stroke="#6d5dfc" stroke-width="2.6" stroke-linecap="round"/><circle cx="31" cy="22" r="2" fill="#6d5dfc"/><circle cx="35" cy="26" r="2" fill="#6d5dfc"/>'),
+    velha: T('#ef4444', '<path d="M19 10v28M29 10v28M10 19h28M10 29h28" ' + S + ' stroke-width="2.6" opacity=".9"/><path d="M12 12l5 5M17 12l-5 5" ' + S + ' stroke-width="2.4"/><circle cx="24" cy="24" r="3.3" ' + S + ' stroke-width="2.4"/>'),
+    cobra: T('#22c55e', '<path d="M13 33h14a6 6 0 0 0 0-12h-8a4 4 0 0 1 0-8h14" ' + S + ' stroke-width="5"/><circle cx="35" cy="13" r="4" ' + W + '/><circle cx="36" cy="12" r="1.2" fill="#16a34a"/>'),
+    flappy: T('#eab308', '<circle cx="22" cy="26" r="11" ' + W + '/><path d="M32 25l8 3-8 3z" fill="#f97316"/><circle cx="26" cy="22" r="2.2" fill="#111827"/><ellipse cx="18" cy="28" rx="5" ry="3.5" fill="#eab308"/>'),
+    dino: T('#65a30d', '<rect x="21" y="11" width="7" height="27" rx="3.5" ' + W + '/><path d="M21 27h-5v-7M28 24h5v-7" ' + S + ' stroke-width="4.5"/><path d="M8 40h32" ' + S + ' stroke-width="2" opacity=".6"/>'),
+    sinuca: T('#166534', '<circle cx="24" cy="24" r="13" fill="#111827"/><circle cx="24" cy="24" r="5.5" ' + W + '/><circle cx="24" cy="24" r="2.2" fill="#111827"/><path d="M15 19a11 11 0 0 1 7-6" ' + S + ' stroke-width="2" opacity=".45"/>'),
+    minas: T('#475569', '<circle cx="24" cy="26" r="9" ' + W + '/><path d="M24 12v28M10 26h28M14 16l20 20M34 16 14 36" ' + S + ' stroke-width="2.8"/><circle cx="21" cy="23" r="2" fill="#475569"/>'),
+    f_d: T('#f59e0b', '<path d="M9 14a3 3 0 0 1 3-3h8l4 4h12a3 3 0 0 1 3 3v3H9z" ' + W + ' opacity=".7"/><rect x="9" y="19" width="30" height="19" rx="3" ' + W + '/>'),
+    f_a: T('#8b5cf6', '<circle cx="19" cy="34" r="5" ' + W + '/><rect x="22" y="12" width="3.5" height="22" ' + W + '/><path d="M25.5 12l10 4v6l-10-3z" ' + W + '/>'),
+    f_v: T('#ef4444', '<rect x="10" y="15" width="20" height="18" rx="3" ' + W + '/><path d="M32 21l7-4v14l-7-4z" ' + W + '/>'),
+    f_i: T('#14b8a6', '<circle cx="32" cy="16" r="4" ' + W + '/><path d="M9 37l10-14 7 9 4-5 9 10z" ' + W + '/>'),
+    f_t: doc('#3b82f6'),
+    f_x: T('#64748b', '<path d="M13 12a3 3 0 0 1 3-3h11l8 8v19a3 3 0 0 1-3 3H16a3 3 0 0 1-3-3z" ' + W + '/><path d="M27 9v8h8" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round"/>')
+  };
+})();
 const APPS = [
   { id:'calc', icon:'🧮', pt:'CALCULADORA LEGAL', en:'COOL CALCULATOR', open: () => window.dzCalc.open() },
   { id:'ed',   icon:'📝', pt:'EDITOR DE TEXTO LEGAL', en:'COOL TEXT EDITOR', open: () => window.dzEd.open() },
@@ -26036,8 +26254,10 @@ function activate(){
   document.querySelectorAll('.tab-panel').forEach(x => x.classList.toggle('active', x.id === 'tabExtras'));
   build();
 }
-function mk(label, fn, cls){
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary' + (cls ? ' ' + cls : ''); b.style.width = '100%'; b.textContent = label;
+function mk(label, fn, cls, iid, emo){
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary' + (cls ? ' ' + cls : ''); b.style.width = '100%';
+  if(iid && window.DZI && window.DZI[iid]){ b.innerHTML = '<span class="dzIc">' + window.DZI[iid] + '</span><span class="dzEm"></span><span class="dzLb"></span>'; b.children[1].textContent = (emo || '') + ' '; b.children[2].textContent = label; }
+  else b.textContent = (emo ? emo + ' ' : '') + label;
   b.addEventListener('click', () => { snd('menuAccept'); try{ fn(); }catch(e){} });
   return b;
 }
@@ -26049,14 +26269,14 @@ function build(){
   if(apps.length){
     const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.classList.add('xt-h-util'); h.textContent = tr('UTILIDADES', 'UTILITIES'); p.appendChild(h);
     const r = document.createElement('div'); r.className = 'xt-row';
-    apps.forEach(a => r.appendChild(mk(a.icon + ' ' + tr(a.pt, a.en), a.open, 'xt-util')));
+    apps.forEach(a => r.appendChild(mk(tr(a.pt, a.en), a.open, 'xt-util', a.id, a.icon)));
     p.appendChild(r);
   }
   { const gl = gamesList();   /* joguinhos secretos: só os liberados (games = todos; vel123, din123, sin123, min123 = um cada) */
     if(gl.length){
       const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.classList.add('xt-h-games'); h.textContent = tr('JOGOS', 'GAMES'); p.appendChild(h);
       const r = document.createElement('div'); r.className = 'xt-row';
-      gl.forEach(g => r.appendChild(mk(g.icon + ' ' + tr(g.pt, g.en), () => window.dzMg.open(g.id), 'xt-util xt-game')));
+      gl.forEach(g => r.appendChild(mk(tr(g.pt, g.en), () => window.dzMg.open(g.id), 'xt-util xt-game', g.id, g.icon)));
       p.appendChild(r);
     } }
   const emus = emuList();
@@ -26064,7 +26284,7 @@ function build(){
     const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.classList.add('xt-h-emu'); h.textContent = tr('EMULADORES', 'EMULATORS'); p.appendChild(h);
     const r = document.createElement('div'); r.className = 'xt-row';
     const ids = emus.map(e => e.id);
-    const hb = mk('🎮 ' + tr('ABRIR EMULADORES', 'OPEN EMULATORS') + '  ·  ' + emus.length, () => { if(window.dzEmuOpenHub) window.dzEmuOpenHub(e => ids.indexOf(e.id) >= 0); }, 'xt-emu xt-hub');
+    const hb = mk(tr('ABRIR EMULADORES', 'OPEN EMULATORS') + '  ·  ' + emus.length, () => { if(window.dzEmuOpenHub) window.dzEmuOpenHub(e => ids.indexOf(e.id) >= 0); }, 'xt-emu xt-hub', 'hub', '🎮');
     hb.style.setProperty('--xc', '#8b6bff'); r.appendChild(hb);
     p.appendChild(r);
   }
