@@ -23027,9 +23027,10 @@ function play(url, name, useAlt, healed, tryN){
     }
     /* confere a ROM antes de abrir: arquivo não encontrado (o site devolve uma página HTML), vazio ou, no NES, sem o cabeçalho iNES */
     try{
-      const r = await fetch(url.split('#')[0], { cache:'no-store' });
+      const light = !!cur.native;   /* N64/PS1/Saturn: jogos grandes, não baixa o arquivo inteiro só para conferir */
+      const r = await fetch(url.split('#')[0], { cache:'no-store', method: light ? 'HEAD' : 'GET' });
       const ct = r.headers.get('content-type') || '';
-      const bytes = r.ok ? new Uint8Array(await r.arrayBuffer()) : new Uint8Array(0);
+      const bytes = !r.ok ? new Uint8Array(0) : light ? new Uint8Array(r.headers.get('content-length') === '0' ? 0 : 16) : new Uint8Array(await r.arrayBuffer());
       if(tok !== playTok) return;
       if(!r.ok || /html/i.test(ct) || bytes.length < 16){
         exitHint(tr('⚠ Arquivo da ROM não encontrado ou vazio: ' + (name || '') + '. Confira o nome em roms/ e o roms.json no GitHub.', '⚠ ROM file not found or empty: ' + (name || '') + '. Check the name in roms/ and roms.json on GitHub.'), 0);
@@ -23177,6 +23178,27 @@ async function loadRoms(){
     const r = await fetch(ROMS_DIR + 'roms.json?v=' + Date.now(), { cache:'no-store' });
     if(r.ok){ const j = await r.json(); items = Array.isArray(j) ? j : (j.games || []); ok = true; }
   }catch(e){}
+  /* roms/extras.json: lista manual de jogos pesados hospedados fora do GitHub ("url" completa). A Action não mexe neste arquivo. */
+  try{
+    const r2 = await fetch(ROMS_DIR + 'extras.json?v=' + Date.now(), { cache:'no-store' });
+    if(r2.ok && !/html/i.test(r2.headers.get('content-type') || '')){ const j2 = await r2.json(); items = items.concat(Array.isArray(j2) ? j2 : (j2.games || [])); ok = true; }
+  }catch(e){}
+  /* extras.json com {"hf":"USUARIO/REPOSITORIO"}: lista sozinho os jogos do Dataset no Hugging Face (subpastas psx/ e saturn/ definem o console) */
+  const hfIs = x => x && typeof x === 'object' && x.hf;
+  const hfList = items.filter(hfIs); items = items.filter(x => !hfIs(x));
+  for(const h of hfList){
+    try{
+      const rr = await fetch('https://huggingface.co/api/datasets/' + h.hf + '/tree/main?recursive=true');
+      if(!rr.ok) continue;
+      (await rr.json()).forEach(f => {
+        if(f && f.type === 'file' && /\.(chd|iso|pbp|cue|ccd|mds|m3u|z64|n64|v64|zip|7z)$/i.test(f.path)){
+          const g = { file:f.path, title:f.path.split('/').pop().replace(/\.[^.]+$/, ''), url:'https://huggingface.co/datasets/' + h.hf + '/resolve/main/' + f.path.split('/').map(encodeURIComponent).join('/') };
+          if(h.system) g.system = h.system; items.push(g);
+        }
+      });
+      ok = true;
+    }catch(e){}
+  }
   items = items.map(x => typeof x === 'string' ? { file:x } : x).filter(x => x && x.file && !/^bios\//i.test(String(x.file)));   /* roms/bios/ guarda só BIOS, não jogos */
   const c = {}; items.forEach(g => { const k = sysOf(g) || '?'; c[k] = (c[k] || 0) + 1; });
   romsInfo = { ok:ok, total:items.length, counts:Object.keys(c).map(k => k + ' ' + c[k]).join(', ') };
@@ -23204,7 +23226,7 @@ function renderList(){
   mine.forEach(g => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'gbarom';
     b.innerHTML = '<b>' + esc(g.title || g.file.replace(/\.[^.]+$/, '')) + '</b>' + (g.author ? '<small>' + esc(g.author) + '</small>' : '');
-    b.addEventListener('click', () => { play(ROMS_DIR + encodeURIComponent(g.file).replace(/%2F/g, '/'), g.title || g.file.replace(/\.[^.]+$/, '')); });
+    b.addEventListener('click', () => { play(g.url ? g.url : ROMS_DIR + encodeURIComponent(g.file).replace(/%2F/g, '/'), g.title || g.file.replace(/\.[^.]+$/, '')); });
     list.appendChild(b);
   });
   const h = document.createElement('div'); h.id = 'gbaHelp';
