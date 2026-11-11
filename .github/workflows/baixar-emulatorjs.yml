@@ -1,0 +1,63 @@
+# Salve como: .github/workflows/baixar-emulatorjs.yml
+# Depois: aba Actions > "Baixar EmulatorJS" > Run workflow.
+# Baixa o EmulatorJS para a pasta emulatorjs/data/ do seu site, com os núcleos
+# de todos os consoles (inclui N64, PS1 e Saturn) e faz commit sozinho.
+name: Baixar EmulatorJS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar 7zip
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: Baixar a versão estável do EmulatorJS (GitHub Releases)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          rm -rf /tmp/ejs && mkdir -p /tmp/ejs && cd /tmp/ejs
+          URL=$(gh api repos/EmulatorJS/EmulatorJS/releases/latest --jq '.assets[] | select(.name|test("\\.7z$")) | .browser_download_url' | head -n1)
+          echo "Release: $URL"
+          curl -L --fail -o ejs.7z "$URL"
+          7z x -y ejs.7z > /dev/null
+          DATA=$(find . -type d -name data | head -n1)
+          echo "Pasta data encontrada em: $DATA"
+          rm -rf "$GITHUB_WORKSPACE/emulatorjs"
+          mkdir -p "$GITHUB_WORKSPACE/emulatorjs"
+          cp -r "$DATA" "$GITHUB_WORKSPACE/emulatorjs/data"
+
+      - name: Garantir os núcleos (N64, PS1, Saturn e os demais)
+        run: |
+          set -e
+          cd "$GITHUB_WORKSPACE/emulatorjs/data"
+          mkdir -p cores
+          CORES="mgba fceumm nestopia gambatte snes9x genesis_plus_gx mupen64plus_next pcsx_rearmed yabause"
+          for c in $CORES; do
+            for suf in "-wasm.data" "-legacy-wasm.data"; do
+              f="cores/${c}${suf}"
+              if [ ! -s "$f" ]; then
+                echo "Baixando $f do CDN..."
+                curl -L -s -o "$f" "https://cdn.emulatorjs.org/stable/data/$f" || true
+                # se veio página de erro (pequena), apaga
+                if [ -f "$f" ] && [ "$(stat -c%s "$f")" -lt 20000 ]; then rm -f "$f"; echo "  (não existe: $f)"; fi
+              fi
+            done
+          done
+          ls -lh cores | head -50
+
+      - name: Commit
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A emulatorjs
+          git diff --cached --quiet && echo "Nada mudou." || git commit -m "Atualiza EmulatorJS (com núcleos N64, PS1 e Saturn)"
+          git push
