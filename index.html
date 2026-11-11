@@ -23653,7 +23653,7 @@ html.console #emuOverlay{padding:calc(8px + var(--sy,0px)) calc(8px + var(--sx,0
   <canvas id="emuBg"></canvas>
   <div id="emuBox" role="dialog" aria-label="Emuladores">
     <div id="emuHead">
-      <div id="emuTitleBox"><span id="emuLogo">🎮</span><div><div id="emuTitle">EMULADORES</div><div id="emuSub"></div></div></div>
+      <div id="emuTitleBox"><div><div id="emuTitle">EMULADORES</div><div id="emuSub"></div></div></div>
       <button type="button" class="emuIcoBtn" id="emuGear" aria-label="Ajustes" title="Ajustes">⚙</button>
       <button type="button" class="emuIcoBtn clr" id="emuClose" aria-label="Fechar" title="Fechar">✕</button>
     </div>
@@ -24965,7 +24965,8 @@ html.console #paintOverlay{padding:calc(8px + var(--sy,0px)) calc(8px + var(--sx
         <button type="button" class="pbtn" id="paintFillTgl">VAZIO</button>
       </div>
     </div>
-    <div id="paintHint"></div>
+    <div id="paintImg"></div>
+    <div id="paintHint"></div><div id="paintStat" style="font-size:11px;color:#b3a07a"></div>
   </div>
 </div>
 <script id="dzPaintScript">
@@ -24980,7 +24981,7 @@ const overlay = $('paintOverlay'); if(!overlay) return;
 const cv = $('paintCanvas'), ctx = cv.getContext('2d', { willReadFrequently:true });
 const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
-const W = cv.width, H = cv.height;
+let W = cv.width, H = cv.height;
 const PAL = ['#000000','#7f7f7f','#880015','#ed1c24','#ff7f27','#fff200','#22b14c','#00a2e8','#3f48cc','#a349a4','#ffffff','#c3c3c3','#b97a57','#ffaec9','#ffc90e','#efe4b0','#b5e61d','#99d9ea','#7092be','#c8bfe7','#5a3a1a','#1b5e20','#0d47a1','#4a148c','#e65100','#00bfa5','#ff4081','#263238'];
 const TOOLS = [
   { id:'pen',    icon:'✏️', pt:'Lápis', en:'Pencil' },
@@ -24992,13 +24993,16 @@ const TOOLS = [
   { id:'line',   icon:'╱',  pt:'Linha', en:'Line' },
   { id:'rect',   icon:'▭',  pt:'Retângulo', en:'Rectangle' },
   { id:'ellipse',icon:'◯',  pt:'Elipse', en:'Ellipse' },
-  { id:'text',   icon:'🅰️', pt:'Texto', en:'Text' }
+  { id:'text',   icon:'🅰️', pt:'Texto', en:'Text' },
+  { id:'tri',    icon:'△',  pt:'Triângulo', en:'Triangle' },
+  { id:'dia',    icon:'◇',  pt:'Losango', en:'Diamond' },
+  { id:'rrect',  icon:'▢',  pt:'Retângulo arredondado', en:'Rounded rectangle' }
 ];
-const S = { tool:'pen', color:'#000000', size:4, filled:false, down:false, sx:0, sy:0, lx:0, ly:0, snap:null, undo:[], redo:[], dirty:false };
+const S = { tool:'pen', color:'#000000', size:4, filled:false, mode:0, bg:'#ffffff', zoom:1, rb:false, down:false, sx:0, sy:0, lx:0, ly:0, snap:null, undo:[], redo:[], dirty:false };
 try{ const v = JSON.parse(localStorage.getItem('dz_paint_prefs') || 'null'); if(v){ if(TOOLS.some(t => t.id === v.tool)) S.tool = v.tool; if(/^#[0-9a-f]{6}$/i.test(v.color)) S.color = v.color; if(v.size >= 1 && v.size <= 60) S.size = v.size; S.filled = !!v.filled; } }catch(e){}
 const savePrefs = () => { try{ localStorage.setItem('dz_paint_prefs', JSON.stringify({ tool:S.tool, color:S.color, size:S.size, filled:S.filled })); }catch(e){} };
 
-function whiten(){ ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+function whiten(){ ctx.save(); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = S.bg; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 function pushUndo(){
   try{ S.undo.push(ctx.getImageData(0, 0, W, H)); if(S.undo.length > 25) S.undo.shift(); S.redo = []; }catch(e){}
   S.dirty = true; syncBtns();
@@ -25012,8 +25016,8 @@ function pos(e){
   return [ (e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height ];
 }
 function strokeStyle(){
-  const er = S.tool === 'eraser';
-  ctx.strokeStyle = ctx.fillStyle = er ? '#ffffff' : S.color;
+  const er = S.tool === 'eraser', c = S.rb ? S.bg : S.color;
+  ctx.strokeStyle = ctx.fillStyle = er ? S.bg : c;
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.lineWidth = S.tool === 'pen' ? Math.max(1, Math.min(S.size, 3)) : (er ? S.size * 2 : S.size);
 }
@@ -25030,9 +25034,14 @@ function sprayAt(x, y){
 function drawShape(x0, y0, x1, y1){
   strokeStyle(); ctx.beginPath();
   if(S.tool === 'line'){ ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); return; }
+  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
   if(S.tool === 'rect'){ ctx.rect(x0, y0, x1 - x0, y1 - y0); }
-  else { ctx.ellipse((x0 + x1) / 2, (y0 + y1) / 2, Math.abs(x1 - x0) / 2, Math.abs(y1 - y0) / 2, 0, 0, Math.PI * 2); }
-  if(S.filled) ctx.fill(); else ctx.stroke();
+  else if(S.tool === 'tri'){ ctx.moveTo(mx, y0); ctx.lineTo(x1, y1); ctx.lineTo(x0, y1); ctx.closePath(); }
+  else if(S.tool === 'dia'){ ctx.moveTo(mx, y0); ctx.lineTo(x1, my); ctx.lineTo(mx, y1); ctx.lineTo(x0, my); ctx.closePath(); }
+  else if(S.tool === 'rrect'){ const rr = Math.min(Math.abs(x1 - x0), Math.abs(y1 - y0)) / 4; if(ctx.roundRect) ctx.roundRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0), rr); else ctx.rect(x0, y0, x1 - x0, y1 - y0); }
+  else { ctx.ellipse(mx, my, Math.abs(x1 - x0) / 2, Math.abs(y1 - y0) / 2, 0, 0, Math.PI * 2); }
+  if(S.mode >= 1){ ctx.fillStyle = S.mode === 2 ? (S.rb ? S.color : S.bg) : ctx.strokeStyle; ctx.fill(); }
+  if(S.mode !== 1) ctx.stroke();
 }
 function hex2rgb(h){ return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
 function floodFill(px, py){
@@ -25060,15 +25069,17 @@ function pickAt(x, y){
   setColor('#' + [p[0], p[1], p[2]].map(v => v.toString(16).padStart(2, '0')).join(''));
 }
 function textAt(x, y){
-  let s = null; try{ s = window.prompt(tr('Digite o texto:', 'Type the text:'), ''); }catch(e){}
+  window.dzAsk(tr('Digite o texto:', 'Type the text:'), '', s => {
   if(!s) return;
   pushUndo();
   const px = Math.max(10, S.size * 4); ctx.fillStyle = S.color; ctx.font = '700 ' + px + 'px Arial, Helvetica, sans-serif'; ctx.textBaseline = 'top';
   s.split('\n').forEach((ln, i) => ctx.fillText(ln, x, y + i * px * 1.2));
+  });
 }
 
 cv.addEventListener('pointerdown', e => {
-  if(e.button > 0 && e.pointerType === 'mouse') return;
+  if(e.button > 1 && e.pointerType === 'mouse') return;
+  S.rb = e.button === 2;
   e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){}
   const [x, y] = pos(e); S.sx = S.lx = x; S.sy = S.ly = y;
   if(S.tool === 'pick'){ pickAt(x, y); return; }
@@ -25105,7 +25116,7 @@ function setColor(c){
 function setTool(id){
   S.tool = id;
   document.querySelectorAll('#paintTools .pbtn').forEach(b => b.classList.toggle('on', b.dataset.t === id));
-  const shape = id === 'rect' || id === 'ellipse';
+  const shape = ['rect','ellipse','tri','dia','rrect'].indexOf(id) >= 0;
   $('paintFillTgl').style.display = shape ? '' : 'none';
   cv.style.cursor = id === 'text' ? 'text' : 'crosshair';
   savePrefs();
@@ -25116,8 +25127,8 @@ function labels(){
   $('paintUndo').title = tr('Desfazer (Ctrl+Z)', 'Undo (Ctrl+Z)'); $('paintRedo').title = tr('Refazer (Ctrl+Y)', 'Redo (Ctrl+Y)');
   $('paintSizeTxt').textContent = tr('Tamanho', 'Size');
   $('paintCur').title = tr('Escolher outra cor', 'Pick another color');
-  $('paintFillTgl').textContent = S.filled ? tr('CHEIO', 'FILLED') : tr('VAZIO', 'OUTLINE');
-  $('paintFillTgl').classList.toggle('on', S.filled);
+  $('paintFillTgl').textContent = [tr('CONTORNO', 'OUTLINE'), tr('CHEIO', 'FILLED'), tr('CONTORNO+CHEIO', 'OUTLINE+FILL')][S.mode];
+  $('paintFillTgl').classList.toggle('on', S.mode > 0);
   $('paintHint').textContent = tr('Desenhe com o mouse ou o dedo · Ctrl+Z desfaz · Esc fecha', 'Draw with mouse or finger · Ctrl+Z undoes · Esc closes');
   document.querySelectorAll('#paintTools .pbtn').forEach(b => { const t = TOOLS.find(x => x.id === b.dataset.t); b.title = tr(t.pt, t.en); b.setAttribute('aria-label', tr(t.pt, t.en)); });
 }
@@ -25135,12 +25146,12 @@ function labels(){
 })();
 $('paintColorIn').addEventListener('input', e => setColor(e.target.value));
 $('paintSize').addEventListener('input', e => setSize(+e.target.value));
-$('paintFillTgl').addEventListener('click', () => { snd('menuSelect'); S.filled = !S.filled; labels(); savePrefs(); });
+$('paintFillTgl').addEventListener('click', () => { snd('menuSelect'); S.mode = (S.mode + 1) % 3; S.filled = S.mode > 0; labels(); savePrefs(); });
 $('paintUndo').addEventListener('click', doUndo);
 $('paintRedo').addEventListener('click', doRedo);
 $('paintNew').addEventListener('click', () => {
-  if(S.dirty){ let ok = true; try{ ok = window.confirm(tr('Começar um desenho novo? O atual será apagado.', 'Start a new drawing? The current one will be erased.')); }catch(e){} if(!ok) return; }
-  pushUndo(); whiten(); S.dirty = false; snd('menuAccept');
+  const go = () => { pushUndo(); whiten(); S.dirty = false; snd('menuAccept'); };
+  if(S.dirty) window.dzAsk(tr('Começar um desenho novo? O atual será apagado.', 'Start a new drawing? The current one will be erased.'), null, ok => { if(ok) go(); }, 'confirm'); else go();
 });
 $('paintSave').addEventListener('click', () => {
   snd('menuAccept');
@@ -25176,6 +25187,22 @@ function close(){ if(!isOpen()) return; S.down = false; overlay.classList.remove
 function goBack(){ close(); }
 
 whiten();
+/* ---- Imagem: girar, inverter, negativo, tamanho, zoom, cor de fundo, coordenadas ---- */
+(function(){
+  const bar = $('paintImg'); bar.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap';
+  const mk = (t, f) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'pbtn'; b.textContent = t; b.addEventListener('click', () => { snd('menuSelect'); f(); }); bar.appendChild(b); return b; };
+  const copy = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(cv, 0, 0); return c; };
+  const tf = (nw, nh, f) => { pushUndo(); const c = copy(); W = cv.width = nw; H = cv.height = nh; ctx.save(); f(); ctx.drawImage(c, 0, 0); ctx.restore(); };
+  mk('⇋', () => tf(W, H, () => { ctx.translate(W, 0); ctx.scale(-1, 1); })).title = 'Inverter horizontal / Flip H';
+  mk('⇅', () => tf(W, H, () => { ctx.translate(0, H); ctx.scale(1, -1); })).title = 'Inverter vertical / Flip V';
+  mk('⟳', () => { const w = W, h = H; tf(h, w, () => { ctx.translate(h, 0); ctx.rotate(Math.PI / 2); }); }).title = 'Girar 90° / Rotate 90°';
+  mk('◐', () => { pushUndo(); const im = ctx.getImageData(0, 0, W, H), d = im.data; for(let i = 0; i < d.length; i += 4){ d[i] = 255 - d[i]; d[i + 1] = 255 - d[i + 1]; d[i + 2] = 255 - d[i + 2]; } ctx.putImageData(im, 0, 0); }).title = 'Inverter cores / Invert colors';
+  mk('⤢', () => { window.dzAsk(tr('Novo tamanho (largura x altura):', 'New size (width x height):'), W + 'x' + H, v => { const m = /^(\d{2,4})\s*[x×]\s*(\d{2,4})$/i.exec(v || ''); if(!m) return; const nw = Math.min(2400, +m[1]), nh = Math.min(2400, +m[2]); tf(nw, nh, () => { ctx.fillStyle = S.bg; ctx.fillRect(0, 0, nw, nh); }); }); }).title = 'Tamanho da tela / Canvas size';
+  mk('🔍+', () => { S.zoom = Math.min(4, S.zoom + .5); apply(); }); mk('🔍−', () => { S.zoom = Math.max(.5, S.zoom - .5); apply(); }); mk('1:1', () => { S.zoom = 1; apply(); });
+  mk('◧', () => { S.bg = S.color; $('paintStat').textContent = tr('Cor de fundo (botão direito) = ', 'Background (right button) = ') + S.bg; }).title = 'Usar a cor atual como cor 2 (botão direito) / Set color 2';
+  function apply(){ cv.style.maxWidth = cv.style.maxHeight = S.zoom > 1 ? 'none' : '100%'; cv.style.width = S.zoom === 1 ? '' : (W * S.zoom) + 'px'; cv.style.height = S.zoom === 1 ? '' : (H * S.zoom) + 'px'; $('paintStage').style.overflow = 'auto'; $('paintStat').textContent = Math.round(S.zoom * 100) + '%  ·  ' + W + '×' + H; }
+  cv.addEventListener('pointermove', e => { const [x, y] = pos(e); $('paintStat').textContent = Math.round(x) + ', ' + Math.round(y) + ' px  ·  ' + W + '×' + H + '  ·  ' + Math.round(S.zoom * 100) + '%'; });
+})();
 
 /* teclado (PC): captura antes do jogo para as teclas não moverem o personagem */
 window.addEventListener('keydown', e => {
@@ -27977,6 +28004,7 @@ let cellW = 30, tool = 'draw', lastLen = 1, drag = null, keyFlash = -1, centered
 const rollCh = () => { const c = chById(selCh); return (c && c.type === 'synth') ? c : null; };
 const SCALES = { maj:[0,2,4,5,7,9,11], min:[0,2,3,5,7,8,10], pmin:[0,3,5,7,10], blues:[0,3,5,6,7,10], dor:[0,2,3,5,7,9,10], mix:[0,2,4,5,7,9,10] };
 const inScale = m => { const k = +$('dwKey').value; return k >= 0 && SCALES[$('dwScale').value].indexOf(((m - k) % 12 + 12) % 12) >= 0; };
+let SEL = [], selBox = null, CLIP = [], PSH = 0;
 function drawRoll(){
   const c = rollCh(), empty = $('dwRollEmpty'), inn = $('dwRollIn');
   if(!c){
@@ -28011,6 +28039,8 @@ function drawRoll(){
     g.fillStyle = '#6d3a06'; g.fillRect(x + w - 4, y + 2, 2, ROW_H - 4);
     if(w > 34){ g.fillStyle = '#2a1500'; g.font = 'bold 10px Arial'; g.textBaseline = 'middle'; g.fillText(noteName(n.p), x + 5, y + ROW_H / 2 + 1); }
   });
+  g.lineWidth = 2; g.strokeStyle = '#fff'; SEL.forEach(n => g.strokeRect(n.s * cellW + 1, (HI - n.p) * ROW_H + 1, n.l * cellW - 2, ROW_H - 2));
+  if(selBox){ const a = selBox.a, b = selBox.b; g.fillStyle = 'rgba(90,170,255,.25)'; g.strokeStyle = '#5aaaff'; g.lineWidth = 1; const x = Math.min(a.s, b.s) * cellW, y = (HI - Math.max(a.p, b.p)) * ROW_H, w = (Math.abs(a.s - b.s) + 1) * cellW, h = (Math.abs(a.p - b.p) + 1) * ROW_H; g.fillRect(x, y, w, h); g.strokeRect(x, y, w, h); }
 }
 function centerRoll(){ if(centered) return; centered = true; sc.scrollTop = Math.max(0, (HI - 76) * ROW_H); }
 function gpos(e){
@@ -28465,11 +28495,138 @@ window.dzDawTry = function(v){
   if(String(v || '').trim().toLowerCase() !== CODE) return false;
   open(); return true;
 };
+/* extras do piano roll: inverter, dobrar/metade da duração, transpor oitava do canal, humanizar duração, limpar passos */
+(function(){
+  const bar = $('dwRollBar'), clr = $('dwRollClear'); if(!bar || !clr) return;
+  const ch = () => P.chs.find(c => c.id === selCh);
+  const op = (t, ti, f) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'dwb sm'; b.textContent = t; b.title = ti; b.addEventListener('click', () => { const c = ch(); if(!c) return; pushUndo(); f(D(curPat, c), c); save(); drawRoll(); lights(); }); bar.insertBefore(b, clr); };
+  const L = () => P.pats[curPat] && P.steps || 16;
+  op('⇄', 'Inverter notas no tempo / Reverse', d => { const n = L(); d.n.forEach(x => { x.s = Math.max(0, n - x.s - x.l); }); d.s = d.s.slice(0, n).reverse(); });
+  op('×2', 'Dobrar duração das notas / Double length', d => d.n.forEach(x => { x.l = Math.min(L() - x.s, x.l * 2); }));
+  op('½', 'Metade da duração / Half length', d => d.n.forEach(x => { x.l = Math.max(1, Math.floor(x.l / 2)); }));
+  op('⇉', 'Deslocar 1 passo à direita (gira) / Shift right', d => { const n = L(); d.n.forEach(x => { x.s = (x.s + 1) % n; }); const l = d.s.slice(0, n); l.unshift(l.pop()); d.s = l; });
+  op('∅', 'Limpar só os passos (bateria) / Clear steps', d => { d.s = []; });
+})();
+/* seleção de várias notas (laço), copiar/colar/recortar, apagar e mover com as setas */
+(function(){
+  const bar = $('dwRollBar'), clr = $('dwRollClear'); if(!bar || !clr) return;
+  let on = false; const b = document.createElement('button'); b.type = 'button'; b.className = 'dwb sm'; b.textContent = '▭ SEL'; b.title = tr('Selecionar notas: arraste um retângulo (Shift soma). Ctrl+A/C/X/V, Delete, setas', 'Select notes: drag a box (Shift adds). Ctrl+A/C/X/V, Delete, arrows'); bar.insertBefore(b, clr);
+  const off = () => { on = false; b.classList.remove('on'); };
+  b.addEventListener('click', () => { on = !on; b.classList.toggle('on', on); if(!on){ SEL = []; selBox = null; drawRoll(); } });
+  ['dwToolDraw', 'dwToolErase', 'dwToolPan'].forEach(id => $(id).addEventListener('click', () => { off(); SEL = []; drawRoll(); }));
+  const upd = base => { const c = rollCh(); if(!c || !selBox) return; const a = selBox.a, z = selBox.b, d = D(curPat, c), s0 = Math.min(a.s, z.s), s1 = Math.max(a.s, z.s), p0 = Math.min(a.p, z.p), p1 = Math.max(a.p, z.p); SEL = base.concat(d.n.filter(n => n.s <= s1 && n.s + n.l - 1 >= s0 && n.p >= p0 && n.p <= p1 && base.indexOf(n) < 0)); drawRoll(); };
+  let base = [];
+  gridCv.addEventListener('pointerdown', e => { if(!on || !rollCh()) return; e.preventDefault(); e.stopImmediatePropagation(); try{ gridCv.setPointerCapture(e.pointerId); }catch(_){} const o = gpos(e); selBox = { a: o, b: o }; base = e.shiftKey ? SEL.slice() : []; upd(base); }, true);
+  gridCv.addEventListener('pointermove', e => { if(!selBox) return; selBox.b = gpos(e); upd(base); });
+  const fin = () => { if(selBox){ selBox = null; drawRoll(); say(SEL.length + tr(' nota(s) selecionada(s)', ' note(s) selected')); } };
+  gridCv.addEventListener('pointerup', fin); gridCv.addEventListener('pointercancel', fin);
+  const edit = f => { const c = rollCh(); if(!c) return; pushUndo(); f(D(curPat, c)); save(); drawRoll(); lights(); };
+  window.addEventListener('keydown', e => {
+    if(!isOpen() || !on || /^(INPUT|SELECT|TEXTAREA)$/.test((e.target || {}).tagName || '')) return;
+    const k = e.key.toLowerCase(), c = rollCh(); if(!c) return; const d = D(curPat, c), ctl = e.ctrlKey || e.metaKey; let h = true;
+    if(ctl && k === 'a') SEL = d.n.slice();
+    else if(ctl && (k === 'c' || k === 'x') && SEL.length){ CLIP = SEL.map(n => Object.assign({}, n)); PSH = 0; if(k === 'x') edit(dd => { dd.n = dd.n.filter(n => SEL.indexOf(n) < 0); SEL = []; }); say(CLIP.length + tr(' nota(s) copiada(s)', ' note(s) copied')); }
+    else if(ctl && k === 'v' && CLIP.length){ const m0 = Math.min.apply(null, CLIP.map(n => n.s)), len = Math.max.apply(null, CLIP.map(n => n.s + n.l)) - m0; PSH += len; edit(dd => { SEL = []; CLIP.forEach(n => { const s = n.s + PSH; if(s < P.steps){ const q = Object.assign({}, n, { s, l: Math.min(n.l, P.steps - s) }); dd.n.push(q); SEL.push(q); } }); }); }
+    else if((k === 'delete' || k === 'backspace') && SEL.length) edit(dd => { dd.n = dd.n.filter(n => SEL.indexOf(n) < 0); SEL = []; });
+    else if(/^arrow/.test(k) && SEL.length){ const ds = k === 'arrowleft' ? -1 : k === 'arrowright' ? 1 : 0, dp = k === 'arrowup' ? 1 : k === 'arrowdown' ? -1 : 0, ok = SEL.every(n => n.s + ds >= 0 && n.s + n.l + ds <= P.steps && n.p + dp >= LO && n.p + dp <= HI); if(ok) edit(() => SEL.forEach(n => { n.s += ds; n.p += dp; })); }
+    else h = false;
+    if(h){ e.preventDefault(); e.stopImmediatePropagation(); drawRoll(); }
+  }, true);
+})();
 window.dzDaw = { open, close, isOpen };
 window.dzDawBack = close;
 })();
 </script>
 
+<script id="dzExtraPlus">
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+/* ---- EDITOR DE TEXTO: recursos de Word (tabela, linha, tachado, sub/sobrescrito, recuo, espaçamento, data, símbolos) ---- */
+const tools = $('edTools'), rich = $('edRich');
+if(tools && rich){
+  const ex = (c, v) => { rich.focus(); try{ document.execCommand('styleWithCSS', false, false); document.execCommand(c, false, v == null ? null : v); }catch(e){} rich.dispatchEvent(new Event('input', { bubbles:true })); };
+  const lh = v => { rich.focus(); const s = getSelection(); if(!s.rangeCount) return; let n = s.anchorNode; while(n && n !== rich && !(n.nodeType === 1 && /^(P|DIV|LI|H\d)$/.test(n.nodeName))) n = n.parentNode; if(n && n !== rich) n.style.lineHeight = v; };
+  const table = () => { window.dzAsk('Linhas x colunas / Rows x columns:', '3x3', v => { const m = /^(\d+)\s*[x×]\s*(\d+)$/i.exec(v || ''); if(!m) return; const r = Math.min(50, +m[1]), c = Math.min(20, +m[2]); let h = '<table style="border-collapse:collapse;width:100%">'; for(let i = 0; i < r; i++){ h += '<tr>'; for(let j = 0; j < c; j++) h += '<td style="border:1px solid #888;padding:4px;min-width:40px">&nbsp;</td>'; h += '</tr>'; } ex('insertHTML', h + '</table><p><br></p>'); }); };
+  const B = [['S̶', 'Tachado / Strikethrough', () => ex('strikeThrough')], ['x₂', 'Subscrito / Subscript', () => ex('subscript')], ['x²', 'Sobrescrito / Superscript', () => ex('superscript')],
+    ['⇥', 'Aumentar recuo / Indent', () => ex('indent')], ['⇤', 'Diminuir recuo / Outdent', () => ex('outdent')], ['1.5', 'Espaçamento entre linhas / Line spacing', () => window.dzAsk('1, 1.15, 1.5, 2…', '1.5', v => { if(v && +v > 0) lh(+v); })],
+    ['▦', 'Inserir tabela / Insert table', table], ['―', 'Linha horizontal / Horizontal rule', () => ex('insertHorizontalRule')], ['📅', 'Data e hora / Date and time', () => ex('insertText', new Date().toLocaleString())],
+    ['Ω', 'Símbolo / Symbol', () => window.dzAsk('© ® ™ € £ ¥ § ° ± × ÷ ≠ ≤ ≥ ∞ π √ → ← ↑ ↓ ✓ ★', '©', v => { if(v) ex('insertText', v); })],
+    ['✂', 'Limpar formatação / Clear formatting', () => ex('removeFormat')]];
+  const g = document.createElement('span'); g.id = 'dzExGrp'; const tab = document.createElement('button'); tab.type = 'button'; tab.id = 'dzExTab'; tab.className = 'eb'; tab.textContent = 'Extras ▾';
+  tab.addEventListener('mousedown', e => e.preventDefault()); tab.addEventListener('click', () => { const o = g.classList.toggle('open'); tab.classList.toggle('on', o); tab.textContent = o ? 'Extras ▴' : 'Extras ▾'; }); tools.appendChild(tab);
+  B.forEach(([t, ti, f]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'eb'; b.textContent = t; b.title = ti; b.addEventListener('mousedown', e => e.preventDefault()); b.addEventListener('click', f); g.appendChild(b); });
+  tools.appendChild(g);
+  const css = document.createElement('style'); css.textContent = `#dzExGrp{display:none;gap:3px;flex-wrap:wrap;margin:3px 0 0 0;flex-basis:100%;padding:4px}#dzExGrp.open{display:flex}
+html.dz-xp #dzExTab{font:11px Tahoma,Verdana,sans-serif!important;color:#000!important;background:linear-gradient(#fff,#ece9d8)!important;border:1px solid #003c74!important;border-bottom:0!important;border-radius:4px 4px 0 0!important;padding:3px 12px!important;margin-left:4px}
+html.dz-xp #dzExTab.on{background:#fcfcfe!important;box-shadow:inset 0 2px 0 #ffc83c!important}
+html.dz-xp #dzExGrp{background:#ece9d8;border:1px solid #003c74;box-shadow:inset 1px 1px 0 #fff;border-radius:0 3px 3px 3px}
+html.dz-xp #dzExGrp .eb{font:11px Tahoma,Verdana,sans-serif!important;color:#000!important;background:linear-gradient(#fff,#ece9d8 85%,#d6d0c5)!important;border:1px solid #003c74!important;border-radius:3px!important;min-width:26px;padding:2px 7px!important}
+html.dz-xp #dzExGrp .eb:hover{border-color:#e68b2c!important;box-shadow:inset 0 0 0 1px #ffc83c!important}
+html.dz-xp #dzExGrp .eb:active{background:#d6d0c5!important;box-shadow:inset 1px 1px 2px #8a8574!important}`; document.head.appendChild(css);
+}
+/* ---- CÓDIGO LEGAL: atalhos de IDE (comentar, duplicar linha, ir para linha, auto-fechar, mover linha) ---- */
+const ta = $('jdCode');
+if(ta){
+  const fire = () => ta.dispatchEvent(new Event('input', { bubbles:true }));
+  const lineRange = () => { const v = ta.value, a = v.lastIndexOf('\n', ta.selectionStart - 1) + 1; let b = v.indexOf('\n', ta.selectionEnd); if(b < 0) b = v.length; return [a, b]; };
+  const cm = () => { const l = ($('jdLang') || {}).value, hash = /^(python|ruby|bash)$/.test(l); return hash ? '# ' : (l === 'html' ? null : '// '); };
+  ta.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase(), pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
+    if((e.ctrlKey || e.metaKey) && k === '/'){ e.preventDefault(); const c = cm() || '// ', [a, b] = lineRange(), ls = ta.value.slice(a, b).split('\n'), un = ls.every(x => x.trim().startsWith(c.trim())); const r = ls.map(x => un ? x.replace(c.trim() + ' ', '').replace(c.trim(), '') : c + x).join('\n'); ta.setRangeText(r, a, b, 'select'); fire(); }
+    else if((e.ctrlKey || e.metaKey) && k === 'd'){ e.preventDefault(); const [a, b] = lineRange(); ta.setRangeText('\n' + ta.value.slice(a, b), b, b, 'end'); fire(); }
+    else if((e.ctrlKey || e.metaKey) && k === 'g'){ e.preventDefault(); window.dzAsk('Ir para a linha / Go to line:', '', n => { n = parseInt(n, 10); if(n > 0){ const ls = ta.value.split('\n'); let p = 0; for(let i = 0; i < Math.min(n - 1, ls.length - 1); i++) p += ls[i].length + 1; ta.setSelectionRange(p, p); const lhh = parseFloat(getComputedStyle(ta).lineHeight) || 18; ta.scrollTop = Math.max(0, (n - 4) * lhh); } }); }
+    else if(e.altKey && (k === 'arrowup' || k === 'arrowdown')){ e.preventDefault(); const [a, b] = lineRange(), v = ta.value; if(k === 'arrowup' && a > 0){ const pa = v.lastIndexOf('\n', a - 2) + 1; ta.setRangeText(v.slice(a, b) + '\n' + v.slice(pa, a - 1), pa, b, 'start'); fire(); } else if(k === 'arrowdown' && b < v.length){ let nb = v.indexOf('\n', b + 1); if(nb < 0) nb = v.length; ta.setRangeText(v.slice(b + 1, nb) + '\n' + v.slice(a, b), a, nb, 'end'); fire(); } }
+    else if(pairs[e.key] && !e.ctrlKey && !e.altKey && !e.metaKey){ const s = ta.selectionStart, en = ta.selectionEnd; if(s !== en || e.key.length === 1 && !/[\w]/.test(ta.value[s] || ' ')){ if(ta.value[s] === pairs[e.key] && s === en && '"\'' .includes(e.key)){ e.preventDefault(); ta.setSelectionRange(s + 1, s + 1); return; } e.preventDefault(); ta.setRangeText(e.key + ta.value.slice(s, en) + pairs[e.key], s, en, 'preserve'); ta.setSelectionRange(s + 1, s + 1 + (en - s)); fire(); } }
+    else if(')]}'.includes(e.key) && ta.value[ta.selectionStart] === e.key && ta.selectionStart === ta.selectionEnd){ e.preventDefault(); ta.setSelectionRange(ta.selectionStart + 1, ta.selectionStart + 1); }
+  });
+}
+})();
+
+/* ===== DIÁLOGOS NA PÁGINA + TOQUE NAS JANELAS XP + MANTER TELA CHEIA ===== */
+(function(){
+  const xp = () => document.documentElement.classList.contains('dz-xp');
+  const css = document.createElement('style'); css.textContent = `#dzAsk{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);padding:12px;box-sizing:border-box}
+#dzAskB{width:min(100%,340px);background:#0d0b07;color:#f0d9a0;border:2px solid #c94b2c;border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;font:14px Arial,sans-serif}
+#dzAskB input{font:inherit;padding:8px;border-radius:4px;border:1px solid #888;background:#fff;color:#000}#dzAskB .r{display:flex;gap:8px;justify-content:flex-end}
+#dzAskB button{font:inherit;min-width:84px;min-height:40px;padding:0 12px;border-radius:5px;border:1px solid #e8b93a;background:#17130b;color:#f0d9a0;cursor:pointer}
+html.dz-xp #dzAskB{background:#ece9d8;color:#000;border:1px solid #0054e3;border-radius:8px 8px 3px 3px;box-shadow:2px 2px 8px #0008;font:12px Tahoma,Verdana,sans-serif;padding:0 0 10px}
+html.dz-xp #dzAskB .t{background:linear-gradient(#0a5bd8,#0840b8);color:#fff;font-weight:700;padding:6px 10px;border-radius:7px 7px 0 0}html.dz-xp #dzAskB .m,html.dz-xp #dzAskB input,html.dz-xp #dzAskB .r{margin:0 12px}
+html.dz-xp #dzAskB button{font:12px Tahoma,sans-serif;color:#000;background:linear-gradient(#fff,#ece9d8 85%,#d6d0c5);border:1px solid #003c74;border-radius:3px}
+@media (pointer:coarse){.xpB{position:relative}.xpB::after{content:'';position:absolute;inset:-4px}.xpTb{touch-action:none;-webkit-user-select:none;user-select:none}.xpTb .xpB{margin-left:2px}}`; document.head.appendChild(css);
+  window.dzAsk = function(msg, def, cb, mode){
+    const old = document.getElementById('dzAsk'); if(old) old.remove();
+    const ov = document.createElement('div'); ov.id = 'dzAsk'; const b = document.createElement('div'); b.id = 'dzAskB'; ov.appendChild(b);
+    const t = document.createElement('div'); t.className = 't'; t.textContent = xp() ? 'Windows XP' : ''; if(xp()) b.appendChild(t);
+    const m = document.createElement('div'); m.className = 'm'; m.textContent = msg; b.appendChild(m);
+    const ask = def != null && mode !== 'alert' && mode !== 'confirm'; let inp = null;
+    if(ask){ inp = document.createElement('input'); inp.type = 'text'; inp.value = def; inp.autocomplete = 'off'; b.appendChild(inp); }
+    const r = document.createElement('div'); r.className = 'r'; b.appendChild(r);
+    const done = v => { ov.remove(); if(cb) try{ cb(v); }catch(e){} };
+    const ok = document.createElement('button'); ok.type = 'button'; ok.textContent = 'OK'; ok.onclick = () => done(ask ? inp.value : true); r.appendChild(ok);
+    if(mode !== 'alert'){ const c = document.createElement('button'); c.type = 'button'; c.textContent = document.documentElement.lang === 'en' ? 'Cancel' : 'Cancelar'; c.onclick = () => done(ask ? null : false); r.appendChild(c); }
+    ov.addEventListener('keydown', e => { e.stopPropagation(); if(e.key === 'Enter'){ e.preventDefault(); ok.click(); } else if(e.key === 'Escape'){ e.preventDefault(); done(ask ? null : false); } }, false);
+    ['keyup', 'keypress'].forEach(k => ov.addEventListener(k, e => e.stopPropagation()));
+    document.body.appendChild(ov); setTimeout(() => { try{ (inp || ok).focus(); if(inp) inp.select(); }catch(e){} }, 30);
+  };
+  window.alert = m => window.dzAsk(String(m), null, null, 'alert');
+  /* toque duplo (dois toques) na barra de título = maximizar/restaurar */
+  let lt = 0, lx = 0;
+  document.addEventListener('pointerup', e => {
+    if(e.pointerType !== 'touch') return; const tb = e.target.closest && e.target.closest('.xpTb'); if(!tb || e.target.closest('button')) return;
+    const n = Date.now(); if(n - lt < 380 && Math.abs(e.clientX - lx) < 30){ const mx = tb.querySelector('.mx'); if(mx) mx.click(); lt = 0; } else { lt = n; lx = e.clientX; }
+  }, true);
+  /* tela cheia: se algo externo (seletor de arquivos, janelas do navegador) tirar, volta no próximo toque */
+  let wantFs = false;
+  const origClick = HTMLInputElement.prototype.click;
+  HTMLInputElement.prototype.click = function(){ if(this.type === 'file' && document.fullscreenElement) wantFs = true; return origClick.apply(this, arguments); };
+  document.addEventListener('pointerdown', () => {
+    if(wantFs && !document.fullscreenElement && document.documentElement.classList.contains('xp-desk')){ try{ const f = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen; const p = f && f.call(document.documentElement, { navigationUI:'hide' }); if(p && p.catch) p.catch(() => {}); }catch(e){} }
+    wantFs = false;
+  }, true);
+  window.dzFsOff = () => { wantFs = false; };
+})();
+</script>
 <style id="dzXpStyle">
 /* fontes do Windows XP (pasta assets/winxp/Fonts) */
 @font-face{font-family:'XP Tahoma';font-weight:400;font-style:normal;src:url('assets/winxp/Fonts/tahoma.ttf') format('truetype');font-display:block}
