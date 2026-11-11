@@ -1,1 +1,34 @@
-
+name: Lista de arquivos do Explorador
+on:
+  push:
+    paths:
+      - 'assets/winxp/Arquivos/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gerar manifest.json
+        run: |
+          python3 - <<'EOF'
+          import os, json
+          base = 'assets/winxp/Arquivos'
+          files = []
+          for root, dirs, fs in os.walk(base):
+              for f in fs:
+                  if f in ('manifest.json', '.keep'):
+                      continue
+                  full = os.path.join(root, f)
+                  files.append({'path': os.path.relpath(full, base).replace(os.sep, '/'), 'size': os.path.getsize(full)})
+          files.sort(key=lambda x: x['path'])
+          json.dump({'files': files}, open(base + '/manifest.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+          EOF
+      - name: Salvar
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add assets/winxp/Arquivos/manifest.json
+          git diff --cached --quiet || (git commit -m "Atualiza lista de arquivos" && git push)
