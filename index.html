@@ -21483,6 +21483,7 @@ function open(){
 function close(){
   if(!isOpen()) return;
   saveDraft(); closePop(); closeDlg();
+  try{ if(edLink){ const L = edLink; edLink = null; L.save(S.mode === 'plain' ? plain.value : rich.innerText); } }catch(e){}   /* arquivo aberto pelo Explorador: grava de volta lá */
   ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); fit(); snd('menuBack');
 }
 function goBack(){
@@ -21632,7 +21633,8 @@ window.dzEdTry = function(v){
   if(String(v || '').trim().toLowerCase() !== ED_SECRET_CODE.toLowerCase()) return false;
   open(); return true;
 };
-window.dzEd = { open, close, isOpen };
+let edLink = null;
+window.dzEd = { open, close, isOpen, openFile: (f, link) => { edLink = null; open(); guard(() => { edLink = link || null; loadFile(f); }); } };
 window.dzEdBack = goBack;
 })();
 </script>
@@ -21998,8 +22000,10 @@ function open(){
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
   ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); fit(); paint(); snd('menuAccept');
 }
+let jdLink = null;
 function close(){
   if(!isOpen()) return;
+  try{ if(jdLink){ const L = jdLink; jdLink = null; L.save(ta.value); } }catch(e){}   /* arquivo aberto pelo Explorador: grava de volta lá */
   save(); if(wk){ try{ wk.terminate(); }catch(e){} wk = null; $('jdRun').disabled = false; }
   if(rac){ rac.abort(); rac = null; $('jdRun').disabled = false; }
   ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); fit(); snd('menuBack');
@@ -22031,12 +22035,12 @@ nameIn.addEventListener('change', () => setName(nameIn.value, true));
 nameIn.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); setName(nameIn.value); nameIn.blur(); } });
 $('jdRename').addEventListener('click', () => { snd('menuSelect'); renameBtn(); });
 showName();
-$('jdFile').addEventListener('change', e => {
-  const f = e.target.files && e.target.files[0]; e.target.value = ''; if(!f) return;
+function jdLoadFile(f){
   const r = new FileReader();
   r.onload = () => { const x = (f.name.split('.').pop() || '').toLowerCase(); setLang(({ java:'java', c:'c', cpp:'cpp', cs:'cs', go:'go', rs:'rust', php:'php', rb:'ruby', kt:'kotlin', ts:'ts', sh:'bash' })[x] || (x === 'py' ? 'py' : /^html?$/.test(x) ? 'html' : x === 'js' ? 'js' : S.lang)); ta.value = String(r.result); setName(f.name, true); paint(); save(); };
   r.readAsText(f);
-});
+}
+$('jdFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if(f){ jdLink = null; jdLoadFile(f); } });
 
 /* teclado (PC): atalhos; as teclas nunca chegam ao jogo */
 ta.addEventListener('keydown', e => {
@@ -22069,7 +22073,7 @@ window.dzJdTry = function(v){
   if(String(v || '').trim().toLowerCase() !== JD_SECRET_CODE.toLowerCase()) return false;
   open(); return true;
 };
-window.dzJd = { open, close, isOpen };
+window.dzJd = { open, close, isOpen, openFile: (f, link) => { jdLink = null; open(); jdLoadFile(f); jdLink = link || null; } };
 window.dzJdBack = goBack;
 })();
 </script>
@@ -22596,7 +22600,7 @@ const SYS_ORDER = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md', 'ms', 'gg', 'segacd'
 /* QUAIS CONSOLES APARECEM NO MENU (seletor "emu" e aba EXTRAS).
    Todos os outros já estão prontos acima e continuam reconhecidos pelo gerador da lista, só ficam escondidos.
    Para liberar um, é só colocar o id dele aqui (ex.: 'n64', 'psx', 'gb', 'gbc', 'ms', 'gg', 'segacd', 'sega32x', 'saturn', 'nds'...). */
-const SHOWN = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md'];
+const SHOWN = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md', 'n64', 'psx', 'saturn'];
 let cur = SYSTEMS.gba;
 /* descobre o console de um jogo: campo "system" do roms.json (id, apelido ou nome), senão pela extensão */
 function sysOf(g){
@@ -25163,8 +25167,7 @@ $('paintSave').addEventListener('click', () => {
   }, 'image/png');
 });
 $('paintOpen').addEventListener('click', () => { snd('menuSelect'); $('paintFile').click(); });
-$('paintFile').addEventListener('change', e => {
-  const f = e.target.files && e.target.files[0]; e.target.value = ''; if(!f) return;
+function paintLoadFile(f){
   const img = new Image(), url = URL.createObjectURL(f);
   img.onload = () => {
     pushUndo(); whiten();
@@ -25173,7 +25176,8 @@ $('paintFile').addEventListener('change', e => {
   };
   img.onerror = () => URL.revokeObjectURL(url);
   img.src = url;
-});
+}
+$('paintFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if(f) paintLoadFile(f); });
 $('paintClose').addEventListener('click', () => close());
 
 function isOpen(){ return overlay.classList.contains('open'); }
@@ -25230,7 +25234,7 @@ window.dzPaintTry = function(v){
   if(String(v || '').trim().toLowerCase() !== PAINT_SECRET_CODE.toLowerCase()) return false;
   open(); return true;
 };
-window.dzPaint = { open, close, isOpen };
+window.dzPaint = { open, close, isOpen, openFile: f => { open(); paintLoadFile(f); } };
 window.dzPaintBack = goBack;
 })();
 </script>
@@ -25641,7 +25645,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const ICON = { d:'📁', a:'🎵', v:'🎬', i:'🖼️', t:'📄', x:'📦' };
 function kind(n){ if(n.type === 'd') return 'd'; const m = n.mime || '', e = (n.name.split('.').pop() || '').toLowerCase();
   if(/^audio/.test(m) || /^(mp3|wav|ogg|m4a|flac|aac|opus)$/.test(e)) return 'a'; if(/^video/.test(m) || /^(mp4|webm|mkv|mov|ogv|m4v|3gp|3g2|avi|wmv|mpg|mpeg)$/.test(e)) return 'v';
-  if(/^image/.test(m) || /^(png|jpe?g|gif|webp|bmp|svg)$/.test(e)) return 'i'; if(/^text/.test(m) || /^(txt|md|json|js|css|html|csv|log)$/.test(e)) return 't'; return 'x'; }
+  if(/^image/.test(m) || /^(png|jpe?g|gif|webp|bmp|svg)$/.test(e)) return 'i'; if(/^text/.test(m) || /^(txt|md|json|js|css|html?|csv|log|py|php|java|c|cpp|h|cs|go|rs|rb|kt|ts|sh|xml|ini|ya?ml|bat|sql)$/.test(e)) return 't'; return 'x'; }
 const fmt = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
 function path(id){ const p = []; while(id && id !== 'root'){ const n = nodes.find(x => x.id === id); if(!n) break; p.unshift(n.name); id = n.parent; } return [tr('Meu Computador', 'My Computer')].concat(p).join(' › '); }
 function render(){
@@ -25682,6 +25686,53 @@ function newText(){   /* cria um documento de texto vazio na pasta atual (salvo 
   const bl = new Blob([''], { type:'text/plain' }), n = { id:uid(), parent:cwd, name:nm, type:'f', mime:'text/plain', size:0, blob:bl, t:Date.now() };
   nodes.push(n); put(n); sel = n.id; selT = 0; render(); if(isXp()) xRename(n.id, true); else view(n, 't');
 }
+/* ---------- abrir com o app certo: texto → Editor de Texto Legal · código → Código Legal · imagem → Media Player ou Paint ---------- */
+const CODE_RX = /^(js|py|php|java|c|cpp|cs|go|rs|rb|kt|ts|sh|html?)$/;
+const extOf = n => (n.name.split('.').pop() || '').toLowerCase();
+const appOnTop = () => ['edOverlay', 'jdOverlay', 'paintOverlay'].some(i => { const o = $(i); return o && o.classList.contains('open'); });
+const exToast = (a, b, k) => { try{ if(typeof uiToast === 'function') uiToast(tr(a, b), k || 'ok'); }catch(e){} };
+async function nodeFile(n){
+  if(n.blob) return (n.blob instanceof File) ? n.blob : new File([n.blob], n.name, { type:n.mime || n.blob.type || '' });
+  if(n.url){ const r = await fetch(n.url), b = await r.blob(); return new File([b], n.name, { type:n.mime || b.type || '' }); }
+  throw new Error('empty');
+}
+function linkFor(n){   /* o que for editado volta para o arquivo do Explorador ao fechar o app */
+  if(!n.blob || n.remote || n.sys) return null;
+  return { save: t => n.blob.text().then(old => {
+    if(old === t) return;
+    const bl = new Blob([t], { type:n.mime || 'text/plain' }); n.blob = bl; n.size = bl.size; n.t = Date.now(); put(n); if(isOpen()) render();
+    exToast('Salvo no Explorador: ' + n.name, 'Saved in Explorer: ' + n.name);
+  }) };
+}
+const APP = { ed:['edOverlay', () => window.dzEd], jd:['jdOverlay', () => window.dzJd], paint:['paintOverlay', () => window.dzPaint] };
+async function sendTo(app, n){
+  const a = APP[app], api = a && a[1]();
+  if(!api || !api.openFile) return false;
+  let f; try{ f = await nodeFile(n); }catch(e){ note(tr('Erro ao abrir arquivo', 'Error opening file'), tr('Não foi possível abrir "' + n.name + '".', 'Could not open "' + n.name + '".')); return true; }
+  const o = $(a[0]); if(o) o.style.zIndex = '99995';   /* esses apps ficam por cima do Explorador; ao fechar, volta para ele */
+  api.openFile(f, app === 'paint' ? null : linkFor(n)); return true;
+}
+function toWmp(n){
+  const sib = nodes.filter(x => x.parent === n.parent && kind(x) === 'i' && (x.blob || x.url)).sort((a, b) => a.name.localeCompare(b.name));
+  window.dzWmp.setList(sib.map(x => ({ name:x.name, blob:x.blob, url:x.url, id:x.id, v:false, i:true, lib:false })), Math.max(0, sib.indexOf(n)));
+}
+function pickApp(title, text, opts, ic){   /* caixa "Abrir com…" (estilo XP no tema XP) */
+  if(isXp()){ xMsg(title, text, opts.map((o, i) => [o[0], o[1], i === 0]).concat([[tr('Cancelar', 'Cancel'), null]]), ic || '🖼️'); return; }
+  const old = document.getElementById('exPick'); if(old) old.remove();
+  const o = document.createElement('div'); o.id = 'exPick'; o.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6)';
+  const d = document.createElement('div'); d.style.cssText = 'background:#0b1020;border:1px solid #4a6aa8;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:240px;max-width:92vw;color:#e9f1ff;font:14px system-ui,sans-serif';
+  const t = document.createElement('div'); t.textContent = text; t.style.cssText = 'margin-bottom:4px;text-align:center;word-break:break-word'; d.appendChild(t);
+  const shut = () => o.remove();
+  opts.concat([[tr('Cancelar', 'Cancel'), null]]).forEach(op => { const b = document.createElement('button'); b.type = 'button'; b.className = 'fxb'; b.textContent = op[0]; b.style.minHeight = '38px'; b.onclick = () => { shut(); if(op[1]) op[1](); }; d.appendChild(b); });
+  o.appendChild(d); o.addEventListener('pointerdown', e => { if(e.target === o) shut(); }); $('exBox').appendChild(o);
+  const f = d.querySelector('button'); if(f) try{ f.focus(); }catch(e){}
+}
+function openWithItems(n){   /* itens "Abrir com" do menu de contexto (tema XP) */
+  const k = kind(n), L = [];
+  if(k === 'i'){ if(window.dzWmp) L.push([tr('Abrir com Media Player', 'Open with Media Player'), () => toWmp(n)]); if(window.dzPaint) L.push([tr('Abrir com Paint', 'Open with Paint'), () => sendTo('paint', n)]); }
+  else if(k === 't'){ if(window.dzEd) L.push([tr('Abrir com Editor de Texto', 'Open with Text Editor'), () => sendTo('ed', n)]); if(window.dzJd) L.push([tr('Abrir com Código Legal', 'Open with Cool Code'), () => sendTo('jd', n)]); }
+  return L;
+}
 function openNode(n){
   const k = kind(n);
   if(k === 'd'){ go(n.id); return; }
@@ -25689,11 +25740,17 @@ function openNode(n){
     const sib = nodes.filter(x => x.parent === n.parent && (kind(x) === 'a' || kind(x) === 'v')).sort((a, b) => a.name.localeCompare(b.name));
     if(window.dzWmp) window.dzWmp.setList(sib.map(x => ({ name:x.name, blob:x.blob, url:x.url, id:x.id, v:kind(x) === 'v' })), sib.indexOf(n)); return;
   }
-  if(k === 'i' && window.dzWmp){
-    const sib = nodes.filter(x => x.parent === n.parent && kind(x) === 'i' && (x.blob || x.url)).sort((a, b) => a.name.localeCompare(b.name));
-    window.dzWmp.setList(sib.map(x => ({ name:x.name, blob:x.blob, url:x.url, id:x.id, v:false, i:true, lib:false })), Math.max(0, sib.indexOf(n))); return;
+  if(k === 'i' && (window.dzWmp || window.dzPaint)){
+    if(!window.dzPaint){ toWmp(n); return; } if(!window.dzWmp){ sendTo('paint', n); return; }
+    pickApp(tr('Abrir com…', 'Open with…'), tr('Com qual programa abrir "' + n.name + '"?', 'Which program should open "' + n.name + '"?'),
+      [['🎵 Media Player', () => toWmp(n)], ['🎨 Paint', () => sendTo('paint', n)]]);
+    return;
   }
-  if(k === 'i' || k === 't'){ view(n, k); return; }
+  if(k === 't'){   /* código → Código Legal · demais textos → Editor de Texto Legal */
+    sendTo(CODE_RX.test(extOf(n)) ? 'jd' : 'ed', n).then(ok => { if(!ok) view(n, k); });
+    return;
+  }
+  if(k === 'i'){ view(n, k); return; }
   download(n);
 }
 async function addFiles(files){ if(cwd === 'mc') cwd = 'root'; for(const f of files){ const n = { id:uid(), parent:cwd, name:f.name, type:'f', mime:f.type, size:f.size, blob:f, t:Date.now() }; nodes.push(n); await put(n); } render(); }
@@ -25758,7 +25815,7 @@ async function open(){
 }
 function close(){ if(!isOpen()) return; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); $('exView').classList.remove('on'); snd('menuBack'); }
 window.addEventListener('keydown', e => {
-  if(!isOpen()) return; const a = document.activeElement; if(a && a.closest && a.closest('#wmpOverlay')) return;
+  if(!isOpen() || appOnTop()) return; const a = document.activeElement; if(a && a.closest && a.closest('#wmpOverlay')) return;
   if(a && ((a.classList && a.classList.contains('xpRenI')) || a.tagName === 'TEXTAREA')) return;
   const md = xp.parentNode.querySelector('.xpPr.msg'); if(md){ if(e.key === 'Escape' || e.key === 'Enter'){ e.stopImmediatePropagation(); e.preventDefault(); const b = md.querySelector(e.key === 'Enter' ? '.xpBtn.def' : '.xpBtn:last-child'); if(b) b.click(); } return; }
   if(e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key;
@@ -25973,7 +26030,7 @@ function xpExtra(){
     const t = e.target.closest && e.target.closest('[data-id]'), n = t && nodes.find(x => x.id === t.dataset.id), X = e.clientX, Y = e.clientY;
     if(cwd === 'mc'){ if(t && t.dataset.id === 'drv'){ sel = 'drv'; clr(); t.classList.add('sel'); paintPane(); paintStatus(); ctx(X, Y, [[tr('Abrir', 'Open'), () => go('root'), true], '-', [tr('Propriedades', 'Properties'), () => props('drive')]]); } return; }
     if(n){ sel = n.id; selT = 0; clr(); t.classList.add('sel'); paintPane(); paintStatus();
-      ctx(X, Y, [[tr('Abrir', 'Open'), () => openNode(n), true], '-', [tr('Recortar', 'Cut'), () => xCopy(true)], [tr('Copiar', 'Copy'), () => xCopy(false)], '-', [tr('Excluir', 'Delete'), () => xDelete(n)], [tr('Renomear', 'Rename'), () => xRename(n.id)], '-', [tr('Propriedades', 'Properties'), () => props(n)]]);
+      ctx(X, Y, [[tr('Abrir', 'Open'), () => openNode(n), true], ...openWithItems(n), '-', [tr('Recortar', 'Cut'), () => xCopy(true)], [tr('Copiar', 'Copy'), () => xCopy(false)], '-', [tr('Excluir', 'Delete'), () => xDelete(n)], [tr('Renomear', 'Rename'), () => xRename(n.id)], '-', [tr('Propriedades', 'Properties'), () => props(n)]]);
     } else { sel = null; clr(); paintPane(); paintStatus();
       const mk = (l, m) => [(vmode === m ? '• ' : '') + l, () => { vmode = m; render(); }];
       ctx(X, Y, [mk(tr('Ícones', 'Icons'), 'icons'), mk(tr('Lista', 'List'), 'list'), mk(tr('Detalhes', 'Details'), 'details'), '-', [tr('Atualizar', 'Refresh'), () => render()], '-', [tr('Colar', 'Paste'), clip ? xPaste : null], '-', [tr('Novo › Pasta', 'New › Folder'), xNew], [tr('Novo › Documento de texto', 'New › Text Document'), newText], '-', [tr('Propriedades', 'Properties'), () => props(cwd === 'root' ? 'drive' : nodes.find(x => x.id === cwd))]]);
