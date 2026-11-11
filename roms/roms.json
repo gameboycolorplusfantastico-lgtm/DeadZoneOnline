@@ -406,5 +406,10 @@
     "file": "UMK3.md",
     "title": "UMK3",
     "system": "md"
+  },
+  {
+    "file": "SM64.z64",
+    "title": "SM64",
+    "system": "n64"
   }
 ]
