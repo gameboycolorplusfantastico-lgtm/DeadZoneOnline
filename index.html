@@ -27342,15 +27342,19 @@ window.dzDawBack = close;
 </script>
 
 <style id="dzXpStyle">
-@font-face{font-family:'XP Tahoma';src:url('assets/winxp/Fonts/tahoma.ttf') format('truetype');font-display:swap}
-@font-face{font-family:'XP Franklin';src:url('assets/winxp/Fonts/framdit.ttf') format('truetype');font-display:swap}
-/* ===== ESTILO WINDOWS XP (só aba EXTRAS) =====
+@font-face{font-family:'XP Tahoma';src:url('assets/winxp/Fonts/tahoma.ttf') format('truetype');font-display:block}
+@font-face{font-family:'XP Franklin';src:url('assets/winxp/Fonts/framdit.ttf') format('truetype');font-display:block}
+/* título das janelas: Trebuchet MS Bold (usa a do sistema; se quiser a original, coloque trebucbd.ttf em assets/winxp/Fonts) */
+@font-face{font-family:'XP Trebuchet';font-weight:700;src:local('Trebuchet MS Bold'),local('TrebuchetMS-Bold'),url('assets/winxp/Fonts/trebucbd.ttf') format('truetype');font-display:swap}
+/* ===== ESTILO WINDOWS XP (aba EXTRAS) =====
    Ligado em EXTRAS > ESTILO. Classes no <html>: dz-xp = estilo escolhido (janelas e botões XP); xp-desk = área de trabalho aberta. */
-#xpDesk,#xpBar,#xpMenu,#xpOff{display:none;font-family:'XP Tahoma',Tahoma,Verdana,Geneva,sans-serif;font-size:12px;color:#000;-webkit-user-select:none;user-select:none}
-#xpDesk *,#xpBar *,#xpMenu *{box-sizing:border-box}
-html.xp-desk #xpDesk{display:block}html.xp-desk #xpBar{display:flex}
-#xpMenu.on{display:flex}#xpOff.on{display:flex}
-#xpDesk{position:fixed;inset:0;z-index:99985;overflow:hidden;background:#3a6ea5 url(assets/winxp/Wallpapers/bliss.jpg) center/cover no-repeat}
+:root{--xf:'XP Tahoma',Tahoma,Verdana,Geneva,sans-serif;--xft:'XP Trebuchet','Trebuchet MS','XP Tahoma',Tahoma,Verdana,sans-serif;--xfs:'XP Franklin','Franklin Gothic Medium','Trebuchet MS',Tahoma,sans-serif}
+#xpDesk,#xpBar,#xpMenu,.xpWin,.xpModal,#xpBalloon,#xpSplash,#xpBoot,#xpStandby{display:none;font:11px/1.25 var(--xf);color:#000;-webkit-user-select:none;user-select:none}
+#xpDesk *,#xpBar *,#xpMenu *,.xpWin *,.xpModal *,#xpBalloon *,#xpSplash *{box-sizing:border-box;font-family:inherit}
+html.xp-desk #xpDesk{display:block}html.xp-desk #xpBar{display:flex}html.xp-desk .xpWin{display:flex}
+#xpMenu.on{display:block}.xpModal.on{display:flex}#xpBalloon.on{display:block}#xpSplash.on{display:flex}#xpBoot.on{display:block}#xpStandby.on{display:block}
+.xpWin.xp-min{display:none!important}
+#xpDesk{position:fixed;inset:0;z-index:99985;overflow:hidden;background:#3a6ea5 center/cover no-repeat}
 #xpDesk[data-wp=bliss]{background-image:url(assets/winxp/Wallpapers/bliss.jpg)}
 #xpDesk[data-wp=ascent]{background-image:url(assets/winxp/Wallpapers/ascent.jpg)}
 #xpDesk[data-wp=autumn]{background-image:url(assets/winxp/Wallpapers/autumn.jpg)}
@@ -27372,267 +27376,307 @@ html.xp-desk #xpDesk{display:block}html.xp-desk #xpBar{display:flex}
 #xpDesk[data-wp=wind]{background-image:url(assets/winxp/Wallpapers/wind.jpg)}
 #xpDesk[data-wp=windows_xp_home_edition]{background-image:url(assets/winxp/Wallpapers/windows_xp_home_edition.jpg)}
 #xpDesk[data-wp=windows_xp_professional]{background-image:url(assets/winxp/Wallpapers/windows_xp_professional.jpg)}
-#xpIcons{position:absolute;inset:6px 6px 36px 6px;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:4px}
-.xpIc{width:80px;padding:4px 2px;text-align:center;color:#fff;border:0;background:none;font:inherit;font-size:11px;line-height:1.25;text-shadow:1px 1px 2px #000;cursor:default}
-.xpIc i{display:block;font-style:normal;font-size:32px;line-height:38px}
-.xpIc.sel span{background:#316ac5;outline:1px dotted #fff}
-#xpWins{position:absolute;inset:0 0 30px 0;pointer-events:none}
-.xpWin{pointer-events:auto;position:absolute;display:flex;flex-direction:column;background:#ece9d8;border:3px solid #0a4fd0;border-top:0;border-radius:8px 8px 3px 3px;box-shadow:2px 4px 14px rgba(0,0,0,.5);overflow:hidden}
-.xpWin.min{display:none}
-.xpTb{display:none;align-items:center;gap:3px;flex:none;height:30px;margin:0 -3px 2px;padding:0 5px 0 7px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#0997ff 0,#0053ee 8%,#0050ee 40%,#06f 88%,#06f 93%,#005bff 95%,#003dd7 100%);color:#fff;font:700 13px 'XP Tahoma',Tahoma,Verdana,sans-serif;text-shadow:1px 1px #0a1f6b;touch-action:none}
-.xpWin .xpTb{display:flex}
-.xpTi{font-size:15px}.xpTt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.xpB{width:23px;height:23px;padding:0;border:1px solid #fff;border-radius:4px;color:#fff;font:700 13px/1 'XP Tahoma',Tahoma,Verdana,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 90% 90%,#0054e9 0,#2263d5 55%,#4479e4 70%,#a3bbec 100%)}
-.xpB.cl{background:radial-gradient(circle at 90% 90%,#cc4600 0,#dc6527 55%,#cd7546 70%,#ffccb2 100%)}
+#xpDesk[data-wp=blue]{background:linear-gradient(180deg,#0b3f9e,#2f77e0)}
+#xpDesk[data-wp=teal]{background:#008080}
+#xpIcons{position:absolute;inset:6px 6px 36px 6px;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:6px}
+.xpIc{width:76px;padding:2px;display:flex;flex-direction:column;align-items:center;text-align:center;color:#fff;border:0;background:none;font:11px/1.2 var(--xf);text-shadow:1px 1px 1px #000,0 0 3px rgba(0,0,0,.55);cursor:default}
+.xpIc i{display:block;margin:2px auto 3px;flex:none}
+.xpIc span{padding:1px 3px;max-width:100%;overflow-wrap:anywhere}
+.xpIc.sel span{background:#316ac5;outline:1px dotted #fff;text-shadow:none}
+.xpIc.sel i{filter:sepia(1) hue-rotate(185deg) saturate(2.4) brightness(.78)}
+/* ---- janelas ---- */
+.xpWin{position:fixed;z-index:99990;flex-direction:column;background:#ece9d8 linear-gradient(#0054e3,#0054e3) top/100% 30px no-repeat;border:3px solid #0831d9;border-top:0;border-radius:7px 7px 0 0;box-shadow:2px 3px 9px rgba(0,0,0,.5);overflow:hidden;min-width:200px}
+.xpWin.xp-max{left:0!important;top:0!important;width:100%!important;height:calc(100% - 30px)!important;transform:none!important;border-radius:0;border-width:0 3px 3px}
+.xpTb{display:none;align-items:center;gap:4px;flex:none;height:30px;margin:0 -3px;border-style:solid;border-width:0 7px;border-image:url(assets/winxp/UI/title_mid.png) 0 7 0 7 fill/0 7px 0 7px stretch;color:#fff;font:700 13px var(--xft);text-shadow:1px 1px #0f1089;touch-action:none;-webkit-user-select:none;user-select:none;position:relative;z-index:30}
+.xpTb.off{border-image-source:url(assets/winxp/UI/title_mid_off.png);color:#d8e2f7;text-shadow:none}
+.xpWin>.xpTb,html.dz-xp .xpTb.app{display:flex}
+.xpTi{flex:none;display:inline-flex}.xpTt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:1px}
+.xpB{flex:none;width:21px;height:21px;padding:0;border:0;border-radius:0;font-size:0;color:transparent;text-shadow:none;cursor:pointer;background:center/100% 100% no-repeat}
+@media (pointer:coarse){.xpB{width:28px;height:28px}.xpTb{height:34px}.xpWin{background-size:100% 34px}}
+.xpB.mn{background-image:url(assets/winxp/UI/cap_min_n.png)}.xpB.mn:hover{background-image:url(assets/winxp/UI/cap_min_h.png)}.xpB.mn:active{background-image:url(assets/winxp/UI/cap_min_p.png)}
+.xpB.mx{background-image:url(assets/winxp/UI/cap_max_n.png)}.xpB.mx:hover{background-image:url(assets/winxp/UI/cap_max_h.png)}.xpB.mx:active{background-image:url(assets/winxp/UI/cap_max_p.png)}
+.xpB.cl{background-image:url(assets/winxp/UI/cap_close_n.png)}.xpB.cl:hover{background-image:url(assets/winxp/UI/cap_close_h.png)}.xpB.cl:active{background-image:url(assets/winxp/UI/cap_close_p.png)}
+.xpB.fs{background-image:url(assets/winxp/UI/cap_restore_n.png)}.xpB.fs:hover{background-image:url(assets/winxp/UI/cap_restore_h.png)}.xpB.fs:active{background-image:url(assets/winxp/UI/cap_restore_p.png)}
+.xp-max>.xpTb .xpB.mx,.xp-max .xpTb.app .xpB.mx{background-image:url(assets/winxp/UI/cap_restore_n.png)}
+.xpTb.off .xpB{filter:saturate(.55) brightness(1.08)}
+/* ---- botões, campos e barras (visual Luna) ---- */
+.xpBtn{min-width:75px;height:23px;padding:0 10px;border:1px solid #003c74;border-radius:3px;background:linear-gradient(180deg,#fff 0,#f0f0ea 80%,#d6d0c5 100%);color:#000;font:11px var(--xf);cursor:pointer;box-shadow:none}
+.xpBtn:hover:not(:disabled){box-shadow:inset 0 0 0 1px #fff,inset 0 0 0 3px #f8b330}
+.xpBtn:active:not(:disabled){background:#d6d0c5;box-shadow:none}
+.xpBtn.def{box-shadow:inset 0 0 0 1px #fff,inset 0 0 0 3px #92b5f4}
+.xpBtn:disabled{color:#a1a192;border-color:#c9c7ba;background:#f4f3ee}
+.xpMbar{display:flex;align-items:center;flex:none;height:20px;padding:0 2px;border-bottom:1px solid #d6d2c2;background:#ece9d8;position:relative}
+.xpMb{height:18px;padding:0 7px;border:0;background:none;color:#000;font:11px var(--xf);cursor:default}
+.xpMb:hover,.xpMb.on{background:#316ac5;color:#fff}
+.xpMflag{margin-left:auto;width:48px;height:100%;border-left:1px solid #fff;background:#fff url(assets/winxp/UI/flag.png) center/20px 18px no-repeat}
+.xpDd{position:absolute;z-index:60;min-width:150px;padding:2px;background:#fff;border:1px solid #aca899;box-shadow:2px 2px 3px rgba(0,0,0,.35)}
+.xpDi{display:block;width:100%;padding:4px 22px 4px 24px;border:0;background:none;color:#000;font:11px var(--xf);text-align:left;cursor:default;white-space:nowrap}
+.xpDi:hover:not(:disabled){background:#316ac5;color:#fff}.xpDi:disabled{color:#a1a192}
+.xpDi.chk::before{content:'\2022';position:absolute;left:10px}
+.xpDd hr{border:0;border-top:1px solid #aca899;margin:2px 1px}
+.xpTbar{display:flex;align-items:center;gap:2px;flex:none;padding:2px 4px;border-bottom:1px solid #d6d2c2;background:linear-gradient(180deg,#f7f6f0,#ece9d8)}
+.xpTbb{display:flex;align-items:center;gap:4px;height:30px;padding:0 6px;border:1px solid transparent;border-radius:3px;background:none;color:#000;font:11px var(--xf);cursor:default;white-space:nowrap}
+.xpTbb:hover:not(:disabled){border-color:#c3c1b3;background:linear-gradient(180deg,#fff,#ece9d8)}
+.xpTbb:active:not(:disabled){border-color:#8a8870;background:#e2dfd0}
+.xpTbb:disabled{opacity:.45;filter:grayscale(1)}.xpTbb.on{border-color:#8a8870;background:#e2dfd0}
+.xpTsep{width:1px;height:24px;margin:0 3px;background:#c3c1b3;flex:none}
+.xpNav{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1px solid #1d6a14;background:radial-gradient(circle at 35% 28%,#b4e99c,#43a631 58%,#21791a);color:#fff;font-style:normal;font-size:11px;line-height:1}
+.xpAddr{display:flex;align-items:center;gap:6px;flex:none;padding:2px 6px;border-bottom:1px solid #d6d2c2;background:#ece9d8;color:#6b6b5e}
+.xpAddrBox{flex:1;min-width:0;display:flex;align-items:center;gap:4px;height:21px;padding:0 4px;border:1px solid #7f9db9;background:#fff;color:#000;overflow:hidden;white-space:nowrap}
+.xpGo{display:flex;align-items:center;gap:3px;color:#000}.xpGo i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#b4e99c,#43a631 58%,#21791a);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:9px}
+.xpSrch{display:none;align-items:center;gap:6px;flex:none;padding:3px 8px;background:#f6f5ee;border-bottom:1px solid #d6d2c2}
+.xpSrch.on{display:flex}.xpSrch input{flex:1;min-width:0;height:21px;padding:0 4px;border:1px solid #7f9db9;font:11px var(--xf);background:#fff;color:#000;-webkit-user-select:text;user-select:text}
 .xpBody{flex:1;min-height:0;display:flex;overflow:hidden;background:#fff}
-.xpPane{width:168px;flex:none;padding:10px 8px;overflow:auto;background:linear-gradient(180deg,#7ba2e7,#6375d6)}
-.xpPane h4{margin:0 0 6px;padding:5px 8px;font-size:12px;color:#fff;background:linear-gradient(90deg,#0c3fc0,#4b7ae6);border-radius:5px 5px 0 0}
-.xpPane .bx{background:#d6dff7;padding:7px 8px 8px;margin-bottom:10px;border-radius:0 0 5px 5px}
-.xpPane a,.xpLnk{display:block;padding:2px 0;color:#1c3a9c;cursor:pointer;text-decoration:none;background:none;border:0;font:inherit;text-align:left}
-.xpPane a:hover,.xpLnk:hover{text-decoration:underline;color:#2a5fe0}
-.xpMain{flex:1;min-width:0;overflow:auto;padding:10px 12px;background:#fff}
-.xpMain h3{margin:12px 0 8px;padding-bottom:3px;font-size:13px;color:#1c3a9c;border-bottom:1px solid #b6c8ef}
-.xpMain h3:first-child{margin-top:0}
-.xpGrid{display:flex;flex-wrap:wrap;gap:6px}
-.xpMain .xpIc{color:#000;text-shadow:none;width:92px}
-.xpMain .xpIc.sel span{color:#fff}
-.xpCat{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;margin:4px 0;border:1px solid #b6c8ef;border-radius:6px;background:#f3f7ff;font:inherit;font-size:13px;color:#1c3a9c;text-align:left;cursor:pointer}
-.xpCat i{font-style:normal;font-size:28px}
-.xpCat.on{border-color:#e69b1e;background:#fff3cf}
+.xpWin.nopane .xpPane{display:none}
+.xpPane{width:176px;flex:none;padding:10px 8px;overflow:auto;background:linear-gradient(180deg,#7ba2e7,#6375d6)}
+.xpBox{margin-bottom:10px;border-radius:4px 4px 0 0;overflow:hidden}
+.xpBh{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;height:23px;padding:0 4px 0 10px;border:0;border-radius:4px 4px 0 0;background:linear-gradient(90deg,#fff 0,#c6d3f7 100%);color:#215dc6;font:700 11px var(--xf);text-align:left;cursor:pointer}
+.xpBox.sp .xpBh{background:linear-gradient(90deg,#0c3fc0,#4b7ae6);color:#fff}
+.xpBh i{flex:none;width:17px;height:17px;border-radius:50%;border:1px solid #aab9e8;background:#fff;position:relative}
+.xpBox.sp .xpBh i{border-color:#fff;background:rgba(255,255,255,.25)}
+.xpBh i::after{content:'';position:absolute;left:4px;top:6px;width:5px;height:5px;border:solid #215dc6;border-width:2px 0 0 2px;transform:rotate(45deg)}
+.xpBox.sp .xpBh i::after{border-color:#fff}
+.xpBox.shut .xpBh i::after{top:3px;transform:rotate(225deg)}
+.xpBox.shut .xpBc{display:none}
+.xpBc{padding:8px 10px 6px;background:#d6dff7;border:1px solid #fff;border-top:0}
+.xpLk{display:flex;align-items:center;gap:5px;width:100%;padding:3px 0;border:0;background:none;color:#215dc6;font:11px var(--xf);text-align:left;cursor:pointer}
+.xpLk:hover:not(:disabled){text-decoration:underline;color:#428eff}.xpLk:disabled{color:#8f9bbd}
+.xpDet b{display:block;color:#000;font-size:11px}.xpDet span{display:block;color:#444;margin-top:1px}
+.xpMain{flex:1;min-width:0;overflow:auto;padding:10px 14px;background:#fff;color:#000}
+.xpSec{margin:0 0 8px;padding:3px 0 3px;color:#0c327d;font:700 11px var(--xf);background:linear-gradient(90deg,#70bfff,#fff) left bottom/100% 1px no-repeat}
+.xpSec:not(:first-child){margin-top:14px}
+.xpGrid{display:flex;flex-wrap:wrap;gap:4px 6px}
+.xpMain .xpIc{color:#000;text-shadow:none;width:88px}
+.xpMain .xpIc.sel span{color:#fff;outline:0}
+.xpMain.list .xpGrid{flex-direction:column;gap:0}
+.xpMain.list .xpIc{width:100%;flex-direction:row;align-items:center;gap:6px;text-align:left;padding:1px 2px}
+.xpMain.list .xpIc i{margin:0}
+.xpEmpty{padding:24px 8px;text-align:center;color:#6b6b5e}
+/* ---- Painel de Controle ---- */
+.xpMain.cp{background:linear-gradient(180deg,#8ea9ea,#6a7fd9);color:#fff}
+.xpMain.cp h2{margin:0 0 14px;font:700 16px var(--xft);color:#fff;text-shadow:1px 1px 1px rgba(0,0,40,.35)}
+.xpMain.cp.white{background:#fff;color:#000}
+.xpMain.white h2{color:#1c3a9c;text-shadow:none}
+.xpCats{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 14px}
+.xpCatB{display:flex;align-items:center;gap:10px;width:100%;padding:8px 6px;border:0;border-radius:3px;background:none;color:#fff;font:700 12px var(--xf);text-align:left;cursor:pointer}
+.xpCatB:hover{background:rgba(255,255,255,.2);text-decoration:underline;color:#ffe9a8}
+.xpCatB .xpIcBig{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#cfdcf8 70%);flex:none}
+.xpTasks{display:flex;flex-direction:column;gap:2px;margin:0 0 14px}
+.xpTasks .xpLk{font-size:12px}
+.xpWpG{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.xpWpB{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px;border:2px solid transparent;border-radius:3px;background:none;color:#000;font:11px var(--xf);cursor:pointer;text-align:center}
+.xpWpB:hover{background:#eef3fd}.xpWpB.on{border-color:#316ac5;background:#dbe7fb}
+.xpWpT{display:block;width:84px;height:63px;border:1px solid #7f9db9;background-size:cover;background-position:center;background-repeat:no-repeat}
+.xpStyG{display:flex;gap:12px;flex-wrap:wrap}
+.xpStyB{display:flex;flex-direction:column;align-items:center;gap:6px;width:120px;padding:12px 8px;border:2px solid #b6c8ef;border-radius:5px;background:#f3f7ff;color:#1c3a9c;font:700 12px var(--xf);cursor:pointer}
+.xpStyB.on{border-color:#e69b1e;background:#fff3cf}
+.xpOpt{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:12px;color:#000}
+.xpOpt input{margin:0;width:15px;height:15px;accent-color:#316ac5}
+.xpOpt input[type=range]{width:170px;height:auto}
+.xpBigClk{font:400 34px var(--xf);color:#1c3a9c;margin:4px 0}.xpDate{font-size:12px;color:#333;text-transform:capitalize}
 @media (max-width:560px){.xpPane{display:none}}
-#xpBar{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:99996;align-items:stretch;background:linear-gradient(180deg,#245edb 0,#3f8cf3 9%,#245edb 18%,#245edb 92%,#1941a5 100%)}
-#xpStart{flex:none;display:flex;align-items:center;gap:5px;padding:0 18px 0 10px;border:0;border-radius:0 12px 12px 0;color:#fff;font:italic 700 17px 'XP Franklin','Trebuchet MS',Tahoma,sans-serif;text-shadow:1px 1px 2px #000;cursor:pointer;background:linear-gradient(180deg,#5cb85c 0,#3c9a3c 12%,#2e8b2e 50%,#2a7d2a 88%,#1e6b1e 100%);box-shadow:inset -2px 0 3px rgba(0,0,0,.3)}
-#xpStart.on{filter:brightness(.85)}
-#xpTasks{flex:1;min-width:0;display:flex;overflow:hidden;padding-left:6px}
-.xpTask{flex:0 1 150px;min-width:50px;height:24px;margin:3px 2px;padding:0 8px;border:1px solid #1c4fbf;border-radius:3px;background:linear-gradient(180deg,#5b9aff,#3a78e8);color:#fff;font:inherit;font-size:11px;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
-.xpTask.on{background:linear-gradient(180deg,#1e50c0,#2860d8);box-shadow:inset 1px 1px 3px rgba(0,0,0,.5)}
-#xpTray{flex:none;display:flex;align-items:center;gap:8px;padding:0 12px;color:#fff;font-size:11px;border-left:1px solid #1042af;background:linear-gradient(180deg,#0c59b9 0,#139ee9 6%,#18b5f2 10%,#139ee9 14%,#1290e8 20%,#0d8fe8 92%,#0c59b9 100%)}
-#xpMenu{position:fixed;left:0;bottom:30px;z-index:99997;width:min(400px,100vw);max-height:calc(100% - 36px);flex-direction:column;border:2px solid #0a4fd0;border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:3px -3px 12px rgba(0,0,0,.45);background:#fff}
-#xpMenu .mh{display:flex;align-items:center;gap:10px;padding:8px 10px;color:#fff;font:700 15px 'XP Tahoma',Tahoma,sans-serif;text-shadow:1px 1px 2px #002;background:linear-gradient(180deg,#1868ce,#0a3fb0)}
-#xpMenu .mh i{font-style:normal;font-size:28px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #dbe6fb;border-radius:5px}
-#xpMenu .mb{display:flex;min-height:0;flex:1;overflow:hidden}
-#xpMenu .ml{flex:1.25;overflow:auto;padding:6px 4px;background:#fff}
-#xpMenu .mr{flex:1;overflow:auto;padding:6px 4px;background:#d3e5fa;border-left:1px solid #95bdee}
-#xpMenu button.mi{display:flex;align-items:center;gap:8px;width:100%;padding:5px 8px;border:0;background:none;font:inherit;font-size:12px;text-align:left;cursor:pointer;color:#000}
-#xpMenu .mr button.mi{font-weight:700;color:#00136b}
-#xpMenu button.mi i{font-style:normal;font-size:22px;width:26px;text-align:center}
-#xpMenu button.mi:hover{background:#316ac5;color:#fff}
-#xpMenu hr{border:0;border-top:1px solid #c9d6ee;margin:4px 6px}
-#xpMenu .mf{display:flex;justify-content:flex-end;gap:12px;padding:6px 10px;background:linear-gradient(180deg,#4282d6,#3168c8)}
-#xpMenu .mf button{display:flex;align-items:center;gap:5px;border:0;background:none;color:#fff;font:inherit;font-size:12px;cursor:pointer}
-#xpOff{position:fixed;inset:0;z-index:99998;align-items:center;justify-content:center;color:#fff;font:italic 20px 'XP Tahoma',Tahoma,Verdana,sans-serif;background:linear-gradient(180deg,#003cb4,#0a5ad8)}
+/* ---- barra de tarefas ---- */
+#xpBar{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:100020;align-items:stretch;background:url(assets/winxp/UI/taskbar.png) 0 0/100% 100% no-repeat,#245edb}
+#xpStart{flex:none;display:flex;align-items:center;gap:4px;min-width:99px;height:30px;padding:0 20px 0 11px;border:0;border-radius:0 12px 12px 0;color:#fff;font:400 20px/1 var(--xfs);font-style:normal;letter-spacing:-.3px;text-shadow:1px 1px 2px #1d4d1d,0 0 1px #1d4d1d;cursor:pointer;background:url(assets/winxp/UI/start_n.png) 0 0/100% 100% no-repeat;filter:none}
+#xpStart:hover{background-image:url(assets/winxp/UI/start_h.png)}
+#xpStart.on,#xpStart:active{background-image:url(assets/winxp/UI/start_p.png)}
+.xpFlag{display:inline-block;width:20px;height:18px;background:url(assets/winxp/UI/flag.png) center/contain no-repeat}
+#xpTasks{flex:1;min-width:0;display:flex;overflow:hidden;padding-left:8px}
+.xpTask{flex:0 1 160px;min-width:34px;height:24px;margin:3px 1px;padding:0 7px;display:flex;align-items:center;gap:4px;border:1px solid #1c4fbf;border-radius:3px;background:linear-gradient(180deg,#4a8bf5 0,#3a79ee 50%,#2f6ae3 100%);color:#fff;font:11px var(--xf);text-align:left;overflow:hidden;white-space:nowrap;cursor:pointer;box-shadow:inset 1px 1px 0 rgba(255,255,255,.28)}
+.xpTask span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.xpTask:hover{filter:brightness(1.1)}
+.xpTask.on{background:linear-gradient(180deg,#1b46ac,#2557c4);box-shadow:inset 1px 1px 3px rgba(0,0,0,.55);filter:none}
+#xpTray{flex:none;display:flex;align-items:center;gap:8px;padding:0 12px 0 14px;color:#fff;font:11px var(--xf);background:url(assets/winxp/UI/tray.png) 0 0/100% 100% no-repeat,#0d8fe8}
+#xpTray button{display:flex;align-items:center;border:0;background:none;color:#fff;font:11px var(--xf);padding:0;cursor:default}
+/* ---- menu Iniciar ---- */
+#xpMenu{position:fixed;left:0;bottom:30px;z-index:100021;width:min(380px,100vw)}
+.smBox{display:flex;flex-direction:column;max-height:calc(100vh - 34px);max-height:calc(100dvh - 34px);border:1px solid #0831d9;border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:3px -2px 8px rgba(0,0,0,.5);background:#fff}
+.smh{display:flex;align-items:center;gap:8px;flex:none;height:56px;padding:0 8px;color:#fff;font:700 14px var(--xft);text-shadow:1px 1px 2px #14307a;background:linear-gradient(180deg,#1868ce 0,#0f56c4 45%,#0a47b3 100%)}
+.smh i{display:flex;align-items:center;justify-content:center;width:42px;height:42px;background:#fff;border:2px solid #dbe6fb;border-radius:4px;flex:none}
+.smh b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.smLine{flex:none;height:2px;background:linear-gradient(90deg,#1860ce 0,#f6a73a 45%,#f6a73a 55%,#1860ce 100%)}
+.smb{display:flex;flex:1;min-height:0;overflow:hidden}
+.sml{flex:1.2;display:flex;flex-direction:column;min-width:0;background:#fff;border-right:1px solid #95bdee}
+.smlList{flex:1;min-height:0;overflow:auto;padding:6px 4px 2px}
+.smAllW{flex:none;padding:3px 4px 4px;border-top:1px solid #dcdcdc}
+.smr{flex:1;min-width:0;overflow:auto;padding:6px 4px;background:#d3e5fa}
+#xpMenu .mi{display:flex;align-items:center;gap:8px;width:100%;padding:4px 6px;border:0;background:none;color:#000;font:11px var(--xf);text-align:left;cursor:pointer}
+#xpMenu .mi .tx{min-width:0;display:flex;flex-direction:column;overflow:hidden}
+#xpMenu .mi .tx b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+#xpMenu .mi .tx small{color:#6a6a6a;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#xpMenu .mi:hover{background:#316ac5;color:#fff}#xpMenu .mi:hover small{color:#dbe6fb}
+#xpMenu .smr .mi{color:#00136b;font-weight:700;padding:4px 6px}
+#xpMenu .smr .mi:hover{color:#fff}
+#xpMenu .smr hr,.smlList hr{border:0;border-top:1px solid #a9c5ee;margin:4px 6px}
+.smlList hr{border-top-color:#dcdcdc}
+#xpMenu .smAll{justify-content:space-between;font-weight:700;font-size:12px;padding:5px 6px;color:#000}
+#xpMenu .smAll i{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#b4e99c,#43a631 58%,#21791a);color:#fff;font-style:normal;font-size:9px;flex:none}
+.smf{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex:none;height:38px;padding:0 8px;background:linear-gradient(180deg,#4282d6,#3168c8 60%,#2c5fc0)}
+.smf button{display:flex;align-items:center;gap:5px;height:28px;padding:0 8px;border:0;border-radius:3px;background:none;color:#fff;font:11px var(--xf);cursor:pointer}
+.smf button:hover{background:rgba(255,255,255,.22)}
+#xpFly{display:none;position:absolute;left:calc(100% - 2px);bottom:38px;width:240px;max-height:calc(100vh - 100px);max-height:calc(100dvh - 100px);overflow:auto;padding:3px;background:#fff;border:1px solid #7f9db9;box-shadow:3px 3px 6px rgba(0,0,0,.4)}
+#xpFly.on{display:block}
+#xpFly .mi{min-height:30px!important;padding:2px 6px!important}
+#xpFly .fh{padding:3px 6px;font:700 11px var(--xf);color:#0c327d;background:linear-gradient(90deg,#dbe7fb,#fff)}
+@media (max-width:660px){#xpFly{left:6px;right:6px;width:auto;bottom:44px}}
+@media (max-height:480px){.smh{height:44px}.smh i{width:34px;height:34px}.smf{height:34px}#xpMenu .mi{padding:3px 6px}}
+@media (pointer:coarse){#xpMenu .mi{min-height:40px}.smf button{height:32px}}
+/* ---- caixas de diálogo (modais) ---- */
+.xpModal{position:fixed;inset:0;z-index:100022;align-items:center;justify-content:center;padding:8px;background:rgba(0,0,0,.4);-webkit-backdrop-filter:grayscale(1) brightness(.72);backdrop-filter:grayscale(1) brightness(.72)}
+.xpModal.plain{background:rgba(0,0,0,.14);-webkit-backdrop-filter:none;backdrop-filter:none}
+.xpDlg{display:flex;flex-direction:column;width:min(400px,100%);max-height:100%;background:#ece9d8 linear-gradient(#0054e3,#0054e3) top/100% 30px no-repeat;border:3px solid #0831d9;border-top:0;border-radius:7px 7px 0 0;box-shadow:3px 4px 12px rgba(0,0,0,.6);overflow:hidden}
+.xpDlg .xpTb{display:flex}
+.xpDlgB{display:flex;gap:14px;align-items:flex-start;padding:16px 16px 10px;font-size:11px;line-height:1.4;color:#000;-webkit-user-select:text;user-select:text}
+.xpDlgB p{margin:0 0 6px}.xpDlgB b{font-size:12px}
+.xpDlgF{display:flex;justify-content:center;gap:8px;padding:6px 12px 14px}
+.xpPw{width:min(380px,100%);border:1px solid #00309c;border-radius:8px;overflow:hidden;box-shadow:0 6px 26px rgba(0,0,0,.7);background:#5a7edc}
+.xpPw .ph{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 12px 0 14px;background:linear-gradient(180deg,#00309c,#0a47d1);color:#fff;font:700 18px var(--xft);text-shadow:1px 1px 2px rgba(0,0,40,.5)}
+.xpPw .pm{display:flex;justify-content:center;gap:26px;padding:22px 12px 20px;border-top:2px solid #f0a23a;background:linear-gradient(180deg,#6c8fe9,#4f74d9)}
+.xpPw .pb{display:flex;justify-content:flex-end;padding:9px 12px;background:linear-gradient(180deg,#0a47d1,#00309c)}
+.pbtn{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:70px;border:0;background:none;color:#fff;font:11px var(--xf);cursor:pointer}
+.pbtn i{position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:2px solid #fff;border-radius:6px;color:#fff;font-style:normal;font-size:22px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.5);box-shadow:0 1px 3px rgba(0,0,0,.45)}
+.pbtn.y i{background:radial-gradient(circle at 30% 22%,#ffe97c,#e0a010)}
+.pbtn.r i{background:radial-gradient(circle at 30% 22%,#ffa585,#d2380e)}
+.pbtn.g i{background:radial-gradient(circle at 30% 22%,#a7ec79,#2c961f)}
+.pbtn.b i{background:radial-gradient(circle at 30% 22%,#9fc0ff,#2a5fd0)}
+.pbtn:hover:not(:disabled) i{filter:brightness(1.15)}.pbtn:hover:not(:disabled) span{text-decoration:underline}
+.pbtn:disabled{opacity:.5;cursor:default}
+.pbtn i.pwr::before{content:'';width:15px;height:15px;border:3px solid #fff;border-top-color:transparent;border-radius:50%}
+.pbtn i.pwr::after{content:'';position:absolute;top:8px;left:50%;width:3px;height:11px;margin-left:-1.5px;background:#fff;border-radius:1px}
+.xpDlg.flash .xpTb,.xpPw.flash .ph{filter:brightness(1.5)}
+/* ---- telas de boot, bem-vindo e desligar ---- */
+#xpBoot{position:fixed;inset:0;z-index:100031;background:#000}
+#xpBoot .bf{position:absolute;left:50%;top:50%;width:min(100vw,177.7778vh);aspect-ratio:16/9;transform:translate(-50%,-50%);background:url(assets/winxp/Logo/boot.png) center/100% 100% no-repeat}
+#xpBoot .bar{position:absolute;left:42.9%;top:73.1%;width:13.4%;height:2.3%;overflow:hidden}
+#xpBoot .bar i{position:absolute;top:0;height:100%;width:19%;border-radius:1px;background:linear-gradient(180deg,#c3d8ff 0,#4d8cf0 35%,#2253c2 70%,#16399a 100%);animation:xpBar 1.7s linear infinite}
+#xpBoot .bar i:nth-child(2){animation-delay:-.18s}#xpBoot .bar i:nth-child(3){animation-delay:-.36s}
+@keyframes xpBar{from{transform:translateX(-110%)}to{transform:translateX(560%)}}
+#xpSplash{position:fixed;inset:0;z-index:100030;flex-direction:column;background:#5a7edc;color:#fff}
+#xpSplash .sb{flex:none;height:15%;min-height:44px;background:linear-gradient(180deg,#00309c,#0a47d1)}
+#xpSplash .st{border-bottom:2px solid #f0a23a;display:flex;align-items:flex-end;padding:0 18px 8px}
+#xpSplash .sbt{border-top:2px solid #f0a23a;display:flex;align-items:center;padding:0 18px;font:700 20px var(--xft)}
+#xpSplash .sbt sup{color:#f6a73a;font-size:11px;margin-left:1px}
+#xpSplash .sm{flex:1;display:flex;align-items:center;justify-content:center;gap:16px;padding:12px;background:radial-gradient(ellipse at 25% 50%,#9ab8fa 0,#6a8be6 40%,#4a6fd6 100%)}
+#xpSplash .sm i{display:flex;align-items:center;justify-content:center;width:58px;height:58px;background:#fff;border:3px solid #dbe6fb;border-radius:6px;flex:none}
+#xpSplash .sm div{display:flex;flex-direction:column}
+#xpSplash .sm b{font:400 36px/1.1 var(--xfs);text-shadow:2px 2px 3px rgba(0,0,60,.45)}
+#xpSplash .sm span{font:14px var(--xf);margin-top:4px;text-shadow:1px 1px 2px rgba(0,0,60,.45)}
+#xpStandby{position:fixed;inset:0;z-index:100032;background:#000;color:#4a4a4a;text-align:center;font:12px var(--xf)}
+#xpStandby span{position:absolute;left:0;right:0;bottom:12%}
+/* ---- balão da bandeja ---- */
+#xpBalloon{position:fixed;right:10px;bottom:38px;z-index:100019;width:min(280px,calc(100vw - 20px));padding:8px 24px 9px 10px;border:1px solid #000;border-radius:8px;background:#ffffe1;color:#000;font:11px/1.35 var(--xf);box-shadow:2px 3px 5px rgba(0,0,0,.4);cursor:pointer}
+#xpBalloon::after{content:'';position:absolute;right:26px;bottom:-9px;border:8px solid transparent;border-top:9px solid #000;border-bottom:0}
+#xpBalloon::before{content:'';position:absolute;right:27px;bottom:-7px;border:7px solid transparent;border-top:8px solid #ffffe1;border-bottom:0;z-index:1}
+#xpBalloon .bt{display:flex;align-items:center;gap:5px;margin-bottom:3px;font-weight:700}
+#xpBalloon .bx{position:absolute;right:4px;top:3px;width:15px;height:15px;border:1px solid #8c8c70;border-radius:3px;background:#fff;color:#444;font-size:10px;line-height:12px;text-align:center}
 /* ---- estilo XP escolhido: moldura das janelas dos apps ---- */
-html.dz-xp .xpTb.app{display:flex}
-html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay){border:3px solid #0a4fd0!important;border-top:0!important;border-radius:8px 8px 3px 3px!important;padding:0 3px 3px!important;gap:3px!important;box-shadow:2px 4px 14px rgba(0,0,0,.55)!important;font-family:'XP Tahoma',Tahoma,Verdana,sans-serif!important}
-/* apps claros: corpo bege XP, texto preto */
-html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox){background:#ece9d8!important;color:#000!important}
-/* emuladores e estúdio: mantêm o corpo escuro (texto claro), só ganham a moldura XP */
-html.dz-xp :is(#emuBox,#lgBox,#gbaBox){background:#0b0818!important;color:#f1eaff!important}
-html.dz-xp #dawOverlay{background:#1f2529!important}
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay){border:3px solid #0831d9!important;border-top:0!important;border-radius:7px 7px 0 0!important;padding:0 3px 3px!important;gap:3px!important;box-shadow:2px 3px 9px rgba(0,0,0,.55)!important;font-family:var(--xf)!important}
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox){background:#ece9d8 linear-gradient(#0054e3,#0054e3) top/100% 30px no-repeat!important;color:#000!important}
+html.dz-xp :is(#emuBox,#lgBox,#gbaBox){background:#0b0818 linear-gradient(#0054e3,#0054e3) top/100% 30px no-repeat!important;color:#f1eaff!important}
+html.dz-xp #dawOverlay{background:#1f2529 linear-gradient(#0054e3,#0054e3) top/100% 30px no-repeat!important}
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox)>.xpTb.app{position:sticky;top:0}
 html.dz-xp :is(#calcHead,#edHead,#jdHead,#paintHead,#mgHead){background:linear-gradient(180deg,#fdfdfb,#ece9d8)!important;border:0!important;border-bottom:1px solid #aca899!important;border-radius:0!important;color:#000!important}
 html.dz-xp :is(#calcTitle,#edTitle,#paintTitle,#mgTitle){display:none!important}
 html.dz-xp :is(#calcClose,#edClose,#jdClose,#paintClose,#mgClose,#emuClose,#lgClose,#gbaClose){display:none!important}
-/* contraste: botões, campos e textos dos apps claros */
-html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:not(#paintPal *):not(.xpB){background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)!important;color:#000!important;border:1px solid #003c74!important;border-radius:3px!important;box-shadow:none!important;text-shadow:none!important}
+/* botões e campos dos apps claros (os botões da barra de título XP ficam de fora) */
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:not(.xpB,.xpFsX,#paintPal *){background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)!important;color:#000!important;border:1px solid #003c74!important;border-radius:3px!important;box-shadow:none!important;text-shadow:none!important}
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:not(.xpB,.xpFsX,#paintPal *):hover:not(:disabled){box-shadow:inset 0 0 0 1px #fff,inset 0 0 0 2px #f8b330!important}
 html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox) button:disabled{color:#777!important}
 html.dz-xp :is(#edBox,#jdBox,#paintBox,#calcBox) :is(select,input:not([type=range],[type=color],[type=file],[type=checkbox],[type=radio])){background:#fff!important;color:#000!important;border:1px solid #7f9db9!important;border-radius:2px!important;box-shadow:none!important}
+/* fonte original do Windows (Tahoma) em tudo que é botão, campo e rótulo — o display da calculadora e as áreas de código ficam como estão */
+html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox) :is(button,select,label,input:not([type=range])):not(.xpB){font-family:var(--xf)!important;font-weight:400!important;letter-spacing:0!important;text-transform:none!important}
+html.dz-xp :is(#calcHead,#edHead,#jdHead,#paintHead,#mgHead,#edStatus,#jdLogo,#paintSizeTxt,#paintSizeLbl,#paintHint,#calcHistList){font-family:var(--xf)!important;letter-spacing:0!important}
 html.dz-xp :is(#edTools,#edFind){background:transparent!important;border-color:#aca899!important}
 html.dz-xp :is(#edStatus,#paintSizeTxt,#paintSizeLbl,#paintHint,#jdLogo span,#edBox label,#jdBox label,#paintBox label){color:#222!important}
 html.dz-xp #jdLogo{color:#000!important;text-shadow:none!important}
 html.dz-xp #jdLogo b{color:#c0390f!important}
 html.dz-xp #paintStage{background:#808080!important}
-/* janela / maximizar (duplo clique na barra de título também) */
 html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox).xp-max{width:100%!important;max-width:none!important;height:100%!important;max-height:none!important}
 html.dz-xp .xp-min{display:none!important}
-/* emulador GBA/consoles: janela com tamanho próprio (fundo animado fica preso nela) */
 html.dz-xp #gbaOverlay.open{display:flex!important;align-items:center;justify-content:center}
 html.dz-xp #gbaBox{width:min(100%,900px)!important;max-width:none!important;height:min(100%,640px)!important;margin:0!important}
-/* emulador do menu: o fundo animado vive DENTRO da janela, não na tela toda */
 html.dz-xp #emuBox{position:relative!important;overflow:hidden!important}
 html.dz-xp #emuBox>*:not(canvas){position:relative;z-index:1}
 html.dz-xp #emuBox>canvas.fxBg{position:absolute;inset:0;z-index:0}
-/* contraste: avisos e textos da lista do emulador ganham fundo escuro sobre a animação */
 html.dz-xp #gbaOverlay:not(.playing) #gbaList>*:not(.gbarom){background:rgba(8,5,20,.82)!important;border-radius:10px;color:#f1eaff!important}
-/* tela cheia do emulador (cobre a barra de tarefas) */
-html.dz-xp #gbaOverlay.xp-full{bottom:0!important;z-index:99999!important;padding:0!important;background:#000!important}
+html.dz-xp #gbaOverlay.xp-full{bottom:0!important;z-index:100025!important;padding:0!important;background:#000!important}
 html.dz-xp #gbaOverlay.xp-full #gbaBox{width:100%!important;height:100%!important;border:0!important;border-radius:0!important;padding:0!important}
 html.dz-xp #gbaOverlay.xp-full .xpTb{display:none}
-.xpFsX{display:none;position:absolute;top:6px;right:6px;z-index:99999;padding:5px 10px;border:1px solid rgba(255,255,255,.6);border-radius:4px;background:rgba(0,0,0,.55);color:#fff;font:12px 'XP Tahoma',Tahoma,Verdana,sans-serif;cursor:pointer;opacity:.55}
+.xpFsX{display:none;position:absolute;top:6px;right:6px;z-index:100026;padding:5px 10px;border:1px solid rgba(255,255,255,.6);border-radius:4px;background:rgba(0,0,0,.55);color:#fff;font:12px var(--xf);cursor:pointer;opacity:.55}
 .xpFsX:hover{opacity:1}
 html.dz-xp #gbaOverlay.xp-full .xpFsX{display:block}
-@media (pointer:coarse){.xpB{width:30px;height:30px}.xpTb{height:36px}}
-#xpDesk[data-wp=blue]{background:linear-gradient(180deg,#0b3f9e,#2f77e0)}
-#xpDesk[data-wp=teal]{background:#008080}
-/* ---- área de trabalho aberta: apps viram janelas sobre o papel de parede, acima da barra de tarefas ---- */
+/* área de trabalho aberta: apps viram janelas sobre o papel de parede, acima da barra de tarefas */
 html.xp-desk :is(#calcOverlay,#edOverlay,#jdOverlay,#paintOverlay,#mgOverlay,#emuOverlay,#lgOverlay,#gbaOverlay){bottom:30px!important;height:auto!important;max-height:none!important}
 html.xp-desk :is(#calcOverlay,#edOverlay,#jdOverlay,#paintOverlay,#mgOverlay,#emuOverlay,#lgOverlay){background:transparent!important;pointer-events:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
-html.xp-desk :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox){pointer-events:auto}
+html.xp-desk :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox){pointer-events:auto;max-height:100%!important}
 html.xp-desk #dawOverlay{inset:6px 6px 36px 6px!important;height:auto!important}
-/* ---- aba EXTRAS no estilo XP ---- */
-html.dz-xp #tabExtras{font-family:'XP Tahoma',Tahoma,Verdana,sans-serif}
+/* aba EXTRAS no estilo XP */
+html.dz-xp #tabExtras{font-family:var(--xf)}
 html.dz-xp #tabExtras .xt-sec{color:#fff;background:linear-gradient(90deg,#0a4fd0,#3a7bea);padding:4px 10px;border-radius:6px 6px 0 0;letter-spacing:0;font-weight:700;font-size:13px}
 html.dz-xp #tabExtras .xt-sec::after{display:none}
-html.dz-xp #tabExtras .xt-row .btn{background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)!important;color:#000!important;border:1px solid #003c74!important;border-radius:3px!important;box-shadow:none!important;font-family:'XP Tahoma',Tahoma,Verdana,sans-serif!important;min-height:40px!important}
+html.dz-xp #tabExtras .xt-row .btn{background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)!important;color:#000!important;border:1px solid #003c74!important;border-radius:3px!important;box-shadow:none!important;font-family:var(--xf)!important;font-weight:400!important;letter-spacing:0!important;text-transform:none!important;min-height:40px!important;display:flex;align-items:center;justify-content:center;gap:8px}
 html.dz-xp #tabExtras .xt-row .btn.xt-on{background:linear-gradient(180deg,#fff3cf,#ffd77a)!important;border-color:#e69b1e!important}
-
-/* ---- texturas do pacote Windows XP (pasta assets/winxp) ---- */
+/* ---- barras de rolagem estilo Luna ---- */
+.xpWin ::-webkit-scrollbar,#xpMenu ::-webkit-scrollbar,#xpFly::-webkit-scrollbar,html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox)::-webkit-scrollbar{width:16px;height:16px}
+.xpWin ::-webkit-scrollbar-track,#xpMenu ::-webkit-scrollbar-track,#xpFly::-webkit-scrollbar-track,html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox)::-webkit-scrollbar-track{background:#f3f2ec;border-left:1px solid #e4e2d6}
+.xpWin ::-webkit-scrollbar-thumb,#xpMenu ::-webkit-scrollbar-thumb,#xpFly::-webkit-scrollbar-thumb,html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox)::-webkit-scrollbar-thumb{border:1px solid #fff;border-radius:3px;background:linear-gradient(90deg,#c4d6fb,#9fbcf1 50%,#8aa9ea)}
+/* ---- ponteiros do Windows XP (pasta assets/winxp/Cursor) ---- */
 :root{--xc-arrow:url(assets/winxp/Cursor/default_arrow.png) 11 12,default;--xc-link:url(assets/winxp/Cursor/default_link.png) 10 10,pointer;--xc-text:url(assets/winxp/Cursor/default_ibeam.png) 6 10,text;--xc-wait:url(assets/winxp/Cursor/default_wait.png) 11 12,progress;--xc-busy:url(assets/winxp/Cursor/default_busy.png) 10 10,wait;--xc-no:url(assets/winxp/Cursor/default_no.png) 10 10,not-allowed;--xc-help:url(assets/winxp/Cursor/default_helpsel.png) 11 12,help;--xc-move:url(assets/winxp/Cursor/default_move.png) 10 10,move}
-html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,#xpWins,#xpBoot,#xpOff),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras){cursor:var(--xc-arrow)}
-html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,#xpWins) :is(button,a,select,summary,label[for],[role=button],input[type=checkbox],input[type=radio],input[type=range],input[type=color],input[type=file],.xpIc,.xpCat,.xpTask,.xpB,.xpLnk,.mi),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras) :is(button,a,select,summary,label[for],[role=button],input[type=checkbox],input[type=radio],input[type=range],input[type=color],input[type=file]){cursor:var(--xc-link)}
-html.xp-desk :is(#xpDesk,#xpWins) :is(input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=button],[type=submit]),textarea),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras) :is(input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=button],[type=submit]),textarea){cursor:var(--xc-text)}
-html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,#xpWins) :is(button,input,select,textarea):disabled,html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras) :is(button,input,select,textarea):disabled{cursor:var(--xc-no)}
-#xpOff{cursor:var(--xc-busy)}
-/* ícones e miniaturas */
-.xpSpr{display:inline-block;vertical-align:middle;background-repeat:no-repeat;flex:none}
-.xpIc i.xpSpr{display:block;margin:3px auto}
-.xpTask .xpSpr{margin-right:3px;vertical-align:-4px}
-.xpCat i.xpSpr{margin:0}
-.xpFlag{display:inline-block;width:20px;height:18px;background:url(assets/winxp/UI/flag.png) center/contain no-repeat}
-.xpWpT{display:inline-block;width:44px;height:33px;border:1px solid #7f9db9;background-size:cover;background-position:center;background-repeat:no-repeat}
-.xpCat i{display:flex;align-items:center;justify-content:center;min-width:44px}
-#xpBoot{display:none;position:fixed;inset:0;z-index:99999;background:#000 url(assets/winxp/Logo/boot.png) center/contain no-repeat}
-#xpBoot.on{display:block}
-/* barra de título, botões da janela, barra de tarefas e botão iniciar (folha UI Theme) */
-.xpTb{background:url(assets/winxp/UI/title_right.png) 0 0/100% 100% no-repeat,linear-gradient(180deg,#0997ff 0,#0053ee 8%,#0050ee 40%,#06f 88%,#003dd7 100%)}
-.xpB.mn,.xpB.mx,.xpB.cl{width:21px;height:21px;padding:0;border:0;border-radius:0;font-size:0;color:transparent;text-shadow:none;background:center/100% 100% no-repeat}
-@media (pointer:coarse){.xpB.mn,.xpB.mx,.xpB.cl{width:28px;height:28px}}
-.xpB.mn{background-image:url(assets/winxp/UI/cap_min_n.png)}.xpB.mn:hover{background-image:url(assets/winxp/UI/cap_min_h.png)}.xpB.mn:active{background-image:url(assets/winxp/UI/cap_min_p.png)}
-.xpB.mx{background-image:url(assets/winxp/UI/cap_max_n.png)}.xpB.mx:hover{background-image:url(assets/winxp/UI/cap_max_h.png)}.xpB.mx:active{background-image:url(assets/winxp/UI/cap_max_p.png)}
-.xpB.cl{background-image:url(assets/winxp/UI/cap_close_n.png)}.xpB.cl:hover{background-image:url(assets/winxp/UI/cap_close_h.png)}.xpB.cl:active{background-image:url(assets/winxp/UI/cap_close_p.png)}
-.xp-max .xpB.mx{background-image:url(assets/winxp/UI/cap_restore_n.png)}.xp-max .xpB.mx:hover{background-image:url(assets/winxp/UI/cap_restore_h.png)}.xp-max .xpB.mx:active{background-image:url(assets/winxp/UI/cap_restore_p.png)}
-#xpBar{background:url(assets/winxp/UI/taskbar.png) 0 0/100% 100% no-repeat,linear-gradient(180deg,#245edb,#1941a5)}
-#xpStart{min-width:99px;padding:0 22px 0 10px;border-radius:0;box-shadow:none;background:url(assets/winxp/UI/start_n.png) 0 0/100% 100% no-repeat}
-#xpStart:hover{background-image:url(assets/winxp/UI/start_h.png)}
-#xpStart.on,#xpStart:active{filter:none;background-image:url(assets/winxp/UI/start_p.png)}
-#xpTray{border-left:0;background:url(assets/winxp/UI/tray.png) 0 0/100% 100% no-repeat,#0d8fe8}
-
-/* ===== tela de inicialização: logo + barra de blocos azuis do XP ===== */
-#xpBoot{display:none;position:fixed;inset:0;z-index:99999;background:#000 url(assets/winxp/Logo/boot.png) center/contain no-repeat;--xb-top:78%;opacity:1;transition:opacity .4s;cursor:wait}
-#xpBoot.on{display:block}
-#xpBoot.xp-done{opacity:0}
-#xpBoot .xbBar{position:absolute;left:50%;top:var(--xb-top);width:min(190px,46vw);height:19px;transform:translateX(-50%);border:2px solid #b2b2b2;border-radius:7px;background:#000;overflow:hidden}
-#xpBoot .xbRun{position:absolute;top:2px;bottom:2px;left:-40px;display:flex;gap:2px;animation:xbRun 1.7s linear infinite}
-#xpBoot .xbRun i{display:block;width:9px;height:100%;border-radius:1px;background:linear-gradient(180deg,#2a3cc4 0,#6a8bf5 45%,#2a3cc4 100%)}
-@keyframes xbRun{from{left:-40px}to{left:100%}}
-#xpBoot .xbMsg{position:absolute;left:0;right:0;top:calc(var(--xb-top) + 34px);text-align:center;color:rgba(255,255,255,.4);font:11px 'XP Tahoma',Tahoma,Verdana,sans-serif}
-#xpBoot .xbFall{display:none;position:absolute;left:0;right:0;top:34%;text-align:center;color:#fff;font:italic 700 clamp(30px,9vh,56px) 'XP Franklin','Trebuchet MS',Tahoma,sans-serif}
-#xpBoot .xbFall b{color:#ff6a1a;margin-left:6px}
-html.xp-nologo #xpBoot .xbFall{display:block}
-@media (prefers-reduced-motion:reduce){#xpBoot .xbRun{animation-duration:3.4s}}
-
-/* ===== reserva: se as imagens dos botões da janela não carregarem, desenha em CSS ===== */
-html.xp-noimg .xpB.mn,html.xp-noimg .xpB.mx,html.xp-noimg .xpB.cl{border:1px solid #fff;border-radius:4px;color:#fff;font-size:13px;text-shadow:none;background:radial-gradient(circle at 90% 90%,#0054e9 0,#2263d5 55%,#4479e4 70%,#a3bbec 100%)}
-html.xp-noimg .xpB.cl{background:radial-gradient(circle at 90% 90%,#cc4600 0,#dc6527 55%,#cd7546 70%,#ffccb2 100%)}
-html.xp-noimg .xpB.mn{padding-bottom:5px}
-html.xp-noimg .xpB.mn:hover,html.xp-noimg .xpB.mx:hover,html.xp-noimg .xpB.cl:hover{filter:brightness(1.12)}
-html.xp-noimg .xpB.mn:active,html.xp-noimg .xpB.mx:active,html.xp-noimg .xpB.cl:active{filter:brightness(.88)}
-
-/* ===== correções de interface nos apps em janela ===== */
-/* barra de título fica fixa no topo quando o conteúdo do app rola (calculadora, editor, código, paint, jogos) */
-html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox)>.xpTb.app{position:sticky;top:0;z-index:50}
-/* celular deitado (tela baixa): barra de título e teclas da calculadora mais compactas, para a janela caber sem cortar */
-@media (max-height:560px){
-  html.dz-xp .xpTb{height:28px}
-  html.dz-xp .xpB.mn,html.dz-xp .xpB.mx,html.dz-xp .xpB.cl{width:22px;height:22px}
-  html.dz-xp #calcBox{gap:3px!important}
-  html.dz-xp #calcBox .calc-pad{grid-auto-rows:clamp(22px,calc((100vh - 215px) / 6.3),54px);gap:3px}
-  html.dz-xp #calcKeys{gap:4px}
-  html.dz-xp #calcRes{font-size:clamp(20px,6vh,34px)}
-  html.dz-xp #calcDisp{padding:3px 10px}
-  html.dz-xp #calcBox .ck{font-size:clamp(11px,3.2vh,16px)}
-  html.dz-xp #xpMenu{max-height:calc(100% - 32px)}
-  html.dz-xp .xpWin .xpMain{padding:6px 8px}
-}
+html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,.xpWin,.xpModal,#xpBalloon,#xpSplash),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras){cursor:var(--xc-arrow)}
+html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,.xpWin,.xpModal,#xpBalloon) :is(button,a,select,summary,label[for],[role=button],input[type=checkbox],input[type=radio],input[type=range],.xpIc,.xpLk,.xpTbb,.xpMb,.xpDi,.xpBh),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras) :is(button,a,select,summary,label[for],[role=button],input[type=checkbox],input[type=radio],input[type=range],input[type=color],input[type=file]){cursor:var(--xc-link)}
+html.xp-desk :is(#xpDesk,.xpWin,.xpModal) :is(input:not([type=checkbox],[type=radio],[type=range],[type=button],[type=submit]),textarea),html.dz-xp :is(#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#dawOverlay,#tabExtras) :is(input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=button],[type=submit]),textarea){cursor:var(--xc-text)}
+html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,.xpWin,.xpModal) :is(button,input,select,textarea):disabled{cursor:var(--xc-no)}
+#xpBoot,#xpSplash{cursor:var(--xc-busy)}
 </style>
 <script id="dzXpScript">
 /* ===== ESTILO WINDOWS XP (aba EXTRAS) =====
    EXTRAS > ESTILO troca entre o estilo padrão e o Windows XP (salvo em localStorage 'dz_extras_style_v1').
-   No XP: papel de parede, ícones, barra de tarefas, menu Iniciar, Meu Computador, Painel de Controle,
-   e os apps/jogos/emuladores abrem como janelas XP. Para incluir um app novo na moldura XP, acrescente em DEFS. */
+   No XP: boot + bem-vindo, área de trabalho, barra de tarefas, menu Iniciar, Meu Computador, Lixeira, Painel de Controle,
+   caixas de desligar/logoff, sons do sistema, e os apps/jogos/emuladores abrem como janelas XP.
+   Para incluir um app novo na moldura XP, acrescente em DEFS. */
 (function(){
 'use strict';
 const KEY = 'dz_extras_style_v1', $ = id => document.getElementById(id), root = document.documentElement;
 const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
-
+const mkEl = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html !== undefined) e.innerHTML = html; return e; };
+const wait = ms => new Promise(r => setTimeout(r, ms));
 const AS = 'assets/winxp/';
-/* ícones: folha WinIcons_32.png (23 colunas de 32px). Para trocar um ícone, mude o número abaixo. Emoji sem número continua como emoji. */
+
+/* ---- ícones: folha WinIcons_32.png (23 colunas de 32px). Aceita emoji (mapa ICN) ou o número do ícone. Emoji sem número continua como emoji. ---- */
 const SPR = AS + 'Icons/WinIcons_32.png', SPC = 23, SPR_W = 736, SPR_H = 704;
-const ICN = {'🖥':74,'\u2699\uFE0F':171,'\u2699':171,'🧮':309,'📝':308,'💻':142,'🎨':8,'🎹':23,'🎮':334,'🧩':220,'🪟':247,'🎲':130,'❌':448,'👤':3,'🔑':258,'\u23FB':152,'🔊':23};
+const I = { pc:74, cp:171, folder:193, bin:213, help:135, search:133, key:241, power:152, user:3, flag:247, sound:23, theme:8, moon:199, info:489, err:448, clock:147, app:143 };
+const ICN = {'🖥':74,'\u2699\uFE0F':171,'\u2699':171,'🧮':309,'📝':308,'💻':142,'🎨':8,'🎹':23,'🎮':334,'🧩':220,'🪟':247,'🎲':130,'❌':448,'👤':3,'🔑':241,'\u23FB':152,'🔊':23};
 function setIc(el, ic, px){
-  const n = ICN[ic];
-  if(n === undefined){ el.textContent = ic; el.classList.remove('xpSpr'); el.style.cssText = ''; return el; }
+  const n = typeof ic === 'number' ? ic : ICN[ic];
+  if(n === undefined){ el.textContent = ic; el.classList.remove('xpSpr'); el.style.cssText = 'display:inline-block;font-style:normal;text-align:center;width:' + px + 'px;height:' + px + 'px;font-size:' + Math.round(px * .78) + 'px;line-height:' + px + 'px'; return el; }
   const k = px / 32, x = (n % SPC) * px, y = Math.floor(n / SPC) * px;
   el.textContent = ''; el.classList.add('xpSpr');
-  el.style.cssText = 'width:' + px + 'px;height:' + px + 'px;background-image:url(' + SPR + ');background-size:' + (SPR_W * k) + 'px ' + (SPR_H * k) + 'px;background-position:-' + x + 'px -' + y + 'px' + (px === 32 ? ';image-rendering:pixelated' : '');
+  el.style.cssText = 'display:inline-block;width:' + px + 'px;height:' + px + 'px;background-repeat:no-repeat;background-image:url(' + SPR + ');background-size:' + (SPR_W * k) + 'px ' + (SPR_H * k) + 'px;background-position:-' + x + 'px -' + y + 'px' + (px === 32 ? ';image-rendering:pixelated' : '');
   return el;
 }
-const icH = (ic, px) => { const e = document.createElement('i'); setIc(e, ic, px); return e.outerHTML; };
-/* sons do Windows XP (pasta assets/winxp/Sounds); dá para desligar no Painel de Controle */
-let sndOn = true; try{ sndOn = localStorage.getItem('dz_xp_snd') !== '0'; }catch(e){}
+const ico = (ic, px) => { const e = mkEl('i'); setIc(e, ic, px); return e; };
+const icH = (ic, px) => ico(ic, px).outerHTML;
+const nice = s => String(s).toLowerCase().replace(/(^|[\s\-])(\S)/g, (m, a, b) => a + b.toUpperCase()).replace(/\s(De|Da|Do|Dos|Das|E|Of|The)\b/g, m => m.toLowerCase());
+
+/* ---- sons do Windows XP (pasta assets/winxp/Sounds); dá para ajustar no Painel de Controle ---- */
+let sndOn = true, vol = .8; try{ sndOn = localStorage.getItem('dz_xp_snd') !== '0'; const v = parseFloat(localStorage.getItem('dz_xp_vol')); if(v >= 0 && v <= 1) vol = v; }catch(e){}
 const sndCache = {};
-function xps(name, vol){
+const aud = name => sndCache[name] || (sndCache[name] = (() => { const a = new Audio(AS + 'Sounds/' + name + '.wav'); a.preload = 'auto'; return a; })());
+function xps(name, rel){
   if(!sndOn) return;
-  try{ const a = sndCache[name] || (sndCache[name] = new Audio(AS + 'Sounds/' + name + '.wav')); a.volume = vol || .6; a.currentTime = 0; const p = a.play(); if(p && p.catch) p.catch(() => {}); }catch(e){}
+  try{ const a = aud(name); a.volume = Math.max(0, Math.min(1, vol * (rel || 1))); a.currentTime = 0; const p = a.play(); if(p && p.catch) p.catch(() => {}); }catch(e){}
 }
-/* papéis de parede (arquivos em assets/winxp/Wallpapers) */
+const SOUNDS = ['windows_xp_startup','windows_xp_logon_sound','windows_xp_start','windows_xp_menu_command','windows_navigation_start','windows_xp_minimize','windows_xp_restore','windows_xp_shutdown','windows_xp_logoff_sound','windows_xp_balloon','windows_xp_ding','windows_xp_error','windows_xp_critical_stop','windows_xp_exclamation','windows_xp_default'];
+/* enquanto a área de trabalho está aberta, os bipes do menu do jogo ficam mudos (o Windows tem os próprios sons) */
+function muteGameMenuSfx(){
+  try{ ['menuSelect', 'menuAccept', 'menuBack'].forEach(k => { const o = SFX[k]; if(typeof o === 'function' && !o.__xp){ const f = function(){ if(root.classList.contains('xp-desk')) return; return o.apply(this, arguments); }; f.__xp = 1; SFX[k] = f; } }); }catch(e){}
+}
+
+/* ---- papéis de parede (arquivos em assets/winxp/Wallpapers) ---- */
 const WALLS = [['bliss','Bliss'],['ascent','Ascent'],['autumn','Autumn'],['azul','Azul'],['crystal','Crystal'],['follow','Follow'],['friend','Friend'],['home','Home'],['moon_flower','Moon Flower'],['peace','Peace'],['power','Power'],['purple_flower','Purple Flower'],['radiance','Radiance'],['red_moon_desert','Red Moon Desert'],['ripple','Ripple'],['stonehenge','Stonehenge'],['tulips','Tulips'],['vortec_space','Vortec Space'],['wind','Wind'],['windows_xp_home_edition','XP Home Edition'],['windows_xp_professional','XP Professional']];
-const wpThumb = k => '<b class="xpWpT" style="background-image:url(' + AS + 'Wallpapers/' + k + '.jpg)"></b>';
-/* ===== TELA DE INICIALIZAÇÃO (estilo Windows XP) =====
-   Pré-carrega TUDO que o estilo XP usa (imagens da interface, ícones, fontes, sons e o papel de parede) e só mostra a área de
-   trabalho quando tudo terminou ou deu erro/tempo esgotado. Se algo não carregar, o estilo cai num visual de reserva (CSS puro). */
-let booting = false;
-const PRE_UI = ['Logo/boot.png', 'Icons/WinIcons_32.png', 'UI/title_right.png', 'UI/taskbar.png', 'UI/tray.png', 'UI/flag.png', 'UI/start_n.png', 'UI/start_h.png', 'UI/start_p.png']
-  .concat(['min', 'max', 'close', 'restore'].reduce((a, k) => a.concat(['n', 'h', 'p'].map(s => 'UI/cap_' + k + '_' + s + '.png')), []));
-const PRE_SND = ['windows_xp_startup', 'windows_xp_minimize', 'windows_xp_menu_command', 'windows_xp_ding', 'windows_xp_logoff_sound', 'windows_xp_shutdown'];
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const withTimeout = (p, ms, fb) => Promise.race([p, sleep(ms).then(() => fb)]);
-const loadImg = (src, ms) => withTimeout(new Promise(res => {
-  const im = new Image(); im.onload = () => res({ ok: im.naturalWidth > 0, src }); im.onerror = () => res({ ok: false, src }); im.src = AS + src;
-}), ms || 9000, { ok: false, src });
-const loadSnd = name => withTimeout(new Promise(res => {
-  try{
-    const a = sndCache[name] || (sndCache[name] = new Audio(AS + 'Sounds/' + name + '.wav'));
-    if(a.readyState >= 3) return res({ ok: true, src: name });
-    const ok = () => res({ ok: true, src: name }), bad = () => res({ ok: false, src: name });
-    a.addEventListener('canplaythrough', ok, { once: true }); a.addEventListener('loadeddata', ok, { once: true }); a.addEventListener('error', bad, { once: true });
-    a.preload = 'auto';
-  }catch(e){ res({ ok: false, src: name }); }
-}), 5000, { ok: false, src: name, soft: true });   /* som lento não trava a inicialização */
-const loadFonts = () => (!document.fonts || !document.fonts.load) ? Promise.resolve({ ok: true, src: 'fonts' })
-  : withTimeout(Promise.all([document.fonts.load("700 13px 'XP Tahoma'"), document.fonts.load("italic 700 17px 'XP Franklin'")]).then(() => document.fonts.ready)
-      .then(() => ({ ok: true, src: 'fonts' }), () => ({ ok: false, src: 'fonts' })), 8000, { ok: false, src: 'fonts', soft: true });
-async function boot(){
-  if(booting) return; booting = true;
-  let b = $('xpBoot');
-  if(!b){
-    b = document.createElement('div'); b.id = 'xpBoot';
-    b.innerHTML = '<div class="xbFall">Windows<b>xp</b></div><div class="xbBar"><div class="xbRun"><i></i><i></i><i></i></div></div><div class="xbMsg"></div>';
-    document.body.appendChild(b);
-  }
-  const msg = b.querySelector('.xbMsg'); b.classList.remove('xp-done'); b.classList.add('on');
-  const t0 = Date.now(), list = PRE_UI.map(s => () => loadImg(s));
-  if(wp !== 'blue' && wp !== 'teal') list.push(() => loadImg('Wallpapers/' + wp + '.jpg', 15000));
-  list.push(loadFonts); if(sndOn) PRE_SND.forEach(n => list.push(() => loadSnd(n)));
-  let n = 0; const say = () => { msg.textContent = tr('Carregando recursos… ', 'Loading resources… ') + n + '/' + list.length; }; say();
-  const res = await Promise.all(list.map(f => f().then(r => { n++; say(); return r; })));
-  const bad = res.filter(r => !r.ok && !r.soft);
-  root.classList.toggle('xp-noimg', res.some(r => /cap_|title_right|taskbar|start_n/.test(r.src || '') && !r.ok));   /* botões/barras sem imagem: usa o visual em CSS */
-  root.classList.toggle('xp-nologo', res.some(r => /boot\.png/.test(r.src || '') && !r.ok));
-  for(let i = 0; i < 30 && !($('xpIcons') && $('xpIcons').children.length && $('xpBar')); i++) await sleep(100);   /* área de trabalho montada */
-  const wait = 2600 - (Date.now() - t0); if(wait > 0) await sleep(wait);   /* a animação aparece por pelo menos ~2,6 s */
-  if(bad.length){ try{ console.warn('[XP] não carregou:', bad.map(r => r.src).join(', ')); }catch(e){} msg.textContent = tr('Aviso: ', 'Warning: ') + bad.length + tr(' arquivo(s) não carregaram — usando visual de reserva', ' file(s) failed to load — using fallback look'); await sleep(1600); }
-  booting = false;
-  if(!root.classList.contains('xp-desk')){ b.classList.remove('on'); return; }   /* a área de trabalho foi fechada durante o carregamento */
-  b.classList.add('xp-done'); xps('windows_xp_startup', .6);
-  setTimeout(() => { if(!booting){ b.classList.remove('on'); b.classList.remove('xp-done'); } }, 450);
-}
-/* ===== BLACKLIST TEMPORÁRIA: estilo Windows XP travado =====
-   Para liberar de novo, troque XP_BLOQUEADO para false. A preferência salva no localStorage NÃO é apagada. */
-const XP_BLOQUEADO = true;
 let style = 'cur'; try{ if(localStorage.getItem(KEY) === 'xp') style = 'xp'; }catch(e){}
-if(XP_BLOQUEADO) style = 'cur';
-let wp = 'bliss'; try{ wp = localStorage.getItem('dz_xp_wp') || 'bliss'; }catch(e){}   /* papel de parede: bliss | blue | teal */
+let wp = 'bliss'; try{ wp = localStorage.getItem('dz_xp_wp') || 'bliss'; }catch(e){}   /* papel de parede: nome da lista acima | blue | teal */
 const applyStyle = () => { root.classList.toggle('dz-xp', style === 'xp'); bgPlace(); };
 
 /* apps que ganham moldura/barra de tarefas (ov = overlay, box = janela, api = window.dzXxx, btn = botão de fechar) */
@@ -27650,17 +27694,47 @@ const DEFS = [
 const isOpen = d => { const o = $(d.ov); return !!(o && o.classList.contains('open')); };
 const closeApp = d => { try{ if(d.api && window[d.api] && window[d.api].close) window[d.api].close(); else if(d.btn && $(d.btn)) $(d.btn).click(); }catch(e){} };
 const host = d => $(d.box || d.ov);
+const tbOf = d => { const h = host(d); return h && h.querySelector(':scope > .xpTb.app'); };
 /* fundo animado do menu de emuladores: no XP ele fica DENTRO da janela (some junto, acompanha o tamanho); no estilo padrão volta para a tela */
 function bgPlace(){
   DEFS.forEach(d => { if(!d.bg) return; const cv = $(d.bg), o = $(d.ov), b = $(d.box); if(!cv || !o || !b) return;
     if(style === 'xp'){ if(cv.parentNode !== b){ const tb = b.querySelector(':scope > .xpTb.app'); b.insertBefore(cv, tb ? tb.nextSibling : b.firstChild); } }
     else if(cv.parentNode !== o) o.insertBefore(cv, o.firstChild); });
 }
-let zApp = 99990; const front = o => { o.style.zIndex = Math.min(++zApp, 99995); };
+
+/* ---- ordem das janelas, foco e barra de tarefas ---- */
+const Z0 = 99990, ZMAX = 100010; let zApp = Z0;
+const wins = new Map();     /* janelas próprias: id -> {id, el, tb, ic, title} */
+const tasks = {};           /* botões da barra de tarefas: chave -> botão */
+let activeKey = null;
+function managed(){ const a = []; DEFS.forEach(d => { const o = $(d.ov); if(o && o.style.zIndex) a.push(o); }); wins.forEach(w => a.push(w.el)); return a; }
+function front(el){
+  el.style.zIndex = ++zApp;
+  if(zApp > ZMAX){ const l = managed().sort((a, b) => (+a.style.zIndex) - (+b.style.zIndex)); l.forEach((e, i) => { e.style.zIndex = Z0 + i; }); zApp = Z0 + l.length; }
+}
+function paintActive(){
+  DEFS.forEach(d => { const tb = tbOf(d); if(tb) tb.classList.toggle('off', activeKey !== d.ov); });
+  wins.forEach((w, k) => w.tb.classList.toggle('off', activeKey !== k));
+  Object.keys(tasks).forEach(k => tasks[k].classList.toggle('on', k === activeKey && !isMin(k)));
+}
+const setActive = k => { activeKey = k; paintActive(); };
+const elOf = k => { const d = DEFS.find(x => x.ov === k); if(d) return $(d.ov); const w = wins.get(k); return w && w.el; };
+const isMin = k => { const e = elOf(k); return !!(e && e.classList.contains('xp-min')); };
+function minimize(k){ const e = elOf(k); if(!e) return; xps('windows_xp_minimize', .8); e.classList.add('xp-min'); if(activeKey === k) setActive(null); else paintActive(); }
+function restore(k){ const e = elOf(k); if(!e) return; if(e.classList.contains('xp-min')){ xps('windows_xp_restore', .8); e.classList.remove('xp-min'); } front(e); setActive(k); }
+function task(k, ic, label){
+  const bar = $('xpTasks'); if(!bar) return null;
+  let b = tasks[k];
+  if(!b){ b = mkEl('button', 'xpTask'); b.type = 'button'; b.onclick = () => { if(isMin(k)) restore(k); else if(activeKey === k) minimize(k); else restore(k); }; bar.appendChild(b); tasks[k] = b; }
+  if(b.dataset.l !== label){ b.dataset.l = label; b.textContent = ''; const s = mkEl('span'); s.textContent = label; b.append(ico(ic, 16), s); }
+  return b;
+}
+function untask(k){ if(tasks[k]){ tasks[k].remove(); delete tasks[k]; } if(activeKey === k) activeKey = null; }
+
 /* tela cheia do app (cobre a barra de tarefas) ou volta para a janela */
 function setFull(d, on){
   const o = $(d.ov); if(!o) return; o.classList.toggle('xp-full', on);
-  if(on && !o.querySelector('.xpFsX')){ const x = document.createElement('button'); x.type = 'button'; x.className = 'xpFsX'; x.textContent = '🗗 ' + tr('JANELA', 'WINDOW'); x.onclick = () => setFull(d, false); o.appendChild(x); }
+  if(on && !o.querySelector('.xpFsX')){ const x = mkEl('button', 'xpFsX'); x.type = 'button'; x.textContent = '🗗 ' + tr('JANELA', 'WINDOW'); x.onclick = () => setFull(d, false); o.appendChild(x); }
   const de = document.documentElement;
   try{ if(on){ const f = de.requestFullscreen || de.webkitRequestFullscreen; if(f && !document.fullscreenElement){ const r = f.call(de, { navigationUI:'hide' }); if(r && r.catch) r.catch(() => {}); } }
        else if(document.fullscreenElement){ const r = document.exitFullscreen(); if(r && r.catch) r.catch(() => {}); } }catch(e){}
@@ -27669,178 +27743,438 @@ function setFull(d, on){
   if(style !== 'xp') return; DEFS.forEach(d => { if(d.full && isOpen(d)){ const on = !!document.fullscreenElement; if(on !== $(d.ov).classList.contains('xp-full')) setFull(d, on); } });
 }));
 
-applyStyle();
+/* arrastar pela barra de título — a janela nunca sai inteira da tela */
 function drag(handle, target, skip){
   handle.addEventListener('pointerdown', e => {
     if(e.target.closest('button') || (skip && skip())) return;
     const sx = e.clientX, sy = e.clientY, m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(target.style.transform || ''), ox = m ? +m[1] : 0, oy = m ? +m[2] : 0;
+    const r = target.getBoundingClientRect(), vw = innerWidth, vh = innerHeight - 30;
+    const minX = -(r.right - 70), maxX = vw - 70 - r.left, minY = -r.top, maxY = vh - 34 - r.top;
     try{ handle.setPointerCapture(e.pointerId); }catch(_){}
-    const mv = ev => {
-      let mx = ox + ev.clientX - sx, my = oy + ev.clientY - sy;
-      target.style.transform = 'translate(' + mx + 'px,' + my + 'px)';
-      const r = target.getBoundingClientRect(); let dx = 0, dy = 0;   /* mantém a barra de título sempre ao alcance do dedo */
-      if(r.top < 0) dy = -r.top; else if(r.top > innerHeight - 70) dy = innerHeight - 70 - r.top;
-      if(r.right < 90) dx = 90 - r.right; else if(r.left > innerWidth - 90) dx = innerWidth - 90 - r.left;
-      if(dx || dy) target.style.transform = 'translate(' + (mx + dx) + 'px,' + (my + dy) + 'px)';
-    };
+    const mv = ev => { const dx = Math.max(minX, Math.min(maxX, ev.clientX - sx)), dy = Math.max(minY, Math.min(maxY, ev.clientY - sy)); target.style.transform = 'translate(' + (ox + dx) + 'px,' + (oy + dy) + 'px)'; };
     const up = () => { handle.removeEventListener('pointermove', mv); handle.removeEventListener('pointerup', up); handle.removeEventListener('pointercancel', up); };
     handle.addEventListener('pointermove', mv); handle.addEventListener('pointerup', up); handle.addEventListener('pointercancel', up);
   });
 }
-const mkTb = (icon, title, withMax, withFull) => {
-  const t = document.createElement('div'); t.className = 'xpTb';
-  t.innerHTML = '<span class="xpTi"></span><span class="xpTt"></span><button type="button" class="xpB mn" title="' + tr('Minimizar', 'Minimize') + '">_</button>' + (withMax ? '<button type="button" class="xpB mx" title="' + tr('Maximizar / restaurar', 'Maximize / restore') + '">▢</button>' : '') + (withFull ? '<button type="button" class="xpB fs" title="' + tr('Tela cheia', 'Full screen') + '">⛶</button>' : '') + '<button type="button" class="xpB cl" title="' + tr('Fechar', 'Close') + '">✕</button>';
+const mkTb = (icon, title, o) => {
+  o = o || {};
+  const t = mkEl('div', 'xpTb');
+  t.innerHTML = '<span class="xpTi"></span><span class="xpTt"></span>' + (o.min === false ? '' : '<button type="button" class="xpB mn" title="' + tr('Minimizar', 'Minimize') + '"></button>') + (o.max ? '<button type="button" class="xpB mx" title="' + tr('Maximizar / restaurar', 'Maximize / restore') + '"></button>' : '') + (o.full ? '<button type="button" class="xpB fs" title="' + tr('Tela cheia', 'Full screen') + '"></button>' : '') + '<button type="button" class="xpB cl" title="' + tr('Fechar', 'Close') + '"></button>';
   setIc(t.firstChild, icon, 16); t.children[1].textContent = title; return t;
 };
 
 /* ---- moldura XP nos apps (criada uma vez, mostrada só no estilo XP) ---- */
 function chrome(d){
-  const h = host(d); if(!h || d.nochrome || h.querySelector(':scope > .xpTb.app')) return;
-  const tb = mkTb(d.ic, tr(d.pt, d.en), true, d.full); tb.classList.add('app');
+  const h = host(d); if(!h || h.querySelector(':scope > .xpTb.app')) return;
+  const tb = mkTb(d.ic, tr(d.pt, d.en), { max:true, full:d.full }); tb.classList.add('app');
   h.insertBefore(tb, h.firstChild); bgPlace();
-  h.addEventListener('pointerdown', () => front($(d.ov)));
-  tb.addEventListener('dblclick', e => { if(!e.target.closest('button')) h.classList.toggle('xp-max'); });
-  const fs = tb.querySelector('.fs'); if(fs) fs.onclick = () => setFull(d, !$(d.ov).classList.contains('xp-full'));
-  tb.querySelector('.cl').onclick = () => { snd('menuBack'); closeApp(d); };
-  tb.querySelector('.mn').onclick = () => { xps('windows_xp_minimize', .5); $(d.ov).classList.add('xp-min'); };
-  tb.querySelector('.mx').onclick = () => h.classList.toggle('xp-max');
+  const o = $(d.ov);
+  h.addEventListener('pointerdown', () => { front(o); setActive(d.ov); });
+  const toggleMax = () => { h.classList.toggle('xp-max'); xps('windows_xp_restore', .8); };
+  tb.addEventListener('dblclick', e => { if(!e.target.closest('button')) toggleMax(); });
+  const fs = tb.querySelector('.fs'); if(fs) fs.onclick = () => setFull(d, !o.classList.contains('xp-full'));
+  tb.querySelector('.cl').onclick = () => closeApp(d);
+  tb.querySelector('.mn').onclick = () => minimize(d.ov);
+  tb.querySelector('.mx').onclick = toggleMax;
   if(d.box) drag(tb, h, () => h.classList.contains('xp-max'));
 }
-
-/* ---- barra de tarefas: um botão por app aberto ---- */
+const wasOpen = {};
 function sync(){
   if(style !== 'xp') return;
-  const tasks = $('xpTasks');
   DEFS.forEach(d => {
     const o = $(d.ov); if(!o) return;
-    const open = isOpen(d); let b = tasks && tasks.querySelector('[data-k="' + d.ov + '"]');
+    const open = isOpen(d);
     if(open){
       chrome(d);
-      const t = host(d).querySelector(':scope > .xpTb.app .xpTt'); if(t) t.textContent = tr(d.pt, d.en);
-      if(tasks && !b){ b = document.createElement('button'); b.type = 'button'; b.className = 'xpTask'; b.dataset.k = d.ov; b.onclick = () => { snd('menuSelect'); o.classList.toggle('xp-min'); xps(o.classList.contains('xp-min') ? 'windows_xp_minimize' : 'windows_xp_restore', .5); sync(); }; tasks.appendChild(b); }
-      if(b){ const lbl = tr(d.pt, d.en); if(b.dataset.l !== lbl){ b.dataset.l = lbl; b.textContent = ''; const si = document.createElement('span'); setIc(si, d.ic, 16); b.appendChild(si); b.appendChild(document.createTextNode(' ' + lbl)); } b.classList.toggle('on', !o.classList.contains('xp-min')); }
+      const lbl = nice(tr(d.pt, d.en)), t = host(d).querySelector(':scope > .xpTb.app .xpTt'); if(t) t.textContent = lbl;
+      if(root.classList.contains('xp-desk')) task(d.ov, d.ic, lbl);
+      if(!wasOpen[d.ov]){ wasOpen[d.ov] = 1; o.classList.remove('xp-min'); front(o); setActive(d.ov); }
     }else{
+      if(wasOpen[d.ov]){ wasOpen[d.ov] = 0; }
       o.classList.remove('xp-min'); o.style.zIndex = ''; if(o.classList.contains('xp-full')) setFull(d, false); const h = host(d); if(h){ h.classList.remove('xp-max'); h.style.transform = ''; }
-      if(b) b.remove();
+      untask(d.ov);
     }
   });
+  wins.forEach((w, k) => task(k, w.ic, w.title));
+  paintActive();
   const c = $('xpClk'); if(c) c.textContent = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  const cc = $('xpCpClk'); if(cc){ const n = new Date(); cc.textContent = n.toLocaleTimeString(); const dd = $('xpCpDate'); if(dd) dd.textContent = n.toLocaleDateString([], { weekday:'long', day:'numeric', month:'long', year:'numeric' }); }
 }
 setInterval(sync, 300);
 
 /* ---- itens liberados na aba EXTRAS ---- */
 function entries(){
   const x = (window.dzExtrasItems && window.dzExtrasItems()) || { apps:[], games:[], emus:[] }, out = [];
-  x.apps.forEach(a => out.push({ g:tr('Utilidades', 'Utilities'), ic:a.icon, t:tr(a.pt, a.en), run:a.open }));
-  x.games.forEach(g => out.push({ g:tr('Jogos', 'Games'), ic:g.icon, t:tr(g.pt, g.en), run:() => window.dzMg.open(g.id) }));
+  x.apps.forEach(a => out.push({ g:tr('Utilitários', 'Utilities'), ic:a.icon, t:nice(tr(a.pt, a.en)), run:a.open }));
+  x.games.forEach(g => out.push({ g:tr('Jogos', 'Games'), ic:g.icon, t:nice(tr(g.pt, g.en)), run:() => window.dzMg.open(g.id) }));
   if(x.emus.length){ const ids = x.emus.map(e => e.id); out.push({ g:tr('Emuladores', 'Emulators'), ic:'🎮', t:tr('Emuladores', 'Emulators'), run:() => window.dzEmuOpenHub && window.dzEmuOpenHub(e => ids.indexOf(e.id) >= 0) }); }
   return out;
 }
-const launch = it => { snd('menuAccept'); xps('windows_xp_menu_command', .5); menu(false); try{ it.run(); }catch(e){} };
-
-/* ---- janelas próprias: Meu Computador e Painel de Controle ---- */
-let zTop = 5, nWin = 0;
-function win(id, icon, title, build){
-  const wins = $('xpWins'); let w = $('xpW_' + id);
-  if(w){ w.classList.remove('min'); w.style.zIndex = ++zTop; return w; }
-  w = document.createElement('div'); w.id = 'xpW_' + id; w.className = 'xpWin';
-  const W = Math.min(580, innerWidth * .94), H = Math.min(400, Math.max(220, innerHeight - 90)), off = (nWin++ % 5) * 22;
-  w.style.cssText = 'width:' + W + 'px;height:' + H + 'px;left:' + Math.max(2, (innerWidth - W) / 2 + off - 30) + 'px;top:' + (16 + off) + 'px;z-index:' + (++zTop);
-  const tb = mkTb(icon, title, false); w.appendChild(tb);
-  const body = document.createElement('div'); body.className = 'xpBody'; w.appendChild(body); build(body);
-  tb.querySelector('.cl').onclick = () => { w.remove(); const b = $('xpTasks').querySelector('[data-w="' + id + '"]'); if(b) b.remove(); };
-  tb.querySelector('.mn').onclick = () => { xps('windows_xp_minimize', .5); w.classList.add('min'); };
-  w.addEventListener('pointerdown', () => { w.style.zIndex = ++zTop; });
-  drag(tb, w); wins.appendChild(w); return w;
+function launch(it){
+  xps('windows_xp_menu_command', .8); menu(false);
+  try{ it.run(); }catch(e){ msgBox({ title:it.t, icon:I.err, text:tr('Não foi possível abrir "' + it.t + '".', 'Could not open "' + it.t + '".'), sound:'windows_xp_error' }); }
 }
-function iconBtn(it, cls){
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'xpIc' + (cls ? ' ' + cls : '');
-  b.innerHTML = '<i></i><span></span>'; setIc(b.firstChild, it.ic, 32); b.lastChild.textContent = it.t;
+
+/* ---- janelas próprias (Meu Computador, Lixeira, Painel de Controle) ---- */
+let nWin = 0;
+function win(id, icon, title, o){
+  o = o || {};
+  let w = wins.get(id);
+  if(w){ restore(id); w.fresh = false; return w; }
+  const el = mkEl('div', 'xpWin'); el.id = 'xpW_' + id;
+  const W = Math.min(o.w || 600, innerWidth * .96), H = Math.min(o.h || 420, Math.max(210, innerHeight - 46)), off = (nWin++ % 5) * 22;
+  const top = Math.max(2, Math.min(10 + off, innerHeight - 30 - H - 4)), left = Math.max(2, Math.min((innerWidth - W) / 2 + off - 24, innerWidth - W - 2));
+  el.style.cssText = 'width:' + W + 'px;height:' + H + 'px;left:' + left + 'px;top:' + top + 'px';
+  const tb = mkTb(icon, title, { max:true }); el.appendChild(tb);
+  w = { id, el, tb, ic:icon, title, fresh:true, body:null };
+  wins.set(id, w);
+  const kill = () => { if(o.onClose) try{ o.onClose(); }catch(e){} el.remove(); wins.delete(id); untask(id); paintActive(); };
+  w.close = kill;
+  const toggleMax = () => { el.classList.toggle('xp-max'); xps('windows_xp_restore', .8); };
+  tb.querySelector('.cl').onclick = kill;
+  tb.querySelector('.mn').onclick = () => minimize(id);
+  tb.querySelector('.mx').onclick = toggleMax;
+  tb.addEventListener('dblclick', e => { if(!e.target.closest('button')) toggleMax(); });
+  el.addEventListener('pointerdown', () => { front(el); setActive(id); });
+  drag(tb, el, () => el.classList.contains('xp-max'));
+  document.body.appendChild(el); front(el); setActive(id); sync();
+  return w;
+}
+function menuBar(w, items){
+  const bar = mkEl('div', 'xpMbar'); let dd = null;
+  const shut = () => { if(dd){ dd.remove(); dd = null; } bar.querySelectorAll('.on').forEach(x => x.classList.remove('on')); };
+  items.forEach(it => {
+    const b = mkEl('button', 'xpMb'); b.type = 'button'; b.textContent = it[0];
+    b.onclick = e => {
+      e.stopPropagation(); const was = b.classList.contains('on'); shut(); if(was) return; b.classList.add('on');
+      dd = mkEl('div', 'xpDd');
+      (typeof it[1] === 'function' ? it[1]() : it[1]).forEach(r => {
+        if(r === '-'){ dd.appendChild(mkEl('hr')); return; }
+        const x = mkEl('button', 'xpDi' + (r[2] ? ' chk' : '')); x.type = 'button'; x.textContent = r[0];
+        if(!r[1]) x.disabled = true; else x.onclick = ev => { ev.stopPropagation(); shut(); xps('windows_xp_menu_command', .8); r[1](); };
+        dd.appendChild(x);
+      });
+      w.el.appendChild(dd); dd.style.left = b.offsetLeft + 'px'; dd.style.top = (bar.offsetTop + bar.offsetHeight) + 'px';
+    };
+    bar.appendChild(b);
+  });
+  bar.appendChild(mkEl('i', 'xpMflag'));
+  w.el.addEventListener('pointerdown', e => { if(dd && !e.target.closest('.xpDd,.xpMb')) shut(); });
+  return bar;
+}
+function tbBtn(html, title, fn){
+  const b = mkEl('button', 'xpTbb', html); b.type = 'button'; if(title) b.title = title;
+  b.onclick = () => { if(b.disabled) return; xps('windows_navigation_start', .8); if(fn) fn(); };
+  return b;
+}
+function box(title, build, sp){
+  const b = mkEl('div', 'xpBox' + (sp ? ' sp' : '')), h = mkEl('button', 'xpBh', '<span></span><i></i>'), c = mkEl('div', 'xpBc');
+  h.type = 'button'; h.firstChild.textContent = title; build(c); h.onclick = () => b.classList.toggle('shut'); b.append(h, c); return b;
+}
+function link(ic, t, fn, off){
+  const a = mkEl('button', 'xpLk'); a.type = 'button'; a.append(ico(ic, 16)); const s = mkEl('span'); s.textContent = t; a.appendChild(s);
+  if(off) a.disabled = true; else a.onclick = () => { xps('windows_navigation_start', .8); if(fn) fn(); };
+  return a;
+}
+function iconBtn(it, px, onSel){
+  const b = mkEl('button', 'xpIc'); b.type = 'button'; b.appendChild(ico(it.ic, px || 32)); const s = mkEl('span'); s.textContent = it.t; b.appendChild(s);
   let last = 0; const coarse = matchMedia('(pointer:coarse)').matches;
   b.addEventListener('click', e => {
     e.stopPropagation(); const now = Date.now();
-    b.parentNode.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel');
+    b.parentNode.parentNode.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); if(onSel) onSel(it);
     if(coarse || now - last < 700){ b.classList.remove('sel'); launch(it); } last = now;
   });
   return b;
 }
-function myComputer(){
-  win('mc', '🖥', tr('Meu Computador', 'My Computer'), body => {
-    const pane = document.createElement('div'); pane.className = 'xpPane';
-    pane.innerHTML = '<h4>' + tr('Tarefas do Sistema', 'System Tasks') + '</h4><div class="bx"><a data-a="cp">' + tr('Alterar o estilo', 'Change the style') + '</a><a data-a="cp">' + tr('Painel de Controle', 'Control Panel') + '</a></div><h4>' + tr('Outros Locais', 'Other Places') + '</h4><div class="bx"><a data-a="off">' + tr('Voltar às configurações', 'Back to settings') + '</a></div>';
-    pane.querySelectorAll('a[data-a="cp"]').forEach(a => a.onclick = controlPanel); pane.querySelector('[data-a="off"]').onclick = () => close();
-    const main = document.createElement('div'); main.className = 'xpMain'; let g = '', grid;
-    entries().forEach(it => { if(it.g !== g){ g = it.g; const h = document.createElement('h3'); h.textContent = g; main.appendChild(h); grid = document.createElement('div'); grid.className = 'xpGrid'; main.appendChild(grid); } grid.appendChild(iconBtn(it)); });
-    body.appendChild(pane); body.appendChild(main);
-  });
+/* janela no estilo do Windows Explorer: barra de menus, barra de ferramentas, endereço e painel de tarefas */
+function explorer(id, ic, title, o){
+  const w = win(id, ic, title, { w:o.w, h:o.h }); if(!w.fresh) return w;
+  const nav = { back:[], fwd:[] }; w.nav = nav;
+  w.addrIc = ico(ic, 16); w.addrTx = mkEl('span'); w.addrTx.textContent = o.addr || title;
+  const back = tbBtn('<i class="xpNav">◄</i><span>' + tr('Voltar', 'Back') + '</span>', tr('Voltar', 'Back'), () => o.onBack && o.onBack());
+  const fwd = tbBtn('<i class="xpNav">►</i>', tr('Avançar', 'Forward'), () => o.onFwd && o.onFwd());
+  const up = tbBtn(icH(I.folder, 16) + '<span style="font-size:13px">↑</span>', tr('Acima', 'Up'), () => o.onUp && o.onUp());
+  const srchBtn = tbBtn(icH(I.search, 16) + '<span>' + tr('Pesquisar', 'Search') + '</span>', '', () => { srch.classList.toggle('on'); srchBtn.classList.toggle('on', srch.classList.contains('on')); if(srch.classList.contains('on')) srchIn.focus(); else { srchIn.value = ''; if(o.onSearch) o.onSearch(''); } });
+  const fold = tbBtn(icH(I.folder, 16) + '<span>' + tr('Pastas', 'Folders') + '</span>', '', () => { w.el.classList.toggle('nopane'); fold.classList.toggle('on', w.el.classList.contains('nopane')); });
+  if(!o.onSearch) srchBtn.disabled = true;
+  const tbar = mkEl('div', 'xpTbar'); tbar.append(back, fwd, up, mkEl('i', 'xpTsep'), srchBtn, fold);
+  w.setNav = (b, f, u) => { back.disabled = !b; fwd.disabled = !f; up.disabled = !u; };
+  w.setNav(false, false, false);
+  const addr = mkEl('div', 'xpAddr'), box1 = mkEl('div', 'xpAddrBox'); box1.append(w.addrIc, w.addrTx);
+  addr.append(mkEl('span', '', tr('Endereço', 'Address')), box1, mkEl('span', 'xpGo', '<i>►</i>' + tr('Ir', 'Go')));
+  w.setAddr = (t, i) => { w.addrTx.textContent = t; if(i !== undefined) setIc(w.addrIc, i, 16); };
+  const srch = mkEl('div', 'xpSrch', '<span>' + tr('Procurar por:', 'Search for:') + '</span>'), srchIn = mkEl('input'); srchIn.type = 'text'; srch.appendChild(srchIn);
+  srchIn.addEventListener('input', () => o.onSearch && o.onSearch(srchIn.value));
+  const body = mkEl('div', 'xpBody'), pane = mkEl('div', 'xpPane'), main = mkEl('div', 'xpMain');
+  body.append(pane, main); w.pane = pane; w.main = main; w.body = body;
+  w.el.append(menuBar(w, o.menus ? o.menus(w) : []), tbar, addr, srch, body);
+  return w;
 }
-function controlPanel(){
-  win('cp', '⚙️', tr('Painel de Controle', 'Control Panel'), body => {
-    const main = document.createElement('div'); main.className = 'xpMain'; body.appendChild(main);
-    const home = () => {
-      main.innerHTML = '<h3>' + tr('Escolha uma categoria', 'Pick a category') + '</h3>';
-      const c = document.createElement('button'); c.type = 'button'; c.className = 'xpCat'; c.innerHTML = icH('🎨', 32) + '<span>' + tr('Aparência e Temas', 'Appearance and Themes') + '</span>'; c.onclick = look; main.appendChild(c);
-    };
-    const look = () => {
-      main.innerHTML = '<h3>' + tr('Escolha um estilo', 'Choose a style') + '</h3>';
-      [['cur', '🖥', tr('Padrão', 'Default')], ['xp', '🪟', 'Windows XP']].forEach(s => {
-        const c = document.createElement('button'); c.type = 'button'; c.className = 'xpCat' + (style === s[0] ? ' on' : ''); c.innerHTML = icH(s[1], 32) + '<span>' + s[2] + '</span>';
-        c.onclick = () => setStyle(s[0]); main.appendChild(c);
+const aboutBox = () => msgBox({ title:tr('Sobre o Windows', 'About Windows'), icon:I.flag, big:true,
+  text:'<p><b>Windows XP</b></p><p>' + tr('Estilo visual do jogo, inspirado no Windows XP Luna.', 'Game visual style, inspired by Windows XP Luna.') + '</p><p>' + tr('Papéis de parede, sons, ícones e fontes do pacote XP (pasta assets/winxp).', 'Wallpapers, sounds, icons and fonts from the XP pack (assets/winxp folder).') + '</p>' });
+const common = (w) => [
+  [tr('Arquivo', 'File'), [[tr('Fechar', 'Close'), () => w.close()]]],
+  [tr('Editar', 'Edit'), [[tr('Selecionar tudo', 'Select all'), () => w.main.querySelectorAll('.xpIc').forEach(x => x.classList.add('sel'))]]],
+  [tr('Exibir', 'View'), () => [[tr('Ícones', 'Icons'), w.setView ? () => w.setView(false) : null, !w.list], [tr('Lista', 'List'), w.setView ? () => w.setView(true) : null, !!w.list]]],
+  [tr('Favoritos', 'Favorites'), [[tr('(Vazio)', '(Empty)'), null]]],
+  [tr('Ferramentas', 'Tools'), [[tr('Painel de Controle', 'Control Panel'), () => controlPanel()]]],
+  [tr('Ajuda', 'Help'), [[tr('Sobre o Windows', 'About Windows'), aboutBox]]]
+];
+function myComputer(){
+  let q = '', det;
+  const w = explorer('mc', I.pc, tr('Meu Computador', 'My Computer'), { addr:tr('Meu Computador', 'My Computer'), menus:common, w:620, h:420,
+    onSearch: s => { q = s; render(); } });
+  if(!w.fresh) return;
+  w.list = false;
+  const detail = (n, t) => { det.innerHTML = '<b></b><span></span>'; det.firstChild.textContent = n; det.lastChild.textContent = t; };
+  w.pane.append(
+    box(tr('Tarefas do Sistema', 'System Tasks'), c => { c.append(link(I.about || I.info, tr('Exibir informações do sistema', 'View system information'), aboutBox), link(I.cp, tr('Alterar uma configuração', 'Change a setting'), () => controlPanel()), link(I.theme, tr('Alterar o estilo visual', 'Change the visual style'), () => controlPanel('style'))); }, true),
+    box(tr('Outros Locais', 'Other Places'), c => { c.append(link(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel()), link(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin), link(I.pc, tr('Voltar às configurações', 'Back to settings'), () => close())); }),
+    box(tr('Detalhes', 'Details'), c => { det = mkEl('div', 'xpDet'); c.appendChild(det); detail(tr('Meu Computador', 'My Computer'), tr('Pasta de sistema', 'System Folder')); })
+  );
+  function render(){
+    const m = w.main; m.classList.toggle('list', w.list); m.innerHTML = '';
+    const fq = q.trim().toLowerCase(); let g = '', grid;
+    entries().forEach(it => {
+      if(fq && it.t.toLowerCase().indexOf(fq) < 0) return;
+      if(it.g !== g){ g = it.g; const h = mkEl('div', 'xpSec'); h.textContent = g; m.appendChild(h); grid = mkEl('div', 'xpGrid'); m.appendChild(grid); }
+      grid.appendChild(iconBtn(it, w.list ? 16 : 32, x => detail(x.t, x.g)));
+    });
+    if(!grid) m.appendChild(mkEl('div', 'xpEmpty', tr('Nenhum item encontrado.', 'No items found.')));
+  }
+  w.setView = l => { w.list = l; render(); };
+  w.main.addEventListener('click', e => { if(e.target === w.main || e.target.classList.contains('xpGrid')) w.main.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); });
+  render();
+}
+function recycleBin(){
+  const w = explorer('bin', I.bin, tr('Lixeira', 'Recycle Bin'), { addr:tr('Lixeira', 'Recycle Bin'), menus:common, w:520, h:340 });
+  if(!w.fresh) return;
+  w.pane.append(
+    box(tr('Tarefas da Lixeira', 'Recycle Bin Tasks'), c => { c.append(link(I.bin, tr('Esvaziar a Lixeira', 'Empty the Recycle Bin'), null, true), link(I.folder, tr('Restaurar todos os itens', 'Restore all items'), null, true)); }, true),
+    box(tr('Outros Locais', 'Other Places'), c => { c.append(link(I.pc, tr('Meu Computador', 'My Computer'), myComputer), link(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel())); })
+  );
+  w.main.appendChild(mkEl('div', 'xpEmpty', tr('A Lixeira está vazia.', 'The Recycle Bin is empty.')));
+}
+/* Painel de Controle: categorias > tarefas > telas (plano de fundo, estilo, sons, data e hora) */
+function controlPanel(start){
+  const hist = [], fwdH = []; let cur = 'home', w;
+  const parent = { look:'home', wall:'look', style:'look', snd:'home', time:'home' };
+  const titles = { home:tr('Painel de Controle', 'Control Panel'), look:tr('Aparência e Temas', 'Appearance and Themes'), wall:tr('Plano de Fundo da Área de Trabalho', 'Desktop Background'), style:tr('Estilo Visual', 'Visual Style'), snd:tr('Sons e Dispositivos de Áudio', 'Sounds and Audio Devices'), time:tr('Data e Hora', 'Date and Time') };
+  const icons = { home:I.cp, look:I.theme, wall:I.theme, style:I.theme, snd:I.sound, time:I.clock };
+  const go = (v, push) => {
+    if(push !== false){ hist.push(cur); fwdH.length = 0; }
+    cur = v; draw();
+  };
+  const goBack = () => { if(!hist.length) return; fwdH.push(cur); cur = hist.pop(); draw(); };
+  const goFwd = () => { if(!fwdH.length) return; hist.push(cur); cur = fwdH.pop(); draw(); };
+  w = explorer('cp', I.cp, tr('Painel de Controle', 'Control Panel'), { addr:tr('Painel de Controle', 'Control Panel'), menus:common, w:640, h:430,
+    onBack:goBack, onFwd:goFwd, onUp:() => go(parent[cur] || 'home') });
+  if(!w.fresh){ if(start && w.cpGo) w.cpGo(start); return; }
+  w.cpGo = go;
+  const catBtn = (ic, t, fn) => { const b = mkEl('button', 'xpCatB'); b.type = 'button'; b.append(mkEl('span', 'xpIcBig')); b.firstChild.appendChild(ico(ic, 32)); const s = mkEl('span'); s.textContent = t; b.appendChild(s); b.onclick = () => { xps('windows_navigation_start', .8); fn(); }; return b; };
+  function draw(){
+    const m = w.main; const st = cur === 'home'; m.className = 'xpMain cp' + (st ? '' : ' white'); m.innerHTML = '';
+    w.setAddr(titles[cur], icons[cur]); w.setNav(hist.length > 0, fwdH.length > 0, cur !== 'home');
+    w.pane.innerHTML = '';
+    w.pane.append(
+      box(tr('Painel de Controle', 'Control Panel'), c => { c.append(link(I.cp, tr('Página inicial', 'Home'), () => go('home'))); }, true),
+      box(tr('Veja Também', 'See Also'), c => { c.append(link(I.pc, tr('Meu Computador', 'My Computer'), myComputer), link(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox), link(I.cp, tr('Voltar às configurações', 'Back to settings'), () => close())); })
+    );
+    const h = mkEl('h2'); m.appendChild(h);
+    if(cur === 'home'){
+      h.textContent = tr('Escolha uma categoria', 'Pick a category');
+      const g = mkEl('div', 'xpCats'); m.appendChild(g);
+      g.append(catBtn(I.theme, tr('Aparência e Temas', 'Appearance and Themes'), () => go('look')), catBtn(I.sound, tr('Sons e Dispositivos de Áudio', 'Sounds and Audio Devices'), () => go('snd')), catBtn(I.clock, tr('Data, Hora, Idioma e Opções Regionais', 'Date, Time, Language and Regional Options'), () => go('time')));
+    }else if(cur === 'look'){
+      h.textContent = titles.look; const t = mkEl('div', 'xpTasks'); m.append(mkEl('div', 'xpSec', tr('Escolha uma tarefa...', 'Pick a task...')), t);
+      t.append(link(I.theme, tr('Alterar o plano de fundo da área de trabalho', 'Change the desktop background'), () => go('wall')), link(I.flag, tr('Alterar o estilo visual (Padrão ou Windows XP)', 'Change the visual style (Default or Windows XP)'), () => go('style')));
+    }else if(cur === 'wall'){
+      h.textContent = titles.wall; const g = mkEl('div', 'xpWpG'); m.appendChild(g);
+      const all = WALLS.map(k => [k[0], 'background-image:url(' + AS + 'Wallpapers/' + k[0] + '.jpg)', k[1]]).concat([['blue', 'background:#2f77e0', tr('Azul Luna', 'Luna blue')], ['teal', 'background:#008080', tr('Verde-água clássico', 'Classic teal')]]);
+      all.forEach(a => {
+        const b = mkEl('button', 'xpWpB' + (wp === a[0] ? ' on' : ''), '<b class="xpWpT" style="' + a[1] + '"></b><span></span>'); b.type = 'button'; b.lastChild.textContent = a[2];
+        b.onclick = () => { wp = a[0]; try{ localStorage.setItem('dz_xp_wp', wp); }catch(e){} const dk = $('xpDesk'); if(dk) dk.dataset.wp = wp; g.querySelectorAll('.on').forEach(x => x.classList.remove('on')); b.classList.add('on'); xps('windows_navigation_start', .8); };
+        g.appendChild(b);
       });
-      const h2 = document.createElement('h3'); h2.textContent = tr('Papel de parede', 'Wallpaper'); main.appendChild(h2);
-      WALLS.map(w => [w[0], wpThumb(w[0]), w[1] + (w[0] === 'bliss' ? ' (' + tr('padrão', 'default') + ')' : '')]).concat([['blue', '<b class="xpWpT" style="background:#2f77e0"></b>', tr('Azul Luna', 'Luna blue')], ['teal', '<b class="xpWpT" style="background:#008080"></b>', tr('Verde-água clássico', 'Classic teal')]]).forEach(w => {
-        const c = document.createElement('button'); c.type = 'button'; c.className = 'xpCat' + (wp === w[0] ? ' on' : ''); c.innerHTML = '<i>' + w[1] + '</i><span>' + w[2] + '</span>';
-        c.onclick = () => { wp = w[0]; try{ localStorage.setItem('dz_xp_wp', wp); }catch(e){} const dk = $('xpDesk'); if(dk) dk.dataset.wp = wp; const st = main.scrollTop; look(); main.scrollTop = st; }; main.appendChild(c);
+    }else if(cur === 'style'){
+      h.textContent = titles.style; const g = mkEl('div', 'xpStyG'); m.appendChild(g);
+      [['cur', I.pc, tr('Padrão', 'Default')], ['xp', I.flag, 'Windows XP']].forEach(s => {
+        const b = mkEl('button', 'xpStyB' + (style === s[0] ? ' on' : '')); b.type = 'button'; b.append(ico(s[1], 32)); const sp = mkEl('span'); sp.textContent = s[2]; b.appendChild(sp);
+        b.onclick = () => { if(s[0] !== style) setStyle(s[0]); }; g.appendChild(b);
       });
-      const h3s = document.createElement('h3'); h3s.textContent = tr('Sons', 'Sounds'); main.appendChild(h3s);
-      const sb = document.createElement('button'); sb.type = 'button'; sb.className = 'xpCat' + (sndOn ? ' on' : '');
-      sb.innerHTML = icH('🔊', 32) + '<span>' + tr('Sons do Windows XP: ', 'Windows XP sounds: ') + (sndOn ? tr('LIGADOS', 'ON') : tr('DESLIGADOS', 'OFF')) + '</span>';
-      sb.onclick = () => { sndOn = !sndOn; try{ localStorage.setItem('dz_xp_snd', sndOn ? '1' : '0'); }catch(e){} if(sndOn) xps('windows_xp_ding', .5); const st = main.scrollTop; look(); main.scrollTop = st; }; main.appendChild(sb);
-      const back = document.createElement('button'); back.type = 'button'; back.className = 'xpLnk'; back.textContent = '◀ ' + tr('Voltar', 'Back'); back.onclick = home; main.appendChild(back);
-    };
-    home();
-  });
+    }else if(cur === 'snd'){
+      h.textContent = titles.snd;
+      const o1 = mkEl('label', 'xpOpt'), cb = mkEl('input'); cb.type = 'checkbox'; cb.checked = sndOn; o1.append(cb, document.createTextNode(tr('Reproduzir os sons do Windows XP', 'Play Windows XP sounds')));
+      cb.onchange = () => { sndOn = cb.checked; try{ localStorage.setItem('dz_xp_snd', sndOn ? '1' : '0'); }catch(e){} if(sndOn) xps('windows_xp_ding'); };
+      const o2 = mkEl('label', 'xpOpt'), rg = mkEl('input'); rg.type = 'range'; rg.min = 0; rg.max = 100; rg.value = Math.round(vol * 100); o2.append(document.createTextNode(tr('Volume:', 'Volume:')), rg);
+      rg.oninput = () => { vol = rg.value / 100; try{ localStorage.setItem('dz_xp_vol', String(vol)); }catch(e){} };
+      const tb = mkEl('button', 'xpBtn', tr('Testar', 'Test')); tb.type = 'button'; tb.onclick = () => xps('windows_xp_ding');
+      m.append(o1, o2, tb);
+    }else if(cur === 'time'){
+      h.textContent = titles.time; m.append(mkEl('div', 'xpBigClk', '<span id="xpCpClk"></span>'), mkEl('div', 'xpDate', '<span id="xpCpDate"></span>')); sync();
+    }
+  }
+  draw(); if(start && start !== 'home') go(start);
 }
 
-/* ---- menu Iniciar, desligar, abrir/fechar a área de trabalho ---- */
-function menu(on){ const m = $('xpMenu'); if(!m) return; m.classList.toggle('on', on === undefined ? !m.classList.contains('on') : on); $('xpStart').classList.toggle('on', m.classList.contains('on')); }
+/* ---- caixas de diálogo (modais): mensagens e desligar / logoff ---- */
+function closeModal(){ const m = $('xpModal'); if(m){ m.classList.remove('on'); m.innerHTML = ''; } }
+function openModal(el, plain){
+  let m = $('xpModal'); if(!m){ m = mkEl('div', 'xpModal'); m.id = 'xpModal'; document.body.appendChild(m); }
+  m.innerHTML = ''; m.classList.toggle('plain', !!plain); m.appendChild(el); m.classList.add('on');
+  m.onpointerdown = e => { if(e.target === m){ xps('windows_xp_default', .8); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 120); setTimeout(() => el.classList.add('flash'), 240); setTimeout(() => el.classList.remove('flash'), 360); } };
+  return m;
+}
+function msgBox(o){
+  const d = mkEl('div', 'xpDlg'), tb = mkTb(o.ic || o.icon, o.title, { min:false }); tb.classList.remove('off'); d.appendChild(tb);
+  tb.querySelector('.cl').onclick = closeModal; drag(tb, d);
+  const b = mkEl('div', 'xpDlgB'); b.appendChild(ico(o.icon || I.info, 32)); const t = mkEl('div'); t.innerHTML = o.text; b.appendChild(t); d.appendChild(b);
+  const f = mkEl('div', 'xpDlgF'), ok = mkEl('button', 'xpBtn def', 'OK'); ok.type = 'button'; ok.onclick = closeModal; f.appendChild(ok); d.appendChild(f);
+  openModal(d, true); if(o.sound) xps(o.sound);
+}
+function powerDlg(kind){
+  menu(false);
+  const off = kind === 'off', d = mkEl('div', 'xpPw');
+  const pb = (cls, glyph, label, fn, dis) => { const b = mkEl('button', 'pbtn ' + cls, '<i' + (glyph === 'pwr' ? ' class="pwr"' : '') + '>' + (glyph === 'pwr' ? '' : glyph) + '</i><span></span>'); b.type = 'button'; b.lastChild.textContent = label; if(dis) b.disabled = true; else b.onclick = fn; return b; };
+  const head = mkEl('div', 'ph'); head.innerHTML = '<span></span><i class="xpFlag" style="width:30px;height:27px"></i>'; head.firstChild.textContent = off ? tr('Desligar o computador', 'Turn off computer') : tr('Fazer Logoff do Windows', 'Log Off Windows');
+  const mid = mkEl('div', 'pm');
+  if(off) mid.append(pb('y', '☾', tr('Em espera', 'Stand By'), standby), pb('r', 'pwr', tr('Desligar', 'Turn Off'), () => { closeModal(); shutdown('off'); }), pb('g', '↻', tr('Reiniciar', 'Restart'), () => { closeModal(); shutdown('restart'); }));
+  else mid.append(pb('b', '👥', tr('Alternar Usuário', 'Switch User'), null, true), pb('r', '🔑', tr('Fazer Logoff', 'Log Off'), () => { closeModal(); shutdown('logoff'); }));
+  const foot = mkEl('div', 'pb'), cancel = mkEl('button', 'xpBtn', tr('Cancelar', 'Cancel')); cancel.type = 'button'; cancel.onclick = closeModal; foot.appendChild(cancel);
+  d.append(head, mid, foot); openModal(d);
+}
+function standby(){
+  closeModal(); let s = $('xpStandby'); if(!s){ s = mkEl('div'); s.id = 'xpStandby'; s.innerHTML = '<span></span>'; document.body.appendChild(s); }
+  s.firstChild.textContent = tr('Toque para voltar', 'Tap to resume'); s.classList.add('on'); s.onclick = () => { s.classList.remove('on'); xps('windows_xp_restore'); };
+}
+/* tela azul de bem-vindo / logoff / desligando */
+function splash(text, sub, ms, big){
+  let s = $('xpSplash'); if(!s){ s = mkEl('div'); s.id = 'xpSplash'; document.body.appendChild(s); }
+  s.innerHTML = '<div class="sb st"></div><div class="sm"><i></i><div><b></b><span></span></div></div><div class="sb sbt">Windows<sup>xp</sup></div>';
+  s.querySelector('i').appendChild(ico(I.user, 32)); s.querySelector('b').textContent = text; s.querySelector('span').textContent = sub || '';
+  s.classList.add('on'); return wait(ms).then(() => { if(!big) s.classList.remove('on'); });
+}
+const hideSplash = () => { const s = $('xpSplash'); if(s) s.classList.remove('on'); };
+const userName = () => { try{ const v = ($('playerNameInput') || {}).value; return (v && v.trim()) || tr('Jogador', 'Player'); }catch(e){ return tr('Jogador', 'Player'); } };
+function shutdown(kind){
+  const my = ++token;
+  if(kind === 'logoff') xps('windows_xp_logoff_sound'); else xps('windows_xp_shutdown');
+  splash(kind === 'logoff' ? tr('Fazendo logoff...', 'Logging off...') : tr('Desligando o Windows...', 'Windows is shutting down...'), userName(), kind === 'logoff' ? 2300 : 2800, true).then(() => {
+    if(my !== token) return;
+    if(kind === 'restart'){ close(); hideSplash(); bootedOnce = false; setTimeout(open, 400); }
+    else{ close(); hideSplash(); }
+  });
+}
+/* balão da bandeja do sistema */
+let balloonT = 0;
+function balloon(title, text){
+  let b = $('xpBalloon'); if(!b){ b = mkEl('div'); b.id = 'xpBalloon'; document.body.appendChild(b); b.onclick = () => { b.classList.remove('on'); }; }
+  b.innerHTML = '<span class="bx">✕</span><div class="bt"></div><div class="bd"></div>'; b.querySelector('.bt').append(ico(I.info, 16), document.createTextNode(' ' + title)); b.querySelector('.bd').textContent = text;
+  b.classList.add('on'); xps('windows_xp_balloon'); clearTimeout(balloonT); balloonT = setTimeout(() => b.classList.remove('on'), 7000);
+}
+
+/* ---- menu Iniciar ---- */
+function menu(on){
+  const m = $('xpMenu'); if(!m) return; const was = m.classList.contains('on');
+  const want = on === undefined ? !was : on; m.classList.toggle('on', want); $('xpStart').classList.toggle('on', want);
+  if(!want){ const f = $('xpFly'); if(f) f.classList.remove('on'); }
+}
+function fillStartMenu(){
+  const L = $('xpSml'), R = $('xpSmr'), F = $('xpFly'); if(!L) return;
+  L.innerHTML = R.innerHTML = F.innerHTML = '';
+  $('xpSmUser').textContent = userName();
+  const list = entries();
+  const mi = (par, ic, px, t, sub, fn) => {
+    const b = mkEl('button', 'mi'); b.type = 'button'; b.append(ico(ic, px)); const tx = mkEl('span', 'tx', '<b></b>' + (sub ? '<small></small>' : '')); tx.firstChild.textContent = t; if(sub) tx.lastChild.textContent = sub; b.appendChild(tx);
+    b.onclick = () => { xps('windows_xp_menu_command', .8); menu(false); fn(); }; par.appendChild(b); return b;
+  };
+  list.slice(0, 6).forEach(it => { const b = mi(L, it.ic, 32, it.t, it.g, () => launch(it)); b.onclick = () => launch(it); });
+  let g = '';
+  list.forEach(it => { if(it.g !== g){ g = it.g; const h = mkEl('div', 'fh'); h.textContent = g; F.appendChild(h); } const b = mi(F, it.ic, 16, it.t, '', () => launch(it)); b.onclick = () => launch(it); });
+  if(!list.length) F.appendChild(mkEl('div', 'fh', tr('(Vazio)', '(Empty)')));
+  const R1 = (ic, t, fn) => mi(R, ic, 24, t, '', fn);
+  R1(I.pc, tr('Meu Computador', 'My Computer'), myComputer); R1(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin);
+  R.appendChild(mkEl('hr')); R1(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel());
+  R.appendChild(mkEl('hr')); R1(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox); R1(I.folder, tr('Configurações', 'Settings'), () => close());
+}
+
+/* ---- área de trabalho ---- */
 function buildDesk(){
   if($('xpDesk')) return;
-  const d = document.createElement('div'); d.id = 'xpDesk'; d.dataset.wp = wp; d.innerHTML = '<div id="xpIcons"></div><div id="xpWins"></div>';
-  const bar = document.createElement('div'); bar.id = 'xpBar'; bar.innerHTML = '<button type="button" id="xpStart"><span class="xpFlag"></span>' + tr('iniciar', 'start') + '</button><div id="xpTasks"></div><div id="xpTray"><span>🔊</span><span id="xpClk"></span></div>';
-  const m = document.createElement('div'); m.id = 'xpMenu'; m.innerHTML = '<div class="mh"><i><span></span></i><span>' + tr('Jogador', 'Player') + '</span></div><div class="mb"><div class="ml"></div><div class="mr"></div></div><div class="mf"><button type="button" data-a="logoff">' + icH('🔑', 20) + ' ' + tr('Fazer Logoff', 'Log Off') + '</button><button type="button" data-a="off">' + icH('\u23FB', 20) + ' ' + tr('Desligar', 'Turn Off') + '</button></div>';
-  setIc(m.querySelector('.mh i span'), '👤', 32);
-  const off = document.createElement('div'); off.id = 'xpOff'; off.textContent = tr('Desligando...', 'Shutting down...');
-  document.body.append(d, bar, m, off);
+  const d = mkEl('div'); d.id = 'xpDesk'; d.dataset.wp = wp; d.innerHTML = '<div id="xpIcons"></div>';
+  const bar = mkEl('div'); bar.id = 'xpBar'; bar.innerHTML = '<button type="button" id="xpStart"><span class="xpFlag"></span>' + tr('iniciar', 'start') + '</button><div id="xpTasks"></div><div id="xpTray"><button type="button" id="xpTrSnd" title="' + tr('Volume', 'Volume') + '"></button><span id="xpClk"></span></div>';
+  const m = mkEl('div'); m.id = 'xpMenu';
+  m.innerHTML = '<div class="smBox"><div class="smh"><i></i><b id="xpSmUser"></b></div><div class="smLine"></div><div class="smb"><div class="sml"><div class="smlList" id="xpSml"></div><div class="smAllW"><button type="button" class="mi smAll" id="xpSmAll"><span>' + tr('Todos os Programas', 'All Programs') + '</span><i>►</i></button></div></div><div class="smr" id="xpSmr"></div></div><div class="smf"><button type="button" data-a="logoff"></button><button type="button" data-a="off"></button></div></div><div id="xpFly"></div>';
+  m.querySelector('.smh i').appendChild(ico(I.user, 32));
+  const fb = (a, ic, t) => { const b = m.querySelector('[data-a="' + a + '"]'); b.append(ico(ic, 20), document.createTextNode(' ' + t)); b.onclick = () => { xps('windows_xp_menu_command', .8); powerDlg(a); }; };
+  fb('logoff', I.key, tr('Fazer Logoff', 'Log Off')); fb('off', I.power, tr('Desligar', 'Turn Off'));
+  document.body.append(d, bar, m);
+  setIc($('xpTrSnd'), I.sound, 16); $('xpTrSnd').onclick = () => { xps('windows_navigation_start', .8); controlPanel('snd'); };
+  $('xpClk').style.cursor = 'default'; $('xpClk').onclick = () => controlPanel('time');
   d.addEventListener('click', () => { menu(false); d.querySelectorAll('.xpIc.sel').forEach(x => x.classList.remove('sel')); });
-  document.addEventListener('keydown', e => { if(e.key === 'Escape' && m.classList.contains('on')) menu(false); });
-  $('xpStart').onclick = e => { e.stopPropagation(); snd('menuSelect'); fillMenu(); menu(); };
-  m.querySelector('[data-a="logoff"]').onclick = () => { xps('windows_xp_logoff_sound'); close(); };
-  m.querySelector('[data-a="off"]').onclick = () => { menu(false); off.classList.add('on'); xps('windows_xp_shutdown'); setTimeout(() => { off.classList.remove('on'); close(); }, 2600); };
-}
-function fillMenu(){
-  const L = $('xpMenu').querySelector('.ml'), R = $('xpMenu').querySelector('.mr'); L.innerHTML = R.innerHTML = '';
-  const mi = (par, ic, t, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'mi'; b.innerHTML = '<i></i><span></span>'; setIc(b.firstChild, ic, 24); b.lastChild.textContent = t; b.onclick = () => { xps('windows_xp_menu_command', .5); menu(false); fn(); }; par.appendChild(b); };
-  entries().forEach(it => mi(L, it.ic, it.t, () => launch(it)));
-  mi(R, '🖥', tr('Meu Computador', 'My Computer'), myComputer); mi(R, '⚙️', tr('Painel de Controle', 'Control Panel'), controlPanel);
-  R.appendChild(document.createElement('hr')); mi(R, '↩', tr('Padrão', 'Default'), () => setStyle('cur'));
+  document.addEventListener('pointerdown', e => { const mm = $('xpMenu'); if(mm && mm.classList.contains('on') && !e.target.closest('#xpMenu,#xpStart')) menu(false); }, true);
+  document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('xpModal') && $('xpModal').classList.contains('on')) closeModal(); else if($('xpMenu').classList.contains('on')) menu(false); } });
+  $('xpStart').onclick = e => { e.stopPropagation(); const willOpen = !$('xpMenu').classList.contains('on'); if(willOpen){ xps('windows_xp_start', .8); fillStartMenu(); } menu(); };
+  const all = $('xpSmAll'), fly = $('xpFly');
+  all.onclick = e => { e.stopPropagation(); xps('windows_navigation_start', .8); fly.classList.toggle('on'); };
+  if(matchMedia('(hover:hover)').matches) all.addEventListener('mouseenter', () => fly.classList.add('on'));
 }
 function fillIcons(){
-  const box = $('xpIcons'); box.innerHTML = '';
-  box.appendChild(iconBtn({ ic:'🖥', t:tr('Meu Computador', 'My Computer'), run:myComputer }));
-  entries().forEach(it => box.appendChild(iconBtn(it)));
+  const box1 = $('xpIcons'); box1.innerHTML = '';
+  box1.appendChild(iconBtn({ ic:I.bin, t:tr('Lixeira', 'Recycle Bin'), run:recycleBin }));
+  box1.appendChild(iconBtn({ ic:I.pc, t:tr('Meu Computador', 'My Computer'), run:myComputer }));
+  entries().forEach(it => box1.appendChild(iconBtn(it)));
 }
-function open(){
-  if(XP_BLOQUEADO || style !== 'xp') return; const was = root.classList.contains('xp-desk'); buildDesk(); fillIcons(); root.classList.add('xp-desk'); sync(); if(!was) boot();
+
+/* ---- boot: a tela de loading de mentira carrega TUDO (imagens, fontes, sons, menu Iniciar, molduras) antes de entrar ---- */
+let booting = false, bootedOnce = false, token = 0, preloaded = null;
+function preload(){
+  if(preloaded) return preloaded;
+  const imgs = [SPR, AS + 'Logo/boot.png', AS + 'Logo/WindowsLogo-small.png', AS + 'Wallpapers/' + (WALLS.some(k => k[0] === wp) ? wp : 'bliss') + '.jpg'];
+  ['taskbar', 'tray', 'start_n', 'start_h', 'start_p', 'flag', 'title_mid', 'title_mid_off'].forEach(n => imgs.push(AS + 'UI/' + n + '.png'));
+  ['min', 'max', 'close', 'restore'].forEach(k => ['n', 'h', 'p'].forEach(s => imgs.push(AS + 'UI/cap_' + k + '_' + s + '.png')));
+  const pi = u => new Promise(r => { const im = new Image(); im.onload = im.onerror = () => r(); im.src = u; });
+  const fonts = [];
+  try{ if(document.fonts && document.fonts.load){ fonts.push(document.fonts.load("11px 'XP Tahoma'"), document.fonts.load("20px 'XP Franklin'")); } }catch(e){}
+  const sounds = SOUNDS.map(n => new Promise(r => { try{ const a = aud(n); if(a.readyState >= 3) return r(); a.addEventListener('canplaythrough', () => r(), { once:true }); a.addEventListener('error', () => r(), { once:true }); a.load(); }catch(e){ r(); } }));
+  const cap = (p, ms) => Promise.race([p, wait(ms)]);
+  preloaded = Promise.all([cap(Promise.all(imgs.map(pi)), 8000), cap(Promise.all(fonts), 4000), cap(Promise.all(sounds), 2500)]);
+  return preloaded;
 }
+function ensureBoot(){
+  let b = $('xpBoot'); if(b) return b;
+  b = mkEl('div'); b.id = 'xpBoot'; b.innerHTML = '<div class="bf"><div class="bar"><i></i><i></i><i></i></div></div>'; document.body.appendChild(b); return b;
+}
+async function open(){
+  if(style !== 'xp' || booting) return;
+  if(root.classList.contains('xp-desk')){ fillIcons(); sync(); return; }
+  booting = true; const my = ++token, full = !bootedOnce, b = ensureBoot();
+  muteGameMenuSfx(); b.classList.add('on'); xps('windows_xp_startup');
+  /* enquanto a tela de boot roda, o sistema inteiro é montado e carregado por trás */
+  buildDesk(); fillIcons(); fillStartMenu(); DEFS.forEach(chrome); bgPlace();
+  const ready = preload(), minT = wait(full ? 3200 : 1500);
+  let skip; const skipP = new Promise(r => { skip = r; }); let loaded = false;
+  ready.then(() => { loaded = true; }); b.onclick = () => { if(loaded) skip(); };
+  await ready;
+  await Promise.race([minT, skipP]);
+  if(my !== token) return;
+  if(full){ b.classList.remove('on'); xps('windows_xp_logon_sound'); await splash(tr('bem-vindo', 'welcome'), userName(), 1500, true); if(my !== token) return; }
+  else xps('windows_xp_logon_sound');
+  root.classList.add('xp-desk'); sync(); b.classList.remove('on'); b.onclick = null; setTimeout(hideSplash, 60);
+  booting = false; bootedOnce = true;
+  setTimeout(() => { if(root.classList.contains('xp-desk')) balloon(tr('Windows XP', 'Windows XP'), tr('Sua área de trabalho está pronta. Clique em iniciar para abrir seus aplicativos.', 'Your desktop is ready. Click start to open your apps.')); }, 1100);
+}
+/* sair da área de trabalho: fecha tudo e deixa o estilo pronto para a próxima vez */
 function close(){
-  menu(false); DEFS.forEach(d => { if(isOpen(d)) closeApp(d); });
-  const w = $('xpWins'); if(w) w.innerHTML = ''; const t = $('xpTasks'); if(t) t.innerHTML = '';
-  const bt = $('xpBoot'); if(bt && !booting) bt.classList.remove('on');
-  root.classList.remove('xp-desk');
+  token++; booting = false;
+  menu(false); closeModal(); hideSplash();
+  ['xpBoot', 'xpStandby', 'xpBalloon'].forEach(i => { const e = $(i); if(e) e.classList.remove('on'); });
+  DEFS.forEach(d => { if(isOpen(d)) closeApp(d); });
+  Array.from(wins.values()).forEach(w => { w.el.remove(); }); wins.clear();
+  Object.keys(tasks).forEach(k => untask(k));
+  activeKey = null; root.classList.remove('xp-desk');
 }
 function setStyle(s){
-  if(XP_BLOQUEADO && s === 'xp'){ try{ flash('Estilo Windows XP temporariamente bloqueado', 'Windows XP style temporarily locked', true); }catch(e){} return; }
   style = s; try{ localStorage.setItem(KEY, s); }catch(e){}
   applyStyle(); if(s !== 'xp') close(); else setTimeout(open, 120);
   const sec = $('xpStyleSec'); if(sec) render(sec);
@@ -27849,15 +28183,29 @@ function setStyle(s){
 /* ---- seção ESTILO no topo da aba EXTRAS ---- */
 function render(w){
   w.innerHTML = '';
-  const h = document.createElement('div'); h.className = 'set-sec xt-sec'; h.textContent = tr('ESTILO', 'STYLE'); w.appendChild(h);
-  const r = document.createElement('div'); r.className = 'xt-row'; w.appendChild(r);
-  const mk = (label, on, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary' + (on ? ' xt-on' : ''); b.style.width = '100%'; b.textContent = label; b.onclick = () => { snd('menuAccept'); fn(); }; r.appendChild(b); };
-  mk((style === 'cur' ? '✔ ' : '') + '🖥 ' + tr('PADRÃO', 'DEFAULT'), style === 'cur', () => setStyle('cur'));
-  mk(XP_BLOQUEADO ? '🔒 WINDOWS XP (' + tr('BLOQUEADO', 'LOCKED') + ')' : (style === 'xp' ? '✔ ' : '') + '🪟 WINDOWS XP', style === 'xp', () => { if(style === 'xp') open(); else setStyle('xp'); });
-  if(XP_BLOQUEADO){ const xb = r.lastElementChild; xb.disabled = true; xb.style.opacity = '.45'; xb.style.pointerEvents = 'none'; }
-  if(style === 'xp') mk('🏞 ' + tr('ABRIR ÁREA DE TRABALHO', 'OPEN DESKTOP'), false, open);
+  const h = mkEl('div', 'set-sec xt-sec'); h.textContent = tr('ESTILO', 'STYLE'); w.appendChild(h);
+  const r = mkEl('div', 'xt-row'); w.appendChild(r);
+  const mk = (label, ic, on, fn) => { const b = mkEl('button', 'btn btn-secondary' + (on ? ' xt-on' : '')); b.type = 'button'; b.style.width = '100%'; if(on) b.appendChild(document.createTextNode('✔ ')); b.appendChild(ico(ic, 16)); const s = mkEl('span'); s.textContent = label; b.appendChild(s); b.onclick = () => { snd('menuAccept'); fn(); }; r.appendChild(b); };
+  mk(tr('PADRÃO', 'DEFAULT'), I.pc, style === 'cur', () => setStyle('cur'));
+  mk('WINDOWS XP', I.flag, style === 'xp', () => { if(style === 'xp') open(); else setStyle('xp'); });
+  if(style === 'xp') mk(tr('ABRIR ÁREA DE TRABALHO', 'OPEN DESKTOP'), I.folder, false, open);
 }
-function section(){ const w = document.createElement('div'); w.id = 'xpStyleSec'; render(w); return w; }
+function section(){ const w = mkEl('div'); w.id = 'xpStyleSec'; render(w); return w; }
+
+/* ---- entrar / sair do menu de configurações ----
+   Entrar na aba EXTRAS com o estilo XP escolhido abre a área de trabalho direto; sair do menu (VOLTAR, ESC, voltar ao jogo...) fecha tudo. */
+document.addEventListener('click', e => { if(style === 'xp' && e.target.closest && e.target.closest('#extrasTabBtn')) setTimeout(open, 30); }, true);
+(function(){
+  const sm = $('settingsModal'); if(!sm) return;
+  let on = sm.style.display === 'flex';
+  new MutationObserver(() => {
+    const now = sm.style.display === 'flex'; if(now === on) return; on = now;
+    if(!now){ if(root.classList.contains('xp-desk') || booting) close(); }
+    else{ const p = $('tabExtras'); if(style === 'xp' && p && p.classList.contains('active')) setTimeout(open, 80); }
+  }).observe(sm, { attributes:true, attributeFilter:['style', 'class'] });
+})();
+muteGameMenuSfx();
+applyStyle();
 
 window.dzXp = { section, open, close, setStyle, isOpen: () => root.classList.contains('xp-desk'), style: () => style };
 })();
