@@ -29364,9 +29364,9 @@ function recycleBin(){
 /* Painel de Controle: categorias > tarefas > telas (plano de fundo, estilo, sons, data e hora) */
 function controlPanel(start){
   const hist = [], fwdH = []; let cur = 'home', w;
-  const parent = { look:'home', wall:'look', style:'look', snd:'home', time:'home' };
-  const titles = { home:tr('Painel de Controle', 'Control Panel'), look:tr('Aparência e Temas', 'Appearance and Themes'), wall:tr('Plano de Fundo da Área de Trabalho', 'Desktop Background'), style:tr('Estilo Visual', 'Visual Style'), snd:tr('Sons e Dispositivos de Áudio', 'Sounds and Audio Devices'), time:tr('Data e Hora', 'Date and Time') };
-  const icons = { home:I.cp, look:I.theme, wall:I.theme, style:I.theme, snd:I.sound, time:I.clock };
+  const parent = { look:'home', wall:'look', style:'look', snd:'home', time:'home', user:'home', uacc:'user', uname:'uacc', upic:'uacc' };
+  const titles = { home:tr('Painel de Controle', 'Control Panel'), look:tr('Aparência e Temas', 'Appearance and Themes'), wall:tr('Plano de Fundo da Área de Trabalho', 'Desktop Background'), style:tr('Estilo Visual', 'Visual Style'), snd:tr('Sons e Dispositivos de Áudio', 'Sounds and Audio Devices'), time:tr('Data e Hora', 'Date and Time'), user:tr('Contas de Usuário', 'User Accounts'), uacc:tr('Alterar uma Conta', 'Change an Account'), uname:tr('Alterar o Nome', 'Change the Name'), upic:tr('Alterar a Imagem', 'Change the Picture') };
+  const icons = { home:I.cp, look:I.theme, wall:I.theme, style:I.theme, snd:I.sound, time:I.clock, user:I.user, uacc:I.user, uname:I.user, upic:I.user };
   const go = (v, push) => {
     if(push !== false){ hist.push(cur); fwdH.length = 0; }
     cur = v; draw();
@@ -29390,7 +29390,7 @@ function controlPanel(start){
     if(cur === 'home'){
       h.textContent = tr('Escolha uma categoria', 'Pick a category');
       const g = mkEl('div', 'xpCats'); m.appendChild(g);
-      g.append(catBtn(I.theme, tr('Aparência e Temas', 'Appearance and Themes'), () => go('look')), catBtn(I.sound, tr('Sons e Dispositivos de Áudio', 'Sounds and Audio Devices'), () => go('snd')), catBtn(I.clock, tr('Data, Hora, Idioma e Opções Regionais', 'Date, Time, Language and Regional Options'), () => go('time')));
+      g.append(catBtn(I.user, tr('Contas de Usuário', 'User Accounts'), () => go('user')), catBtn(I.theme, tr('Aparência e Temas', 'Appearance and Themes'), () => go('look')), catBtn(I.sound, tr('Sons e Dispositivos de Áudio', 'Sounds and Audio Devices'), () => go('snd')), catBtn(I.clock, tr('Data, Hora, Idioma e Opções Regionais', 'Date, Time, Language and Regional Options'), () => go('time')));
     }else if(cur === 'look'){
       h.textContent = titles.look; const t = mkEl('div', 'xpTasks'); m.append(mkEl('div', 'xpSec', tr('Escolha uma tarefa...', 'Pick a task...')), t);
       t.append(link(I.theme, tr('Alterar o plano de fundo da área de trabalho', 'Change the desktop background'), () => go('wall')), link(I.flag, tr('Alterar o estilo visual (Padrão ou Windows XP)', 'Change the visual style (Default or Windows XP)'), () => go('style')));
@@ -29402,6 +29402,40 @@ function controlPanel(start){
         b.onclick = () => { wp = a[0]; try{ localStorage.setItem('dz_xp_wp', wp); }catch(e){} const dk = $('xpDesk'); if(dk) dk.dataset.wp = wp; g.querySelectorAll('.on').forEach(x => x.classList.remove('on')); b.classList.add('on'); xps('windows_navigation_start', .8); };
         g.appendChild(b);
       });
+    }else if(cur === 'user' || cur === 'uacc' || cur === 'uname' || cur === 'upic'){
+      const acct = () => { const b = mkEl('button', 'uaTile'); b.type = 'button'; const p = mkEl('span', 'p'); p.appendChild(avEl('100%')); const tx = mkEl('span'); tx.innerHTML = '<b></b><small></small>'; tx.firstChild.textContent = userName(); tx.lastChild.textContent = tr('Administrador do computador', 'Computer administrator'); b.append(p, tx); b.onclick = () => { xps('windows_navigation_start', .8); go('uacc'); }; return b; };
+      if(cur === 'user'){
+        h.textContent = tr('Contas de Usuário', 'User Accounts');
+        const t = mkEl('div', 'xpTasks'); t.append(link(I.user, tr('Alterar uma conta', 'Change an account'), () => go('uacc')), link(I.user, tr('Alterar o modo como os usuários fazem logon ou logoff', 'Change the way users log on or off'), () => {}, true));
+        m.append(mkEl('div', 'xpSec', tr('Escolha uma tarefa...', 'Pick a task...')), t, mkEl('div', 'xpSec', tr('ou escolha uma conta para alterar', 'or pick an account to change')), acct());
+      }else if(cur === 'uacc'){
+        h.textContent = tr('O que você deseja alterar na conta de ', 'What do you want to change about ') + userName() + (document.documentElement.lang === 'en' ? "'s account?" : '?');
+        const r = mkEl('div', 'uaRow'), t = mkEl('div', 'xpTasks'); t.style.flex = '1'; t.style.minWidth = '180px';
+        t.append(link(I.user, tr('Alterar o nome', 'Change the name'), () => go('uname')), link(I.user, tr('Criar uma senha', 'Create a password'), () => {}, true), link(I.user, tr('Alterar a imagem', 'Change the picture'), () => go('upic')), link(I.user, tr('Alterar o tipo de conta', 'Change the account type'), () => {}, true));
+        const info = mkEl('div', 'uaTile'); info.style.cursor = 'default'; const p = mkEl('span', 'p'); p.appendChild(avEl('100%')); const tx = mkEl('span'); tx.innerHTML = '<b></b><small></small>'; tx.firstChild.textContent = userName(); tx.lastChild.textContent = tr('Administrador do computador', 'Computer administrator'); info.append(p, tx);
+        r.append(t, info); m.appendChild(r);
+      }else if(cur === 'uname'){
+        h.textContent = tr('Digite um novo nome para a conta de ', 'Type a new name for ') + userName();
+        const note = mkEl('div'); note.style.cssText = 'font-size:12px;margin:6px 0'; note.textContent = tr('Esse nome aparecerá na tela de boas-vindas e no menu Iniciar.', 'This name will appear on the Welcome screen and on the Start menu.');
+        const inp = mkEl('input', 'uaIn'); inp.type = 'text'; inp.maxLength = 24; inp.value = userName(); inp.spellcheck = false;
+        const bs = mkEl('div', 'uaBtns'), ok = mkEl('button', 'xpBtn def', tr('Alterar nome', 'Change Name')), ca = mkEl('button', 'xpBtn', tr('Cancelar', 'Cancel')); ok.type = ca.type = 'button';
+        ok.onclick = () => { const v = inp.value.trim(); try{ if(v) localStorage.setItem('dz_xp_uname', v); else localStorage.removeItem('dz_xp_uname'); }catch(e){} try{ fillStartMenu(); }catch(e){} xps('windows_navigation_start', .8); goBack(); };
+        ca.onclick = () => goBack(); inp.onkeydown = e => { e.stopPropagation(); if(e.key === 'Enter') ok.click(); };
+        bs.append(ok, ca); m.append(note, inp, bs);
+      }else{
+        h.textContent = tr('Escolha uma nova imagem para a sua conta', 'Pick a new picture for your account');
+        let sel = avatar; const r = mkEl('div', 'uaRow'), g = mkEl('div', 'uaGrid'), pv = mkEl('div', 'uaPrev');
+        const showPv = () => { pv.innerHTML = '<div class="p"></div><span></span>'; pv.firstChild.appendChild(avEl('100%', sel)); pv.lastChild.textContent = tr('Imagem atual', 'Current picture'); };
+        const names = (avCustom ? ['@custom'] : []).concat(USER_ICONS);
+        names.forEach(n => { const b = mkEl('button', n === sel ? 'on' : ''); b.type = 'button'; b.title = n === '@custom' ? tr('Sua imagem', 'Your picture') : n; b.appendChild(avEl('48px', n)); b.onclick = () => { sel = n; g.querySelectorAll('.on').forEach(x => x.classList.remove('on')); b.classList.add('on'); showPv(); xps('windows_xp_menu_command', .6); }; g.appendChild(b); });
+        showPv(); r.append(g, pv); m.appendChild(r);
+        const fi = mkEl('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.style.display = 'none';
+        fi.onchange = () => { const f = fi.files && fi.files[0]; if(!f) return; const im = new Image(), u = URL.createObjectURL(f); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 96; const x = c.getContext('2d'), k = Math.max(96 / im.width, 96 / im.height); x.drawImage(im, (96 - im.width * k) / 2, (96 - im.height * k) / 2, im.width * k, im.height * k); URL.revokeObjectURL(u); try{ avCustom = c.toDataURL('image/jpeg', .85); localStorage.setItem('dz_xp_avatar_img', avCustom); }catch(e){} avatar = '@custom'; try{ localStorage.setItem('dz_xp_avatar', avatar); }catch(e){} paintAvatar(); xps('windows_navigation_start', .8); draw(); }; im.onerror = () => URL.revokeObjectURL(u); im.src = u; };
+        const more = link(I.help, tr('Procurar mais imagens...', 'Browse for more pictures...'), () => fi.click()); more.style.margin = '10px 0 0'; m.append(more, fi);
+        const bs = mkEl('div', 'uaBtns'), ok = mkEl('button', 'xpBtn def', tr('Alterar imagem', 'Change Picture')), ca = mkEl('button', 'xpBtn', tr('Cancelar', 'Cancel')); ok.type = ca.type = 'button';
+        ok.onclick = () => { avatar = sel; try{ localStorage.setItem('dz_xp_avatar', avatar); }catch(e){} paintAvatar(); xps('windows_navigation_start', .8); goBack(); };
+        ca.onclick = () => goBack(); bs.append(ok, ca); m.appendChild(bs);
+      }
     }else if(cur === 'style'){
       h.textContent = titles.style; const g = mkEl('div', 'xpStyG'); m.appendChild(g);
       [['cur', I.pc, tr('Padrão', 'Default')], ['xp', I.flag, 'Windows XP']].forEach(s => {
@@ -29457,11 +29491,19 @@ function standby(){
 function splash(text, sub, ms, big){
   let s = $('xpSplash'); if(!s){ s = mkEl('div'); s.id = 'xpSplash'; document.body.appendChild(s); }
   s.innerHTML = '<div class="sb st"></div><div class="sm"><i></i><div><b></b><span></span></div></div><div class="sb sbt">Windows<sup>xp</sup></div>';
-  s.querySelector('i').appendChild(ico(I.user, 32)); s.querySelector('b').textContent = text; s.querySelector('span').textContent = sub || '';
+  s.querySelector('i').appendChild(avEl('100%')); s.querySelector('b').textContent = text; s.querySelector('span').textContent = sub || '';
   s.classList.add('on'); return wait(ms).then(() => { if(!big) s.classList.remove('on'); });
 }
 const hideSplash = () => { const s = $('xpSplash'); if(s) s.classList.remove('on'); };
-const userName = () => { try{ const v = ($('playerNameInput') || {}).value; return (v && v.trim()) || tr('Jogador', 'Player'); }catch(e){ return tr('Jogador', 'Player'); } };
+const USER_ICONS = ["Astronaut", "Beach", "Bike", "Butterfly", "Car", "Cat", "Chess", "Dog", "Duck", "Fish", "Flower", "Frog", "Guitar", "Horses", "Karate", "Lily", "Luggage", "Palms", "Plane", "Skateboard", "Snowflake", "Soccer", "Spaceship", "Water"];
+let avatar = ''; try{ avatar = localStorage.getItem('dz_xp_avatar') || ''; if(avatar !== '@custom' && USER_ICONS.indexOf(avatar) < 0) avatar = ''; }catch(e){}
+let avCustom = ''; try{ avCustom = localStorage.getItem('dz_xp_avatar_img') || ''; }catch(e){}
+if(avatar === '@custom' && !avCustom) avatar = '';
+const avSrc = n => n === '@custom' ? avCustom : AS + 'UserIcons/' + n + '.png';
+function avEl(sz, n){ n = n === undefined ? avatar : n; const e = mkEl('span'); e.style.cssText = 'display:block;width:' + sz + ';height:' + sz; if(n){ const im = new Image(); im.alt = ''; im.draggable = false; im.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block'; im.onerror = () => { e.innerHTML = ''; e.appendChild(ico(I.user, 32)); }; im.src = avSrc(n); e.appendChild(im); } else e.appendChild(ico(I.user, 32)); return e; }
+{ const st = document.createElement('style'); st.textContent = '.uaTile{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid transparent;border-radius:3px;background:none;font:12px var(--xf);text-align:left;cursor:pointer;color:#00136b;min-height:56px}.uaTile:hover{background:#e8f0fc;border-color:#a9c5ee}.uaTile .p{width:48px;height:48px;border:2px solid #7ba2e7;border-radius:3px;overflow:hidden;background:#fff;flex:none}.uaTile small{display:block;color:#555;font-size:11px}.uaRow{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}.uaGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px;flex:1;min-width:200px;max-height:240px;overflow:auto;padding:4px;border:1px solid #7f9db9;background:#fff}.uaGrid button{padding:2px;border:2px solid transparent;background:none;cursor:pointer;border-radius:2px;line-height:0}.uaGrid button.on{border-color:#316ac5;background:#c1d2ee}.uaPrev{width:96px;text-align:center;font-size:11px;color:#000}.uaPrev .p{width:64px;height:64px;margin:0 auto 4px;border:2px solid #7ba2e7;border-radius:3px;overflow:hidden;background:#fff}.uaBtns{display:flex;gap:8px;margin-top:12px}.uaIn{width:min(320px,100%);height:23px;border:1px solid #7f9db9;padding:0 4px;font:12px var(--xf);margin:6px 0 10px}'; document.head.appendChild(st); }
+function paintAvatar(){ document.querySelectorAll('.smh i').forEach(i => { i.innerHTML = ''; i.appendChild(avEl('100%')); }); }
+const userName = () => { try{ const cn = localStorage.getItem('dz_xp_uname'); if(cn) return cn; }catch(e){} try{ const v = ($('playerNameInput') || {}).value; return (v && v.trim()) || tr('Jogador', 'Player'); }catch(e){ return tr('Jogador', 'Player'); } };
 function shutdown(kind){
   const my = ++token;
   if(kind === 'logoff') xps('windows_xp_logoff_sound'); else xps('windows_xp_shutdown');
@@ -29488,7 +29530,7 @@ function menu(on){
 function fillStartMenu(){
   const L = $('xpSml'), R = $('xpSmr'), F = $('xpFly'); if(!L) return;
   L.innerHTML = R.innerHTML = F.innerHTML = '';
-  $('xpSmUser').textContent = userName();
+  $('xpSmUser').textContent = userName(); paintAvatar();
   const list = entries();
   const mi = (par, ic, px, t, sub, fn) => {
     const b = mkEl('button', 'mi'); b.type = 'button'; b.append(ico(ic, px)); const tx = mkEl('span', 'tx', '<b></b>' + (sub ? '<small></small>' : '')); tx.firstChild.textContent = t; if(sub) tx.lastChild.textContent = sub; b.appendChild(tx);
@@ -29649,7 +29691,7 @@ function buildDesk(){
   const bar = mkEl('div'); bar.id = 'xpBar'; bar.innerHTML = '<button type="button" id="xpStart"><span class="xpFlag"></span>' + tr('iniciar', 'start') + '</button><div id="xpQl"></div><div id="xpTasks"></div><div id="xpTray"><button type="button" id="xpTrSnd" title="' + tr('Volume', 'Volume') + '"></button><span id="xpClk"></span></div>';
   const m = mkEl('div'); m.id = 'xpMenu';
   m.innerHTML = '<div class="smBox"><div class="smh"><i></i><b id="xpSmUser"></b></div><div class="smLine"></div><div class="smb"><div class="sml"><div class="smlList" id="xpSml"></div><div class="smAllW"><button type="button" class="mi smAll" id="xpSmAll"><span>' + tr('Todos os Programas', 'All Programs') + '</span><i>►</i></button></div></div><div class="smr" id="xpSmr"></div></div><div class="smf"><button type="button" data-a="logoff"></button><button type="button" data-a="off"></button></div></div><div id="xpFly"></div>';
-  m.querySelector('.smh i').appendChild(ico(I.user, 32));
+  m.querySelector('.smh i').appendChild(ico(I.user, 32)); paintAvatar();
   const fb = (a, ic, t) => { const b = m.querySelector('[data-a="' + a + '"]'); b.append(ico(ic, 20), document.createTextNode(' ' + t)); b.onclick = () => { xps('windows_xp_menu_command', .8); powerDlg(a); }; };
   fb('logoff', I.key, tr('Fazer Logoff', 'Log Off')); fb('off', I.power, tr('Desligar', 'Turn Off'));
   document.body.append(d, bar, m);
