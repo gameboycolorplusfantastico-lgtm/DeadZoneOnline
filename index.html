@@ -14581,6 +14581,14 @@ function switchSettingsTab(tabId) {
     p.classList.toggle('active', p.id === tabId);
   });
 }
+/* ponte para o estilo Windows XP (script separado, fora deste escopo): sons, música do menu, aba e idioma */
+window.dzGame = {
+  sfx: function(k){ try{ SFX[k](); }catch(e){} },
+  muteMenu: function(){ try{ ['menuSelect','menuAccept','menuBack'].forEach(function(k){ var o = SFX[k]; if(typeof o === 'function' && !o.__xp){ var f = function(){ if(document.documentElement.classList.contains('xp-desk')) return; return o.apply(this, arguments); }; f.__xp = 1; SFX[k] = f; } }); }catch(e){} },
+  music: function(on){ try{ if(started) return; if(on) SFX.playMenuMusic(); else SFX.stopMenuMusic(); }catch(e){} },
+  tab: function(t){ try{ switchSettingsTab(t); }catch(e){} },
+  t: function(pt, en){ try{ return LTX(pt, en); }catch(e){ return pt; } }
+};
 document.querySelectorAll('#settingsTabRow .tab-btn').forEach(btn => {
   btn.addEventListener('click', () => { SFX.menuSelect(); switchSettingsTab(btn.getAttribute('data-tab')); });
 });
@@ -27547,9 +27555,9 @@ html.xp-desk #xpDesk{display:block}html.xp-desk #xpBar{display:flex}html.xp-desk
 /* ---- telas de boot, bem-vindo e desligar ---- */
 #xpBoot{position:fixed;inset:0;z-index:100031;background:#000}
 #xpBoot .bf{position:absolute;left:50%;top:50%;width:min(100vw,177.7778vh);aspect-ratio:16/9;transform:translate(-50%,-50%);background:url(assets/winxp/Logo/boot.png) center/100% 100% no-repeat}
-#xpBoot .bar{position:absolute;left:42.9%;top:73.1%;width:13.4%;height:2.3%;overflow:hidden}
-#xpBoot .bar i{position:absolute;top:0;height:100%;width:19%;border-radius:1px;background:linear-gradient(180deg,#c3d8ff 0,#4d8cf0 35%,#2253c2 70%,#16399a 100%);animation:xpBar 1.7s linear infinite}
-#xpBoot .bar i:nth-child(2){animation-delay:-.18s}#xpBoot .bar i:nth-child(3){animation-delay:-.36s}
+#xpBoot .bar{position:absolute;left:42.4%;top:73.15%;width:14.7%;height:3.05%;box-sizing:border-box;border:2px solid #c4c4c4;border-radius:6px;background:#000;overflow:hidden}
+#xpBoot .bar i{position:absolute;top:2px;height:calc(100% - 4px);width:19%;border-radius:1px;background:linear-gradient(180deg,#c3d8ff 0,#4d8cf0 35%,#2253c2 70%,#16399a 100%);animation:xpBar 1.7s linear infinite}
+#xpBoot .bar i:nth-child(2){animation-delay:-.3s}#xpBoot .bar i:nth-child(3){animation-delay:-.6s}
 @keyframes xpBar{from{transform:translateX(-110%)}to{transform:translateX(560%)}}
 #xpSplash{position:fixed;inset:0;z-index:100030;flex-direction:column;background:#5a7edc;color:#fff}
 #xpSplash .sb{flex:none;height:15%;min-height:44px;background:linear-gradient(180deg,#00309c,#0a47d1)}
@@ -27637,8 +27645,8 @@ html.xp-desk :is(#xpDesk,#xpBar,#xpMenu,.xpWin,.xpModal) :is(button,input,select
 (function(){
 'use strict';
 const KEY = 'dz_extras_style_v1', $ = id => document.getElementById(id), root = document.documentElement;
-const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };
-const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
+const tr = (pt, en) => { try{ return window.dzGame ? window.dzGame.t(pt, en) : pt; }catch(e){ return pt; } };
+const snd = n => { try{ if(window.dzGame) window.dzGame.sfx(n); }catch(e){} };
 const mkEl = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className = cls; if(html !== undefined) e.innerHTML = html; return e; };
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const AS = 'assets/winxp/';
@@ -27669,9 +27677,9 @@ function xps(name, rel){
 }
 const SOUNDS = ['windows_xp_startup','windows_xp_logon_sound','windows_xp_start','windows_xp_menu_command','windows_navigation_start','windows_xp_minimize','windows_xp_restore','windows_xp_shutdown','windows_xp_logoff_sound','windows_xp_balloon','windows_xp_ding','windows_xp_error','windows_xp_critical_stop','windows_xp_exclamation','windows_xp_default'];
 /* enquanto a área de trabalho está aberta, os bipes do menu do jogo ficam mudos (o Windows tem os próprios sons) */
-function muteGameMenuSfx(){
-  try{ ['menuSelect', 'menuAccept', 'menuBack'].forEach(k => { const o = SFX[k]; if(typeof o === 'function' && !o.__xp){ const f = function(){ if(root.classList.contains('xp-desk')) return; return o.apply(this, arguments); }; f.__xp = 1; SFX[k] = f; } }); }catch(e){}
-}
+/* música do menu do Dead Zone: desligada enquanto a área de trabalho XP está aberta, volta ao sair (só fora de partida) */
+function menuMusic(on){ try{ if(window.dzGame) window.dzGame.music(on); }catch(e){} }
+function muteGameMenuSfx(){ try{ if(window.dzGame) window.dzGame.muteMenu(); }catch(e){} }
 
 /* ---- papéis de parede (arquivos em assets/winxp/Wallpapers) ---- */
 const WALLS = [['bliss','Bliss'],['ascent','Ascent'],['autumn','Autumn'],['azul','Azul'],['crystal','Crystal'],['follow','Follow'],['friend','Friend'],['home','Home'],['moon_flower','Moon Flower'],['peace','Peace'],['power','Power'],['purple_flower','Purple Flower'],['radiance','Radiance'],['red_moon_desert','Red Moon Desert'],['ripple','Ripple'],['stonehenge','Stonehenge'],['tulips','Tulips'],['vortec_space','Vortec Space'],['wind','Wind'],['windows_xp_home_edition','XP Home Edition'],['windows_xp_professional','XP Professional']];
@@ -27929,7 +27937,7 @@ function myComputer(){
   const detail = (n, t) => { det.innerHTML = '<b></b><span></span>'; det.firstChild.textContent = n; det.lastChild.textContent = t; };
   w.pane.append(
     box(tr('Tarefas do Sistema', 'System Tasks'), c => { c.append(link(I.about || I.info, tr('Exibir informações do sistema', 'View system information'), aboutBox), link(I.cp, tr('Alterar uma configuração', 'Change a setting'), () => controlPanel()), link(I.theme, tr('Alterar o estilo visual', 'Change the visual style'), () => controlPanel('style'))); }, true),
-    box(tr('Outros Locais', 'Other Places'), c => { c.append(link(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel()), link(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin), link(I.pc, tr('Voltar às configurações', 'Back to settings'), () => close())); }),
+    box(tr('Outros Locais', 'Other Places'), c => { c.append(link(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel()), link(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin), link(I.pc, tr('Voltar às configurações', 'Back to settings'), () => leaveDesk())); }),
     box(tr('Detalhes', 'Details'), c => { det = mkEl('div', 'xpDet'); c.appendChild(det); detail(tr('Meu Computador', 'My Computer'), tr('Pasta de sistema', 'System Folder')); })
   );
   function render(){
@@ -27978,7 +27986,7 @@ function controlPanel(start){
     w.pane.innerHTML = '';
     w.pane.append(
       box(tr('Painel de Controle', 'Control Panel'), c => { c.append(link(I.cp, tr('Página inicial', 'Home'), () => go('home'))); }, true),
-      box(tr('Veja Também', 'See Also'), c => { c.append(link(I.pc, tr('Meu Computador', 'My Computer'), myComputer), link(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox), link(I.cp, tr('Voltar às configurações', 'Back to settings'), () => close())); })
+      box(tr('Veja Também', 'See Also'), c => { c.append(link(I.pc, tr('Meu Computador', 'My Computer'), myComputer), link(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox), link(I.cp, tr('Voltar às configurações', 'Back to settings'), () => leaveDesk())); })
     );
     const h = mkEl('h2'); m.appendChild(h);
     if(cur === 'home'){
@@ -28062,7 +28070,7 @@ function shutdown(kind){
   splash(kind === 'logoff' ? tr('Fazendo logoff...', 'Logging off...') : tr('Desligando o Windows...', 'Windows is shutting down...'), userName(), kind === 'logoff' ? 2300 : 2800, true).then(() => {
     if(my !== token) return;
     if(kind === 'restart'){ close(); hideSplash(); bootedOnce = false; setTimeout(open, 400); }
-    else{ close(); hideSplash(); }
+    else{ leaveDesk(); hideSplash(); }
   });
 }
 /* balão da bandeja do sistema */
@@ -28095,7 +28103,7 @@ function fillStartMenu(){
   const R1 = (ic, t, fn) => mi(R, ic, 24, t, '', fn);
   R1(I.pc, tr('Meu Computador', 'My Computer'), myComputer); R1(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin);
   R.appendChild(mkEl('hr')); R1(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel());
-  R.appendChild(mkEl('hr')); R1(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox); R1(I.folder, tr('Configurações', 'Settings'), () => close());
+  R.appendChild(mkEl('hr')); R1(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox); R1(I.folder, tr('Configurações', 'Settings'), () => leaveDesk());
 }
 
 /* ---- área de trabalho ---- */
@@ -28149,7 +28157,7 @@ async function open(){
   if(style !== 'xp' || booting) return;
   if(root.classList.contains('xp-desk')){ fillIcons(); sync(); return; }
   booting = true; const my = ++token, full = !bootedOnce, b = ensureBoot();
-  muteGameMenuSfx(); b.classList.add('on'); xps('windows_xp_startup');
+  muteGameMenuSfx(); menuMusic(false); b.classList.add('on'); xps('windows_xp_startup');
   /* enquanto a tela de boot roda, o sistema inteiro é montado e carregado por trás */
   buildDesk(); fillIcons(); fillStartMenu(); DEFS.forEach(chrome); bgPlace();
   const ready = preload(), minT = wait(full ? 3200 : 1500);
@@ -28173,10 +28181,16 @@ function close(){
   Array.from(wins.values()).forEach(w => { w.el.remove(); }); wins.clear();
   Object.keys(tasks).forEach(k => untask(k));
   activeKey = null; root.classList.remove('xp-desk');
+  menuMusic(true);
+}
+/* saída da área de trabalho: NÃO volta para a aba EXTRAS — vai para a aba DEBUG (ou, se o menu foi fechado, o jogo reabre normal) */
+function leaveDesk(){
+  close();
+  try{ window.dzGame.tab('tabDebug'); }catch(e){}
 }
 function setStyle(s){
   style = s; try{ localStorage.setItem(KEY, s); }catch(e){}
-  applyStyle(); if(s !== 'xp') close(); else setTimeout(open, 120);
+  applyStyle(); if(s !== 'xp'){ const wasDesk = root.classList.contains('xp-desk'); close(); if(wasDesk) try{ window.dzGame.tab('tabDebug'); }catch(e){} } else setTimeout(open, 120);
   const sec = $('xpStyleSec'); if(sec) render(sec);
 }
 
@@ -28200,7 +28214,7 @@ document.addEventListener('click', e => { if(style === 'xp' && e.target.closest 
   let on = sm.style.display === 'flex';
   new MutationObserver(() => {
     const now = sm.style.display === 'flex'; if(now === on) return; on = now;
-    if(!now){ if(root.classList.contains('xp-desk') || booting) close(); }
+    if(!now){ if(root.classList.contains('xp-desk') || booting){ close(); try{ window.dzGame.tab('tabDebug'); }catch(e){} } }
     else{ const p = $('tabExtras'); if(style === 'xp' && p && p.classList.contains('active')) setTimeout(open, 80); }
   }).observe(sm, { attributes:true, attributeFilter:['style', 'class'] });
 })();
