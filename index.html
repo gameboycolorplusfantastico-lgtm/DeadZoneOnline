@@ -25283,6 +25283,125 @@ html.dz-xp #wmpPlay{width:44px!important;height:44px!important;font-size:18px!im
 html.dz-xp #wmpTime{color:#cfe0ff}html.dz-xp #wmpSeek,html.dz-xp #wmpVol{accent-color:#3fb028}
 @media (max-width:640px){html.dz-xp #wmpTabs{flex-direction:row;width:100%;flex:none;overflow-x:auto}.wtab{white-space:nowrap}}
 </style>
+<style id="dzWmpSkinStyle">
+/* ===== Media Player — skin "Windows Media Player 9 Series (Corona)". Imagens em assets/winxp/WMP ===== */
+html #wmpOverlay #wmpBox.sk{width:min(100%,640px);height:min(100%,400px);padding:0!important;gap:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:#000!important;overflow:visible}
+html #wmpOverlay #wmpBox.sk.xp-max{width:100%!important;height:100%!important}
+#wmpBox.sk>.xpTb.app{display:none!important}
+#wmpBox.sk *{box-sizing:border-box}
+#wsRoot{flex:1;min-height:0;min-width:0;display:flex;align-items:stretch;position:relative;font:11px Tahoma,'XP Tahoma',Arial,sans-serif;-webkit-user-select:none;user-select:none}
+#wsRoot.cmp{flex:none;align-self:flex-start;width:100%}
+#wsMain{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.wsb{position:absolute;display:block;padding:0;margin:0;border:0;border-radius:0;background:transparent no-repeat;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.wsb:focus{outline:0}.wsb.gp-focus,.wsb:focus-visible{outline:2px solid #39ff14;outline-offset:1px;z-index:5}
+/* barra superior */
+#wsTop{height:33px;flex:none;display:flex;position:relative;z-index:3;touch-action:none}
+#wsTL{width:299px;flex:none;position:relative;background:url(assets/winxp/WMP/player_top_left.png) no-repeat}
+#wsTM{flex:1;min-width:0;background:url(assets/winxp/WMP/player_top_middle.png) repeat-x}
+#wsTR{width:46px;flex:none;position:relative;background:url(assets/winxp/WMP/player_top_right.png) no-repeat}
+.wsT{top:3px;width:19px;height:19px;left:calc(116px + var(--x));background-image:url(assets/winxp/WMP/player_top_controls_left.png);background-position:calc(-1 * var(--x)) 0}
+.wsT:hover{background-image:url(assets/winxp/WMP/player_top_controls_left_hover.png)}
+.wsT:active,.wsT.on{background-image:url(assets/winxp/WMP/player_top_controls_left_down.png)}
+.wsS{top:3px;height:19px;left:var(--x);width:var(--w);background-image:url(assets/winxp/WMP/player_top_controls_right.png);background-position:calc(-1 * var(--x)) 0}
+.wsS:hover{background-image:url(assets/winxp/WMP/player_top_controls_right_hover.png)}
+.wsS:active{background-image:url(assets/winxp/WMP/player_top_controls_right_down.png)}
+/* área central */
+#wsMid{flex:1;min-height:0;display:flex;margin-top:-7px;position:relative;z-index:1}
+#wsRoot.cmp #wsMid,#wsRoot.cmp #wsEq,#wsRoot.cmp #wsPl,#wsRoot.cmp #wsBot{display:none!important}
+#wsL{width:19px;flex:none;margin-top:7px;background:url(assets/winxp/WMP/player_left.png) repeat-y}
+#wsR{width:7px;flex:none;margin-top:7px;background:url(assets/winxp/WMP/player_right.png) repeat-y}
+html #wmpBox.sk #wmpStage{flex:1;min-width:0;position:relative;overflow:hidden;background:#000;border:0!important;border-radius:0!important}
+#wmpBox.sk #wmpStage canvas,#wmpBox.sk #wmpStage video{position:absolute;inset:0;width:100%;height:100%}
+/* barra do display (verde) */
+#wsBot{height:23px;flex:none;display:flex;position:relative;z-index:2}
+#wsBL{width:286px;flex:none;position:relative;background:url(assets/winxp/WMP/player_bottom_left.png) no-repeat}
+#wsBM{flex:1;min-width:0;background:url(assets/winxp/WMP/player_bottom_middle.png) repeat-x}
+#wsBR{width:59px;flex:none;position:relative;background:url(assets/winxp/WMP/player_bottom_right.png) no-repeat}
+html #wmpBox.sk #wmpNow{position:absolute;left:63px;top:2px;right:0;height:17px;padding:0;border:0;border-radius:0;background:none;opacity:1;color:#0f0;font:700 11px/17px Arial,'XP Arial',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html #wmpBox.sk #wmpTime{position:absolute;right:10px;top:2px;width:49px;min-width:0;height:17px;color:#0f0;font:700 11px/17px Arial,'XP Arial',sans-serif;text-align:right}
+/* barra de controles */
+#wsCtl{height:60px;flex:none;margin:-5px 0 0 12px;position:relative;z-index:4;display:flex}
+#wsCL{width:274px;flex:none;position:relative;background:url(assets/winxp/WMP/equalizer_left.png) no-repeat}
+#wsCM{flex:1;min-width:0;background:url(assets/winxp/WMP/equalizer_middle.png) repeat-x}
+#wsCR{width:59px;flex:none;position:relative;background:url(assets/winxp/WMP/equalizer_right.png) no-repeat}
+#wsRew{left:6px;top:1px;width:35px;height:13px;background-image:url(assets/winxp/WMP/seekbutton_left.png)}
+#wsRew:hover{background-image:url(assets/winxp/WMP/seekbutton_left_hover.png)}#wsRew:active{background-image:url(assets/winxp/WMP/seekbutton_left_down.png)}
+#wsFf{left:calc(100% - 43px);top:1px;width:35px;height:13px;background-image:url(assets/winxp/WMP/seekbutton_right.png)}
+#wsFf:hover{background-image:url(assets/winxp/WMP/seekbutton_right_hover.png)}#wsFf:active{background-image:url(assets/winxp/WMP/seekbutton_right_down.png)}
+#wsSeek{position:absolute;left:42px;right:44px;top:1px;height:13px;z-index:3;cursor:pointer;touch-action:none}
+#wsSeekF{position:absolute;left:0;top:0;height:13px;width:0;background:url(assets/winxp/WMP/track_bar_filled.png) 0 0 repeat-x}
+#wsSeekT{position:absolute;left:0;top:0;width:23px;height:13px;background:url(assets/winxp/WMP/track_bar_slider.png) no-repeat}
+#wsSeek:hover #wsSeekT,#wsSeek.dn #wsSeekT{background-image:url(assets/winxp/WMP/track_bar_slider_hover.png)}
+#wsTr{position:absolute;left:8px;top:20px;width:136px;height:30px}
+.wsTx{left:var(--x);top:var(--y);width:var(--w,22px);height:var(--h,21px);background-image:url(assets/winxp/WMP/transports.png);background-position:calc(-1 * var(--x)) calc(-1 * var(--y))}
+.wsTx:hover{background-image:url(assets/winxp/WMP/transports_hover.png)}
+.wsTx:active,.wsTx.on{background-image:url(assets/winxp/WMP/transports_down.png)}
+#wsPause{display:none;left:0;top:0;width:30px;height:30px;background-image:url(assets/winxp/WMP/transports_pause.png);background-position:0 0}
+#wsPause:hover{background-image:url(assets/winxp/WMP/transports_pause_hover.png)}#wsPause:active{background-image:url(assets/winxp/WMP/transports_pause_down.png)}
+#wsRoot.playing #wsPause{display:block}#wsRoot.playing #wsPlay{visibility:hidden}
+#wsVol{position:absolute;left:150px;top:25px;width:68px;height:18px;cursor:pointer;touch-action:none}
+#wsVolF{position:absolute;left:0;top:0;height:18px;width:0;background:url(assets/winxp/WMP/volume_bar_filled.png) 0 0 no-repeat}
+#wsVolT{position:absolute;left:0;top:0;width:10px;height:18px;background:url(assets/winxp/WMP/volume_slider.png) no-repeat}
+#wsVol:hover #wsVolT,#wsVol.dn #wsVolT{background-image:url(assets/winxp/WMP/volume_slider_hover.png)}
+#wsCmp{left:3px;top:20px;width:20px;height:19px;background-image:url(assets/winxp/WMP/minimize_button.png)}
+#wsCmp:hover{background-image:url(assets/winxp/WMP/minimize_button_hover.png)}#wsCmp:active,#wsCmp.on{background-image:url(assets/winxp/WMP/minimize_button_down.png)}
+#wsMnu{left:24px;top:20px;width:20px;height:19px;background-image:url(assets/winxp/WMP/system_bar_disabled.png)}
+#wsMnu:hover{background-image:url(assets/winxp/WMP/system_bar_hover.png)}#wsMnu:active{background-image:url(assets/winxp/WMP/system_bar_down.png)}
+#wsGrip{left:44px;top:20px;width:17px;height:22px;background-image:url(assets/winxp/WMP/grippy.png);cursor:default;pointer-events:none}
+/* equalizador */
+#wsEq{display:none;position:absolute;left:12px;right:0;bottom:60px;height:123px;z-index:3}
+#wsRoot.eq #wsEq{display:flex}
+#wsEqL{width:3px;flex:none;background:url(assets/winxp/WMP/equalizer_pane_left.png) no-repeat}
+#wsEqM{flex:1;min-width:0;position:relative;background:url(assets/winxp/WMP/equalizer_pane_middle.png) repeat-x}
+#wsEqR{width:4px;flex:none;background:url(assets/winxp/WMP/equalizer_pane_right.png) no-repeat}
+.wsE{top:8px;width:19px;height:19px}
+#wsEqOn{left:9px;background-image:url(assets/winxp/WMP/equalizer_onoff_button.png)}#wsEqOn:hover{background-image:url(assets/winxp/WMP/equalizer_onoff_button_hover.png)}#wsEqOn:active,#wsEqOn.on{background-image:url(assets/winxp/WMP/equalizer_onoff_button_down.png)}
+#wsEqRs{left:31px;background-image:url(assets/winxp/WMP/equalizer_reset.png)}#wsEqRs:hover{background-image:url(assets/winxp/WMP/equalizer_reset_hover.png)}#wsEqRs:active{background-image:url(assets/winxp/WMP/equalizer_reset_down.png)}
+#wsEqPr{left:53px;background-image:url(assets/winxp/WMP/equalizer_menu_button.png)}#wsEqPr:hover{background-image:url(assets/winxp/WMP/equalizer_menu_button_hover.png)}#wsEqPr:active{background-image:url(assets/winxp/WMP/equalizer_menu_button_down.png)}
+#wsRoot:not(.eqon) :is(#wsEqRs,#wsEqPr){background-image:none}
+#wsRoot:not(.eqon) #wsEqRs{background-image:url(assets/winxp/WMP/equalizer_reset_disabled.png)}#wsRoot:not(.eqon) #wsEqPr{background-image:url(assets/winxp/WMP/equalizer_menu_button_disabled.png)}
+#wsEqX{right:5px;top:5px;width:15px;height:15px;background-image:url(assets/winxp/WMP/equalizer_feature.png)}
+#wsEqX:hover{background-image:url(assets/winxp/WMP/equalizer_feature_hover.png)}#wsEqX:active{background-image:url(assets/winxp/WMP/equalizer_feature_down.png)}
+#wsBalT{position:absolute;right:112px;top:11px;font:700 9px Arial,sans-serif;color:#000}
+#wsBal{position:absolute;right:40px;top:8px;width:67px;height:18px;background:url(assets/winxp/WMP/equalizer_balance_track.png) no-repeat;cursor:pointer;touch-action:none}
+#wsBalT2{position:absolute;left:0;top:0;width:17px;height:18px;background:url(assets/winxp/WMP/equalizer_balance_thumb_disabled.png) no-repeat}
+#wsBal:hover #wsBalT2{background-image:url(assets/winxp/WMP/equalizer_balance_thumb_hover.png)}#wsBal.dn #wsBalT2{background-image:url(assets/winxp/WMP/equalizer_balance_thumb_down.png)}
+#wsEqS{position:absolute;left:14px;right:14px;top:33px;height:67px;display:flex;justify-content:space-between}
+.wsEc{position:relative;width:18px;height:67px}
+.wsEs{position:absolute;inset:0;background:url(assets/winxp/WMP/equalizer_track.png) no-repeat;cursor:pointer;touch-action:none}
+.wsEt{position:absolute;left:0;top:0;width:18px;height:17px;background:url(assets/winxp/WMP/equalizer_thumb.png) no-repeat}
+.wsEs:hover .wsEt{background-image:url(assets/winxp/WMP/equalizer_thumb_hover.png)}.wsEs.dn .wsEt{background-image:url(assets/winxp/WMP/equalizer_thumb_down.png)}
+.wsEc i{position:absolute;left:-6px;width:30px;top:71px;font:700 9px/15px Arial,sans-serif;font-style:normal;text-align:center;color:#000}
+#wsRoot:not(.eqon) .wsEs{background-image:url(assets/winxp/WMP/equalizer_track_disabled.png);cursor:default}
+#wsRoot:not(.eqon) .wsEt{background-image:url(assets/winxp/WMP/equalizer_thumb_disabled.png)!important}
+#wsRoot:not(.eqon) .wsEc i{color:#a9a9a9;font-weight:400}
+/* lista de reprodução */
+#wsPl{display:none;width:263px;flex:none;position:relative;margin:33px 0 74px 0}
+#wsRoot.pl #wsPl{display:block}
+#wsPlT{position:absolute;left:0;top:0;width:263px;height:107px;background:url(assets/winxp/WMP/playlist_top.png) no-repeat;z-index:2;pointer-events:none}
+#wsPlM{position:absolute;left:0;right:0;top:107px;bottom:129px;background:url(assets/winxp/WMP/playlist_middle.png) repeat-y}
+#wsPlB{position:absolute;left:0;bottom:0;width:263px;height:129px;background:url(assets/winxp/WMP/playlist_bottom.png) no-repeat;pointer-events:none}
+html #wmpBox.sk #wmpPl{position:absolute;left:26px;top:34px;right:11px;bottom:29px;width:auto;overflow:auto;display:block;padding:0;gap:0;border:0;border-radius:0;background:#000;z-index:3}
+html #wmpBox.sk #wmpPl::before{display:none}
+html #wmpBox.sk .wpi{display:block;width:100%;padding:2px 4px;font:11px/15px Tahoma,'XP Tahoma',Arial,sans-serif;color:#fff;background:transparent;border-radius:0;text-align:left;border:0}
+html #wmpBox.sk .wpi:hover{background:#1c2f58}html #wmpBox.sk .wpi.on{background:#316ac5;color:#fff}
+#wmpBox.sk #wmpPl::-webkit-scrollbar{width:12px}
+#wsPlHd,#wsPlSh,#wsPlX,#wsPlG{z-index:4}
+#wsPlHd{left:60px;top:7px;width:170px;height:19px;padding:0 6px;text-align:left;font:11px/19px Tahoma,'XP Tahoma',Arial,sans-serif;color:#1a2b5c;background:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#wsPlHd:hover{background:rgba(255,255,255,.35)}
+#wsPlSh{left:26px;top:9px;width:19px;height:19px;background-image:url(assets/winxp/WMP/playlist_shufflebutton.png)}
+#wsPlSh:hover{background-image:url(assets/winxp/WMP/playlist_shufflebutton_hover.png)}#wsPlSh:active,#wsPlSh.on{background-image:url(assets/winxp/WMP/playlist_shufflebutton_down.png)}
+#wsPlX{left:243px;top:10px;width:15px;height:15px;background-image:url(assets/winxp/WMP/playlist_closebutton.png)}
+#wsPlX:hover{background-image:url(assets/winxp/WMP/playlist_closebutton_hover.png)}#wsPlX:active{background-image:url(assets/winxp/WMP/playlist_closebutton_down.png)}
+#wsPlG{left:0;top:81px;width:12px;height:27px;background-image:url(assets/winxp/WMP/playlist_grippy.png)}
+/* menu suspenso */
+.wsMenu{position:absolute;z-index:30;min-width:150px;padding:2px;background:#fff;border:1px solid #808080;box-shadow:2px 2px 3px rgba(0,0,0,.45);font:11px Tahoma,'XP Tahoma',Arial,sans-serif}
+.wsMenu hr{border:0;border-top:1px solid #d0d0c8;margin:2px 1px}
+.wsMi{display:block;width:100%;padding:3px 22px 3px 22px;text-align:left;font:inherit;color:#000;background:transparent;border:0;border-radius:0;cursor:default;white-space:nowrap;position:relative}
+.wsMi:hover:not(:disabled){background:#316ac5;color:#fff}.wsMi:disabled{color:#aca899}
+.wsMi.chk::before{content:'✔';position:absolute;left:6px;font-size:10px}
+@media (max-width:640px){#wsRoot.pl #wsPl{position:absolute;right:0;top:0;bottom:0;margin:33px 0 74px;z-index:6}}
+</style>
 <div id="exOverlay" aria-hidden="true"><div id="exBox" role="dialog" aria-label="Explorer">
   <div class="fxh fxdef"><b id="exTitle">📁 EXPLORADOR</b><button type="button" class="fxb x" id="exClose">✕</button></div>
   <div class="fxt fxdef"><button type="button" class="fxb" id="exUp">⬆</button><div id="exAddr"></div>
@@ -25291,12 +25410,79 @@ html.dz-xp #wmpTime{color:#cfe0ff}html.dz-xp #wmpSeek,html.dz-xp #wmpVol{accent-
   <div id="exView"><div class="fxh"><b id="exVT"></b><button type="button" class="fxb x" id="exVC">✕</button></div><div class="vb" id="exVB"></div></div>
   <input type="file" id="exFile" multiple style="display:none">
 </div></div>
-<div id="wmpOverlay" aria-hidden="true"><div id="wmpBox" role="dialog" aria-label="Media Player">
-  <div class="fxh fxdef"><b id="wmpTitle">🎵 MEDIA PLAYER</b><button type="button" class="fxb" id="wmpAdd"></button><button type="button" class="fxb" id="wmpSave"></button><button type="button" class="fxb" id="wmpEx"></button><button type="button" class="fxb x" id="wmpClose">✕</button></div>
-  <div id="wmpMenu"></div><div id="wmpMain"><div id="wmpTabs"></div><div id="wmpStage"><div id="wmpLibV"></div><canvas id="wmpViz" width="640" height="360"></canvas><video id="wmpMedia" playsinline></video></div><div id="wmpPl"></div></div>
-  <div id="wmpNow"></div>
-  <div class="wmpc"><input type="range" id="wmpSeek" min="0" max="1000" value="0"><span id="wmpTime">0:00 / 0:00</span></div>
-  <div class="wmpc"><button type="button" class="fxb" id="wmpShuf">🔀</button><button type="button" class="fxb" id="wmpPrev">⏮</button><button type="button" class="fxb" id="wmpPlay">▶</button><button type="button" class="fxb" id="wmpStop">⏹</button><button type="button" class="fxb" id="wmpNext">⏭</button><button type="button" class="fxb" id="wmpRep">🔁</button><span style="flex:1"></span><button type="button" class="fxb" id="wmpMute">🔊</button><input type="range" id="wmpVol" min="0" max="100" value="80"></div>
+<div id="wmpOverlay" aria-hidden="true"><div id="wmpBox" class="sk" role="dialog" aria-label="Media Player">
+  <div id="wsRoot" class="pl eqon">
+    <div id="wsMain">
+      <div id="wsTop">
+        <div id="wsTL">
+          <button type="button" class="wsb wsT" id="wsOpen" style="--x:0px"></button>
+          <button type="button" class="wsb wsT on" id="wsPlBtn" style="--x:28px"></button>
+          <button type="button" class="wsb wsT" id="wsVis" style="--x:50px"></button>
+          <button type="button" class="wsb wsT" id="wsEqBtn" style="--x:72px"></button>
+        </div>
+        <div id="wsTM"></div>
+        <div id="wsTR">
+          <button type="button" class="wsb wsS" id="wsMin" style="--x:7px;--w:15px"></button>
+          <button type="button" class="wsb wsS" id="wsClose" style="--x:23px;--w:18px"></button>
+        </div>
+      </div>
+      <div id="wsMid">
+        <div id="wsL"></div>
+        <div id="wmpStage"><canvas id="wmpViz" width="640" height="360"></canvas><video id="wmpMedia" playsinline></video></div>
+        <div id="wsR"></div>
+      </div>
+      <div id="wsEq">
+        <div id="wsEqL"></div>
+        <div id="wsEqM">
+          <button type="button" class="wsb wsE on" id="wsEqOn"></button>
+          <button type="button" class="wsb wsE" id="wsEqRs"></button>
+          <button type="button" class="wsb wsE" id="wsEqPr"></button>
+          <span id="wsBalT">Balance</span>
+          <div id="wsBal"><div id="wsBalT2"></div></div>
+          <button type="button" class="wsb" id="wsEqX"></button>
+          <div id="wsEqS"></div>
+        </div>
+        <div id="wsEqR"></div>
+      </div>
+      <div id="wsBot">
+        <div id="wsBL"><div id="wmpNow"></div></div>
+        <div id="wsBM"></div>
+        <div id="wsBR"><span id="wmpTime">0:00</span></div>
+      </div>
+      <div id="wsCtl">
+        <div id="wsCL">
+          <div id="wsTr">
+            <button type="button" class="wsb wsTx" id="wsPlay" style="--x:0px;--y:0px;--w:30px;--h:30px"></button>
+            <button type="button" class="wsb" id="wsPause"></button>
+            <button type="button" class="wsb wsTx" id="wsStop" style="--x:34px;--y:5px"></button>
+            <button type="button" class="wsb wsTx" id="wsPrev" style="--x:61px;--y:5px"></button>
+            <button type="button" class="wsb wsTx" id="wsNext" style="--x:86px;--y:5px"></button>
+            <button type="button" class="wsb wsTx" id="wsMute" style="--x:113px;--y:5px"></button>
+          </div>
+          <div id="wsVol"><div id="wsVolF"></div><div id="wsVolT"></div></div>
+          <button type="button" class="wsb" id="wsRew"></button>
+        </div>
+        <div id="wsCM"></div>
+        <div id="wsCR">
+          <button type="button" class="wsb" id="wsCmp"></button>
+          <button type="button" class="wsb" id="wsMnu"></button>
+          <div class="wsb" id="wsGrip"></div>
+        </div>
+        <button type="button" class="wsb" id="wsFf"></button>
+        <div id="wsSeek"><div id="wsSeekF"></div><div id="wsSeekT"></div></div>
+      </div>
+    </div>
+    <div id="wsPl">
+      <div id="wsPlM"></div>
+      <div id="wmpPl"></div>
+      <div id="wsPlB"></div>
+      <div id="wsPlT"></div>
+      <button type="button" class="wsb" id="wsPlHd"></button>
+      <button type="button" class="wsb" id="wsPlSh"></button>
+      <button type="button" class="wsb" id="wsPlX"></button>
+      <button type="button" class="wsb" id="wsPlG"></button>
+    </div>
+  </div>
   <input type="file" id="wmpFile" accept="audio/*,video/*" multiple style="display:none">
 </div></div>
 <script id="dzFxScript">
@@ -25539,46 +25725,100 @@ window.dzEx = { open, close, isOpen, save, library }; window.dzExBack = () => { 
 })();
 </script>
 <script id="dzWmpScript">
-/* ===== MEDIA PLAYER estilo Windows Media Player (aba EXTRAS) — código no campo SENHA do DEBUG: wmp123 ===== */
+/* ===== MEDIA PLAYER com a skin do Windows Media Player 9 Series (aba EXTRAS) — código no campo SENHA do DEBUG: wmp123 =====
+   Imagens da skin: assets/winxp/WMP/*.png (convertidas dos .bmp da skin "9 Series Default", magenta #FF00FF vira transparente). */
 (function(){
 'use strict';
 const $ = id => document.getElementById(id);
 const tr = (pt, en) => { try{ return (typeof LTX === 'function') ? LTX(pt, en) : pt; }catch(e){ return pt; } };
 const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catch(e){} };
 const ov = $('wmpOverlay'); if(!ov) return;
-const m = $('wmpMedia'), cv = $('wmpViz'), cx = cv.getContext('2d'), pl = $('wmpPl'), seek = $('wmpSeek'), vol = $('wmpVol');
+const box = $('wmpBox'), root = $('wsRoot'), m = $('wmpMedia'), cv = $('wmpViz'), cx = cv.getContext('2d'), pl = $('wmpPl');
 const XPS = ['windows_xp_startup', 'windows_xp_logon_sound', 'windows_xp_shutdown', 'windows_xp_logoff_sound', 'windows_xp_balloon', 'windows_xp_ding', 'windows_xp_error', 'windows_xp_exclamation', 'windows_xp_default'];
-const defaults = () => XPS.map(n => ({ name:n.replace('windows_xp_', '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), url:'assets/winxp/Sounds/' + n + '.wav' }));
-let items = defaults(), idx = -1, shuf = false, rep = 0, raf = 0, t = 0, urls = [];
+const defaults = () => XPS.map(n => ({ sys:true, name:n.replace('windows_xp_', '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), url:'assets/winxp/Sounds/' + n + '.wav' }));
+let items = [], sysShown = false, idx = -1, shuf = false, rep = 0, raf = 0, t = 0, urls = [], visMode = 0;
 const isOpen = () => ov.classList.contains('open');
+const isXp = () => document.documentElement.classList.contains('dz-xp');
 const T = s => { s = isFinite(s) ? Math.floor(s) : 0; return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-function lbls(){ $('wmpAdd').textContent = '➕ ' + tr('ADICIONAR', 'ADD'); $('wmpSave').textContent = '💾 ' + tr('BAIXAR', 'SAVE'); $('wmpEx').textContent = '📁 ' + tr('EXPLORADOR', 'EXPLORER'); $('wmpTitle').textContent = '🎵 ' + tr('MEDIA PLAYER', 'MEDIA PLAYER'); }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const tip = (id, s) => { const e = $(id); if(e){ e.title = s; e.setAttribute('aria-label', s); } };
+function lbls(){
+  tip('wsOpen', tr('Abrir arquivo', 'Open File')); tip('wsPlBtn', tr('Lista de reprodução', 'Playlist')); tip('wsVis', tr('Próxima visualização', 'Next Visualization')); tip('wsEqBtn', tr('Equalizador', 'Equalizer'));
+  tip('wsMin', tr('Minimizar', 'Minimize')); tip('wsClose', tr('Fechar', 'Close')); tip('wsPlay', tr('Reproduzir', 'Play')); tip('wsPause', tr('Pausar', 'Pause')); tip('wsStop', tr('Parar', 'Stop'));
+  tip('wsPrev', tr('Anterior', 'Previous')); tip('wsNext', tr('Próxima', 'Next')); tip('wsMute', tr('Mudo', 'Mute')); tip('wsRew', tr('Retroceder', 'Rewind')); tip('wsFf', tr('Avançar', 'Fast Forward'));
+  tip('wsCmp', tr('Modo compacto', 'Compact')); tip('wsMnu', tr('Mais opções', 'More options')); tip('wsPlSh', tr('Aleatório', 'Shuffle')); tip('wsPlX', tr('Ocultar lista', 'Hide Playlist'));
+  tip('wsEqOn', tr('Ligar/desligar equalizador', 'Turn Equalizer On/Off')); tip('wsEqRs', tr('Zerar equalizador', 'Reset Equalizer')); tip('wsEqPr', tr('Predefinições', 'Presets')); tip('wsEqX', tr('Fechar equalizador', 'Close Equalizer'));
+  $('wsPlHd').textContent = tr('Lista de reprodução', 'Playlist') + '  ▾'; $('wsBalT').textContent = tr('Balanço', 'Balance');
+}
 function ui(){
   lbls(); pl.innerHTML = '';
   items.forEach((it, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'wpi' + (i === idx ? ' on' : ''); b.textContent = (it.v ? '🎬 ' : '🎵 ') + it.name + (it.lib ? ' 💾' : ''); b.onclick = () => play(i); pl.appendChild(b); });
-  $('wmpNow').textContent = idx >= 0 ? items[idx].name : tr('Escolha uma faixa na lista ou adicione arquivos.', 'Pick a track from the list or add files.');
-  $('wmpPlay').textContent = m.paused ? '▶' : '⏸'; $('wmpShuf').classList.toggle('on', shuf); $('wmpRep').classList.toggle('on', rep > 0); $('wmpRep').textContent = rep === 2 ? '🔂' : '🔁'; $('wmpMute').textContent = (m.muted || m.volume === 0) ? '🔇' : '🔊';
-  $('wmpStage').classList.toggle('vid', idx >= 0 && !!items[idx].v); pl.dataset.t = tr('Lista de reprodução', 'Playlist');
-  try{ const tt = $('wmpBox').querySelector(':scope > .xpTb.app .xpTt'); if(tt) tt.textContent = (idx >= 0 ? items[idx].name + ' - ' : '') + 'Windows Media Player'; }catch(e){}
+  const on = pl.querySelector('.wpi.on'); if(on && on.scrollIntoView){ try{ on.scrollIntoView({ block:'nearest' }); }catch(e){} }
+  const st = idx < 0 ? '' : (!m.paused && !m.ended ? tr('Reproduzindo', 'Playing') : (m.currentTime > 0 ? tr('Pausado', 'Paused') : tr('Parado', 'Stopped')));
+  $('wmpNow').textContent = idx >= 0 ? st + ': ' + items[idx].name : tr('Escolha uma faixa na lista ou abra arquivos.', 'Pick a track from the list or open files.');
+  root.classList.toggle('playing', !m.paused && !m.ended); $('wsPlBtn').classList.toggle('on', root.classList.contains('pl')); $('wsEqBtn').classList.toggle('on', root.classList.contains('eq'));
+  $('wsPlSh').classList.toggle('on', shuf); $('wsMute').classList.toggle('on', m.muted || m.volume === 0); $('wsCmp').classList.toggle('on', root.classList.contains('cmp'));
+  $('wmpStage').classList.toggle('vid', idx >= 0 && !!items[idx].v);
+  try{ const tt = box.querySelector(':scope > .xpTb.app .xpTt'); if(tt) tt.textContent = (idx >= 0 ? items[idx].name + ' - ' : '') + 'Windows Media Player'; }catch(e){}
 }
 function play(i){
   if(i < 0 || i >= items.length) return; idx = i; const it = items[i];
   if(!it.url && it.blob){ it.url = URL.createObjectURL(it.blob); urls.push(it.url); }
-  m.src = it.url; const p = m.play(); if(p && p.catch) p.catch(() => {}); ui();
+  m.src = it.url; resumeAc(); const p = m.play(); if(p && p.catch) p.catch(() => {}); ui();
 }
 function nextI(dir){ if(!items.length) return; if(shuf && dir > 0) return Math.floor(Math.random() * items.length); const n = idx + dir; return n >= items.length ? (rep ? 0 : -1) : (n < 0 ? items.length - 1 : n); }
 function go(dir){ const n = nextI(dir); if(n >= 0) play(n); else stop(); }
-function stop(){ m.pause(); try{ m.currentTime = 0; }catch(e){} ui(); }
+function stop(){ m.pause(); try{ m.currentTime = 0; }catch(e){} ui(); tick(); }
+function toggle(){ snd('menuAccept'); if(idx < 0) play(0); else if(m.paused || m.ended){ resumeAc(); const p = m.play(); if(p && p.catch) p.catch(() => {}); } else m.pause(); }
 m.addEventListener('ended', () => { if(rep === 2) play(idx); else go(1); });
-['play', 'pause', 'volumechange'].forEach(ev => m.addEventListener(ev, ui));
-m.addEventListener('timeupdate', () => { if(m.duration) seek.value = Math.round(m.currentTime / m.duration * 1000); $('wmpTime').textContent = T(m.currentTime) + ' / ' + T(m.duration); });
-seek.oninput = () => { if(m.duration) m.currentTime = seek.value / 1000 * m.duration; };
-vol.oninput = () => { m.volume = vol.value / 100; m.muted = false; }; m.volume = .8;
-$('wmpPlay').onclick = () => { snd('menuAccept'); if(idx < 0) play(0); else if(m.paused){ const p = m.play(); if(p && p.catch) p.catch(() => {}); } else m.pause(); };
-$('wmpStop').onclick = stop; $('wmpPrev').onclick = () => go(-1); $('wmpNext').onclick = () => go(1);
-$('wmpShuf').onclick = () => { shuf = !shuf; ui(); }; $('wmpRep').onclick = () => { rep = (rep + 1) % 3; ui(); };
-$('wmpMute').onclick = () => { m.muted = !m.muted; ui(); };
-$('wmpAdd').onclick = () => $('wmpFile').click(); $('wmpEx').onclick = () => { if(window.dzEx) window.dzEx.open(); };
+['play', 'pause', 'volumechange', 'loadedmetadata'].forEach(ev => m.addEventListener(ev, () => { ui(); tick(); volPaint(); }));
+
+/* ----- controles deslizantes (busca, volume, equalizador, balanço) ----- */
+function slider(el, onMove, axis){   /* onMove(fração 0..1); axis 'x' ou 'y' (y: 1 = em cima) */
+  el.addEventListener('pointerdown', e => {
+    if(e.button > 0) return; e.preventDefault(); el.classList.add('dn'); try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    const at = ev => { const r = el.getBoundingClientRect(); onMove(axis === 'y' ? 1 - clamp((ev.clientY - r.top) / r.height, 0, 1) : clamp((ev.clientX - r.left) / r.width, 0, 1), true); };
+    at(e); const mv = ev => at(ev), up = () => { el.classList.remove('dn'); el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); };
+    el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  });
+}
+const seekEl = $('wsSeek'), seekT = $('wsSeekT'), seekF = $('wsSeekF');
+function tick(){
+  const d = m.duration, f = d && isFinite(d) ? clamp(m.currentTime / d, 0, 1) : 0, W = seekEl.clientWidth, x = f * Math.max(0, W - 23);
+  seekT.style.left = x + 'px'; seekF.style.width = (f ? x + 12 : 0) + 'px';
+  $('wmpTime').textContent = T(m.currentTime);
+}
+m.addEventListener('timeupdate', tick);
+slider(seekEl, (f, drag) => { if(m.duration && isFinite(m.duration)) m.currentTime = f * m.duration; tick(); });
+const volEl = $('wsVol'), volT = $('wsVolT'), volF = $('wsVolF');
+function volPaint(){ const v = m.muted ? 0 : m.volume, x = v * 58; volT.style.left = x + 'px'; volF.style.width = (v ? x + 5 : 0) + 'px'; }
+function setVol(v){ m.volume = clamp(v, 0, 1); m.muted = false; volPaint(); try{ localStorage.setItem('dz_wmp_vol', String(m.volume)); }catch(e){} }
+slider(volEl, f => setVol(clamp((f * 68 - 5) / 58, 0, 1)));
+try{ const v = parseFloat(localStorage.getItem('dz_wmp_vol')); m.volume = v >= 0 && v <= 1 ? v : .8; }catch(e){ m.volume = .8; }
+volPaint();
+
+/* ----- botões ----- */
+$('wsPlay').onclick = toggle; $('wsPause').onclick = toggle; $('wsStop').onclick = stop; $('wsPrev').onclick = () => go(-1); $('wsNext').onclick = () => go(1);
+$('wsMute').onclick = () => { m.muted = !m.muted; ui(); volPaint(); };
+$('wsPlSh').onclick = () => { shuf = !shuf; ui(); };
+function hold(id, dir){   /* retroceder/avançar: clique = 5 s, segurar = continua andando */
+  const b = $(id); let iv = 0, held = false;
+  const stopH = () => { clearInterval(iv); iv = 0; };
+  b.addEventListener('pointerdown', () => { held = false; stopH(); iv = setInterval(() => { held = true; if(m.duration) m.currentTime = clamp(m.currentTime + dir * 2, 0, m.duration); }, 140); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, stopH));
+  b.addEventListener('click', () => { if(!held && m.duration) m.currentTime = clamp(m.currentTime + dir * 5, 0, m.duration); held = false; });
+}
+hold('wsRew', -1); hold('wsFf', 1);
+$('wsOpen').onclick = () => $('wmpFile').click();
+$('wsVis').onclick = () => { visMode = (visMode + 1) % 4; };
+const setPl = on => { root.classList.toggle('pl', on); ui(); };
+$('wsPlBtn').onclick = () => setPl(!root.classList.contains('pl')); $('wsPlX').onclick = () => setPl(false); $('wsPlG').onclick = () => setPl(false);
+$('wsEqBtn').onclick = () => { root.classList.toggle('eq'); ui(); }; $('wsEqX').onclick = () => { root.classList.remove('eq'); ui(); };
+$('wsCmp').onclick = () => { root.classList.toggle('cmp'); ui(); };
+$('wsClose').onclick = () => close();
+$('wsMin').onclick = () => { const b = box.querySelector(':scope > .xpTb.app .xpB.mn'); if(b && isXp()) b.click(); else close(); };
+
+/* ----- arquivos ----- */
 async function refreshLib(){   /* carrega os arquivos salvos (compartilhados com o Explorador) */
   if(!window.dzEx || !window.dzEx.library) return;
   try{
@@ -25593,57 +25833,128 @@ async function addFiles(fs){
   if(saved.length){ await refreshLib(); const i = items.findIndex(x => x.id === saved[0].id); play(i >= 0 ? i : 0); try{ if(typeof uiToast === 'function') uiToast(tr('Salvo neste aparelho: ', 'Saved on this device: ') + saved.length, 'ok'); }catch(e){} }
   else { const was = items.length; fs.forEach(f => items.push({ name:f.name, blob:f, v:/^video/.test(f.type) })); play(was); }
 }
-$('wmpSave').onclick = () => { if(idx < 0) return; const it = items[idx], a = document.createElement('a'); a.href = it.blob ? URL.createObjectURL(it.blob) : it.url; a.download = it.name; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1500); };
+function saveCur(){ if(idx < 0) return; const it = items[idx], a = document.createElement('a'); a.href = it.blob ? URL.createObjectURL(it.blob) : it.url; a.download = it.name; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1500); }
 $('wmpFile').onchange = e => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; };
 ov.addEventListener('dragover', e => e.preventDefault()); ov.addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer && e.dataTransfer.files.length) addFiles(Array.from(e.dataTransfer.files)); });
-$('wmpClose').onclick = () => close();
-function viz(ts){
-  raf = requestAnimationFrame(viz); t = ts / 1000; const W = cv.width, H = cv.height, on = !m.paused && !m.ended, g = cx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#06122e'); g.addColorStop(1, '#0b3a7a'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
-  const n = 40, bw = W / n, v = m.muted ? 0 : (m.volume || 0);
-  for(let i = 0; i < n; i++){ const a = on ? (.12 + .88 * Math.abs(Math.sin(t * 2.3 + i * .55) * Math.sin(t * 1.1 + i * .21))) * (.35 + .65 * v) : .04, h = a * H * .8;
-    const c = cx.createLinearGradient(0, H - h, 0, H); c.addColorStop(0, '#7fe9ff'); c.addColorStop(1, '#2a6bff'); cx.fillStyle = c; cx.fillRect(i * bw + 2, H - h, bw - 4, h);
-    cx.fillStyle = 'rgba(255,255,255,.55)'; cx.fillRect(i * bw + 2, H - h - 5 - (on ? 4 * Math.sin(t * 3 + i) : 0), bw - 4, 3); }
-  cx.fillStyle = 'rgba(255,255,255,.85)'; cx.font = 'bold 20px sans-serif'; cx.textAlign = 'center'; cx.fillText(idx >= 0 ? items[idx].name : 'Windows Media Player', W / 2, 36);
+
+/* ----- menus suspensos (estilo XP) ----- */
+function closeMenu(){ const d = $('wsMenu'); if(d) d.remove(); document.removeEventListener('pointerdown', outside, true); }
+function outside(e){ const d = $('wsMenu'); if(d && !d.contains(e.target)) closeMenu(); }
+function menu(anchor, rows){
+  closeMenu(); const d = document.createElement('div'); d.className = 'wsMenu'; d.id = 'wsMenu';
+  rows.forEach(r => { if(r === '-'){ d.appendChild(document.createElement('hr')); return; } const b = document.createElement('button'); b.type = 'button'; b.className = 'wsMi' + (r[2] ? ' chk' : ''); b.textContent = r[0]; b.disabled = !r[1];
+    b.onclick = e => { e.stopPropagation(); closeMenu(); try{ window.dzXp.xps('windows_xp_menu_command', .8); }catch(_){} if(r[1]) r[1](); }; d.appendChild(b); });
+  box.appendChild(d); const a = anchor.getBoundingClientRect(), bb = box.getBoundingClientRect(); let x = a.left - bb.left, y = a.bottom - bb.top;
+  d.style.left = x + 'px'; d.style.top = y + 'px'; const w = d.offsetWidth, h = d.offsetHeight;
+  if(x + w > bb.width - 2) d.style.left = Math.max(2, bb.width - w - 2) + 'px'; if(y + h > bb.height - 2) d.style.top = Math.max(2, a.top - bb.top - h) + 'px';
+  setTimeout(() => document.addEventListener('pointerdown', outside, true), 0);
 }
+function toggleSys(){   /* sons do Windows: ocultos por padrão, só aparecem se pedir neste menu */
+  sysShown = !sysShown; const cur = idx >= 0 ? items[idx] : null;
+  if(sysShown) items = items.concat(defaults()); else { if(cur && cur.sys){ m.pause(); idx = -1; } items = items.filter(x => !x.sys); }
+  if(cur && !cur.sys) idx = items.indexOf(cur); ui();
+}
+const mainMenu = () => [
+  [tr('Abrir arquivo…', 'Open file…'), () => $('wmpFile').click()], [tr('Baixar faixa atual', 'Save current track'), idx >= 0 ? saveCur : null], '-',
+  [tr('Aleatório', 'Shuffle'), () => $('wsPlSh').click(), shuf], [tr('Repetir', 'Repeat') + (rep === 2 ? ' (1)' : ''), () => { rep = (rep + 1) % 3; ui(); }, rep > 0], '-',
+  [tr('Lista de reprodução', 'Playlist'), () => $('wsPlBtn').click(), root.classList.contains('pl')], [tr('Equalizador', 'Equalizer'), () => $('wsEqBtn').click(), root.classList.contains('eq')], [tr('Modo compacto', 'Compact mode'), () => $('wsCmp').click(), root.classList.contains('cmp')], '-',
+  [tr('Abrir Explorador de Arquivos', 'Open File Explorer'), () => window.dzEx && window.dzEx.open()],
+  [tr('Mostrar sons do Windows', 'Show Windows sounds'), toggleSys, sysShown], '-', [tr('Fechar', 'Close'), close]];
+$('wsMnu').onclick = e => { e.stopPropagation(); menu($('wsMnu'), mainMenu()); };
+$('wsPlHd').onclick = e => { e.stopPropagation(); menu($('wsPlHd'), mainMenu()); };
+box.addEventListener('contextmenu', e => { if(e.target.closest('#wmpPl') || e.target.closest('#wmpStage') || e.target.closest('#wsTop')){ e.preventDefault(); const a = document.createElement('span'); a.style.cssText = 'position:fixed;left:' + e.clientX + 'px;top:' + e.clientY + 'px'; box.appendChild(a); menu(a, mainMenu()); a.remove(); } });
+
+/* ----- equalizador de 10 bandas (Web Audio) e balanço ----- */
+const FQ = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000], FL = ['31Hz', '62Hz', '125Hz', '250Hz', '500Hz', '1KHz', '2KHz', '4KHz', '8KHz', '16KHz'];
+const PRESETS = [['Flat', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], [tr('Rock', 'Rock'), [8, 6, 4, 1, -2, -2, 1, 4, 6, 7]], ['Pop', [-2, 1, 4, 6, 5, 2, -1, -2, -2, -2]], ['Jazz', [4, 3, 1, 3, -2, -2, 0, 2, 4, 5]], [tr('Clássica', 'Classical'), [0, 0, 0, 0, 0, 0, -4, -4, -4, -6]], ['Dance', [9, 7, 3, 0, 0, -3, -5, -5, 0, 0]], [tr('Graves', 'Bass boost'), [10, 8, 6, 3, 1, 0, 0, 0, 0, 0]], [tr('Agudos', 'Treble boost'), [0, 0, 0, 0, 0, 1, 4, 7, 9, 10]], [tr('Vocal', 'Vocal'), [-3, -2, 0, 3, 6, 6, 4, 1, -1, -2]], ['Techno', [8, 6, 1, -3, -4, -1, 3, 7, 8, 7]]];
+let ac = null, flt = [], pan = null, eqOn = true, gains = FQ.map(() => 0), bal = 0, eqUi = [];
+function graph(){   /* cria a cadeia de áudio só quando o equalizador/balanço é mexido (evita mudar o som sem necessidade) */
+  if(ac) return true; if(ac === false) return false;
+  let src = null;
+  try{
+    const C = window.AudioContext || window.webkitAudioContext; if(!C || location.protocol === 'file:'){ ac = false; return false; }
+    const c = new C(); src = c.createMediaElementSource(m); let n = src;
+    flt = FQ.map(f => { const b = c.createBiquadFilter(); b.type = 'peaking'; b.frequency.value = f; b.Q.value = 1.1; b.gain.value = 0; n.connect(b); n = b; return b; });
+    if(c.createStereoPanner){ pan = c.createStereoPanner(); n.connect(pan); n = pan; }
+    n.connect(c.destination); ac = c; return true;
+  }catch(e){ try{ if(src && ac) src.connect(ac.destination); }catch(_){} ac = false; return false; }
+}
+function resumeAc(){ try{ if(ac && ac.state === 'suspended') ac.resume(); }catch(e){} }
+function eqApply(){ if(!graph()) return; resumeAc(); flt.forEach((f, i) => { f.gain.value = eqOn ? gains[i] : 0; }); if(pan) pan.pan.value = bal; }
+function eqPaint(){
+  root.classList.toggle('eqon', eqOn); $('wsEqOn').classList.toggle('on', eqOn);
+  eqUi.forEach((u, i) => { u.t.style.top = ((1 - (gains[i] + 14) / 28) * 50) + 'px'; });
+  $('wsBalT2').style.left = ((bal + 1) / 2 * 50) + 'px';
+}
+(function buildEq(){
+  const host = $('wsEqS'); host.innerHTML = '';
+  FQ.forEach((f, i) => { const c = document.createElement('div'); c.className = 'wsEc'; c.innerHTML = '<div class="wsEs" title="' + FL[i] + '"><div class="wsEt"></div></div><i>' + FL[i] + '</i>'; host.appendChild(c);
+    const s = c.firstChild; eqUi.push({ s:s, t:s.firstChild });
+    slider(s, fr => { if(!eqOn) return; gains[i] = Math.round((clamp((fr * 67 - 8.5) / 50, 0, 1) * 28 - 14) * 2) / 2; eqPaint(); eqApply(); }, 'y'); });
+  slider($('wsBal'), fr => { bal = Math.abs(fr - .5) < .04 ? 0 : clamp(((fr * 67 - 8.5) / 50) * 2 - 1, -1, 1); eqPaint(); eqApply(); });
+})();
+$('wsEqOn').onclick = () => { eqOn = !eqOn; eqPaint(); eqApply(); };
+$('wsEqRs').onclick = () => { if(!eqOn) return; gains = FQ.map(() => 0); eqPaint(); eqApply(); };
+$('wsEqPr').onclick = e => { e.stopPropagation(); if(!eqOn) return; menu($('wsEqPr'), PRESETS.map(p => [p[0], () => { gains = p[1].slice(); eqPaint(); eqApply(); }, gains.every((g, i) => g === p[1][i])])); };
+eqPaint();
+
+/* ----- visualizações (4 modos; o botão "próxima visualização" troca) ----- */
+function viz(ts){
+  raf = requestAnimationFrame(viz); t = ts / 1000;
+  const st = $('wmpStage'), cw = st.clientWidth | 0, ch = st.clientHeight | 0; if(cw > 8 && ch > 8 && (cv.width !== cw || cv.height !== ch)){ cv.width = cw; cv.height = ch; }
+  const W = cv.width, H = cv.height, on = !m.paused && !m.ended, v = m.muted ? 0 : (m.volume || 0), amp = on ? (.35 + .65 * v) : .05, g = cx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#06122e'); g.addColorStop(1, '#0b3a7a'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+  if(visMode === 0){
+    const n = Math.max(12, Math.round(W / 16)), bw = W / n;
+    for(let i = 0; i < n; i++){ const a = on ? (.12 + .88 * Math.abs(Math.sin(t * 2.3 + i * .55) * Math.sin(t * 1.1 + i * .21))) * amp : .04, h = a * H * .8;
+      const c = cx.createLinearGradient(0, H - h, 0, H); c.addColorStop(0, '#7fe9ff'); c.addColorStop(1, '#2a6bff'); cx.fillStyle = c; cx.fillRect(i * bw + 2, H - h, bw - 4, h);
+      cx.fillStyle = 'rgba(255,255,255,.55)'; cx.fillRect(i * bw + 2, H - h - 5 - (on ? 4 * Math.sin(t * 3 + i) : 0), bw - 4, 3); }
+  } else if(visMode === 1){
+    for(let k = 0; k < 3; k++){ cx.beginPath(); for(let x = 0; x <= W; x += 3){ const y = H / 2 + Math.sin(x * .02 * (k + 1) + t * (2 + k)) * H * .22 * amp * Math.sin(x / W * Math.PI) + Math.sin(x * .05 + t * 5) * H * .05 * amp; x ? cx.lineTo(x, y) : cx.moveTo(x, y); }
+      cx.strokeStyle = ['#7fe9ff', '#9dff7a', '#ffd86b'][k]; cx.lineWidth = 2.2; cx.globalAlpha = .9 - k * .22; cx.stroke(); } cx.globalAlpha = 1;
+  } else if(visMode === 2){
+    for(let i = 0; i < 14; i++){ const ph = (t * (.35 + i * .04) + i * .31) % 1, r = ph * Math.min(W, H) * .5 * (.4 + amp), x = W / 2 + Math.cos(i * 2.4 + t * .6) * W * .28 * amp, y = H / 2 + Math.sin(i * 1.7 + t * .5) * H * .26 * amp;
+      cx.beginPath(); cx.arc(x, y, Math.max(1, r), 0, 6.283); cx.strokeStyle = 'hsla(' + ((i * 26 + t * 40) % 360) + ',90%,65%,' + (1 - ph) * .9 + ')'; cx.lineWidth = 2; cx.stroke(); }
+  } else {
+    const n = 64, cxm = W / 2, cym = H / 2, R = Math.min(W, H) * .22;
+    for(let i = 0; i < n; i++){ const a = i / n * 6.283 + t * .3, l = R * .35 + R * (on ? (.2 + .8 * Math.abs(Math.sin(t * 2.1 + i * .7) * Math.sin(t * .9 + i * .23))) * amp * 1.6 : .12);
+      cx.beginPath(); cx.moveTo(cxm + Math.cos(a) * R, cym + Math.sin(a) * R); cx.lineTo(cxm + Math.cos(a) * (R + l), cym + Math.sin(a) * (R + l)); cx.strokeStyle = 'hsl(' + ((i * 5 + t * 50) % 360) + ',90%,65%)'; cx.lineWidth = 3; cx.stroke(); }
+  }
+  cx.fillStyle = 'rgba(255,255,255,.85)'; cx.font = 'bold 16px Tahoma, Arial, sans-serif'; cx.textAlign = 'center'; cx.fillText(idx >= 0 ? items[idx].name : 'Windows Media Player', W / 2, 28);
+}
+
+/* ----- abrir / fechar / janela ----- */
 function open(){
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
-  ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); snd('menuAccept'); ui(); if(!raf) raf = requestAnimationFrame(viz); refreshLib(); xpInit();
+  ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); snd('menuAccept');
+  if(!root.dataset.init){ root.dataset.init = '1'; if(innerWidth < 660) root.classList.remove('pl'); }
+  ui(); tick(); volPaint(); if(!raf) raf = requestAnimationFrame(viz); refreshLib();
 }
-function close(){ if(!isOpen()) return; m.pause(); cancelAnimationFrame(raf); raf = 0; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); snd('menuBack'); }
+function close(){ if(!isOpen()) return; closeMenu(); m.pause(); cancelAnimationFrame(raf); raf = 0; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); snd('menuBack'); }
 function setList(list, start){ items = list.map(x => Object.assign({ lib:true }, x)); idx = -1; open(); play(Math.max(0, start)); }
+(function dragWin(){   /* arrastar a janela pela barra superior da skin (modo XP) */
+  const h = $('wsTop');
+  h.addEventListener('pointerdown', e => {
+    if(e.target.closest('button') || !isXp() || box.classList.contains('xp-max') || e.button > 0) return;
+    const sx = e.clientX, sy = e.clientY, mt = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(box.style.transform || ''), ox = mt ? +mt[1] : 0, oy = mt ? +mt[2] : 0;
+    const r = box.getBoundingClientRect(), vw = innerWidth, vh = innerHeight - 30, minX = -(r.right - 70), maxX = vw - 70 - r.left, minY = -r.top, maxY = vh - 34 - r.top;
+    try{ h.setPointerCapture(e.pointerId); }catch(_){}
+    const mv = ev => { box.style.transform = 'translate(' + (ox + clamp(ev.clientX - sx, minX, maxX)) + 'px,' + (oy + clamp(ev.clientY - sy, minY, maxY)) + 'px)'; };
+    const up = () => { h.removeEventListener('pointermove', mv); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); };
+    h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+  });
+  h.addEventListener('dblclick', e => { if(e.target.closest('button') || !isXp()) return; const b = box.querySelector(':scope > .xpTb.app .xpB.mx'); if(b) b.click(); });
+})();
 window.addEventListener('keydown', e => {
   if(!isOpen()) return; const a = document.activeElement; if(a && a.closest && a.closest('#exOverlay')) return;
   if(e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key; let u = true;
-  if(k === 'Escape') close(); else if(k === ' ') $('wmpPlay').click(); else if(k === 'ArrowRight') m.currentTime += 5; else if(k === 'ArrowLeft') m.currentTime -= 5;
-  else if(k === 'ArrowUp'){ vol.value = Math.min(100, +vol.value + 5); vol.oninput(); } else if(k === 'ArrowDown'){ vol.value = Math.max(0, +vol.value - 5); vol.oninput(); }
+  if(k === 'Escape'){ if($('wsMenu')) closeMenu(); else close(); } else if(k === ' ') toggle(); else if(k === 'ArrowRight') m.currentTime += 5; else if(k === 'ArrowLeft') m.currentTime -= 5;
+  else if(k === 'ArrowUp') setVol(m.volume + .05); else if(k === 'ArrowDown') setVol(m.volume - .05);
   else if(k === 'n' || k === 'N') go(1); else if(k === 'p' || k === 'P') go(-1); else u = false;
   if(u){ e.stopImmediatePropagation(); e.preventDefault(); }
 }, true);
-/* ----- visual Windows Media Player (estilo XP): menus, abas da barra lateral, Biblioteca de Mídia, controles redondos ----- */
-const isXp = () => document.documentElement.classList.contains('dz-xp');
-let tabOn = 'now', xpDone = false;
-const XA = () => window.dzXp || {};
-const xic = (ic, px) => { try{ if(XA().ico) return XA().ico(ic, px); }catch(e){} const i = document.createElement('i'); i.textContent = '🎵'; return i; };
-const TABS = [['now', 'Reproduzindo Agora', 'Now Playing', 1], ['guide', 'Guia de Mídia', 'Media Guide', 0], ['cd', 'Copiar do CD', 'Copy from CD', 0], ['lib', 'Biblioteca de Mídia', 'Media Library', 1], ['radio', 'Sintonizador de Rádio', 'Radio Tuner', 0], ['dev', 'Copiar para CD ou Dispositivo', 'Copy to CD or Device', 0], ['prem', 'Serviços Premium', 'Premium Services', 0], ['skin', 'Seletor de Capa', 'Skin Chooser', 0]];
-function xpTabs(){ const t = $('wmpTabs'); t.innerHTML = ''; TABS.forEach(x => { const b = document.createElement('button'); b.type = 'button'; b.className = 'wtab' + (tabOn === x[0] ? ' on' : ''); b.disabled = !x[3]; b.innerHTML = '<i></i><span></span>'; b.lastChild.textContent = tr(x[1], x[2]); b.onclick = () => { tabOn = x[0]; xpTabs(); xpLib(); }; t.appendChild(b); }); }
-function xpLib(){
-  const v = $('wmpLibV'); v.classList.toggle('on', tabOn === 'lib'); if(tabOn !== 'lib') return; v.innerHTML = '';
-  const h = document.createElement('div'); h.className = 'wlh'; h.textContent = tr('Biblioteca de Mídia — todas as faixas', 'Media Library — all tracks'); v.appendChild(h);
-  items.forEach((it, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'wlr'; b.appendChild(xic(it.v ? 414 : 416, 16)); const n = document.createElement('span'); n.textContent = it.name; const o = document.createElement('span'); o.textContent = it.lib ? '💾 ' + tr('salvo no aparelho', 'saved on device') : 'Windows XP'; b.append(n, o); b.onclick = () => { tabOn = 'now'; xpTabs(); xpLib(); play(i); }; v.appendChild(b); });
-}
-function xpInit(){
-  if(!isXp()) return;
-  if(!xpDone && window.dzMenuBar){ xpDone = true; $('wmpMenu').appendChild(window.dzMenuBar(() => [
-    [tr('Arquivo', 'File'), [[tr('Abrir…', 'Open…'), () => $('wmpAdd').click()], [tr('Baixar faixa atual', 'Save current track'), () => $('wmpSave').click()], '-', [tr('Fechar', 'Close'), close]]],
-    [tr('Exibir', 'View'), () => [[tr('Reproduzindo Agora', 'Now Playing'), () => { tabOn = 'now'; xpTabs(); xpLib(); }, tabOn === 'now'], [tr('Biblioteca de Mídia', 'Media Library'), () => { tabOn = 'lib'; xpTabs(); xpLib(); }, tabOn === 'lib'], '-', [tr('Lista de reprodução', 'Playlist'), () => { const p = $('wmpPl'); p.style.display = p.style.display === 'none' ? '' : 'none'; }, $('wmpPl').style.display !== 'none']]],
-    [tr('Reproduzir', 'Play'), () => [[m.paused ? tr('Reproduzir', 'Play') : tr('Pausar', 'Pause'), () => $('wmpPlay').click()], [tr('Parar', 'Stop'), stop], '-', [tr('Anterior', 'Previous'), () => go(-1)], [tr('Próxima', 'Next'), () => go(1)], '-', [tr('Aleatório', 'Shuffle'), () => $('wmpShuf').click(), shuf], [tr('Repetir', 'Repeat'), () => $('wmpRep').click(), rep > 0]]],
-    [tr('Ferramentas', 'Tools'), [[tr('Abrir Explorador de Arquivos', 'Open File Explorer'), () => window.dzEx && window.dzEx.open()]]],
-    [tr('Ajuda', 'Help'), [[tr('Sobre o Windows Media Player', 'About Windows Media Player'), () => alert('Windows Media Player — ' + tr('visual inspirado no Windows XP. Faixas salvas neste aparelho.', 'Windows XP inspired look. Tracks saved on this device.'))]]]
-  ], $('wmpBox'))); }
-  xpTabs(); xpLib();
-}
+if(window.ResizeObserver) new ResizeObserver(() => { if(isOpen()) tick(); }).observe(seekEl);
 window.dzWmpTry = v => String(v || '').trim().toLowerCase() === 'wmp123';
 window.dzWmp = { open, close, isOpen, setList }; window.dzWmpBack = close;
 })();
