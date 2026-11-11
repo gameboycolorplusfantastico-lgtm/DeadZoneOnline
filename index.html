@@ -25339,6 +25339,8 @@ html #wmpOverlay #wmpBox.sk.xp-max{width:100%!important;height:100%!important}
 #wsR{width:7px;flex:none;margin-top:7px;background:url(assets/winxp/WMP/player_right.png) repeat-y}
 html #wmpBox.sk #wmpStage{flex:1;min-width:0;position:relative;overflow:hidden;background:#000;border:0!important;border-radius:0!important}
 #wmpBox.sk #wmpStage canvas,#wmpBox.sk #wmpStage video{position:absolute;inset:0;width:100%;height:100%}
+#wmpBox.sk #wmpStage #wmpImg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;background:#000;-webkit-user-drag:none;user-select:none}
+#wmpBox.sk #wmpStage.img #wmpImg{display:block}#wmpBox.sk #wmpStage.img #wmpViz,#wmpBox.sk #wmpStage.img #wmpMedia{display:none}
 /* barra do display (verde) */
 #wsBot{height:23px;flex:none;display:flex;position:relative;z-index:2}
 #wsBL{width:286px;flex:none;position:relative;background:url(assets/winxp/WMP/player_bottom_left.png) no-repeat}
@@ -25545,7 +25547,7 @@ html:not(.dz-xp) .wsMi:hover:not(:disabled){background:linear-gradient(90deg,#5b
       </div>
       <div id="wsMid">
         <div id="wsL"></div>
-        <div id="wmpStage"><canvas id="wmpViz" width="640" height="360"></canvas><video id="wmpMedia" playsinline></video></div>
+        <div id="wmpStage"><canvas id="wmpViz" width="640" height="360"></canvas><video id="wmpMedia" playsinline></video><img id="wmpImg" alt="" draggable="false"></div>
         <div id="wsR"></div>
       </div>
       <div id="wsEq">
@@ -25600,7 +25602,7 @@ html:not(.dz-xp) .wsMi:hover:not(:disabled){background:linear-gradient(90deg,#5b
       <button type="button" class="wsb" id="wsPlG"></button>
     </div>
   </div>
-  <input type="file" id="wmpFile" accept="audio/*,video/*" multiple style="display:none">
+  <input type="file" id="wmpFile" accept="audio/*,video/*,image/*" multiple style="display:none">
 </div></div>
 <style>
 .xpRenI{font:11px var(--xf);border:1px solid #000;padding:0 2px;width:84px;max-width:100%;background:#fff;color:#000;text-align:center;outline:0;border-radius:0;box-sizing:border-box}
@@ -25686,6 +25688,10 @@ function openNode(n){
   if(k === 'a' || k === 'v'){
     const sib = nodes.filter(x => x.parent === n.parent && (kind(x) === 'a' || kind(x) === 'v')).sort((a, b) => a.name.localeCompare(b.name));
     if(window.dzWmp) window.dzWmp.setList(sib.map(x => ({ name:x.name, blob:x.blob, url:x.url, id:x.id, v:kind(x) === 'v' })), sib.indexOf(n)); return;
+  }
+  if(k === 'i' && window.dzWmp){
+    const sib = nodes.filter(x => x.parent === n.parent && kind(x) === 'i' && (x.blob || x.url)).sort((a, b) => a.name.localeCompare(b.name));
+    window.dzWmp.setList(sib.map(x => ({ name:x.name, blob:x.blob, url:x.url, id:x.id, v:false, i:true, lib:false })), Math.max(0, sib.indexOf(n))); return;
   }
   if(k === 'i' || k === 't'){ view(n, k); return; }
   download(n);
@@ -26001,8 +26007,13 @@ const box = $('wmpBox'), root = $('wsRoot'), m = $('wmpMedia'), cv = $('wmpViz')
 const XPS = ['windows_xp_startup', 'windows_xp_logon_sound', 'windows_xp_shutdown', 'windows_xp_logoff_sound', 'windows_xp_balloon', 'windows_xp_ding', 'windows_xp_error', 'windows_xp_exclamation', 'windows_xp_default'];
 const defaults = () => XPS.map(n => ({ sys:true, name:n.replace('windows_xp_', '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), url:'assets/winxp/Sounds/' + n + '.wav' }));
 const VEXT = /\.(mp4|m4v|webm|mkv|mov|ogv|3gp|3g2|avi|wmv|mpg|mpeg)$/i, isVid = (mime, name) => /^video/.test(mime || '') || VEXT.test(name || '');
+const IEXT = /\.(png|jpe?g|gif|webp|bmp|svg|avif|ico)$/i, isImg = (mime, name) => /^image/.test(mime || '') || IEXT.test(name || '');
+const SLIDE_MS = 4000, imgEl = $('wmpImg');
+let slideOn = false, slideT0 = 0;
 let items = [], sysShown = false, idx = -1, shuf = false, rep = 0, raf = 0, t = 0, urls = [], visMode = 0;
 const isOpen = () => ov.classList.contains('open');
+const isI = () => idx >= 0 && !!items[idx] && !!items[idx].i;
+const isPlaying = () => isI() ? slideOn : (!m.paused && !m.ended);
 const isXp = () => document.documentElement.classList.contains('dz-xp');
 const T = s => { s = isFinite(s) ? Math.floor(s) : 0; return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -26017,25 +26028,32 @@ function lbls(){
 }
 function ui(){
   lbls(); pl.innerHTML = '';
-  items.forEach((it, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'wpi' + (i === idx ? ' on' : ''); b.textContent = (it.v ? '🎬 ' : '🎵 ') + it.name + (it.lib ? ' 💾' : ''); b.onclick = () => play(i); pl.appendChild(b); });
+  items.forEach((it, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'wpi' + (i === idx ? ' on' : ''); b.textContent = (it.i ? '🖼️ ' : it.v ? '🎬 ' : '🎵 ') + it.name + (it.lib ? ' 💾' : ''); b.onclick = () => play(i); pl.appendChild(b); });
   const on = pl.querySelector('.wpi.on'); if(on && on.scrollIntoView){ try{ on.scrollIntoView({ block:'nearest' }); }catch(e){} }
-  const st = idx < 0 ? '' : (!m.paused && !m.ended ? tr('Reproduzindo', 'Playing') : (m.currentTime > 0 ? tr('Pausado', 'Paused') : tr('Parado', 'Stopped')));
-  $('wmpNow').textContent = idx >= 0 ? st + ': ' + items[idx].name : tr('Escolha uma faixa na lista ou abra arquivos.', 'Pick a track from the list or open files.');
-  root.classList.toggle('playing', !m.paused && !m.ended); $('wsPlBtn').classList.toggle('on', root.classList.contains('pl')); $('wsEqBtn').classList.toggle('on', root.classList.contains('eq'));
+  const st = idx < 0 ? '' : isI() ? (slideOn ? tr('Apresentação de slides', 'Slide show') : tr('Imagem', 'Picture')) : (!m.paused && !m.ended ? tr('Reproduzindo', 'Playing') : (m.currentTime > 0 ? tr('Pausado', 'Paused') : tr('Parado', 'Stopped')));
+  $('wmpNow').textContent = idx >= 0 ? st + ': ' + items[idx].name : tr('Escolha uma faixa ou imagem na lista, ou abra arquivos.', 'Pick a track or picture from the list, or open files.');
+  root.classList.toggle('playing', isPlaying()); $('wsPlBtn').classList.toggle('on', root.classList.contains('pl')); $('wsEqBtn').classList.toggle('on', root.classList.contains('eq'));
   $('wsPlSh').classList.toggle('on', shuf); $('wsMute').classList.toggle('on', m.muted || m.volume === 0); $('wsCmp').classList.toggle('on', root.classList.contains('cmp'));
-  $('wmpStage').classList.toggle('vid', idx >= 0 && !!items[idx].v);
+  $('wmpStage').classList.toggle('vid', idx >= 0 && !!items[idx].v && !items[idx].i); $('wmpStage').classList.toggle('img', isI());
   try{ const tt = box.querySelector(':scope > .xpTb.app .xpTt'); if(tt) tt.textContent = (idx >= 0 ? items[idx].name + ' - ' : '') + 'Windows Media Player'; }catch(e){}
 }
 function play(i){
   if(i < 0 || i >= items.length) return; idx = i; const it = items[i];
   if(!it.url && it.blob){ it.url = URL.createObjectURL(it.blob); urls.push(it.url); }
+  if(it.i){   /* imagem: para o áudio/vídeo e mostra no palco (a apresentação de slides segue se estiver ligada) */
+    try{ m.pause(); m.removeAttribute('src'); m.load(); }catch(e){}
+    imgEl.onerror = () => { $('wmpNow').textContent = tr('Não foi possível abrir a imagem: ', 'Could not open the picture: ') + it.name; };
+    imgEl.src = it.url; slideT0 = performance.now(); ui(); tick(); return;
+  }
+  slideOn = false; imgEl.removeAttribute('src');
   m.src = it.url; resumeAc(); const p = m.play(); if(p && p.catch) p.catch(() => {}); ui();
 }
 function nextI(dir){ if(!items.length) return; if(shuf && dir > 0) return Math.floor(Math.random() * items.length); const n = idx + dir; return n >= items.length ? (rep ? 0 : -1) : (n < 0 ? items.length - 1 : n); }
 function go(dir){ const n = nextI(dir); if(n >= 0) play(n); else stop(); }
-function stop(){ m.pause(); try{ m.currentTime = 0; }catch(e){} ui(); tick(); }
-function toggle(){ snd('menuAccept'); if(idx < 0) play(0); else if(m.paused || m.ended){ resumeAc(); const p = m.play(); if(p && p.catch) p.catch(() => {}); } else m.pause(); }
+function stop(){ slideOn = false; slideT0 = performance.now(); m.pause(); try{ m.currentTime = 0; }catch(e){} ui(); tick(); }
+function toggle(){ snd('menuAccept'); if(isI()){ slideOn = !slideOn; slideT0 = performance.now(); ui(); tick(); return; } if(idx < 0) play(0); else if(m.paused || m.ended){ resumeAc(); const p = m.play(); if(p && p.catch) p.catch(() => {}); } else m.pause(); }
 m.addEventListener('ended', () => { if(rep === 2) play(idx); else go(1); });
+function slideStep(){ if(rep === 2) play(idx); else go(1); }
 ['loadedmetadata', 'resize'].forEach(ev => m.addEventListener(ev, () => { const it = idx >= 0 ? items[idx] : null; if(it && m.videoWidth > 0 !== !!it.v){ it.v = m.videoWidth > 0; ui(); } }));
 m.addEventListener('error', () => { if(idx >= 0 && m.error) $('wmpNow').textContent = tr('Formato não suportado pelo navegador: ', 'Format not supported by the browser: ') + items[idx].name; });
 ['play', 'pause', 'volumechange', 'loadedmetadata'].forEach(ev => m.addEventListener(ev, () => { ui(); tick(); volPaint(); }));
@@ -26051,12 +26069,17 @@ function slider(el, onMove, axis){   /* onMove(fração 0..1); axis 'x' ou 'y' (
 }
 const seekEl = $('wsSeek'), seekT = $('wsSeekT'), seekF = $('wsSeekF');
 function tick(){
+  if(isI()){
+    const W0 = seekEl.clientWidth, f0 = slideOn ? clamp((performance.now() - slideT0) / SLIDE_MS, 0, 1) : 0, x0 = f0 * Math.max(0, W0 - 23);
+    seekT.style.left = x0 + 'px'; seekF.style.width = (f0 ? x0 + 12 : 0) + 'px';
+    const imgs = items.filter(x => x.i); $('wmpTime').textContent = (imgs.indexOf(items[idx]) + 1) + '/' + imgs.length; return;
+  }
   const d = m.duration, f = d && isFinite(d) ? clamp(m.currentTime / d, 0, 1) : 0, W = seekEl.clientWidth, x = f * Math.max(0, W - 23);
   seekT.style.left = x + 'px'; seekF.style.width = (f ? x + 12 : 0) + 'px';
   $('wmpTime').textContent = T(m.currentTime);
 }
 m.addEventListener('timeupdate', tick);
-slider(seekEl, (f, drag) => { if(m.duration && isFinite(m.duration)) m.currentTime = f * m.duration; tick(); });
+slider(seekEl, (f, drag) => { if(isI()){ slideT0 = performance.now() - f * SLIDE_MS; tick(); return; } if(m.duration && isFinite(m.duration)) m.currentTime = f * m.duration; tick(); });
 const volEl = $('wsVol'), volT = $('wsVolT'), volF = $('wsVolF');
 function volPaint(){ const v = m.muted ? 0 : m.volume, x = v * 58; volT.style.left = x + 'px'; volF.style.width = (v ? x + 5 : 0) + 'px'; }
 function setVol(v){ m.volume = clamp(v, 0, 1); m.muted = false; volPaint(); try{ localStorage.setItem('dz_wmp_vol', String(m.volume)); }catch(e){} }
@@ -26066,10 +26089,23 @@ volPaint();
 
 /* ----- vídeo: clique = reproduzir/pausar, duplo clique ou F = tela cheia ----- */
 const stageEl = $('wmpStage'); let clkT = 0;
-const isV = () => idx >= 0 && !!items[idx] && !!items[idx].v;
-function fs(){ if(document.fullscreenElement){ try{ document.exitFullscreen(); }catch(e){} } else if(isV() && stageEl.requestFullscreen){ const p = stageEl.requestFullscreen(); if(p && p.catch) p.catch(() => {}); } }
-stageEl.addEventListener('click', () => { if(!isV()) return; clearTimeout(clkT); clkT = setTimeout(toggle, 220); });
-stageEl.addEventListener('dblclick', () => { if(!isV()) return; clearTimeout(clkT); fs(); });
+const isV = () => idx >= 0 && !!items[idx] && !!items[idx].v && !items[idx].i;
+let pageFs = null;   /* elemento que já estava em tela cheia (desktop XP / site) quando o vídeo foi para tela cheia */
+function stageFsOff(){   /* sai SÓ da tela cheia do vídeo/imagem; a tela cheia do site/desktop continua */
+  if(document.fullscreenElement !== stageEl) return;
+  const back = pageFs; pageFs = null;
+  const again = () => { if(back && back.isConnected && !document.fullscreenElement){ try{ const f = back.requestFullscreen || back.webkitRequestFullscreen; const r = f && f.call(back, { navigationUI:'hide' }); if(r && r.catch) r.catch(() => { if(window.dzFsOn) window.dzFsOn(); }); }catch(e){ if(window.dzFsOn) window.dzFsOn(); } } };
+  try{ const p = document.exitFullscreen(); if(p && p.then) p.then(again, () => {}); else again(); }catch(e){}
+}
+function fs(){
+  if(document.fullscreenElement === stageEl) stageFsOff();
+  else if((isV() || isI()) && stageEl.requestFullscreen){ const cur = document.fullscreenElement; pageFs = (cur && cur !== stageEl) ? cur : null; const p = stageEl.requestFullscreen(); if(p && p.catch) p.catch(() => { pageFs = null; }); }
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach(t => document.addEventListener(t, () => {   /* Esc do navegador: devolve a tela cheia do site no próximo toque */
+  if(!pageFs) return; const c = document.fullscreenElement; if(c === stageEl) return; pageFs = null; if(!c && window.dzFsOn) window.dzFsOn();
+}));
+stageEl.addEventListener('click', () => { if(!isV() && !isI()) return; clearTimeout(clkT); clkT = setTimeout(toggle, 220); });
+stageEl.addEventListener('dblclick', () => { if(!isV() && !isI()) return; clearTimeout(clkT); fs(); });
 
 /* ----- botões ----- */
 $('wsPlay').onclick = toggle; $('wsPause').onclick = toggle; $('wsStop').onclick = stop; $('wsPrev').onclick = () => go(-1); $('wsNext').onclick = () => go(1);
@@ -26078,9 +26114,9 @@ $('wsPlSh').onclick = () => { shuf = !shuf; ui(); };
 function hold(id, dir){   /* retroceder/avançar: clique = 5 s, segurar = continua andando */
   const b = $(id); let iv = 0, held = false;
   const stopH = () => { clearInterval(iv); iv = 0; };
-  b.addEventListener('pointerdown', () => { held = false; stopH(); iv = setInterval(() => { held = true; if(m.duration) m.currentTime = clamp(m.currentTime + dir * 2, 0, m.duration); }, 140); });
+  b.addEventListener('pointerdown', () => { held = false; stopH(); if(isI()) return; iv = setInterval(() => { held = true; if(m.duration) m.currentTime = clamp(m.currentTime + dir * 2, 0, m.duration); }, 140); });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, stopH));
-  b.addEventListener('click', () => { if(!held && m.duration) m.currentTime = clamp(m.currentTime + dir * 5, 0, m.duration); held = false; });
+  b.addEventListener('click', () => { if(isI()){ go(dir); return; } if(!held && m.duration) m.currentTime = clamp(m.currentTime + dir * 5, 0, m.duration); held = false; });
 }
 hold('wsRew', -1); hold('wsFf', 1);
 $('wsOpen').onclick = () => $('wmpFile').click();
@@ -26093,19 +26129,29 @@ $('wsClose').onclick = () => close();
 $('wsMin').onclick = () => { const b = box.querySelector(':scope > .xpTb.app .xpB.mn'); if(b && isXp()) b.click(); else close(); };
 
 /* ----- arquivos ----- */
-async function refreshLib(){   /* carrega os arquivos salvos (compartilhados com o Explorador) */
+async function refreshLib(force){   /* carrega os arquivos salvos (compartilhados com o Explorador) */
   if(!window.dzEx || !window.dzEx.library) return;
   try{
-    const lib = await window.dzEx.library(), cur = idx >= 0 ? items[idx] : null;
-    const mine = lib.sort((a, b) => a.name.localeCompare(b.name)).map(n => ({ name:n.name, blob:n.blob, url:n.url, id:n.id, lib:true, v:isVid(n.mime, n.name) }));
+    const lib = await window.dzEx.library(); if(isI() && !force) return;   /* vendo imagens: a lista fica só com elas */
+    const cur = idx >= 0 ? items[idx] : null;
+    const mine = lib.sort((a, b) => a.name.localeCompare(b.name)).map(n => ({ name:n.name, blob:n.blob, url:n.url, id:n.id, lib:true, v:isVid(n.mime, n.name), i:false }));
     items = items.filter(it => !it.lib).concat(mine); idx = cur ? items.findIndex(x => x === cur || (cur.id && x.id === cur.id)) : -1; ui();
   }catch(e){}
 }
-async function addFiles(fs){
+async function addImages(fs){   /* imagens: salvas em Minhas Imagens e mostradas no palco do player */
+  let saved = []; try{ saved = await window.dzEx.save(fs); }catch(e){}
+  return (saved.length ? saved.map(n => ({ name:n.name, blob:n.blob, url:n.url, id:n.id, lib:false, v:false, i:true })) : fs.map(f => ({ name:f.name, blob:f, lib:false, v:false, i:true })));
+}
+async function addFiles(all){
+  const imgF = all.filter(f => isImg(f.type, f.name)), fs = all.filter(f => !isImg(f.type, f.name));
+  if(imgF.length){
+    const its = await addImages(imgF); const was = items.length; items = items.concat(its);
+    if(!fs.length){ slideOn = false; idx = -1; play(was); try{ if(typeof uiToast === 'function') uiToast(tr('Salvo neste aparelho: ', 'Saved on this device: ') + its.length, 'ok'); }catch(e){} return; }
+  }
   if(!fs.length) return; let saved = [];
   try{ saved = await window.dzEx.save(fs); }catch(e){}
-  if(saved.length){ await refreshLib(); const i = items.findIndex(x => x.id === saved[0].id); play(i >= 0 ? i : 0); try{ if(typeof uiToast === 'function') uiToast(tr('Salvo neste aparelho: ', 'Saved on this device: ') + saved.length, 'ok'); }catch(e){} }
-  else { const was = items.length; fs.forEach(f => items.push({ name:f.name, blob:f, v:isVid(f.type, f.name) })); play(was); }
+  if(saved.length){ await refreshLib(true); const i = items.findIndex(x => x.id === saved[0].id); play(i >= 0 ? i : 0); try{ if(typeof uiToast === 'function') uiToast(tr('Salvo neste aparelho: ', 'Saved on this device: ') + saved.length, 'ok'); }catch(e){} }
+  else { const was = items.length; fs.forEach(f => items.push({ name:f.name, blob:f, v:isVid(f.type, f.name), i:false })); play(was); }
 }
 function saveCur(){ if(idx < 0) return; const it = items[idx], a = document.createElement('a'); a.href = it.blob ? URL.createObjectURL(it.blob) : it.url; a.download = it.name; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1500); }
 $('wmpFile').onchange = e => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; };
@@ -26175,6 +26221,7 @@ eqPaint();
 /* ----- visualizações (4 modos; o botão "próxima visualização" troca) ----- */
 function viz(ts){
   raf = requestAnimationFrame(viz); t = ts / 1000;
+  if(isI()){ if(slideOn){ if(performance.now() - slideT0 >= SLIDE_MS) slideStep(); else tick(); } return; }
   if(idx >= 0 && items[idx] && items[idx].v) return;   /* vídeo na tela: não desenha a visualização por baixo */
   const st = $('wmpStage'), cw = st.clientWidth | 0, ch = st.clientHeight | 0; if(cw > 8 && ch > 8 && (cv.width !== cw || cv.height !== ch)){ cv.width = cw; cv.height = ch; }
   const W = cv.width, H = cv.height, on = !m.paused && !m.ended, v = m.muted ? 0 : (m.volume || 0), amp = on ? (.35 + .65 * v) : .05, g = cx.createLinearGradient(0, 0, 0, H);
@@ -26206,8 +26253,8 @@ function open(){
   if(!root.dataset.init){ root.dataset.init = '1'; if(innerWidth < 660) root.classList.remove('pl'); }
   ui(); tick(); volPaint(); if(!raf) raf = requestAnimationFrame(viz); refreshLib();
 }
-function close(){ if(!isOpen()) return; closeMenu(); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} m.pause(); cancelAnimationFrame(raf); raf = 0; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); snd('menuBack'); }
-function setList(list, start){ items = list.map(x => Object.assign({ lib:true }, x)); idx = -1; open(); play(Math.max(0, start)); }
+function close(){ if(!isOpen()) return; closeMenu(); stageFsOff(); slideOn = false; m.pause(); cancelAnimationFrame(raf); raf = 0; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); snd('menuBack'); }
+function setList(list, start){ slideOn = false; items = list.map(x => Object.assign({ lib:true }, x)); idx = -1; open(); play(Math.max(0, start)); }
 (function dragWin(){   /* arrastar a janela pela barra superior da skin (modo XP) */
   const h = $('wsTop');
   h.addEventListener('pointerdown', e => {
@@ -26224,9 +26271,9 @@ function setList(list, start){ items = list.map(x => Object.assign({ lib:true },
 window.addEventListener('keydown', e => {
   if(!isOpen()) return; const a = document.activeElement; if(a && a.closest && a.closest('#exOverlay')) return;
   if(e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key; let u = true;
-  if(k === 'Escape'){ if($('wsMenu')) closeMenu(); else close(); } else if(k === ' ') toggle(); else if(k === 'ArrowRight') m.currentTime += 5; else if(k === 'ArrowLeft') m.currentTime -= 5;
+  if(k === 'Escape'){ if($('wsMenu')) closeMenu(); else close(); } else if(k === ' ') toggle(); else if(k === 'ArrowRight'){ if(isI()) go(1); else m.currentTime += 5; } else if(k === 'ArrowLeft'){ if(isI()) go(-1); else m.currentTime -= 5; }
   else if(k === 'ArrowUp') setVol(m.volume + .05); else if(k === 'ArrowDown') setVol(m.volume - .05);
-  else if(k === 'f' || k === 'F'){ if(isV() || document.fullscreenElement) fs(); else u = false; } else if(k === 'n' || k === 'N') go(1); else if(k === 'p' || k === 'P') go(-1); else u = false;
+  else if(k === 'f' || k === 'F'){ if(isV() || isI() || document.fullscreenElement === stageEl) fs(); else u = false; } else if(k === 'n' || k === 'N') go(1); else if(k === 'p' || k === 'P') go(-1); else u = false;
   if(u){ e.stopImmediatePropagation(); e.preventDefault(); }
 }, true);
 if(window.ResizeObserver) new ResizeObserver(() => { if(isOpen()) tick(); }).observe(seekEl);
@@ -28684,6 +28731,7 @@ html.dz-xp #dzAskB button{font:12px Tahoma,sans-serif;color:#000;background:line
     wantFs = false;
   }, true);
   window.dzFsOff = () => { wantFs = false; };
+  window.dzFsOn = () => { wantFs = true; };
 })();
 </script>
 <style id="dzXpStyle">
@@ -28862,6 +28910,9 @@ html.xp-desk #xpDesk{display:block}html.xp-desk #xpBar{display:flex}html.xp-desk
 .xpTask.on{background:linear-gradient(180deg,#1b46ac,#2557c4);box-shadow:inset 1px 1px 3px rgba(0,0,0,.55);filter:none}
 #xpTray{flex:none;display:flex;align-items:center;gap:8px;padding:0 12px 0 14px;color:#fff;font:11px var(--xf);background:url(assets/winxp/UI/tray.png) 0 0/100% 100% no-repeat,#0d8fe8}
 #xpTray button{display:flex;align-items:center;border:0;background:none;color:#fff;font:11px var(--xf);padding:0;cursor:default}
+#xpTray #xpTrFs{width:16px;height:16px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E") center/16px 16px no-repeat;opacity:.9}
+#xpTray #xpTrFs:hover{opacity:1;filter:drop-shadow(0 0 2px #fff)}
+#xpTray #xpTrFs.on{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 2v4H2M10 2v4h4M14 10h-4v4M2 10h4v4' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E")}
 /* ---- menu Iniciar ---- */
 #xpMenu{position:fixed;left:0;bottom:30px;z-index:100021;width:min(380px,100vw)}
 .smBox{display:flex;flex-direction:column;max-height:calc(100vh - 34px);max-height:calc(100dvh - 34px);border:1px solid #0831d9;border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden;box-shadow:3px -2px 8px rgba(0,0,0,.5);background:#fff}
@@ -29604,8 +29655,23 @@ function fillStartMenu(){
   const R1 = (ic, t, fn) => mi(R, ic, 24, t, '', fn);
   R1(I.pc, tr('Meu Computador', 'My Computer'), myComputer); R1(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin);
   R.appendChild(mkEl('hr')); R1(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel());
+  R1(I.app, fsLabel(), () => deskFs());
   R.appendChild(mkEl('hr')); R1(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox); R1(I.folder, tr('Configurações', 'Settings'), () => leaveDesk());
 }
+
+/* ---- TELA CHEIA da área de trabalho do Windows XP (bandeja, menu iniciar e botão direito na área de trabalho) ---- */
+const fsNow = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function deskFs(on){
+  const de = document.documentElement, want = on === undefined ? !fsNow() : !!on;
+  try{
+    if(want && !fsNow()){ const f = de.requestFullscreen || de.webkitRequestFullscreen; const r = f && f.call(de, { navigationUI:'hide' }); if(r && r.catch) r.catch(() => {}); }
+    else if(!want && fsNow()){ const f = document.exitFullscreen || document.webkitExitFullscreen; const r = f && f.call(document); if(r && r.catch) r.catch(() => {}); }
+  }catch(e){}
+  if(!want && window.dzFsOff) window.dzFsOff();
+}
+const fsLabel = () => fsNow() ? tr('Sair da tela cheia', 'Exit full screen') : tr('Tela cheia', 'Full screen');
+function fsSync(){ const b = $('xpTrFs'); if(!b) return; b.classList.toggle('on', fsNow()); b.title = fsLabel(); }
+['fullscreenchange', 'webkitfullscreenchange'].forEach(t => document.addEventListener(t, fsSync));
 
 /* ---- menu de contexto (botão direito) ---- */
 function ctxClose(){ const m = $('xpCx'); if(m) m.classList.remove('on'); }
@@ -29741,6 +29807,7 @@ function dragIcon(b){
 const deskCtx = e => ctx(e, [
   [tr('Organizar ícones automaticamente', 'Arrange icons automatically'), () => { ipos = {}; saveIp(); layoutIcons(); }],
   [tr('Atualizar', 'Refresh'), () => fillIcons()], '-',
+  [fsLabel(), () => deskFs()], '-',
   [tr('Propriedades', 'Properties'), () => controlPanel('wall')]
 ]);
 addEventListener('resize', () => { if(root.classList.contains('xp-desk')) layoutIcons(); });
@@ -29757,6 +29824,7 @@ function buildDesk(){
   fb('logoff', I.key, tr('Fazer Logoff', 'Log Off')); fb('off', I.power, tr('Desligar', 'Turn Off'));
   document.body.append(d, bar, m);
   d.addEventListener('contextmenu', deskCtx); bar.addEventListener('contextmenu', e => e.preventDefault()); renderQl();
+  { const fb = mkEl('button'); fb.type = 'button'; fb.id = 'xpTrFs'; $('xpTray').insertBefore(fb, $('xpTrSnd')); fb.onclick = () => { xps('windows_navigation_start', .8); deskFs(); }; fsSync(); }
   setIc($('xpTrSnd'), I.sound, 16); $('xpTrSnd').onclick = () => { xps('windows_navigation_start', .8); controlPanel('snd'); };
   $('xpClk').style.cursor = 'default'; $('xpClk').onclick = () => controlPanel('time');
   d.addEventListener('click', () => { menu(false); d.querySelectorAll('.xpIc.sel').forEach(x => x.classList.remove('sel')); });
