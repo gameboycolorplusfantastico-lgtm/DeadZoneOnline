@@ -11,6 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Criar pastas padrão
+        run: |
+          B="assets/winxp/Arquivos"
+          for d in \
+            "Área de Trabalho" \
+            "Downloads" \
+            "Favoritos" \
+            "Meus Documentos/Minhas Imagens/Amostras de imagens" \
+            "Meus Documentos/Minhas Músicas/Amostras de músicas" \
+            "Meus Documentos/Meus Vídeos" \
+            "Arquivos de Programas" \
+            "Windows"; do
+            mkdir -p "$B/$d"
+            [ -e "$B/$d/.keep" ] || touch "$B/$d/.keep"
+          done
       - name: Gerar manifest.json
         run: |
           python3 - <<'EOF'
@@ -30,5 +45,5 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add assets/winxp/Arquivos/manifest.json
-          git diff --cached --quiet || (git commit -m "Atualiza lista de arquivos" && git push)
+          git add -A assets/winxp/Arquivos
+          git diff --cached --quiet || (git commit -m "Atualiza pastas e lista de arquivos" && git push)
