@@ -25518,10 +25518,11 @@ html:not(.dz-xp) .wsMi{color:#efeaff;border-radius:6px;padding:7px 24px}
 html:not(.dz-xp) .wsMi:hover:not(:disabled){background:linear-gradient(90deg,#5b3df0,#2aa8d8);color:#fff}html:not(.dz-xp) .wsMi:disabled{color:#6d6490}
 @media (max-width:640px){html:not(.dz-xp) #wmpBox.sk #wsRoot.pl #wsPl{margin:46px 0 118px}}
 </style>
+<style id="dzExTaStyle">#exVB .exTa{display:block;width:100%;height:100%;min-height:55vh;box-sizing:border-box;padding:10px;border:0;outline:0;resize:none;font:13px/1.45 ui-monospace,Consolas,Menlo,monospace;color:#e9f1ff;background:#0b1020}html.dz-xp #exVB .exTa{color:#000;background:#fff;font-family:'Lucida Console',Consolas,monospace}</style>
 <div id="exOverlay" aria-hidden="true"><div id="exBox" role="dialog" aria-label="Explorer">
   <div class="fxh fxdef"><b id="exTitle">📁 EXPLORADOR</b><button type="button" class="fxb x" id="exClose">✕</button></div>
   <div class="fxt fxdef"><button type="button" class="fxb" id="exUp">⬆</button><div id="exAddr"></div>
-    <button type="button" class="fxb" id="exNew"></button><button type="button" class="fxb" id="exImp"></button><button type="button" class="fxb" id="exRen"></button><button type="button" class="fxb" id="exCut"></button><button type="button" class="fxb" id="exCopy"></button><button type="button" class="fxb" id="exPaste"></button><button type="button" class="fxb" id="exDl"></button><button type="button" class="fxb x" id="exDel"></button></div>
+    <button type="button" class="fxb" id="exNew"></button><button type="button" class="fxb" id="exNewF"></button><button type="button" class="fxb" id="exImp"></button><button type="button" class="fxb" id="exRen"></button><button type="button" class="fxb" id="exCut"></button><button type="button" class="fxb" id="exCopy"></button><button type="button" class="fxb" id="exPaste"></button><button type="button" class="fxb" id="exDl"></button><button type="button" class="fxb x" id="exDel"></button></div>
   <div id="exList" class="fxdef"></div><div id="exStat" class="fxdef"></div><div id="exXp"></div>
   <div id="exView"><div class="fxh"><b id="exVT"></b><button type="button" class="fxb x" id="exVC">✕</button></div><div class="vb" id="exVB"></div></div>
   <input type="file" id="exFile" multiple style="display:none">
@@ -25629,7 +25630,7 @@ window.dzMenuBar = function(defs, host){   /* barra de menus no estilo XP (usada
 };
 const ov = $('exOverlay'); if(!ov) return;
 const xp = $('exXp'), list = $('exList'); let nodes = [], cwd = 'root', sel = null, selT = 0, dbp = null, seeded = false;
-const lbl = () => { $('exNew').textContent = '📁+ ' + tr('PASTA', 'FOLDER'); $('exImp').textContent = '⬇ ' + tr('IMPORTAR', 'IMPORT'); $('exRen').textContent = '✎ ' + tr('RENOMEAR', 'RENAME'); $('exCut').textContent = '✂ ' + tr('RECORTAR', 'CUT'); $('exCopy').textContent = '⧉ ' + tr('COPIAR', 'COPY'); $('exPaste').textContent = '📋 ' + tr('COLAR', 'PASTE'); $('exDl').textContent = '💾 ' + tr('BAIXAR', 'SAVE'); $('exDel').textContent = '🗑 ' + tr('EXCLUIR', 'DELETE'); $('exTitle').textContent = '📁 ' + tr('EXPLORADOR DE ARQUIVOS', 'FILE EXPLORER'); };
+const lbl = () => { $('exNew').textContent = '📁+ ' + tr('PASTA', 'FOLDER'); $('exNewF').textContent = '📄+ ' + tr('ARQUIVO', 'FILE'); $('exImp').textContent = '⬇ ' + tr('IMPORTAR', 'IMPORT'); $('exRen').textContent = '✎ ' + tr('RENOMEAR', 'RENAME'); $('exCut').textContent = '✂ ' + tr('RECORTAR', 'CUT'); $('exCopy').textContent = '⧉ ' + tr('COPIAR', 'COPY'); $('exPaste').textContent = '📋 ' + tr('COLAR', 'PASTE'); $('exDl').textContent = '💾 ' + tr('BAIXAR', 'SAVE'); $('exDel').textContent = '🗑 ' + tr('EXCLUIR', 'DELETE'); $('exTitle').textContent = '📁 ' + tr('EXPLORADOR DE ARQUIVOS', 'FILE EXPLORER'); };
 function db(){ return dbp || (dbp = new Promise((res, rej) => { try{ const r = indexedDB.open('dz_fx_v1', 1); r.onupgradeneeded = () => r.result.createObjectStore('n', { keyPath:'id' }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }catch(e){ rej(e); } })); }
 const tx = (m, f) => db().then(d => new Promise((res, rej) => { const t = d.transaction('n', m), r = f(t.objectStore('n')); t.oncomplete = () => res(r && r.result); t.onerror = t.onabort = () => rej(t.error); }));
 const put = n => tx('readwrite', s => s.put(n)).catch(() => { try{ if(typeof uiToast === 'function') uiToast(tr('Não foi possível salvar (sem espaço ou armazenamento bloqueado).', 'Could not save (no space or storage blocked).'), 'err'); }catch(_){} });
@@ -25658,9 +25659,26 @@ const selNode = () => nodes.find(n => n.id === sel);
 function download(n){ if(!n || n.type === 'd' || !(n.blob || n.url)) return; const a = document.createElement('a'); a.href = n.blob ? URL.createObjectURL(n.blob) : n.url; a.download = n.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
 function view(n, k){
   const vb = $('exVB'); vb.innerHTML = ''; $('exVT').textContent = n.name;
+  let sv = $('exVS'); if(!sv){ sv = document.createElement('button'); sv.type = 'button'; sv.className = 'fxb'; sv.id = 'exVS'; $('exVC').parentNode.insertBefore(sv, $('exVC')); } sv.style.display = 'none';
   if(k === 'i'){ const im = new Image(); im.src = n.blob ? URL.createObjectURL(n.blob) : n.url; vb.appendChild(im); }
+  else if(n.blob && !n.remote){   /* texto local: editável, salvo neste aparelho */
+    const ta = document.createElement('textarea'); ta.className = 'exTa'; ta.spellcheck = false; vb.appendChild(ta); n.blob.text().then(t => { ta.value = t; });
+    sv.style.display = ''; sv.textContent = '💾 ' + tr('SALVAR', 'SAVE');
+    const doSave = () => { const bl = new Blob([ta.value], { type:n.mime || 'text/plain' }); n.blob = bl; n.size = bl.size; n.t = Date.now(); put(n); render(); try{ if(typeof uiToast === 'function') uiToast(tr('Salvo neste aparelho: ', 'Saved on this device: ') + n.name, 'ok'); }catch(e){} };
+    sv.onclick = doSave;
+    ta.onkeydown = e => { e.stopPropagation(); if(e.key === 'Escape'){ e.preventDefault(); $('exVC').click(); } else if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'){ e.preventDefault(); doSave(); } };
+    setTimeout(() => { try{ ta.focus(); }catch(e){} }, 60);
+  }
   else { const p = document.createElement('pre'); p.textContent = '…'; vb.appendChild(p); (n.blob ? n.blob.text() : fetch(n.url).then(r => r.text())).then(t => { p.textContent = t.slice(0, 200000); }).catch(() => { p.textContent = '—'; }); }
   $('exView').classList.add('on');
+}
+function newText(){   /* cria um documento de texto vazio na pasta atual (salvo neste aparelho, como os outros arquivos) */
+  if(cwd === 'mc') return; if(srchQ){ srchQ = ''; if(xm.srchI) xm.srchI.value = ''; }
+  const stem = tr('Novo documento de texto', 'New Text Document'), has = nm => nodes.some(x => x.parent === cwd && x.name.toLowerCase() === nm.toLowerCase()); let nm = stem + '.txt', i = 2;
+  while(has(nm)) nm = stem + ' (' + (i++) + ').txt';
+  if(!isXp()){ const v = prompt(tr('Nome do novo documento:', 'New document name:'), nm); if(!v || !v.trim()) return; nm = v.trim(); if(!/\.[A-Za-z0-9]+$/.test(nm)) nm += '.txt'; if(/[\\/:*?"<>|]/.test(nm) || has(nm)){ alert(tr('Nome inválido ou já existente.', 'Invalid or existing name.')); return; } }
+  const bl = new Blob([''], { type:'text/plain' }), n = { id:uid(), parent:cwd, name:nm, type:'f', mime:'text/plain', size:0, blob:bl, t:Date.now() };
+  nodes.push(n); put(n); sel = n.id; selT = 0; render(); if(isXp()) xRename(n.id, true); else view(n, 't');
 }
 function openNode(n){
   const k = kind(n);
@@ -25680,6 +25698,7 @@ $('exImp').onclick = () => { snd('menuAccept'); $('exFile').click(); };
 $('exFile').onchange = e => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; };
 $('exRen').onclick = () => { const n = selNode(); if(!n) return; if(n.sys || n.remote) return locked(n, ['renomear', 'rename']); if(isXp()) return xRename(n.id); const v = prompt(tr('Novo nome:', 'New name:'), n.name); if(!v || !v.trim()) return; n.name = v.trim(); put(n); render(); };
 $('exDl').onclick = () => download(selNode());
+$('exNewF').onclick = () => { snd('menuAccept'); newText(); };
 $('exCut').onclick = () => xCopy(true); $('exCopy').onclick = () => xCopy(false); $('exPaste').onclick = () => xPaste();
 $('exDel').onclick = () => { const n = selNode(); if(!n) return; if(n.sys || n.remote) return locked(n, ['excluir', 'delete']); if(isXp()) return xDelete(n); if(!confirm(tr('Excluir "', 'Delete "') + n.name + '"?')) return; delTree(n.id); sel = null; render(); };
 $('exVC').onclick = () => { $('exView').classList.remove('on'); $('exVB').innerHTML = ''; };
@@ -25734,7 +25753,7 @@ async function open(){
 function close(){ if(!isOpen()) return; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); $('exView').classList.remove('on'); snd('menuBack'); }
 window.addEventListener('keydown', e => {
   if(!isOpen()) return; const a = document.activeElement; if(a && a.closest && a.closest('#wmpOverlay')) return;
-  if(a && a.classList && a.classList.contains('xpRenI')) return;
+  if(a && ((a.classList && a.classList.contains('xpRenI')) || a.tagName === 'TEXTAREA')) return;
   const md = xp.parentNode.querySelector('.xpPr.msg'); if(md){ if(e.key === 'Escape' || e.key === 'Enter'){ e.stopImmediatePropagation(); e.preventDefault(); const b = md.querySelector(e.key === 'Enter' ? '.xpBtn.def' : '.xpBtn:last-child'); if(b) b.click(); } return; }
   if(e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key;
   if(k === 'Escape'){ e.stopImmediatePropagation(); e.preventDefault(); if($('exView').classList.contains('on')) $('exVC').click(); else close(); }
@@ -25797,7 +25816,7 @@ function buildXp(){
   if(xpBuilt) return; xpBuilt = true;
   const tb = (h, title, fn) => { const b = xmk('button', 'xpTbb', h); b.type = 'button'; if(title) b.title = title; b.onclick = () => { if(b.disabled) return; xps('windows_navigation_start'); fn(); }; return b; };
   const bar = window.dzMenuBar(() => [
-    [tr('Arquivo', 'File'), () => { const n = selNode(), inF = cwd !== 'mc'; return [[tr('Nova pasta', 'New folder'), inF ? () => $('exNew').click() : null], [tr('Importar arquivos…', 'Import files…'), inF ? () => $('exImp').click() : null], '-', [tr('Renomear', 'Rename'), n ? () => $('exRen').click() : null], [tr('Baixar', 'Save'), n && n.type === 'f' ? () => $('exDl').click() : null], [tr('Excluir', 'Delete'), n ? () => $('exDel').click() : null], '-', [tr('Propriedades', 'Properties'), () => props(n || (cwd === 'mc' || cwd === 'root' ? 'drive' : nodes.find(x => x.id === cwd)))], '-', [tr('Fechar', 'Close'), close]]; }],
+    [tr('Arquivo', 'File'), () => { const n = selNode(), inF = cwd !== 'mc'; return [[tr('Nova pasta', 'New folder'), inF ? () => $('exNew').click() : null], [tr('Novo documento de texto', 'New text document'), inF ? newText : null], [tr('Importar arquivos…', 'Import files…'), inF ? () => $('exImp').click() : null], '-', [tr('Renomear', 'Rename'), n ? () => $('exRen').click() : null], [tr('Baixar', 'Save'), n && n.type === 'f' ? () => $('exDl').click() : null], [tr('Excluir', 'Delete'), n ? () => $('exDel').click() : null], '-', [tr('Propriedades', 'Properties'), () => props(n || (cwd === 'mc' || cwd === 'root' ? 'drive' : nodes.find(x => x.id === cwd)))], '-', [tr('Fechar', 'Close'), close]]; }],
     [tr('Editar', 'Edit'), () => { const n = selNode(), inF = cwd !== 'mc'; return [[tr('Recortar', 'Cut'), n && inF ? () => xCopy(true) : null], [tr('Copiar', 'Copy'), n && inF ? () => xCopy(false) : null], [tr('Colar', 'Paste'), clip && inF ? xPaste : null], '-', [tr('Selecionar tudo', 'Select all'), () => xm.main.querySelectorAll('.xpIc,.xpDrv').forEach(x => x.classList.add('sel'))]]; }],
     [tr('Exibir', 'View'), () => [[tr('Ícones', 'Icons'), () => { vmode = 'icons'; render(); }, vmode === 'icons'], [tr('Lista', 'List'), () => { vmode = 'list'; render(); }, vmode === 'list'], [tr('Detalhes', 'Details'), () => { vmode = 'details'; render(); }, vmode === 'details']]],
     [tr('Favoritos', 'Favorites'), [[tr('(Vazio)', '(Empty)'), null]]],
@@ -25824,7 +25843,7 @@ function paintPane(){
   const p = xm.pane, n = selNode(), mc = cwd === 'mc', cur = nodes.find(x => x.id === cwd); p.innerHTML = '';
   const others = c => { if(!mc) c.append(xlink(74, tr('Meu Computador', 'My Computer'), () => go('mc'))); c.append(xlink(146, tr('Meus Documentos', 'My Documents'), () => goName('Meus Documentos')), xlink(438, tr('Minhas Músicas', 'My Music'), () => goName('Minhas Músicas')), xlink(436, tr('Minhas Imagens', 'My Pictures'), () => goName('Minhas Imagens')), xlink(441, tr('Meus Vídeos', 'My Videos'), () => goName('Meus Vídeos')), xlink(193, 'Downloads', () => goName('Downloads')), xlink(193, tr('Área de Trabalho', 'Desktop'), () => goName('Área de Trabalho'))); if(!mc && cwd !== 'root') c.append(xlink(76, 'Disco Local (C:)', () => go('root'))); };
   if(mc) p.append(xbox(tr('Tarefas do Sistema', 'System Tasks'), c => c.append(xlink(76, tr('Ver propriedades do disco', 'View disk properties'), () => props('drive')), xlink(143, tr('Abrir Media Player', 'Open Media Player'), () => window.dzWmp && window.dzWmp.open())), true));
-  else p.append(xbox(tr('Tarefas de arquivo e pasta', 'File and Folder Tasks'), c => { c.append(xlink(193, tr('Criar nova pasta', 'Make a new folder'), () => $('exNew').click()), xlink(143, tr('Importar arquivos do aparelho', 'Import files from device'), () => $('exImp').click()));
+  else p.append(xbox(tr('Tarefas de arquivo e pasta', 'File and Folder Tasks'), c => { c.append(xlink(193, tr('Criar nova pasta', 'Make a new folder'), () => $('exNew').click()), xlink(306, tr('Criar documento de texto', 'Create a text document'), () => newText()), xlink(143, tr('Importar arquivos do aparelho', 'Import files from device'), () => $('exImp').click()));
     if(n){ c.append(xlink(306, tr('Renomear este item', 'Rename this item'), () => $('exRen').click())); if(n.type === 'f') c.append(xlink(143, tr('Baixar este arquivo', 'Save this file'), () => $('exDl').click())); c.append(xlink(213, tr('Excluir este item', 'Delete this item'), () => $('exDel').click()), xlink(489, tr('Propriedades', 'Properties'), () => props(n))); } }, true));
   p.append(xbox(tr('Outros Locais', 'Other Places'), others), xbox(tr('Detalhes', 'Details'), c => {
     const d = xmk('div', 'xpDet'); let a, t;
@@ -25951,7 +25970,7 @@ function xpExtra(){
       ctx(X, Y, [[tr('Abrir', 'Open'), () => openNode(n), true], '-', [tr('Recortar', 'Cut'), () => xCopy(true)], [tr('Copiar', 'Copy'), () => xCopy(false)], '-', [tr('Excluir', 'Delete'), () => xDelete(n)], [tr('Renomear', 'Rename'), () => xRename(n.id)], '-', [tr('Propriedades', 'Properties'), () => props(n)]]);
     } else { sel = null; clr(); paintPane(); paintStatus();
       const mk = (l, m) => [(vmode === m ? '• ' : '') + l, () => { vmode = m; render(); }];
-      ctx(X, Y, [mk(tr('Ícones', 'Icons'), 'icons'), mk(tr('Lista', 'List'), 'list'), mk(tr('Detalhes', 'Details'), 'details'), '-', [tr('Atualizar', 'Refresh'), () => render()], '-', [tr('Colar', 'Paste'), clip ? xPaste : null], '-', [tr('Novo › Pasta', 'New › Folder'), xNew], '-', [tr('Propriedades', 'Properties'), () => props(cwd === 'root' ? 'drive' : nodes.find(x => x.id === cwd))]]);
+      ctx(X, Y, [mk(tr('Ícones', 'Icons'), 'icons'), mk(tr('Lista', 'List'), 'list'), mk(tr('Detalhes', 'Details'), 'details'), '-', [tr('Atualizar', 'Refresh'), () => render()], '-', [tr('Colar', 'Paste'), clip ? xPaste : null], '-', [tr('Novo › Pasta', 'New › Folder'), xNew], [tr('Novo › Documento de texto', 'New › Text Document'), newText], '-', [tr('Propriedades', 'Properties'), () => props(cwd === 'root' ? 'drive' : nodes.find(x => x.id === cwd))]]);
     }
   });
   $('exBox').addEventListener('pointerdown', e => { if(ctxEl && !e.target.closest('.xpCtx')) closeCtx(); }, true);
