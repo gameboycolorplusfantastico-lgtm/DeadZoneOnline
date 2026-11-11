@@ -22691,6 +22691,16 @@ function exitFs(force){
 function toggleFs(){ if(fsEl()){ fsDeclined = true; exitFs(true); } else { fsDeclined = false; enterFs(); } }
 function fsLabel(){ $('gbaFs').textContent = (fsEl() ? '⛶ ' + tr('SAIR DA TELA CHEIA', 'EXIT FULLSCREEN') : '⛶ ' + tr('TELA CHEIA', 'FULLSCREEN')); }
 ['fullscreenchange', 'webkitfullscreenchange'].forEach(t => document.addEventListener(t, () => { if(!fsEl()) fsByUs = false; fsLabel(); try{ releaseAll(); }catch(e){} }));
+/* CORREÇÃO (N64/PS1/Saturn em tela cheia): depois de escolher o arquivo do jogo o navegador pode ter saído da tela cheia e o pedido automático
+   é negado (sem toque novo). Nesses consoles os toques caem DENTRO do iframe do emulador, então o app nunca os via e a tela cheia não voltava.
+   Agora o próprio iframe avisa: o primeiro toque depois da negação entra em tela cheia de novo. */
+function fsRetry(){ try{ if(fsWant && !fsDeclined && !fsEl() && isOpen() && isPlaying()) enterFs(); }catch(e){} }
+['pointerup', 'touchend'].forEach(t => document.addEventListener(t, fsRetry, true));
+/* a tela cheia muda o tamanho do iframe: manda um "resize" ao EmulatorJS para ele reposicionar analógicos e botões */
+function nudgeEmuResize(){
+  [120, 450, 1000].forEach(ms => setTimeout(() => { try{ if(isPlaying() && frame.contentWindow) frame.contentWindow.dispatchEvent(new Event('resize')); }catch(e){} }, ms));
+}
+['fullscreenchange', 'webkitfullscreenchange'].forEach(t => document.addEventListener(t, nudgeEmuResize));
 
 function labels(){
   $('gbaOpen').textContent = '📂 ' + tr('ABRIR ARQUIVO', 'OPEN FILE');
@@ -22917,11 +22927,33 @@ function stop(){
   ov.classList.remove('playing'); list.classList.remove('full'); root.classList.remove('dz-gba-play');
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* Controles na tela dos consoles nativos (N64, PS1, Saturn...): fica só o que existe no controle de verdade.
+   Some "Rápido/Lento" (avanço rápido do emulador, não é botão de controle) e os nomes voltam ao do controle original (ESQ/DIR -> L/R, Start -> START). */
+const NP_HIDE = /^(r[aá]pido|lento|fast|slow|quick|salvar r[aá]pido|carregar r[aá]pido)\b/i;
+const NP_NAME = { esq:'L', dir:'R', start:'START', select:'SELECT' };
+function nativePad(doc){
+  if(!doc || !doc.body || doc.__dzNp) return; doc.__dzNp = true;
+  const win = doc.defaultView; let raf = 0;
+  const hide = el => { if(el.style.display !== 'none'){ el.style.setProperty('display', 'none', 'important'); } };
+  const run = () => {
+    doc.querySelectorAll('.ejs_virtualGamepad_parent,[class*="virtualGamepad"]').forEach(root => root.querySelectorAll('*').forEach(el => {
+      if(el.children.length) return;
+      const t = (el.textContent || '').trim(); if(!t) return;
+      if(NP_HIDE.test(t)){ hide(el); const pa = el.parentElement; if(pa && pa !== root && pa.children.length === 1 && /virtualGamepad/.test(pa.className || '')) hide(pa); return; }
+      const nn = NP_NAME[t.toLowerCase()]; if(nn && t !== nn) el.textContent = nn;
+    }));
+  };
+  const sched = () => { if(!raf) raf = win.requestAnimationFrame(() => { raf = 0; run(); }); };
+  try{ new win.MutationObserver(sched).observe(doc.body, { childList:true, subtree:true, characterData:true }); }catch(e){}
+  [0, 500, 1500].forEach(ms => setTimeout(run, ms));
+  ['pointerup', 'touchend'].forEach(t => doc.addEventListener(t, fsRetry, true));   /* tela cheia: ver fsRetry */
+}
 function onEmuReady(){
   applyCfg();   /* ajustes salvos (filtro, volume, velocidade) */
   if(cur.native){   /* N64, PS1...: mantém os controles do EmulatorJS e deixa o iframe receber teclado, controle e toque */
     frame.style.pointerEvents = '';
     try{ frame.focus(); if(frame.contentWindow) frame.contentWindow.focus(); }catch(e){}
+    try{ nativePad(frame.contentDocument); }catch(e){}
     try{ localStorage.setItem('dz_gba_ready', '1'); }catch(e){}
     return;
   }
@@ -23442,7 +23474,10 @@ const EMU_IMGS = {
   gb:'https://i.postimg.cc/t4J619g5/Game-Boy.png',
   md:'https://i.postimg.cc/JzFkZSyZ/Mega-Drive.png',
   snes:'https://i.postimg.cc/zGQgK4Lg/Super-Nintendo.png',
-  nes:'https://i.postimg.cc/RZht3v0G/NES.png'
+  nes:'https://i.postimg.cc/RZht3v0G/NES.png',
+  psx:'https://i.postimg.cc/wBvNn3qF/Play-Station-1.png',
+  n64:'https://i.postimg.cc/0NQShrkV/Nintendo64.png',
+  saturn:'https://i.postimg.cc/W43ZxtNX/Sega-Saturn.png'
 };
 SYS_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, img:EMU_IMGS[id] || '', icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, sub:SYSTEMS[id].coreName, open: () => open(id) }));
 
