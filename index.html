@@ -27350,13 +27350,25 @@ window.dzDawBack = close;
 </script>
 
 <style id="dzXpStyle">
-@font-face{font-family:'XP Tahoma';src:url('assets/winxp/Fonts/tahoma.ttf') format('truetype');font-display:block}
+/* fontes do Windows XP (pasta assets/winxp/Fonts) */
+@font-face{font-family:'XP Tahoma';font-weight:400;font-style:normal;src:url('assets/winxp/Fonts/tahoma.ttf') format('truetype');font-display:block}
+@font-face{font-family:'XP Tahoma';font-weight:700;font-style:normal;src:url('assets/winxp/Fonts/tahomabd.ttf') format('truetype');font-display:block}
 @font-face{font-family:'XP Franklin';src:url('assets/winxp/Fonts/framdit.ttf') format('truetype');font-display:block}
-/* título das janelas: Trebuchet MS Bold (usa a do sistema; se quiser a original, coloque trebucbd.ttf em assets/winxp/Fonts) */
-@font-face{font-family:'XP Trebuchet';font-weight:700;src:local('Trebuchet MS Bold'),local('TrebuchetMS-Bold'),url('assets/winxp/Fonts/trebucbd.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Franklin Roman';font-weight:400;font-style:normal;src:url('assets/winxp/Fonts/framd.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Trebuchet';font-weight:400;font-style:normal;src:url('assets/winxp/Fonts/trebuc.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Trebuchet';font-weight:400;font-style:italic;src:url('assets/winxp/Fonts/trebucit.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Trebuchet';font-weight:700;font-style:normal;src:url('assets/winxp/Fonts/trebucbd.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Verdana';font-weight:400;font-style:normal;src:url('assets/winxp/Fonts/verdana.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Verdana';font-weight:700;font-style:normal;src:url('assets/winxp/Fonts/verdanab.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Arial';font-weight:400;font-style:normal;src:url('assets/winxp/Fonts/arial.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Arial';font-weight:700;font-style:normal;src:url('assets/winxp/Fonts/arialbd.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Lucida Console';font-weight:400;font-style:normal;src:url('assets/winxp/Fonts/lucon.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'XP Sans Serif';font-weight:400;font-style:normal;src:url('assets/winxp/Fonts/micross.ttf') format('truetype');font-display:swap}
 /* ===== ESTILO WINDOWS XP (aba EXTRAS) =====
    Ligado em EXTRAS > ESTILO. Classes no <html>: dz-xp = estilo escolhido (janelas e botões XP); xp-desk = área de trabalho aberta. */
-:root{--xf:'XP Tahoma',Tahoma,Verdana,Geneva,sans-serif;--xft:'XP Trebuchet','Trebuchet MS','XP Tahoma',Tahoma,Verdana,sans-serif;--xfs:'XP Franklin','Franklin Gothic Medium','Trebuchet MS',Tahoma,sans-serif}
+:root{--xf:'XP Tahoma',Tahoma,'XP Verdana',Verdana,Geneva,sans-serif;--xft:'XP Trebuchet','Trebuchet MS','XP Tahoma',Tahoma,Verdana,sans-serif;--xfs:'XP Franklin','Franklin Gothic Medium','XP Trebuchet','Trebuchet MS',Tahoma,sans-serif;--xfv:'XP Verdana',Verdana,'XP Tahoma',Tahoma,sans-serif;--xfa:'XP Arial',Arial,Helvetica,sans-serif;--xfm:'XP Lucida Console','Lucida Console',Monaco,'Courier New',monospace;--xfc:'XP Sans Serif','Microsoft Sans Serif','MS Sans Serif',Tahoma,sans-serif}
+/* texto monoespaçado dentro de janelas XP (bloco de notas, código) usa Lucida Console */
+.xpWin :is(textarea,pre,code,kbd,samp){font-family:var(--xfm)}
 #xpDesk,#xpBar,#xpMenu,.xpWin,.xpModal,#xpBalloon,#xpSplash,#xpBoot,#xpStandby{display:none;font:11px/1.25 var(--xf);color:#000;-webkit-user-select:none;user-select:none}
 #xpDesk *,#xpBar *,#xpMenu *,.xpWin *,.xpModal *,#xpBalloon *,#xpSplash *{box-sizing:border-box;font-family:inherit}
 html.xp-desk #xpDesk{display:block}html.xp-desk #xpBar{display:flex}html.xp-desk .xpWin{display:flex}
