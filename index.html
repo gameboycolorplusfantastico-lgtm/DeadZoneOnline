@@ -25521,7 +25521,7 @@ html:not(.dz-xp) .wsMi:hover:not(:disabled){background:linear-gradient(90deg,#5b
 <div id="exOverlay" aria-hidden="true"><div id="exBox" role="dialog" aria-label="Explorer">
   <div class="fxh fxdef"><b id="exTitle">📁 EXPLORADOR</b><button type="button" class="fxb x" id="exClose">✕</button></div>
   <div class="fxt fxdef"><button type="button" class="fxb" id="exUp">⬆</button><div id="exAddr"></div>
-    <button type="button" class="fxb" id="exNew"></button><button type="button" class="fxb" id="exImp"></button><button type="button" class="fxb" id="exRen"></button><button type="button" class="fxb" id="exDl"></button><button type="button" class="fxb x" id="exDel"></button></div>
+    <button type="button" class="fxb" id="exNew"></button><button type="button" class="fxb" id="exImp"></button><button type="button" class="fxb" id="exRen"></button><button type="button" class="fxb" id="exCut"></button><button type="button" class="fxb" id="exCopy"></button><button type="button" class="fxb" id="exPaste"></button><button type="button" class="fxb" id="exDl"></button><button type="button" class="fxb x" id="exDel"></button></div>
   <div id="exList" class="fxdef"></div><div id="exStat" class="fxdef"></div><div id="exXp"></div>
   <div id="exView"><div class="fxh"><b id="exVT"></b><button type="button" class="fxb x" id="exVC">✕</button></div><div class="vb" id="exVB"></div></div>
   <input type="file" id="exFile" multiple style="display:none">
@@ -25629,7 +25629,7 @@ window.dzMenuBar = function(defs, host){   /* barra de menus no estilo XP (usada
 };
 const ov = $('exOverlay'); if(!ov) return;
 const xp = $('exXp'), list = $('exList'); let nodes = [], cwd = 'root', sel = null, selT = 0, dbp = null, seeded = false;
-const lbl = () => { $('exNew').textContent = '📁+ ' + tr('PASTA', 'FOLDER'); $('exImp').textContent = '⬇ ' + tr('IMPORTAR', 'IMPORT'); $('exRen').textContent = '✎ ' + tr('RENOMEAR', 'RENAME'); $('exDl').textContent = '💾 ' + tr('BAIXAR', 'SAVE'); $('exDel').textContent = '🗑 ' + tr('EXCLUIR', 'DELETE'); $('exTitle').textContent = '📁 ' + tr('EXPLORADOR DE ARQUIVOS', 'FILE EXPLORER'); };
+const lbl = () => { $('exNew').textContent = '📁+ ' + tr('PASTA', 'FOLDER'); $('exImp').textContent = '⬇ ' + tr('IMPORTAR', 'IMPORT'); $('exRen').textContent = '✎ ' + tr('RENOMEAR', 'RENAME'); $('exCut').textContent = '✂ ' + tr('RECORTAR', 'CUT'); $('exCopy').textContent = '⧉ ' + tr('COPIAR', 'COPY'); $('exPaste').textContent = '📋 ' + tr('COLAR', 'PASTE'); $('exDl').textContent = '💾 ' + tr('BAIXAR', 'SAVE'); $('exDel').textContent = '🗑 ' + tr('EXCLUIR', 'DELETE'); $('exTitle').textContent = '📁 ' + tr('EXPLORADOR DE ARQUIVOS', 'FILE EXPLORER'); };
 function db(){ return dbp || (dbp = new Promise((res, rej) => { try{ const r = indexedDB.open('dz_fx_v1', 1); r.onupgradeneeded = () => r.result.createObjectStore('n', { keyPath:'id' }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }catch(e){ rej(e); } })); }
 const tx = (m, f) => db().then(d => new Promise((res, rej) => { const t = d.transaction('n', m), r = f(t.objectStore('n')); t.oncomplete = () => res(r && r.result); t.onerror = t.onabort = () => rej(t.error); }));
 const put = n => tx('readwrite', s => s.put(n)).catch(() => { try{ if(typeof uiToast === 'function') uiToast(tr('Não foi possível salvar (sem espaço ou armazenamento bloqueado).', 'Could not save (no space or storage blocked).'), 'err'); }catch(_){} });
@@ -25637,7 +25637,7 @@ const rm = id => tx('readwrite', s => s.delete(id)).catch(() => {});
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const ICON = { d:'📁', a:'🎵', v:'🎬', i:'🖼️', t:'📄', x:'📦' };
 function kind(n){ if(n.type === 'd') return 'd'; const m = n.mime || '', e = (n.name.split('.').pop() || '').toLowerCase();
-  if(/^audio/.test(m) || /^(mp3|wav|ogg|m4a|flac|aac|opus)$/.test(e)) return 'a'; if(/^video/.test(m) || /^(mp4|webm|mkv|mov|ogv|m4v)$/.test(e)) return 'v';
+  if(/^audio/.test(m) || /^(mp3|wav|ogg|m4a|flac|aac|opus)$/.test(e)) return 'a'; if(/^video/.test(m) || /^(mp4|webm|mkv|mov|ogv|m4v|3gp|3g2|avi|wmv|mpg|mpeg)$/.test(e)) return 'v';
   if(/^image/.test(m) || /^(png|jpe?g|gif|webp|bmp|svg)$/.test(e)) return 'i'; if(/^text/.test(m) || /^(txt|md|json|js|css|html|csv|log)$/.test(e)) return 't'; return 'x'; }
 const fmt = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
 function path(id){ const p = []; while(id && id !== 'root'){ const n = nodes.find(x => x.id === id); if(!n) break; p.unshift(n.name); id = n.parent; } return [tr('Meu Computador', 'My Computer')].concat(p).join(' › '); }
@@ -25647,7 +25647,7 @@ function render(){
   lbl(); $('exAddr').textContent = path(cwd); list.innerHTML = '';
   const ks = nodes.filter(n => n.parent === cwd).sort((a, b) => (a.type === b.type ? 0 : a.type === 'd' ? -1 : 1) || a.name.localeCompare(b.name));
   if(!ks.length){ const e = document.createElement('div'); e.className = 'exempty'; e.textContent = tr('Esta pasta está vazia. Use IMPORTAR (ou arraste arquivos aqui) para trazer arquivos do aparelho.', 'This folder is empty. Use IMPORT (or drop files here) to bring files from your device.'); list.appendChild(e); }
-  ks.forEach(n => { const b = document.createElement('button'); b.type = 'button'; b.className = 'exi' + (n.id === sel ? ' on' : ''); b.dataset.id = n.id; b.innerHTML = '<i>' + ((window.DZI && window.DZI['f_' + kind(n)]) || ICON[kind(n)]) + '</i><span></span><small></small>';
+  ks.forEach(n => { const b = document.createElement('button'); b.type = 'button'; b.className = 'exi' + (n.id === sel ? ' on' : ''); b.dataset.id = n.id; if(clip && clip.cut && clip.id === n.id) b.style.opacity = .5; b.innerHTML = '<i>' + ((window.DZI && window.DZI['f_' + kind(n)]) || ICON[kind(n)]) + '</i><span></span><small></small>';
     b.children[1].textContent = n.name; b.children[2].textContent = n.type === 'd' ? '' : fmt(n.size || 0);
     b.onclick = () => { if(sel === n.id && Date.now() - selT < 900){ openNode(n); return; } sel = n.id; selT = Date.now(); list.querySelectorAll('.exi').forEach(x => x.classList.toggle('on', x.dataset.id === sel)); };
     list.appendChild(b); });
@@ -25655,11 +25655,11 @@ function render(){
   try{ navigator.storage.estimate().then(e => { $('exStat').textContent += ' · ' + fmt(e.usage || 0) + (e.quota ? ' / ' + fmt(e.quota) : ''); }); }catch(e){}
 }
 const selNode = () => nodes.find(n => n.id === sel);
-function download(n){ if(!n || n.type === 'd' || !n.blob) return; const a = document.createElement('a'); a.href = URL.createObjectURL(n.blob); a.download = n.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+function download(n){ if(!n || n.type === 'd' || !(n.blob || n.url)) return; const a = document.createElement('a'); a.href = n.blob ? URL.createObjectURL(n.blob) : n.url; a.download = n.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
 function view(n, k){
   const vb = $('exVB'); vb.innerHTML = ''; $('exVT').textContent = n.name;
-  if(k === 'i'){ const im = new Image(); im.src = URL.createObjectURL(n.blob); vb.appendChild(im); }
-  else { const p = document.createElement('pre'); p.textContent = '…'; vb.appendChild(p); n.blob.text().then(t => { p.textContent = t.slice(0, 200000); }); }
+  if(k === 'i'){ const im = new Image(); im.src = n.blob ? URL.createObjectURL(n.blob) : n.url; vb.appendChild(im); }
+  else { const p = document.createElement('pre'); p.textContent = '…'; vb.appendChild(p); (n.blob ? n.blob.text() : fetch(n.url).then(r => r.text())).then(t => { p.textContent = t.slice(0, 200000); }).catch(() => { p.textContent = '—'; }); }
   $('exView').classList.add('on');
 }
 function openNode(n){
@@ -25667,7 +25667,7 @@ function openNode(n){
   if(k === 'd'){ go(n.id); return; }
   if(k === 'a' || k === 'v'){
     const sib = nodes.filter(x => x.parent === n.parent && (kind(x) === 'a' || kind(x) === 'v')).sort((a, b) => a.name.localeCompare(b.name));
-    if(window.dzWmp) window.dzWmp.setList(sib.map(x => ({ name:x.name, blob:x.blob, id:x.id, v:kind(x) === 'v' })), sib.indexOf(n)); return;
+    if(window.dzWmp) window.dzWmp.setList(sib.map(x => ({ name:x.name, blob:x.blob, url:x.url, id:x.id, v:kind(x) === 'v' })), sib.indexOf(n)); return;
   }
   if(k === 'i' || k === 't'){ view(n, k); return; }
   download(n);
@@ -25678,9 +25678,10 @@ $('exUp').onclick = () => { snd('menuBack'); const c = nodes.find(n => n.id === 
 $('exNew').onclick = () => { snd('menuAccept'); if(isXp()) return xNew(); const v = prompt(tr('Nome da nova pasta:', 'New folder name:'), tr('Nova pasta', 'New folder')); if(!v || !v.trim()) return; const n = { id:uid(), parent:cwd, name:v.trim(), type:'d', t:Date.now() }; nodes.push(n); put(n); render(); };
 $('exImp').onclick = () => { snd('menuAccept'); $('exFile').click(); };
 $('exFile').onchange = e => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; };
-$('exRen').onclick = () => { const n = selNode(); if(!n) return; if(isXp()) return xRename(n.id); const v = prompt(tr('Novo nome:', 'New name:'), n.name); if(!v || !v.trim()) return; n.name = v.trim(); put(n); render(); };
+$('exRen').onclick = () => { const n = selNode(); if(!n) return; if(n.sys || n.remote) return locked(n, ['renomear', 'rename']); if(isXp()) return xRename(n.id); const v = prompt(tr('Novo nome:', 'New name:'), n.name); if(!v || !v.trim()) return; n.name = v.trim(); put(n); render(); };
 $('exDl').onclick = () => download(selNode());
-$('exDel').onclick = () => { const n = selNode(); if(!n) return; if(isXp()) return xDelete(n); if(!confirm(tr('Excluir "', 'Delete "') + n.name + '"?')) return; delTree(n.id); sel = null; render(); };
+$('exCut').onclick = () => xCopy(true); $('exCopy').onclick = () => xCopy(false); $('exPaste').onclick = () => xPaste();
+$('exDel').onclick = () => { const n = selNode(); if(!n) return; if(n.sys || n.remote) return locked(n, ['excluir', 'delete']); if(isXp()) return xDelete(n); if(!confirm(tr('Excluir "', 'Delete "') + n.name + '"?')) return; delTree(n.id); sel = null; render(); };
 $('exVC').onclick = () => { $('exView').classList.remove('on'); $('exVB').innerHTML = ''; };
 $('exClose').onclick = () => close();
 list.addEventListener('dragover', e => e.preventDefault());
@@ -25690,19 +25691,40 @@ let loaded = false;
 async function load(){
   if(loaded) return; loaded = true;
   try{ nodes = (await tx('readonly', s => s.getAll())) || []; }catch(e){ nodes = []; }
-  if(!nodes.length) ['Meus Documentos', 'Minhas Músicas', 'Meus Vídeos', 'Minhas Imagens', 'Área de Trabalho'].forEach(nm => { const n = { id:uid(), parent:'root', name:nm, type:'d', t:Date.now() }; nodes.push(n); put(n); });
+  let tv = ''; try{ tv = localStorage.getItem('dz_fx_tree') || ''; }catch(e){}
+  if(tv !== '2' || !nodes.length){ ensureTree(); try{ localStorage.setItem('dz_fx_tree', '2'); }catch(e){} }
+  await loadRemote();
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}   /* pede ao navegador para não apagar os arquivos salvos */
 }
+/* Estrutura padrão (como no Windows): Área de Trabalho, Downloads, Favoritos, Meus Documentos (Minhas Imagens › Amostras de imagens, Minhas Músicas › Amostras de músicas, Meus Vídeos), Arquivos de Programas, Windows */
+const TREE = [['Área de Trabalho'], ['Downloads'], ['Favoritos'], ['Meus Documentos', ['Minhas Imagens', ['Amostras de imagens']], ['Minhas Músicas', ['Amostras de músicas']], ['Meus Vídeos']], ['Arquivos de Programas'], ['Windows']];
+const RBASE = 'assets/winxp/Arquivos/';   /* espelha o C:\ do Explorador; manifest.json (gerado pela Action) lista os arquivos */
+async function loadRemote(){
+  try{
+    const r = await fetch(RBASE + 'manifest.json', { cache:'no-cache' }); if(!r.ok) return; const j = await r.json();
+    (j.files || []).forEach(f => {
+      const full = String(f.path || '').split('/').filter(Boolean); if(!full.length) return; const id = 'r:' + full.join('/'); if(nodes.some(n => n.id === id)) return;
+      const name = full[full.length - 1]; let parent = 'root'; full.slice(0, -1).forEach(sg => { parent = sysF(sg, parent).id; });
+      nodes.push({ id:id, parent:parent, name:name, type:'f', mime:'', size:f.size || 0, t:Date.now(), url:RBASE + full.map(encodeURIComponent).join('/'), remote:true });
+    });
+  }catch(e){}
+}
+function sysF(name, parent){ let f = nodes.find(n => n.type === 'd' && n.parent === parent && n.name === name); if(!f){ f = { id:uid(), parent:parent, name:name, type:'d', t:Date.now(), sys:true }; nodes.push(f); put(f); } else if(!f.sys){ f.sys = true; put(f); } return f; }
+function ensureTree(){
+  const docs = sysF('Meus Documentos', 'root');   /* pastas antigas (na raiz) passam a ficar dentro de Meus Documentos, com os arquivos */
+  ['Minhas Imagens', 'Minhas Músicas', 'Meus Vídeos'].forEach(nm => { const o = nodes.find(n => n.type === 'd' && n.parent === 'root' && n.name === nm); if(o){ o.parent = docs.id; put(o); } });
+  const walk = (list, parent) => list.forEach(e => { const f = sysF(e[0], parent); walk(e.slice(1), f.id); }); walk(TREE, 'root');
+}
 async function folderFor(k){
-  await load(); const nm = k === 'a' ? 'Minhas Músicas' : k === 'v' ? 'Meus Vídeos' : k === 'i' ? 'Minhas Imagens' : 'Meus Documentos';
-  let f = nodes.find(n => n.parent === 'root' && n.type === 'd' && n.name === nm); if(!f){ f = { id:uid(), parent:'root', name:nm, type:'d', t:Date.now() }; nodes.push(f); await put(f); } return f.id;
+  await load(); const docs = sysF('Meus Documentos', 'root'), nm = k === 'a' ? 'Minhas Músicas' : k === 'v' ? 'Meus Vídeos' : k === 'i' ? 'Minhas Imagens' : '';
+  return (nm ? sysF(nm, docs.id) : docs).id;
 }
 async function save(files){   /* usado pelo Media Player: grava na pasta certa (Músicas / Vídeos) */
   await load(); const out = [];
   for(const f of files){ const n = { id:uid(), parent:await folderFor(kind({ type:'f', name:f.name, mime:f.type })), name:f.name, type:'f', mime:f.type, size:f.size, blob:f, t:Date.now() }; nodes.push(n); await put(n); out.push(n); }
   if(isOpen()) render(); return out;
 }
-async function library(){ await load(); return nodes.filter(n => n.type === 'f' && n.blob && (kind(n) === 'a' || kind(n) === 'v')); }
+async function library(){ await load(); return nodes.filter(n => n.type === 'f' && (n.blob || n.url) && (kind(n) === 'a' || kind(n) === 'v')); }
 async function open(){
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
@@ -25739,7 +25761,7 @@ function go(id){ if(id === cwd) return; hist.push(cwd); fwd = []; cwd = id; sel 
 function goBack(){ if(!hist.length) return; fwd.push(cwd); cwd = hist.pop(); sel = null; render(); }
 function goFwd(){ if(!fwd.length) return; hist.push(cwd); cwd = fwd.pop(); sel = null; render(); }
 function goUp(){ if(cwd === 'mc') return; const c = nodes.find(n => n.id === cwd); go(c ? c.parent : (cwd === 'root' ? 'mc' : 'root')); }
-const byName = nm => nodes.find(n => n.parent === 'root' && n.type === 'd' && n.name === nm);
+const byName = nm => nodes.find(n => n.type === 'd' && n.sys && n.name === nm) || nodes.find(n => n.parent === 'root' && n.type === 'd' && n.name === nm);
 const goName = nm => { const f = byName(nm); if(f) go(f.id); };
 function sizeOf(id){ let s = 0, f = 0, d = 0; nodes.filter(n => n.parent === id).forEach(n => { if(n.type === 'd'){ d++; const r = sizeOf(n.id); s += r.s; f += r.f; d += r.d; } else { s += n.size || 0; f++; } }); return { s, f, d }; }
 function pick(key, fn, el){
@@ -25776,7 +25798,7 @@ function buildXp(){
   const tb = (h, title, fn) => { const b = xmk('button', 'xpTbb', h); b.type = 'button'; if(title) b.title = title; b.onclick = () => { if(b.disabled) return; xps('windows_navigation_start'); fn(); }; return b; };
   const bar = window.dzMenuBar(() => [
     [tr('Arquivo', 'File'), () => { const n = selNode(), inF = cwd !== 'mc'; return [[tr('Nova pasta', 'New folder'), inF ? () => $('exNew').click() : null], [tr('Importar arquivos…', 'Import files…'), inF ? () => $('exImp').click() : null], '-', [tr('Renomear', 'Rename'), n ? () => $('exRen').click() : null], [tr('Baixar', 'Save'), n && n.type === 'f' ? () => $('exDl').click() : null], [tr('Excluir', 'Delete'), n ? () => $('exDel').click() : null], '-', [tr('Propriedades', 'Properties'), () => props(n || (cwd === 'mc' || cwd === 'root' ? 'drive' : nodes.find(x => x.id === cwd)))], '-', [tr('Fechar', 'Close'), close]]; }],
-    [tr('Editar', 'Edit'), [[tr('Selecionar tudo', 'Select all'), () => xm.main.querySelectorAll('.xpIc,.xpDrv').forEach(x => x.classList.add('sel'))]]],
+    [tr('Editar', 'Edit'), () => { const n = selNode(), inF = cwd !== 'mc'; return [[tr('Recortar', 'Cut'), n && inF ? () => xCopy(true) : null], [tr('Copiar', 'Copy'), n && inF ? () => xCopy(false) : null], [tr('Colar', 'Paste'), clip && inF ? xPaste : null], '-', [tr('Selecionar tudo', 'Select all'), () => xm.main.querySelectorAll('.xpIc,.xpDrv').forEach(x => x.classList.add('sel'))]]; }],
     [tr('Exibir', 'View'), () => [[tr('Ícones', 'Icons'), () => { vmode = 'icons'; render(); }, vmode === 'icons'], [tr('Lista', 'List'), () => { vmode = 'list'; render(); }, vmode === 'list'], [tr('Detalhes', 'Details'), () => { vmode = 'details'; render(); }, vmode === 'details']]],
     [tr('Favoritos', 'Favorites'), [[tr('(Vazio)', '(Empty)'), null]]],
     [tr('Ferramentas', 'Tools'), [[tr('Abrir Media Player', 'Open Media Player'), () => window.dzWmp && window.dzWmp.open()], [tr('Mostrar/ocultar painel', 'Show/hide pane'), () => xp.classList.toggle('nopane')]]],
@@ -25800,7 +25822,7 @@ function xbox(title, fill, sp){ const b = xmk('div', 'xpBox' + (sp ? ' sp' : '')
 function xlink(ic, t, fn, off){ const a = xmk('button', 'xpLk'); a.type = 'button'; a.appendChild(xic(ic, 16)); const s = xmk('span'); s.textContent = t; a.appendChild(s); if(off) a.disabled = true; else a.onclick = () => { xps('windows_navigation_start'); fn(); }; return a; }
 function paintPane(){
   const p = xm.pane, n = selNode(), mc = cwd === 'mc', cur = nodes.find(x => x.id === cwd); p.innerHTML = '';
-  const others = c => { if(!mc) c.append(xlink(74, tr('Meu Computador', 'My Computer'), () => go('mc'))); c.append(xlink(146, tr('Meus Documentos', 'My Documents'), () => goName('Meus Documentos')), xlink(438, tr('Minhas Músicas', 'My Music'), () => goName('Minhas Músicas')), xlink(436, tr('Minhas Imagens', 'My Pictures'), () => goName('Minhas Imagens')), xlink(441, tr('Meus Vídeos', 'My Videos'), () => goName('Meus Vídeos'))); if(!mc && cwd !== 'root') c.append(xlink(76, 'Disco Local (C:)', () => go('root'))); };
+  const others = c => { if(!mc) c.append(xlink(74, tr('Meu Computador', 'My Computer'), () => go('mc'))); c.append(xlink(146, tr('Meus Documentos', 'My Documents'), () => goName('Meus Documentos')), xlink(438, tr('Minhas Músicas', 'My Music'), () => goName('Minhas Músicas')), xlink(436, tr('Minhas Imagens', 'My Pictures'), () => goName('Minhas Imagens')), xlink(441, tr('Meus Vídeos', 'My Videos'), () => goName('Meus Vídeos')), xlink(193, 'Downloads', () => goName('Downloads')), xlink(193, tr('Área de Trabalho', 'Desktop'), () => goName('Área de Trabalho'))); if(!mc && cwd !== 'root') c.append(xlink(76, 'Disco Local (C:)', () => go('root'))); };
   if(mc) p.append(xbox(tr('Tarefas do Sistema', 'System Tasks'), c => c.append(xlink(76, tr('Ver propriedades do disco', 'View disk properties'), () => props('drive')), xlink(143, tr('Abrir Media Player', 'Open Media Player'), () => window.dzWmp && window.dzWmp.open())), true));
   else p.append(xbox(tr('Tarefas de arquivo e pasta', 'File and Folder Tasks'), c => { c.append(xlink(193, tr('Criar nova pasta', 'Make a new folder'), () => $('exNew').click()), xlink(143, tr('Importar arquivos do aparelho', 'Import files from device'), () => $('exImp').click()));
     if(n){ c.append(xlink(306, tr('Renomear este item', 'Rename this item'), () => $('exRen').click())); if(n.type === 'f') c.append(xlink(143, tr('Baixar este arquivo', 'Save this file'), () => $('exDl').click())); c.append(xlink(213, tr('Excluir este item', 'Delete this item'), () => $('exDel').click()), xlink(489, tr('Propriedades', 'Properties'), () => props(n))); } }, true));
@@ -25867,7 +25889,7 @@ function xNew(){
   nodes.push(n); put(n); sel = n.id; selT = 0; render(); xRename(n.id, true);
 }
 function xRename(id, isNew){
-  const n = nodes.find(x => x.id === id); if(!n || cwd === 'mc') return;
+  const n = nodes.find(x => x.id === id); if(!n || cwd === 'mc') return; if(n.sys || n.remote) return locked(n, ['renomear', 'rename']);
   const el = xm.main.querySelector('[data-id="' + id + '"]'); if(!el) return;
   const inp = xmk('input', 'xpRenI'); inp.type = 'text'; inp.value = n.name; inp.maxLength = 120; inp.spellcheck = false; xrn = id;
   if(el.tagName === 'TR'){ el.querySelector('td span').replaceWith(inp); }
@@ -25886,16 +25908,23 @@ function xRename(id, isNew){
   inp.focus(); const dot = n.type === 'f' ? n.name.lastIndexOf('.') : -1; inp.setSelectionRange(0, dot > 0 ? dot : n.name.length); try{ inp.scrollIntoView({ block:'nearest' }); }catch(e){}
 }
 function xDelete(n){
+  if(n.sys || n.remote) return locked(n, ['excluir', 'delete']);
   const f = n.type === 'd';
   xMsg(f ? tr('Confirmar exclusão de pasta', 'Confirm Folder Delete') : tr('Confirmar exclusão de arquivo', 'Confirm File Delete'),
     f ? tr('Tem certeza de que deseja excluir a pasta "' + n.name + '" e todo o seu conteúdo?', 'Are you sure you want to delete the folder "' + n.name + '" and all its contents?') : tr('Tem certeza de que deseja excluir "' + n.name + '"?', 'Are you sure you want to delete "' + n.name + '"?'),
     [[tr('Sim', 'Yes'), () => { delTree(n.id); if(clip && clip.id === n.id) clip = null; sel = null; render(); }, true], [tr('Não', 'No'), null]], '❓');
 }
-function xCopy(cut){ const n = selNode(); if(!n) return; clip = { id:n.id, cut:cut }; xm.main.querySelectorAll('[data-id]').forEach(x => { x.style.opacity = ''; }); const el = xm.main.querySelector('[data-id="' + n.id + '"]'); if(el && cut) el.style.opacity = .5; }
-function cloneTree(n, parent, name){ const c = Object.assign({}, n, { id:uid(), parent:parent, t:Date.now() }); if(name) c.name = name; nodes.push(c); put(c); if(n.type === 'd') nodes.filter(k => k.parent === n.id).forEach(k => cloneTree(k, c.id)); return c; }
-function xErr(n, what){ xMsg(tr('Erro ao copiar arquivo ou pasta', 'Error Copying File or Folder'), tr('Não é possível ' + what + ' "' + n.name + '": o destino é uma subpasta da pasta de origem.', 'Cannot ' + (what === 'mover' ? 'move' : 'copy') + ' "' + n.name + '": the destination folder is a subfolder of the source folder.'), [['OK', null, true]], '⚠️'); }
+function note(title, text){ if(isXp()) xMsg(title, text, [['OK', null, true]], '⚠️'); else alert(text); }
+function locked(n, what){ note(tr('Erro', 'Error'), tr('Não é possível ' + what[0] + ' "' + n.name + '": ' + (n.remote ? 'este arquivo vem do GitHub (somente leitura). Você pode copiá-lo.' : 'esta é uma pasta do sistema.'), 'Cannot ' + what[1] + ' "' + n.name + '": ' + (n.remote ? 'this file comes from GitHub (read-only). You can copy it.' : 'it is a system folder.'))); }
+function xCopy(cut){
+  const n = selNode(); if(!n || cwd === 'mc') return; if(cut && (n.sys || n.remote)) return locked(n, ['mover', 'move']);
+  clip = { id:n.id, cut:cut }; if(!isXp()){ render(); return; }
+  xm.main.querySelectorAll('[data-id]').forEach(x => { x.style.opacity = ''; }); const el = xm.main.querySelector('[data-id="' + n.id + '"]'); if(el && cut) el.style.opacity = .5;
+}
+function cloneTree(n, parent, name){ const c = Object.assign({}, n, { id:uid(), parent:parent, t:Date.now() }); delete c.sys; delete c.remote; if(name) c.name = name; nodes.push(c); put(c); if(n.type === 'd') nodes.filter(k => k.parent === n.id).forEach(k => cloneTree(k, c.id)); return c; }
+function xErr(n, what){ note(tr('Erro ao copiar arquivo ou pasta', 'Error Copying File or Folder'), tr('Não é possível ' + what + ' "' + n.name + '": o destino é uma subpasta da pasta de origem.', 'Cannot ' + (what === 'mover' ? 'move' : 'copy') + ' "' + n.name + '": the destination folder is a subfolder of the source folder.'), [['OK', null, true]], '⚠️'); }
 function moveTo(id, parentId){
-  const n = nodes.find(x => x.id === id); if(!n || n.parent === parentId) return;
+  const n = nodes.find(x => x.id === id); if(!n || n.parent === parentId) return; if(n.sys || n.remote) return locked(n, ['mover', 'move']);
   if(n.type === 'd' && (n.id === parentId || isUnder(parentId, n.id))) return xErr(n, 'mover');
   n.name = uniq(parentId, n.name, n.id); n.parent = parentId; put(n); sel = null; render();
 }
@@ -25931,11 +25960,11 @@ function xpExtra(){
   xm.main.addEventListener('dragend', () => { dragId = null; });
   xm.main.addEventListener('dragover', e => { if(!dragId) return; const t = e.target.closest && e.target.closest('[data-id]'), d = t && nodes.find(x => x.id === t.dataset.id); if(d && d.type === 'd' && d.id !== dragId) e.preventDefault(); });
   xm.main.addEventListener('drop', e => { if(!dragId) return; const t = e.target.closest && e.target.closest('[data-id]'), d = t && nodes.find(x => x.id === t.dataset.id); if(d && d.type === 'd'){ e.preventDefault(); const id = dragId; dragId = null; moveTo(id, d.id); } });
-  window.addEventListener('keydown', e => {
-    if(!isOpen() || !isXp() || !(e.ctrlKey || e.metaKey) || xrn) return; const a = document.activeElement; if(a && ((a.closest && a.closest('#wmpOverlay')) || a.tagName === 'INPUT')) return;
-    const k = e.key.toLowerCase(); if(k === 'c'){ e.preventDefault(); xCopy(false); } else if(k === 'x'){ e.preventDefault(); xCopy(true); } else if(k === 'v'){ e.preventDefault(); xPaste(); }
-  });
 }
+window.addEventListener('keydown', e => {
+  if(!isOpen() || !(e.ctrlKey || e.metaKey) || xrn || $('exView').classList.contains('on')) return; const a = document.activeElement; if(a && ((a.closest && a.closest('#wmpOverlay')) || a.tagName === 'INPUT')) return;
+  const k = e.key.toLowerCase(); if(k === 'c'){ e.preventDefault(); xCopy(false); } else if(k === 'x'){ e.preventDefault(); xCopy(true); } else if(k === 'v'){ e.preventDefault(); xPaste(); }
+});
 window.dzExTry = v => String(v || '').trim().toLowerCase() === 'fx123';
 window.dzEx = { open, close, isOpen, save, library }; window.dzExBack = () => { if($('exView').classList.contains('on')) $('exVC').click(); else close(); };
 })();
@@ -25952,6 +25981,7 @@ const ov = $('wmpOverlay'); if(!ov) return;
 const box = $('wmpBox'), root = $('wsRoot'), m = $('wmpMedia'), cv = $('wmpViz'), cx = cv.getContext('2d'), pl = $('wmpPl');
 const XPS = ['windows_xp_startup', 'windows_xp_logon_sound', 'windows_xp_shutdown', 'windows_xp_logoff_sound', 'windows_xp_balloon', 'windows_xp_ding', 'windows_xp_error', 'windows_xp_exclamation', 'windows_xp_default'];
 const defaults = () => XPS.map(n => ({ sys:true, name:n.replace('windows_xp_', '').replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()), url:'assets/winxp/Sounds/' + n + '.wav' }));
+const VEXT = /\.(mp4|m4v|webm|mkv|mov|ogv|3gp|3g2|avi|wmv|mpg|mpeg)$/i, isVid = (mime, name) => /^video/.test(mime || '') || VEXT.test(name || '');
 let items = [], sysShown = false, idx = -1, shuf = false, rep = 0, raf = 0, t = 0, urls = [], visMode = 0;
 const isOpen = () => ov.classList.contains('open');
 const isXp = () => document.documentElement.classList.contains('dz-xp');
@@ -25987,6 +26017,8 @@ function go(dir){ const n = nextI(dir); if(n >= 0) play(n); else stop(); }
 function stop(){ m.pause(); try{ m.currentTime = 0; }catch(e){} ui(); tick(); }
 function toggle(){ snd('menuAccept'); if(idx < 0) play(0); else if(m.paused || m.ended){ resumeAc(); const p = m.play(); if(p && p.catch) p.catch(() => {}); } else m.pause(); }
 m.addEventListener('ended', () => { if(rep === 2) play(idx); else go(1); });
+['loadedmetadata', 'resize'].forEach(ev => m.addEventListener(ev, () => { const it = idx >= 0 ? items[idx] : null; if(it && m.videoWidth > 0 !== !!it.v){ it.v = m.videoWidth > 0; ui(); } }));
+m.addEventListener('error', () => { if(idx >= 0 && m.error) $('wmpNow').textContent = tr('Formato não suportado pelo navegador: ', 'Format not supported by the browser: ') + items[idx].name; });
 ['play', 'pause', 'volumechange', 'loadedmetadata'].forEach(ev => m.addEventListener(ev, () => { ui(); tick(); volPaint(); }));
 
 /* ----- controles deslizantes (busca, volume, equalizador, balanço) ----- */
@@ -26012,6 +26044,13 @@ function setVol(v){ m.volume = clamp(v, 0, 1); m.muted = false; volPaint(); try{
 slider(volEl, f => setVol(clamp((f * 68 - 5) / 58, 0, 1)));
 try{ const v = parseFloat(localStorage.getItem('dz_wmp_vol')); m.volume = v >= 0 && v <= 1 ? v : .8; }catch(e){ m.volume = .8; }
 volPaint();
+
+/* ----- vídeo: clique = reproduzir/pausar, duplo clique ou F = tela cheia ----- */
+const stageEl = $('wmpStage'); let clkT = 0;
+const isV = () => idx >= 0 && !!items[idx] && !!items[idx].v;
+function fs(){ if(document.fullscreenElement){ try{ document.exitFullscreen(); }catch(e){} } else if(isV() && stageEl.requestFullscreen){ const p = stageEl.requestFullscreen(); if(p && p.catch) p.catch(() => {}); } }
+stageEl.addEventListener('click', () => { if(!isV()) return; clearTimeout(clkT); clkT = setTimeout(toggle, 220); });
+stageEl.addEventListener('dblclick', () => { if(!isV()) return; clearTimeout(clkT); fs(); });
 
 /* ----- botões ----- */
 $('wsPlay').onclick = toggle; $('wsPause').onclick = toggle; $('wsStop').onclick = stop; $('wsPrev').onclick = () => go(-1); $('wsNext').onclick = () => go(1);
@@ -26039,7 +26078,7 @@ async function refreshLib(){   /* carrega os arquivos salvos (compartilhados com
   if(!window.dzEx || !window.dzEx.library) return;
   try{
     const lib = await window.dzEx.library(), cur = idx >= 0 ? items[idx] : null;
-    const mine = lib.sort((a, b) => a.name.localeCompare(b.name)).map(n => ({ name:n.name, blob:n.blob, id:n.id, lib:true, v:/^video/.test(n.mime || '') || /\.(mp4|webm|mkv|mov|ogv|m4v)$/i.test(n.name) }));
+    const mine = lib.sort((a, b) => a.name.localeCompare(b.name)).map(n => ({ name:n.name, blob:n.blob, url:n.url, id:n.id, lib:true, v:isVid(n.mime, n.name) }));
     items = items.filter(it => !it.lib).concat(mine); idx = cur ? items.findIndex(x => x === cur || (cur.id && x.id === cur.id)) : -1; ui();
   }catch(e){}
 }
@@ -26047,7 +26086,7 @@ async function addFiles(fs){
   if(!fs.length) return; let saved = [];
   try{ saved = await window.dzEx.save(fs); }catch(e){}
   if(saved.length){ await refreshLib(); const i = items.findIndex(x => x.id === saved[0].id); play(i >= 0 ? i : 0); try{ if(typeof uiToast === 'function') uiToast(tr('Salvo neste aparelho: ', 'Saved on this device: ') + saved.length, 'ok'); }catch(e){} }
-  else { const was = items.length; fs.forEach(f => items.push({ name:f.name, blob:f, v:/^video/.test(f.type) })); play(was); }
+  else { const was = items.length; fs.forEach(f => items.push({ name:f.name, blob:f, v:isVid(f.type, f.name) })); play(was); }
 }
 function saveCur(){ if(idx < 0) return; const it = items[idx], a = document.createElement('a'); a.href = it.blob ? URL.createObjectURL(it.blob) : it.url; a.download = it.name; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1500); }
 $('wmpFile').onchange = e => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; };
@@ -26117,6 +26156,7 @@ eqPaint();
 /* ----- visualizações (4 modos; o botão "próxima visualização" troca) ----- */
 function viz(ts){
   raf = requestAnimationFrame(viz); t = ts / 1000;
+  if(idx >= 0 && items[idx] && items[idx].v) return;   /* vídeo na tela: não desenha a visualização por baixo */
   const st = $('wmpStage'), cw = st.clientWidth | 0, ch = st.clientHeight | 0; if(cw > 8 && ch > 8 && (cv.width !== cw || cv.height !== ch)){ cv.width = cw; cv.height = ch; }
   const W = cv.width, H = cv.height, on = !m.paused && !m.ended, v = m.muted ? 0 : (m.volume || 0), amp = on ? (.35 + .65 * v) : .05, g = cx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, '#06122e'); g.addColorStop(1, '#0b3a7a'); cx.fillStyle = g; cx.fillRect(0, 0, W, H);
@@ -26136,7 +26176,7 @@ function viz(ts){
     for(let i = 0; i < n; i++){ const a = i / n * 6.283 + t * .3, l = R * .35 + R * (on ? (.2 + .8 * Math.abs(Math.sin(t * 2.1 + i * .7) * Math.sin(t * .9 + i * .23))) * amp * 1.6 : .12);
       cx.beginPath(); cx.moveTo(cxm + Math.cos(a) * R, cym + Math.sin(a) * R); cx.lineTo(cxm + Math.cos(a) * (R + l), cym + Math.sin(a) * (R + l)); cx.strokeStyle = 'hsl(' + ((i * 5 + t * 50) % 360) + ',90%,65%)'; cx.lineWidth = 3; cx.stroke(); }
   }
-  cx.fillStyle = 'rgba(255,255,255,.85)'; cx.font = 'bold 16px Tahoma, Arial, sans-serif'; cx.textAlign = 'center'; cx.fillText(idx >= 0 ? items[idx].name : 'Windows Media Player', W / 2, 28);
+  cx.fillStyle = 'rgba(255,255,255,.85)'; cx.font = 'bold 16px Tahoma, Arial, sans-serif'; cx.textAlign = 'center'; { const lbl = idx >= 0 ? items[idx].name : (isXp() ? 'Windows Media Player' : ''); if(lbl) cx.fillText(lbl, W / 2, 28); }
 }
 
 /* ----- abrir / fechar / janela ----- */
@@ -26147,7 +26187,7 @@ function open(){
   if(!root.dataset.init){ root.dataset.init = '1'; if(innerWidth < 660) root.classList.remove('pl'); }
   ui(); tick(); volPaint(); if(!raf) raf = requestAnimationFrame(viz); refreshLib();
 }
-function close(){ if(!isOpen()) return; closeMenu(); m.pause(); cancelAnimationFrame(raf); raf = 0; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); snd('menuBack'); }
+function close(){ if(!isOpen()) return; closeMenu(); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} m.pause(); cancelAnimationFrame(raf); raf = 0; ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); snd('menuBack'); }
 function setList(list, start){ items = list.map(x => Object.assign({ lib:true }, x)); idx = -1; open(); play(Math.max(0, start)); }
 (function dragWin(){   /* arrastar a janela pela barra superior da skin (modo XP) */
   const h = $('wsTop');
@@ -26167,7 +26207,7 @@ window.addEventListener('keydown', e => {
   if(e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key; let u = true;
   if(k === 'Escape'){ if($('wsMenu')) closeMenu(); else close(); } else if(k === ' ') toggle(); else if(k === 'ArrowRight') m.currentTime += 5; else if(k === 'ArrowLeft') m.currentTime -= 5;
   else if(k === 'ArrowUp') setVol(m.volume + .05); else if(k === 'ArrowDown') setVol(m.volume - .05);
-  else if(k === 'n' || k === 'N') go(1); else if(k === 'p' || k === 'P') go(-1); else u = false;
+  else if(k === 'f' || k === 'F'){ if(isV() || document.fullscreenElement) fs(); else u = false; } else if(k === 'n' || k === 'N') go(1); else if(k === 'p' || k === 'P') go(-1); else u = false;
   if(u){ e.stopImmediatePropagation(); e.preventDefault(); }
 }, true);
 if(window.ResizeObserver) new ResizeObserver(() => { if(isOpen()) tick(); }).observe(seekEl);
