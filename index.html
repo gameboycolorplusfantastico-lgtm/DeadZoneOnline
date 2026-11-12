@@ -22606,7 +22606,9 @@ const SYS_ORDER = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md', 'ms', 'gg', 'segacd'
 /* QUAIS CONSOLES APARECEM NO MENU (seletor "emu" e aba EXTRAS).
    Todos os outros já estão prontos acima e continuam reconhecidos pelo gerador da lista, só ficam escondidos.
    Para liberar um, é só colocar o id dele aqui (ex.: 'n64', 'psx', 'gb', 'gbc', 'ms', 'gg', 'segacd', 'sega32x', 'saturn', 'nds'...). */
-const SHOWN = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md', 'n64', 'psx', 'saturn'];
+const SHOWN = ['gba', 'nes', 'gb', 'gbc', 'snes', 'md', 'ms', 'n64', 'psx'];
+/* ORDEM NO SELETOR DE EMULADORES: do console mais antigo ao mais novo (a ordem de SYS_ORDER acima só decide a detecção dos arquivos) */
+const SEL_ORDER = ['nes', 'ms', 'md', 'gb', 'snes', 'psx', 'n64', 'gbc', 'gba'];
 let cur = SYSTEMS.gba;
 /* descobre o console de um jogo: campo "system" do roms.json (id, apelido ou nome), senão pela extensão */
 function sysOf(g){
@@ -23658,15 +23660,16 @@ const EMU_IMGS = {
   nes:'https://i.postimg.cc/RZht3v0G/NES.png',
   psx:'https://i.postimg.cc/wBvNn3qF/Play-Station-1.png',
   n64:'https://i.postimg.cc/0NQShrkV/Nintendo64.png',
-  saturn:'https://i.postimg.cc/W43ZxtNX/Sega-Saturn.png'
+  saturn:'https://i.postimg.cc/W43ZxtNX/Sega-Saturn.png',
+  ms:'https://i.postimg.cc/7YLB7nry/Master-System.png'
 };
-SYS_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, img:EMU_IMGS[id] || '', icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, sub:SYSTEMS[id].coreName, open: () => open(id) }));
+SEL_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = window.dzEmus || []).push({ id:id, img:EMU_IMGS[id] || '', icon:SYSTEMS[id].icon, name:SYSTEMS[id].name, sub:SYSTEMS[id].coreName, open: () => open(id) }));
 
 /* ---- PREPARO DOS EMULADORES: baixa o motor e os núcleos dos consoles liberados (NES, GB, GBC, GBA, SNES, Mega Drive).
    1) Em segundo plano: 6 s depois do Dead Zone carregar, um arquivo por vez e com o navegador ocioso.
    2) Ao abrir a aba EMULADORES: se ainda falta algo, o seletor mostra um pequeno "carregando" até terminar (dzEmuPrep.ensure).
    Os dois usam as mesmas requisições (nada é baixado duas vezes). Se um arquivo falhar, ignora e o jogo abre normal. */
-const EJS_CORE_FILE = { nes:'fceumm', gb:'gambatte', gbc:'gambatte', gba:'mgba', snes:'snes9x', md:'genesis_plus_gx' };
+const EJS_CORE_FILE = { nes:'fceumm', gb:'gambatte', gbc:'gambatte', gba:'mgba', snes:'snes9x', md:'genesis_plus_gx', ms:'genesis_plus_gx' };
 function prepUrls(){
   const urls = [EJS_CDN + 'loader.js', EJS_CDN + 'emulator.min.js', EJS_CDN + 'emulator.min.css'], seen = {};
   SHOWN.forEach(id => { const c = EJS_CORE_FILE[id]; if(!c || seen[c]) return; seen[c] = 1; urls.push(EJS_CDN + 'cores/' + c + '-wasm.data'); });
