@@ -413,6 +413,11 @@
     "system": "n64"
   },
   {
+    "file": "MKRT64.z64",
+    "title": "MKRT64",
+    "system": "n64"
+  },
+  {
     "file": "SM64.z64",
     "title": "SM64",
     "system": "n64"
