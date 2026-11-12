@@ -22472,6 +22472,9 @@ window.dzEmuFx = { register, on, off, panel, refresh: refreshPanels, setTheme, s
           <div id="gbaMoreGrid">
             <button type="button" class="gbab" id="gbaPadBtn">🕹 CONTROLES</button>
             <button type="button" class="gbab" id="gbaPsxMode" style="display:none"></button>
+            <button type="button" class="gbab" id="gbaEmuPause" style="display:none"></button>
+            <button type="button" class="gbab" id="gbaEmuRestart" style="display:none"></button>
+            <button type="button" class="gbab" id="gbaEmuBar" style="display:none"></button>
             <button type="button" class="gbab" id="gbaHelpBtn">❓ AJUDA</button>
             <button type="button" class="gbab" id="gbaSaveOut">💾 BAIXAR SAVE</button>
             <button type="button" class="gbab" id="gbaSaveIn">📥 ENVIAR SAVE</button>
@@ -22582,7 +22585,7 @@ addSys({ id:'gg', icon:'🟦', name:'GAME GEAR', core:'segaGG', coreName:'Genesi
   keys:KEYS_AB, keyTxt:KEY_TXT_12, labels:{ 8:'2', 0:'1' }, gp:GP_AB });
 /* --- controles do próprio EmulatorJS (native) --- */
 addSys({ id:'sega32x', icon:'⚡', name:'SEGA 32X', core:'sega32x', coreName:'PicoDrive', exts:['32x'], hints:['32x','sega32x'] });
-addSys({ id:'saturn', icon:'🪐', name:'SEGA SATURN', core:'segaSaturn', coreName:'Yabause', exts:['ccd','mds'], hints:['saturn','segasaturn','ss'], bios:'saturn.bin' });
+addSys({ id:'saturn', icon:'🪐', name:'SEGA SATURN', core:'segaSaturn', coreName:'Yabause', exts:['ccd','mds'], pick:'.chd,.cue,.ccd,.mds,.iso,.zip,.7z', hints:['saturn','segasaturn','ss'], bios:'saturn.bin' });
 addSys({ id:'n64', icon:'🎮', name:'NINTENDO 64', core:'n64', coreName:'Mupen64Plus-Next', exts:['z64','n64','v64'], hints:['n64','nintendo64'] });
 addSys({ id:'psx', icon:'💽', name:'PLAYSTATION (PS1)', core:'psx', coreName:'PCSX ReARMed', exts:['cue','pbp','m3u','iso','chd'], hints:['psx','ps1','playstation','playstation1'], bios:'psx.bin' });
 addSys({ id:'nds', icon:'📱', name:'NINTENDO DS (BETA)', core:'nds', coreName:'melonDS', exts:['nds','dsi'], hints:['nds','ds','nintendods'] });
@@ -22642,6 +22645,7 @@ const snd = n => { try{ if(typeof SFX !== 'undefined' && SFX[n]) SFX[n](); }catc
 const isOpen = () => ov.classList.contains('open');
 const isPlaying = () => ov.classList.contains('playing');
 let curGameName = 'game', saveMode = '', blobUrl = null, romsLoaded = false, gameMuted = false, watchTimer = 0, padRaf = 0, padInit = false, startTimer = 0, playTok = 0;
+let userPaused = false, emuBarOn = false;   /* pausa e barra de opções do EmulatorJS (consoles nativos) */
 let padIgnore = 0, padFirst = false;   /* botões já apertados ao abrir o jogo (ex.: o A que escolheu a ROM) só valem depois de soltos */
 const root = document.documentElement;
 
@@ -22713,6 +22717,7 @@ function labels(){
   $('gbaClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
   try{ moreLabels(); }catch(e){}
   try{ psxModeLabel(); }catch(e){}
+  try{ emuExtraLabels(); }catch(e){}
   $('gbaQSave').textContent = '⚡ ' + tr('SALVAR RÁPIDO', 'QUICK SAVE'); $('gbaQLoad').textContent = '⚡ ' + tr('CARREGAR RÁPIDO', 'QUICK LOAD');
   fsLabel();
   if(!isPlaying())
@@ -22919,7 +22924,7 @@ function killEmu(){
   }catch(x){}
 }
 function stop(){
-  blurPaused = false;
+  blurPaused = false; userPaused = false; emuBarOn = false;
   clearInterval(watchTimer); watchTimer = 0; clearTimeout(startTimer); startTimer = 0; playTok++;
   killEmu();
   if(padRaf){ cancelAnimationFrame(padRaf); padRaf = 0; }
@@ -23033,6 +23038,38 @@ function psxPad(doc){
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => base.addEventListener(t, sOff));
   }
 }
+/* ===== Consoles nativos (PS1, N64, Saturn): a barra de baixo do EmulatorJS fica escondida e as opções ficam no ☰ MENU de cima ===== */
+function emuBarApply(){
+  try{
+    const d = frame.contentDocument; if(!d || !d.head) return;
+    let h = d.getElementById('dzBarHide'); if(!h){ h = d.createElement('style'); h.id = 'dzBarHide'; d.head.appendChild(h); }
+    h.textContent = emuBarOn
+      ? '.ejs_menu_bar{display:flex!important;opacity:1!important;visibility:visible!important;transform:none!important;z-index:200!important}'
+      : '.ejs_menu_bar{display:none!important}';
+  }catch(e){}
+}
+function emuExtraLabels(){
+  const nat = !!(cur && cur.native);
+  ['gbaEmuPause', 'gbaEmuRestart', 'gbaEmuBar'].forEach(id => { const b = $(id); if(b) b.style.display = nat ? '' : 'none'; });
+  $('gbaEmuPause').textContent = '⏯ ' + (userPaused ? tr('CONTINUAR', 'RESUME') : tr('PAUSAR', 'PAUSE'));
+  $('gbaEmuRestart').textContent = '🔄 ' + tr('REINICIAR', 'RESTART');
+  $('gbaEmuBar').textContent = '🎛 ' + (emuBarOn ? tr('FECHAR OPÇÕES DO EMULADOR', 'HIDE EMULATOR OPTIONS') : tr('OPÇÕES DO EMULADOR', 'EMULATOR OPTIONS'));
+}
+$('gbaEmuPause').addEventListener('click', () => { if(!isPlaying()) return; userPaused = !userPaused; loopPause(userPaused); emuExtraLabels(); });
+$('gbaEmuBar').addEventListener('click', () => { if(!isPlaying()) return; emuBarOn = !emuBarOn; emuBarApply(); emuExtraLabels(); });
+$('gbaEmuRestart').addEventListener('click', () => {
+  if(!isPlaying()) return;
+  const go = () => {
+    const g = emuApi();
+    try{
+      if(g && typeof g.restart === 'function') g.restart();
+      else{ const b = frame.contentDocument.querySelector('.ejs_menu_bar button'); if(b) b.click(); }   /* 1º botão da barra = reiniciar */
+    }catch(e){}
+    userPaused = false; loopPause(false); emuExtraLabels();
+  };
+  if(typeof window.dzAsk === 'function') window.dzAsk(tr('Reiniciar o jogo? O que não foi salvo se perde.', 'Restart the game? Anything unsaved is lost.'), null, ok => { if(ok) go(); }, 'confirm');
+  else go();
+});
 const NP_HIDE = /^(r[aá]pido|lento|fast|slow|quick|salvar r[aá]pido|carregar r[aá]pido)\b/i;
 const NP_NAME = { esq:'L', dir:'R', start:'START', select:'SELECT' };
 function nativePad(doc){
@@ -23057,6 +23094,7 @@ function onEmuReady(){
   if(cur.native){   /* N64, PS1...: mantém os controles do EmulatorJS e deixa o iframe receber teclado, controle e toque */
     frame.style.pointerEvents = '';
     try{ frame.focus(); if(frame.contentWindow) frame.contentWindow.focus(); }catch(e){}
+    userPaused = false; emuBarOn = false; emuBarApply(); emuExtraLabels();
     try{ if(cur.id === 'psx') psxPad(frame.contentDocument); }catch(e){}
     try{ nativePad(frame.contentDocument); }catch(e){}
     try{ localStorage.setItem('dz_gba_ready', '1'); }catch(e){}
@@ -23115,7 +23153,7 @@ function play(url, name, useAlt, healed, tryN){
   /* sem barra/menus do EmulatorJS (menos DOM e menos CPU); em Xbox One/PS4 também frameskip automático e remoção de loops ociosos do mGBA */
   const perf = '';   /* (sem opções extras do EmulatorJS: as interface dele já fica escondida pelo CSS) */
   const mkHtml = () => '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-    '<style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div>' +
+    '<style>html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}' + (cfg.native ? '.ejs_menu_bar{display:none!important}' : '') + '</style></head><body><div id="game"></div>' +
     '<script>(function(){var L=window.console;["error","warn"].forEach(function(k){var o=L[k];L[k]=function(){try{parent.dzEmuLog&&parent.dzEmuLog(k,Array.prototype.slice.call(arguments).map(String).join(" "))}catch(x){}try{o.apply(L,arguments)}catch(x){}}})})();<\/script>' +
     '<script>window.onerror=function(m){try{parent.dzEmuErr&&parent.dzEmuErr(String(m))}catch(x){}};window.addEventListener("unhandledrejection",function(e){try{parent.dzEmuErr&&parent.dzEmuErr(String(e.reason&&e.reason.message||e.reason))}catch(x){}});' + (cfg.native ? '' : 'try{navigator.getGamepads=function(){return[]};}catch(x){}') + 'var C=' + JSON.stringify(cfg).replace(/</g,'\\u003c') + ';' +   /* o iframe NÃO lê o controle: só o app lê (evita botão duplicado/conflitante) */
     'EJS_player="#game";EJS_core=C.core;EJS_gameUrl=C.url;EJS_gameName=C.name;EJS_pathtodata=C.cdn;EJS_startOnLoaded=true;EJS_color="#6a4bd8";' +
@@ -23269,7 +23307,8 @@ function playFile(f){
   if(!f) return;
   stop();
   const ext = (f.name.split('.').pop() || '').toLowerCase();
-  const useExt = (ext === 'zip' || ext === '7z' || cur.exts.indexOf(ext) >= 0) ? ext : cur.exts[0];
+  const cdOk = ['saturn', 'psx', 'segacd'].indexOf(cur.id) >= 0 && ['chd', 'cue', 'iso', 'pbp', 'm3u'].indexOf(ext) >= 0;   /* discos: o formato real vai junto (antes o Saturn trocava .chd por .ccd e falhava) */
+  const useExt = (ext === 'zip' || ext === '7z' || cdOk || cur.exts.indexOf(ext) >= 0) ? ext : cur.exts[0];
   const url = URL.createObjectURL(f);
   play(url + '#rom.' + useExt, f.name.replace(/\.[^.]+$/, ''));
   blobUrl = url;   // depois do play(): o stop() interno não apaga mais o link da ROM
@@ -23289,21 +23328,35 @@ async function loadRoms(){
     const r2 = await fetch(ROMS_DIR + 'extras.json?v=' + Date.now(), { cache:'no-store' });
     if(r2.ok && !/html/i.test(r2.headers.get('content-type') || '')){ const j2 = await r2.json(); items = items.concat(Array.isArray(j2) ? j2 : (j2.games || [])); ok = true; }
   }catch(e){}
-  /* extras.json com {"hf":"USUARIO/REPOSITORIO"}: lista sozinho os jogos do Dataset no Hugging Face (subpastas psx/ e saturn/ definem o console) */
+  /* extras.json com {"hf":"USUARIO/REPOSITORIO"}: jogos hospedados no Hugging Face.
+     A lista vem do arquivo lista.json na raiz do repositório (o download de arquivos do Hugging Face aceita qualquer site, mas a API que
+     lista pastas só responde ao próprio site deles) e, se existir, de "files" no extras.json. A API ainda é tentada, caso um dia libere. */
   const hfIs = x => x && typeof x === 'object' && x.hf;
   const hfList = items.filter(hfIs); items = items.filter(x => !hfIs(x));
+  const hfExt = /\.(chd|iso|pbp|cue|ccd|mds|m3u|z64|n64|v64|zip|7z)$/i;
+  const hfAdd = (h, f) => {
+    if(typeof f === 'string') f = { file:f };
+    if(!f || !f.file || !hfExt.test(String(f.file))) return;
+    const g = { file:String(f.file), title:f.title || String(f.file).split('/').pop().replace(/\.[^.]+$/, ''), url:'https://huggingface.co/datasets/' + h.hf + '/resolve/main/' + String(f.file).split('/').map(encodeURIComponent).join('/') };
+    const sy = f.system || h.system; if(sy) g.system = sy;
+    if(!items.some(x => x && x.url === g.url)) items.push(g);
+  };
   for(const h of hfList){
+    const before = items.length;
+    (Array.isArray(h.files) ? h.files : []).forEach(f => hfAdd(h, f));
+    try{   /* roms/hf-lista.json: gerado sozinho pela Action "Lista do Hugging Face" (no GitHub, sem bloqueio de CORS) */
+      const rg = await fetch(ROMS_DIR + 'hf-lista.json?v=' + Date.now(), { cache:'no-store' });
+      if(rg.ok && !/html/i.test(rg.headers.get('content-type') || '')){ const jg = await rg.json(); (Array.isArray(jg) ? jg : (jg.games || [])).forEach(f => hfAdd(h, f)); }
+    }catch(e){}
+    try{
+      const rl = await fetch('https://huggingface.co/datasets/' + h.hf + '/resolve/main/lista.json?v=' + Date.now(), { cache:'no-store' });
+      if(rl.ok){ const jl = await rl.json(); (Array.isArray(jl) ? jl : (jl.games || [])).forEach(f => hfAdd(h, f)); }
+    }catch(e){}
     try{
       const rr = await fetch('https://huggingface.co/api/datasets/' + h.hf + '/tree/main?recursive=true');
-      if(!rr.ok) continue;
-      (await rr.json()).forEach(f => {
-        if(f && f.type === 'file' && /\.(chd|iso|pbp|cue|ccd|mds|m3u|z64|n64|v64|zip|7z)$/i.test(f.path)){
-          const g = { file:f.path, title:f.path.split('/').pop().replace(/\.[^.]+$/, ''), url:'https://huggingface.co/datasets/' + h.hf + '/resolve/main/' + f.path.split('/').map(encodeURIComponent).join('/') };
-          if(h.system) g.system = h.system; items.push(g);
-        }
-      });
-      ok = true;
+      if(rr.ok) (await rr.json()).forEach(f => { if(f && f.type === 'file') hfAdd(h, f.path); });
     }catch(e){}
+    if(items.length > before) ok = true;
   }
   items = items.map(x => typeof x === 'string' ? { file:x } : x).filter(x => x && x.file && !/^bios\//i.test(String(x.file)));   /* roms/bios/ guarda só BIOS, não jogos */
   const c = {}; items.forEach(g => { const k = sysOf(g) || '?'; c[k] = (c[k] || 0) + 1; });
