@@ -1488,6 +1488,18 @@ html.console #deathFx,#deathFx.noblur{-webkit-backdrop-filter:none;backdrop-filt
 @keyframes dfIn{from{transform:scale(1.6);opacity:0;letter-spacing:.5em;}to{transform:none;opacity:1;letter-spacing:.18em;}}
 @keyframes dfPulse{0%,100%{opacity:1;}50%{opacity:.72;}}
 </style>
+<style id="dzBindCss">
+#bindSection{margin:10px 0 14px;padding:10px 12px;border:1px solid var(--panel-border);border-radius:4px;background:rgba(0,0,0,.3)}
+#bindSection .bind-title{color:var(--amber);font-weight:bold;font-size:12px;letter-spacing:1px;margin-bottom:6px}
+#bindSection .bind-hint{font-size:11px;opacity:.75;margin-bottom:8px}
+#bindSection .bind-row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11.5px;color:#ccc;padding:3px 0}
+#bindSection .bind-btn,#bindSection .bind-reset{font:inherit;font-size:10.5px;letter-spacing:.5px;color:var(--green);background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.3);border-radius:3px;padding:3px 8px;cursor:pointer;min-width:92px;text-align:center}
+#bindSection .bind-btn:hover,#bindSection .bind-reset:hover{background:rgba(57,255,20,.18)}
+#bindSection .bind-btn.listening{color:#000;background:var(--amber);border-color:var(--amber);animation:bindBlink .8s infinite alternate}
+#bindSection .bind-reset{margin-top:10px;min-width:0}
+#bindSection summary{cursor:pointer;font-size:11.5px;color:var(--amber);margin-top:8px;letter-spacing:.5px}
+@keyframes bindBlink{from{opacity:1}to{opacity:.55}}
+</style>
 </head>
 <body>
 <div id="loadingScreen">
@@ -2456,27 +2468,35 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
         </label>
       </div>
 
+      <div id="bindSection">
+        <div class="bind-title" id="bindTitle">REMAPEAR TECLADO / MOUSE</div>
+        <div class="bind-hint" id="bindHint"></div>
+        <div id="bindList"></div>
+        <details id="bindWpnBox"><summary id="bindWpnSum"></summary><div id="bindWpnList"></div></details>
+        <button type="button" class="bind-reset" id="bindReset"></button>
+      </div>
+
       <div class="controls-scheme-grid">
         <div class="controls-scheme-col" id="colKb">
           <div class="controls-scheme-title"><span data-i18n="controlsKbTitle">TECLADO / MOUSE</span><span class="ctl-inuse" data-i18n="ctlInUse">EM USO</span></div>
-          <div class="controls-row"><span data-i18n="ctlMove">Mover</span><span class="controls-keys">W A S D</span></div>
-          <div class="controls-row"><span data-i18n="ctlLookH">Girar (esquerda/direita)</span><span class="controls-keys" data-i18n="ctlKbLookH">MOUSE ↔ / ← →</span></div>
-          <div class="controls-row"><span data-i18n="ctlLookV">Olhar (cima/baixo)</span><span class="controls-keys" data-i18n="ctlKbLookV">MOUSE ↕ / PGUP PGDN</span></div>
-          <div class="controls-row"><span data-i18n="ctlCamCenter">Centralizar câmera</span><span class="controls-keys" data-i18n="ctlKbCenter">C / HOME</span></div>
-          <div class="controls-row"><span data-i18n="ctlFire">Atirar</span><span class="controls-keys" data-i18n="ctlMouseClick">CLIQUE ESQ.</span></div>
-          <div class="controls-row"><span data-i18n="ctlReload">Recarregar</span><span class="controls-keys">R</span></div>
-          <div class="controls-row"><span data-i18n="ctlScope">Zoom (snipers)</span><span class="controls-keys" data-i18n="ctlKbScope">CLIQUE DIR. / Z</span></div>
-          <div class="controls-row"><span data-i18n="ctlFireMode">Modo de tiro (auto / semi / rajada)</span><span class="controls-keys">V</span></div>
+          <div class="controls-row"><span data-i18n="ctlMove">Mover</span><span class="controls-keys" data-bshow="move">W A S D</span></div>
+          <div class="controls-row"><span data-i18n="ctlLookH">Girar (esquerda/direita)</span><span class="controls-keys" data-bshow="turn">MOUSE ↔ / ← →</span></div>
+          <div class="controls-row"><span data-i18n="ctlLookV">Olhar (cima/baixo)</span><span class="controls-keys" data-bshow="look">MOUSE ↕ / PGUP PGDN</span></div>
+          <div class="controls-row"><span data-i18n="ctlCamCenter">Centralizar câmera</span><span class="controls-keys" data-bshow="recenter">C / HOME</span></div>
+          <div class="controls-row"><span data-i18n="ctlFire">Atirar</span><span class="controls-keys" data-bshow="fire1">CLIQUE ESQ.</span></div>
+          <div class="controls-row"><span data-i18n="ctlReload">Recarregar</span><span class="controls-keys" data-bshow="reload">R</span></div>
+          <div class="controls-row"><span data-i18n="ctlScope">Zoom (snipers)</span><span class="controls-keys" data-bshow="aimscope">CLIQUE DIR. / Z</span></div>
+          <div class="controls-row"><span data-i18n="ctlFireMode">Modo de tiro (auto / semi / rajada)</span><span class="controls-keys" data-bshow="firemode">V</span></div>
           <div class="controls-row"><span data-i18n="ctlWeapons">Trocar arma</span><span class="controls-keys">1-9 / 0 / - = [ ]</span></div>
           <div class="controls-row"><span data-i18n="ctlCycleWpn">Arma anterior / próxima</span><span class="controls-keys" data-i18n="ctlKbWheel">RODA DO MOUSE</span></div>
-          <div class="controls-row"><span data-i18n="ctlLastWeapon">Voltar à arma anterior</span><span class="controls-keys">Q</span></div>
-          <div class="controls-row"><span data-i18n="ctlInteract">Interagir (portas, luzes, arma do chão)</span><span class="controls-keys">E</span></div>
-          <div class="controls-row"><span data-i18n="ctlShop">Abrir loja (DM/CTF/Resgate)</span><span class="controls-keys">B</span></div>
-          <div class="controls-row"><span data-i18n="ctlShopClose">Fechar loja</span><span class="controls-keys">B / ESC</span></div>
-          <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys">F</span></div>
-          <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys">ESPAÇO</span></div>
+          <div class="controls-row"><span data-i18n="ctlLastWeapon">Voltar à arma anterior</span><span class="controls-keys" data-bshow="quickswap">Q</span></div>
+          <div class="controls-row"><span data-i18n="ctlInteract">Interagir (portas, luzes, arma do chão)</span><span class="controls-keys" data-bshow="interact">E</span></div>
+          <div class="controls-row"><span data-i18n="ctlShop">Abrir loja (DM/CTF/Resgate)</span><span class="controls-keys" data-bshow="shop">B</span></div>
+          <div class="controls-row"><span data-i18n="ctlShopClose">Fechar loja</span><span class="controls-keys" data-bshow="shopclose">B / ESC</span></div>
+          <div class="controls-row"><span data-i18n="ctlKick">Chutar (Futebol)</span><span class="controls-keys" data-bshow="kick">F</span></div>
+          <div class="controls-row"><span data-i18n="ctlJump">Pular</span><span class="controls-keys" data-bshow="jump">ESPAÇO</span></div>
           <div class="controls-row"><span data-i18n="ctlPause">Pausar</span><span class="controls-keys">ESC</span></div>
-          <div class="controls-row"><span id="ctlHelpKeyTxt">Ajuda de controles (no jogo)</span><span class="controls-keys">H</span></div>
+          <div class="controls-row"><span id="ctlHelpKeyTxt">Ajuda de controles (no jogo)</span><span class="controls-keys" data-bshow="help">H</span></div>
           <div class="controls-row"><span data-i18n="ctlChat">Abrir chat (online)</span><span class="controls-keys">ENTER</span></div>
         </div>
         <div class="controls-scheme-col" id="colTouch">
@@ -13705,32 +13725,127 @@ function detectTouchDefault(){
 }
 usingTouch = detectTouchDefault();
 
+/* ===== REMAPEAR TECLADO / MOUSE (jogo principal) =====
+   Cada ação tem uma lista de "tokens": tecla = e.key em minúsculas ('w', 'arrowup', ' '), mouse = 'mouse0' (esq.), 'mouse1' (meio),
+   'mouse2' (dir.), 'mouse3'/'mouse4' (laterais). Só as mudanças do jogador ficam salvas (BIND_USER); o resto usa o padrão. */
+const BIND_DEFS = [
+  { id:'forward',  pt:'Andar para frente',       en:'Move forward',        def:['w','arrowup'] },
+  { id:'back',     pt:'Andar para trás',         en:'Move backward',       def:['s','arrowdown'] },
+  { id:'left',     pt:'Andar para a esquerda',   en:'Strafe left',         def:['a'] },
+  { id:'right',    pt:'Andar para a direita',    en:'Strafe right',        def:['d'] },
+  { id:'turnleft', pt:'Girar para a esquerda',   en:'Turn left',           def:['arrowleft'] },
+  { id:'turnright',pt:'Girar para a direita',    en:'Turn right',          def:['arrowright'] },
+  { id:'lookup',   pt:'Olhar para cima',         en:'Look up',             def:['pageup'] },
+  { id:'lookdown', pt:'Olhar para baixo',        en:'Look down',           def:['pagedown'] },
+  { id:'recenter', pt:'Centralizar câmera',      en:'Center camera',       def:['c','home'] },
+  { id:'fire',     pt:'Atirar',                  en:'Fire',                def:['mouse0','mouse2'] },
+  { id:'aim',      pt:'Zoom da sniper / agarrar (Gravity Gun)', en:'Sniper zoom / grab (Gravity Gun)', def:['mouse2'] },
+  { id:'scope',    pt:'Zoom da sniper (alternativo)', en:'Sniper zoom (alternate)', def:['z'] },
+  { id:'reload',   pt:'Recarregar',              en:'Reload',              def:['r'] },
+  { id:'firemode', pt:'Modo de tiro (auto / semi / rajada)', en:'Fire mode (auto / semi / burst)', def:['v'] },
+  { id:'quickswap',pt:'Voltar à arma anterior',  en:'Previous weapon',     def:['q'] },
+  { id:'interact', pt:'Interagir (portas, luzes, arma do chão)', en:'Interact (doors, lights, floor weapon)', def:['e'] },
+  { id:'shop',     pt:'Abrir / fechar loja',     en:'Open / close shop',   def:['b'] },
+  { id:'kick',     pt:'Chutar (Futebol)',        en:'Kick (Soccer)',       def:['f'] },
+  { id:'jump',     pt:'Pular',                   en:'Jump',                def:[' '] },
+  { id:'help',     pt:'Ajuda de controles',      en:'Controls help',       def:['h'] }
+];
+const BIND_KEY = 'dz_binds_v1';
+let BIND_USER = {};
+try{ BIND_USER = JSON.parse(localStorage.getItem(BIND_KEY) || '{}') || {}; }catch(e){ BIND_USER = {}; }
+function bindDefTokens(id){
+  if(id.indexOf('w:') === 0){ const c = WEAPON_CONFIG[id.slice(2)]; return (c && c.key != null) ? [String(c.key).toLowerCase()] : []; }
+  const d = BIND_DEFS.find(x => x.id === id); return d ? d.def.slice() : [];
+}
+function bindTokens(id){ return Array.isArray(BIND_USER[id]) ? BIND_USER[id] : bindDefTokens(id); }
+function bm(id, t){ return bindTokens(id).indexOf(t) >= 0; }                       // o token t está ligado à ação id?
+function bHeld(id){ const a = bindTokens(id); for(let i = 0; i < a.length; i++) if(keys[a[i]]) return true; return false; }
+function bindSave(){ try{ localStorage.setItem(BIND_KEY, JSON.stringify(BIND_USER)); }catch(e){} }
+function bindIds(){ return BIND_DEFS.map(d => d.id).concat(Object.keys(WEAPON_CONFIG).map(w => 'w:' + w)); }
+function bindTokName(t){
+  if(/^mouse\d$/.test(t)){
+    const n = +t.slice(5);
+    return [LTX('CLIQUE ESQ.','LEFT CLICK'), LTX('CLIQUE MEIO','MIDDLE CLICK'), LTX('CLIQUE DIR.','RIGHT CLICK'), LTX('MOUSE LATERAL 1','MOUSE SIDE 1'), LTX('MOUSE LATERAL 2','MOUSE SIDE 2')][n] || ('MOUSE ' + (n + 1));
+  }
+  const m = { ' ':LTX('ESPAÇO','SPACE'), arrowup:'↑', arrowdown:'↓', arrowleft:'←', arrowright:'→', pageup:'PGUP', pagedown:'PGDN', control:'CTRL', capslock:'CAPS' };
+  return String(m[t] || t).toUpperCase();
+}
+function bindLabel(id){ const a = bindTokens(id); return a.length ? a.map(bindTokName).join(' / ') : LTX('SEM TECLA','UNBOUND'); }
+// dá a tecla/botão tok para a ação id; se outra ação já usava, ela fica com a tecla antiga desta (troca)
+function bindAssign(id, tok){
+  const prim = bindTokens(id)[0];
+  bindIds().forEach(o => {
+    if(o === id) return;
+    const t = bindTokens(o); if(t.indexOf(tok) < 0) return;
+    const rest = t.filter(x => x !== tok);
+    BIND_USER[o] = rest.length ? rest : ((prim && prim !== tok) ? [prim] : []);
+  });
+  BIND_USER[id] = [tok];
+  bindSave();
+}
+function bindResetAll(){ BIND_USER = {}; bindSave(); }
+
+// captura da próxima tecla / botão do mouse (tela REMAPEAR); Esc cancela
+let bindListen = null;
+function bindCaptureStart(done){ bindListen = { done:done, t0:performance.now() }; }
+window.addEventListener('keydown', e => {
+  if(!bindListen) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if(e.repeat) return;
+  const L = bindListen; bindListen = null;
+  L.done(e.key === 'Escape' ? null : e.key.toLowerCase());
+}, true);
+window.addEventListener('keyup', e => { if(bindListen){ e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+window.addEventListener('mousedown', e => {
+  if(!bindListen) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if(performance.now() - bindListen.t0 < 250) return;   // o clique que abriu a captura não conta
+  const L = bindListen; bindListen = null;
+  const sw = ev => { ev.stopImmediatePropagation(); ev.preventDefault(); }; window.addEventListener('click', sw, true); setTimeout(() => window.removeEventListener('click', sw, true), 350);
+  L.done('mouse' + e.button);
+}, true);
+window.addEventListener('contextmenu', e => { if(bindListen) e.preventDefault(); }, true);
+window.addEventListener('auxclick', e => { if(e.button >= 3 && (bindListen || started)) e.preventDefault(); }, true);
+
+// ações disparadas por tecla OU botão do mouse (k = token)
+function bindPress(k, e){
+  const play = started && !gameOver, menuOff = settingsModal.style.display !== 'flex';
+  if(bm('reload', k) && player.weapon !== 'gravgun') reloadWeapon();   // recarregar (agarrar/soltar da Gravity Gun fica só no botão "aim")
+  if(bm('shop', k) && play) shopToggle();
+  if(bm('firemode', k) && play && menuOff) cycleFireMode();
+  if(bm('scope', k) && play && menuOff) toggleScope();
+  if(bm('recenter', k) && play && menuOff) recenterCam();
+  if(bm('lookup', k) || bm('lookdown', k)){ if(e.cancelable) e.preventDefault(); }
+  if(play && menuOff){ if(soc && bm('kick', k)) socPlayerKick(); if(bm('jump', k)){ socPlayerJump(); if(e.cancelable) e.preventDefault(); } }
+  if(bm('help', k) && play && !shopOpen && !e.repeat){   // ajuda de controles: abre o menu de pausa na aba CONTROLES; de novo volta ao jogo
+    if(e.cancelable) e.preventDefault();
+    if(settingsModal.style.display === 'flex'){ resumeGame(); }
+    else{ if(document.pointerLockElement) document.exitPointerLock(); openSettingsMenu(); switchSettingsTab('tabControls'); }
+  }
+  if(bm('interact', k)){ if(!fnafTryUse() && !testTryUse() && !zomUse()) trySwapWeapon(); }   // interagir (portas/luzes/arma do chão)
+  if(bm('quickswap', k) && play && !shopOpen && menuOff) quickSwapWeapon();
+  if(menuOff){
+    Object.keys(WEAPON_CONFIG).forEach(wId => {
+      if(bm('w:' + wId, k) && player.unlockedWeapons[wId] && player.weapon !== wId){ SFX.menuSelect(); switchWeapon(wId); }
+    });
+  }
+}
+
 window.addEventListener('keydown', e => {
   // Ignora a troca de modo de controle se o usuário estiver digitando em campos de texto
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
   const k = e.key.toLowerCase();
   keys[k] = true;
-  if (!usingKeyboardMouse) { 
-    usingKeyboardMouse = true; 
-    usingTouch = false; 
-    applyControlScheme(); 
+  if (!usingKeyboardMouse) {
+    usingKeyboardMouse = true;
+    usingTouch = false;
+    applyControlScheme();
   }
-  if(k === 'r' && player.weapon !== 'gravgun') reloadWeapon();   // R = recarregar (agarrar/soltar da Gravity Gun fica só no botão direito do mouse)
-  if(k === 'b' && started && !gameOver) shopToggle();
-  if(k === 'v' && started && !gameOver && settingsModal.style.display !== 'flex') cycleFireMode();   // V = modo de tiro (auto / semi / rajada)
-  if(k === 'z' && started && !gameOver && settingsModal.style.display !== 'flex') toggleScope();   // Z = zoom da sniper (alternativa)
   if(k === 'escape' && shopOpen){ e.preventDefault(); shopClose(); return; }   // ESC fecha a loja e devolve o controle do mouse
-  if((k === 'c' || k === 'home') && started && !gameOver && settingsModal.style.display !== 'flex') recenterCam();
+  if(bm('fire', k) && started && !gameOver && !shopOpen && !chatOpen && settingsModal.style.display !== 'flex' && !e.repeat){ fireHeld = true; tryFire(); }   // tiro ligado a uma tecla
+  bindPress(k, e);
   if(k === 'pageup' || k === 'pagedown') e.preventDefault();
-  if(started && !gameOver && settingsModal.style.display !== 'flex'){ if(soc && k === 'f') socPlayerKick(); if(k === ' '){ socPlayerJump(); e.preventDefault(); } }
-  if(k === 'h' && started && !gameOver && !shopOpen && !e.repeat){   // H = ajuda de controles (teclado/mouse): abre o menu de pausa na aba CONTROLES; H de novo volta ao jogo
-    e.preventDefault();
-    if(settingsModal.style.display === 'flex'){ resumeGame(); }
-    else{ if(document.pointerLockElement) document.exitPointerLock(); openSettingsMenu(); switchSettingsTab('tabControls'); }
-  }
-  if(k === 'e'){ if(!fnafTryUse() && !testTryUse() && !zomUse()) trySwapWeapon(); }   // E = interagir (portas/luzes/arma do chão)
-  if(k === 'q' && started && !gameOver && !shopOpen && settingsModal.style.display !== 'flex') quickSwapWeapon();   // Q = volta à arma anterior
   if(k === 'escape') {
     e.preventDefault();
     if(settingsModal.style.display === 'flex' && started && !gameOver){ resumeGame(); }   // ESC de novo = volta ao jogo (e recaptura o mouse)
@@ -13739,13 +13854,8 @@ window.addEventListener('keydown', e => {
       openSettingsMenu();
     }
   }
-  if (settingsModal.style.display !== 'flex') {
-    Object.keys(WEAPON_CONFIG).forEach(wId => {
-      if(e.key === WEAPON_CONFIG[wId].key && player.unlockedWeapons[wId] && player.weapon !== wId){ SFX.menuSelect(); switchWeapon(wId); }
-    });
-  }
 });
-window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
+window.addEventListener('keyup', e=>{ const k = e.key.toLowerCase(); keys[k] = false; if(bm('fire', k) && !bHeld('fire')) fireHeld = false; });
 
 // Anti-"câmera virando sozinha": o navegador (principalmente Chrome/Windows) às vezes entrega um
 // movementX gigante e falso num único evento, e o delta acumulado enquanto o jogo não está rodando
@@ -13766,19 +13876,20 @@ window.addEventListener('mousemove', e=>{
 });
 window.addEventListener('contextmenu', e=>{ if(started && (player.weapon === 'gravgun' || SCOPE_WEAPONS[player.weapon])) e.preventDefault(); });
 window.addEventListener('mousedown', e=>{
-  if(e.button === 2 && started && !gameOver && player.weapon === 'gravgun' && document.pointerLockElement === document.getElementById('screen')){
-    e.preventDefault(); ggSecondary(); return;   // botão direito = agarrar / soltar
-  }
-  if(e.button === 2 && started && !gameOver && SCOPE_WEAPONS[player.weapon] && document.pointerLockElement === document.getElementById('screen')){
-    e.preventDefault(); toggleScope(); return;   // botão direito = zoom da sniper
-  }
-  if(started && !gameOver && document.pointerLockElement===document.getElementById('screen')){
-    fireHeld = true; tryFire();
+  const t = 'mouse' + e.button;
+  keys[t] = true;
+  const locked = document.pointerLockElement === document.getElementById('screen');
+  if(started && !gameOver && locked){
+    if(bm('aim', t) && player.weapon === 'gravgun'){ e.preventDefault(); ggSecondary(); return; }   // agarrar / soltar
+    if(bm('aim', t) && SCOPE_WEAPONS[player.weapon]){ e.preventDefault(); toggleScope(); return; }   // zoom da sniper
+    if(bm('fire', t)){ fireHeld = true; tryFire(); }
+    if(e.button >= 1) e.preventDefault();
+    if(settingsModal.style.display !== 'flex') bindPress(t, e);   // outras ações ligadas a botões do mouse
   } else if(started && !gameOver && !e.target.closest('#weaponIconBar') && !e.target.closest('#menuBtn') && !e.target.closest('#shopBtn') && !e.target.closest('#shopModal') && !e.target.closest('#touchLayer') && !e.target.closest('#chatWrap') && !e.target.closest('#chatBtn') && !e.target.closest('#dzVk') && !e.target.closest('.overlay-screen')){
     requestPointerLockSafe();
   }
 });
-window.addEventListener('mouseup', ()=>{ fireHeld=false; });
+window.addEventListener('mouseup', e=>{ keys['mouse' + e.button] = false; if(!bHeld('fire')) fireHeld = false; });
 // Roda do mouse = arma anterior / próxima (o mesmo que LB / RB no controle). Só durante a partida, com o mouse travado.
 let wheelWpnT = 0;
 window.addEventListener('wheel', e => {
@@ -13959,7 +14070,7 @@ function quickSwapWeapon(){
 function useKeyLabel(){
   if(usingTouch || window.dzBtnHelp === false) return '';
   if(usingGamepad) return '[' + (gpIsPS ? '△' : 'Y') + '] ';
-  return '[E] ';
+  return '[' + bindTokName(bindTokens('interact')[0] || 'e') + '] ';
 }
 function cycleWeapon(dir){
   const ids = Object.keys(WEAPON_CONFIG).filter(id => player.unlockedWeapons[id]);
@@ -14576,6 +14687,7 @@ const dbgTestLevelBtn = document.getElementById('dbgTestLevelBtn');
 
 // --- Tabbed pause menu ---
 function switchSettingsTab(tabId) {
+  if(tabId === 'tabControls'){ try{ window.bindRender && window.bindRender(); }catch(e){} }
   document.querySelectorAll('#settingsTabRow .tab-btn').forEach(b => {
     b.classList.toggle('active', b.getAttribute('data-tab') === tabId);
   });
@@ -14583,6 +14695,59 @@ function switchSettingsTab(tabId) {
     p.classList.toggle('active', p.id === tabId);
   });
 }
+
+/* ----- tela REMAPEAR (aba CONTROLES) ----- */
+(function(){
+  const list = document.getElementById('bindList'), wl = document.getElementById('bindWpnList');
+  if(!list) return;
+  const T = (pt, en) => LTX(pt, en);
+  let listeningId = null;
+  function row(id, label){
+    const r = document.createElement('div'); r.className = 'bind-row';
+    const sp = document.createElement('span'); sp.textContent = label;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'bind-btn'; b.dataset.bid = id;
+    if(listeningId === id){ b.classList.add('listening'); b.textContent = T('APERTE UMA TECLA…', 'PRESS A KEY…'); } else b.textContent = bindLabel(id);
+    r.appendChild(sp); r.appendChild(b); return r;
+  }
+  window.bindRender = function(){
+    list.textContent = ''; wl.textContent = '';
+    BIND_DEFS.forEach(d => list.appendChild(row(d.id, T(d.pt, d.en))));
+    Object.keys(WEAPON_CONFIG).forEach(w => wl.appendChild(row('w:' + w, (WEAPON_CONFIG[w] && WEAPON_CONFIG[w].name) || w)));
+    document.getElementById('bindTitle').textContent = T('REMAPEAR TECLADO / MOUSE', 'REBIND KEYBOARD / MOUSE');
+    document.getElementById('bindHint').textContent = T('Clique numa ação e aperte a nova tecla ou botão do mouse (ESC cancela). Se a tecla já estiver em uso, as duas ações trocam de lugar. Fica salvo neste aparelho.', 'Click an action, then press the new key or mouse button (ESC cancels). If the key is already used, the two actions swap. Saved on this device.');
+    document.getElementById('bindWpnSum').textContent = T('ATALHOS DAS ARMAS', 'WEAPON SHORTCUTS');
+    document.getElementById('bindReset').textContent = T('RESTAURAR PADRÃO', 'RESTORE DEFAULTS');
+    bindRefreshStatic();
+  };
+  window.bindRefreshStatic = function(){
+    const L = id => bindLabel(id);
+    const first = id => { const a = bindTokens(id); return a.length ? bindTokName(a[0]) : '—'; };
+    const map = {
+      move: [first('forward'), first('left'), first('back'), first('right')].join(' '),
+      turn: 'MOUSE ↔ / ' + first('turnleft') + ' ' + first('turnright'),
+      look: 'MOUSE ↕ / ' + first('lookup') + ' ' + first('lookdown'),
+      fire1: L('fire'), aimscope: L('aim') + ' / ' + L('scope'),
+      shopclose: L('shop') + ' / ESC'
+    };
+    document.querySelectorAll('[data-bshow]').forEach(el => {
+      const k = el.dataset.bshow; el.textContent = map[k] !== undefined ? map[k] : L(k);
+    });
+  };
+  function onClick(e){
+    const b = e.target.closest('.bind-btn'); if(!b) return;
+    const id = b.dataset.bid;
+    if(bindListen){ bindListen = null; }
+    listeningId = id; window.bindRender();
+    bindCaptureStart(tok => {
+      listeningId = null;
+      if(tok){ bindAssign(id, tok); try{ SFX.menuAccept(); }catch(x){} }
+      window.bindRender();
+    });
+  }
+  list.addEventListener('click', onClick); wl.addEventListener('click', onClick);
+  document.getElementById('bindReset').addEventListener('click', () => { bindListen = null; listeningId = null; bindResetAll(); window.bindRender(); try{ SFX.menuSelect(); }catch(x){} });
+  window.bindRender();
+})();
 /* ponte para o estilo Windows XP (script separado, fora deste escopo): sons, música do menu, aba e idioma */
 window.dzGame = {
   sfx: function(k){ try{ SFX[k](); }catch(e){} },
@@ -17070,14 +17235,14 @@ function updatePlayer(dt){
 
   let turn=0, moveF=0, strafe=0;
   if(usingKeyboardMouse || (!usingTouch)){
-    if(keys['arrowleft']) turn -= player.turnSpeed*dt;
-    if(keys['arrowright']) turn += player.turnSpeed*dt;
-    if(keys['a']) strafe -= 1;
-    if(keys['d']) strafe += 1;
-    if(keys['w']||keys['arrowup']) moveF += 1;
-    if(keys['s']||keys['arrowdown']) moveF -= 1;
-    if(keys['pageup'])   lookPitch( 0.9*dt*pitchSens);   // olhar para cima
-    if(keys['pagedown']) lookPitch(-0.9*dt*pitchSens);   // olhar para baixo
+    if(bHeld('turnleft')) turn -= player.turnSpeed*dt;
+    if(bHeld('turnright')) turn += player.turnSpeed*dt;
+    if(bHeld('left')) strafe -= 1;
+    if(bHeld('right')) strafe += 1;
+    if(bHeld('forward')) moveF += 1;
+    if(bHeld('back')) moveF -= 1;
+    if(bHeld('lookup'))   lookPitch( 0.9*dt*pitchSens);   // olhar para cima
+    if(bHeld('lookdown')) lookPitch(-0.9*dt*pitchSens);   // olhar para baixo
     if(pointerLocked && settingsModal.style.display !== 'flex'){ turn += Math.max(-0.6, Math.min(0.6, mouseDX * 0.0028 * mouseSensitivity * scopeSensMul)); mouseDX=0; lookPitch(-Math.max(-60, Math.min(60, mouseDY)) * 0.0011 * mouseSensitivity * scopeSensMul * pitchSens * (invertY ? -1 : 1)); mouseDY=0; }
   }
   if(usingTouch && settingsModal.style.display !== 'flex'){
@@ -22476,6 +22641,7 @@ window.dzEmuFx = { register, on, off, panel, refresh: refreshPanels, setTheme, s
             <button type="button" class="gbab" id="gbaEmuRestart" style="display:none"></button>
             <button type="button" class="gbab" id="gbaEmuBar" style="display:none"></button>
             <button type="button" class="gbab" id="gbaHelpBtn">❓ AJUDA</button>
+            <button type="button" class="gbab" id="gbaKeysBtn">⌨ REMAPEAR</button>
             <button type="button" class="gbab" id="gbaSaveOut">💾 BAIXAR SAVE</button>
             <button type="button" class="gbab" id="gbaSaveIn">📥 ENVIAR SAVE</button>
             <button type="button" class="gbab" id="gbaStateOut">⬇ BAIXAR ESTADO</button>
@@ -22653,6 +22819,51 @@ let userPaused = false, emuBarOn = false;   /* pausa e barra de opções do Emul
 let padIgnore = 0, padFirst = false;   /* botões já apertados ao abrir o jogo (ex.: o A que escolheu a ROM) só valem depois de soltos */
 const root = document.documentElement;
 
+/* ---- REMAPEAR TECLADO / MOUSE (consoles com botões do app: GBA, NES, GB, GBC, SNES, Mega Drive, Master System...) ----
+   O mapa de teclas de cada console (sys.keys: código da tecla -> botão) é recalculado a partir do padrão (sys.defKeys) + o que o jogador mudou.
+   Códigos de mouse: Mouse0 (esq.), Mouse1 (meio), Mouse2 (dir.), Mouse3 / Mouse4 (laterais). N64 / PS1 usam o remapeador do próprio EmulatorJS. */
+const EK_KEY = 'dz_emukeys_v1';
+let EK_USER = {};
+try{ EK_USER = JSON.parse(localStorage.getItem(EK_KEY) || '{}') || {}; }catch(e){ EK_USER = {}; }
+const EK_RESERVED = { Escape:1, KeyF:1, KeyH:1, F1:1, F5:1, F9:1 };   /* teclas fixas do app (voltar, tela cheia, ajuda, salvar/carregar rápido) */
+const EK_BITNAME = { 0:'B', 1:'Y', 2:'SELECT', 3:'START', 4:'↑', 5:'↓', 6:'←', 7:'→', 8:'A', 9:'X', 10:'L', 11:'R' };
+const EK_ORDER = [4, 5, 6, 7, 8, 0, 9, 1, 10, 11, 3, 2];
+function ekBitName(sys, bit){ if(bit === 2 && sys.sel) return sys.sel; return (sys.labels && sys.labels[bit]) || EK_BITNAME[bit] || String(bit); }
+function ekName(c){
+  if(/^Mouse\d$/.test(c)) return [tr('CLIQUE ESQ.', 'LEFT CLICK'), tr('CLIQUE MEIO', 'MIDDLE CLICK'), tr('CLIQUE DIR.', 'RIGHT CLICK'), tr('MOUSE LATERAL 1', 'MOUSE SIDE 1'), tr('MOUSE LATERAL 2', 'MOUSE SIDE 2')][+c.slice(5)] || c;
+  const m = { ArrowUp:'↑', ArrowDown:'↓', ArrowLeft:'←', ArrowRight:'→', Space:tr('ESPAÇO', 'SPACE'), Enter:'ENTER', NumpadEnter:'NUM ENTER', Backspace:'BACKSPACE', ShiftLeft:'SHIFT ESQ.', ShiftRight:'SHIFT DIR.', ControlLeft:'CTRL ESQ.', ControlRight:'CTRL DIR.', AltLeft:'ALT ESQ.', AltRight:'ALT DIR.', Tab:'TAB' };
+  return m[c] || c.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'NUM ');
+}
+const ekCodes = (sys, bit) => Object.keys(sys.keys).filter(c => sys.keys[c] === +bit);
+function ekBits(sys){ const have = {}; Object.keys(sys.defKeys || {}).forEach(c => { have[sys.defKeys[c]] = 1; }); return EK_ORDER.filter(b => have[b]); }
+function ekApply(sys){
+  if(sys.native || !sys.defKeys) return;
+  const u = EK_USER[sys.id] || {}, by = {}, out = {};
+  Object.keys(sys.defKeys).forEach(c => { (by[sys.defKeys[c]] = by[sys.defKeys[c]] || []).push(c); });
+  Object.keys(by).forEach(b => { const codes = (u[b] !== undefined) ? (u[b] ? [u[b]] : []) : by[b]; codes.forEach(c => { out[c] = +b; }); });
+  sys.keys = out;
+  sys.customKeys = Object.keys(u).length > 0;
+  if(sys.customKeys){
+    const txt = ekBits(sys).map(b => (ekCodes(sys, b)[0] ? ekName(ekCodes(sys, b)[0]) : '—') + ' = ' + ekBitName(sys, b)).join(' · ');
+    sys.keyTxt = [txt + ' · F = tela cheia · Esc = voltar', txt + ' · F = fullscreen · Esc = back'];
+  } else sys.keyTxt = sys.defKeyTxt;
+}
+function ekSave(){ try{ localStorage.setItem(EK_KEY, JSON.stringify(EK_USER)); }catch(e){} }
+/* dá o código "code" ao botão "bit"; se outro botão já usava, ele fica com o código antigo deste (troca) */
+function ekAssign(sys, bit, code){
+  const u = EK_USER[sys.id] = EK_USER[sys.id] || {};
+  const prim = ekCodes(sys, bit)[0];
+  Object.keys(sys.keys).forEach(c => {
+    if(c !== code || sys.keys[c] === +bit) return;
+    const b2 = sys.keys[c], rest = ekCodes(sys, b2).filter(x => x !== code);
+    u[b2] = rest.length ? rest[0] : ((prim && prim !== code) ? prim : '');
+  });
+  u[bit] = code;
+  ekSave(); ekApply(sys);
+}
+function ekReset(sys){ delete EK_USER[sys.id]; ekSave(); ekApply(sys); }
+Object.keys(SYSTEMS).forEach(id => { const sy = SYSTEMS[id]; if(!sy.native){ sy.defKeys = Object.assign({}, sy.keys); sy.defKeyTxt = sy.keyTxt; ekApply(sy); } });
+
 /* ---- som do jogo: mudo enquanto o emulador está aberto ---- */
 function muteGame(){
   if(gameMuted) return; gameMuted = true;
@@ -22718,6 +22929,7 @@ function labels(){
   $('gbaMenuBtn').textContent = '☰ ' + tr('JOGOS', 'GAMES');
   $('gbaPadBtn').textContent = '🕹 ' + tr('CONTROLES', 'CONTROLS');
   $('gbaHelpBtn').textContent = '❓ ' + tr('AJUDA', 'HELP');
+  $('gbaKeysBtn').textContent = '⌨ ' + tr('REMAPEAR TECLAS / MOUSE', 'REBIND KEYS / MOUSE');
   $('gbaClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
   try{ moreLabels(); }catch(e){}
   try{ psxModeLabel(); }catch(e){}
@@ -22877,6 +23089,12 @@ function padLoop(){
 /* teclado (PC) */
 function onKey(e){
   if(!isOpen()) return;
+  if(remapListen){   /* tela REMAPEAR esperando uma tecla: Esc cancela */
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(e.type === 'keydown' && !e.repeat) remapDone(e.code);
+    return;
+  }
+  if(helpOpen && !isPlaying() && e.type === 'keydown' && (e.key === 'Escape' || e.code === 'KeyH' || e.code === 'F1')){ e.preventDefault(); e.stopImmediatePropagation(); toggleHelp(); return; }   /* painel aberto fora do jogo: Esc fecha */
   if(e.type === 'keydown' && fsWant && isPlaying() && e.key !== 'Escape' && e.isTrusted) enterFs();   /* a tela cheia foi negada sem clique: tenta de novo com esta tecla */
   if(isPlaying()){
     const down = e.type === 'keydown';
@@ -23306,7 +23524,7 @@ async function diagNet(useAlt){
 window.dzEmuErr = m => { try{ if(isPlaying()) exitHint('⚠ ' + String(m).slice(0, 160), 0); }catch(e){} };
 
 /* ---- AJUDA DE BOTÕES (❓): teclado, controle e toque do console aberto. Pausa o jogo enquanto aberta ---- */
-let helpOpen = false, helpPC = false, helpPB = false;
+let helpOpen = false, helpPC = false, helpPB = false, helpView = 'help', remapListen = null, remapT0 = 0;
 const helpEl = document.createElement('div'); helpEl.id = 'gbaHelpPanel'; helpEl.style.display = 'none'; ov.appendChild(helpEl);
 (function(){
   const st = document.createElement('style');
@@ -23319,16 +23537,16 @@ const helpEl = document.createElement('div'); helpEl.id = 'gbaHelpPanel'; helpEl
   document.head.appendChild(st);
 })();
 function helpRows(){
-  const L = cur.labels || {}, nm = bit => L[bit] || ({ 0:'B', 1:'Y', 8:'A', 9:'X', 10:'L', 11:'R' })[bit] || String(bit);
+  const L = cur.labels || {}, nm = bit => L[bit] || ({ 0:'B', 1:'Y', 8:'A', 9:'X', 10:'L', 11:'R', 4:'↑', 5:'↓', 6:'←', 7:'→' })[bit] || String(bit);
   const dirs = [['Setas', 'Arrows']];
   /* teclado */
   const kb = [];
   if(cur.native){ kb.push([tr('Teclado e controle', 'Keyboard and gamepad'), tr('controles padrão do próprio emulador', 'the emulator default controls')]); }
   else{
-    kb.push([tr('Setas', 'Arrow keys'), tr('Direcional', 'D-pad')]);
-    const nice = c => c.replace(/^Key/, '');
+    if(!cur.customKeys) kb.push([tr('Setas', 'Arrow keys'), tr('Direcional', 'D-pad')]);
+    const nice = c => ekName(c);
     Object.keys(cur.keys).forEach(c => {
-      if(/^Arrow/.test(c) || c === 'NumpadEnter') return;
+      if((/^Arrow/.test(c) && !cur.customKeys) || c === 'NumpadEnter') return;
       const b = cur.keys[c], lab = c === 'Enter' ? 'START' : (c === 'Backspace' ? cur.sel : nm(b));
       kb.push([c === 'Backspace' ? 'Backspace' : nice(c), lab]);
     });
@@ -23353,18 +23571,106 @@ function helpRows(){
   return [['⌨️ ' + tr('TECLADO (PC)', 'KEYBOARD (PC)'), kb], ['🎮 ' + tr('CONTROLE (CONSOLE / PC)', 'GAMEPAD (CONSOLE / PC)'), pad], ['📱 ' + tr('TOQUE (ANDROID / CELULAR)', 'TOUCH (ANDROID / PHONE)'), tc]];
 }
 function paintHelp(){
+  if(helpView === 'remap') return paintRemap();
   const esc2 = t => String(t).replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' })[c]);
   helpEl.innerHTML = '<div class="hw"><h2>❓ ' + esc2(tr('AJUDA DE BOTÕES', 'BUTTON HELP')) + ' · ' + esc2(cur.name) + '</h2>' +
     helpRows().map(sec => '<h3>' + esc2(sec[0]) + '</h3>' + sec[1].map(r => '<div class="hr2"><b>' + esc2(r[0]) + '</b><span>' + esc2(r[1]) + '</span></div>').join('')).join('') +
+    '<button type="button" class="hx" id="gbaHelpRemap">⌨ ' + esc2(tr('REMAPEAR TECLAS / MOUSE', 'REBIND KEYS / MOUSE')) + '</button>' +
     '<button type="button" class="hx" id="gbaHelpX">✕ ' + esc2(tr('FECHAR (B / Esc)', 'CLOSE (B / Esc)')) + '</button></div>';
   $('gbaHelpX').addEventListener('click', () => toggleHelp());
+  $('gbaHelpRemap').addEventListener('click', () => { helpView = 'remap'; paintHelp(); });
 }
 function toggleHelp(){
-  if(!isPlaying() && !helpOpen) return;
+  if(!isPlaying() && !helpOpen && helpView !== 'remap') return;
   helpOpen = !helpOpen;
   if(helpOpen){ releaseAll(); paintHelp(); helpEl.style.display = 'block'; loopPause(true); exitHintHide(); }
-  else{ helpEl.style.display = 'none'; loopPause(false); try{ frame.blur(); window.focus(); }catch(e){} }
+  else{ helpView = 'help'; remapListen = null; helpEl.style.display = 'none'; loopPause(false); try{ frame.blur(); window.focus(); }catch(e){} }
 }
+function openRemap(){ helpView = 'remap'; if(helpOpen) paintHelp(); else toggleHelp(); }
+$('gbaKeysBtn').addEventListener('click', () => openRemap());
+
+/* ---- REMAPEAR: vista dentro do painel (consoles com botões do app) ---- */
+(function(){
+  const st = document.createElement('style');
+  st.textContent = '#gbaHelpPanel .rk{flex:1;font:inherit;font-weight:700;letter-spacing:.5px;color:#e8b93a;background:#17130b;border:1px solid #6a4bd8;border-radius:6px;padding:6px 10px;cursor:var(--xc-link);min-height:34px}' +
+    '#gbaHelpPanel .rk.on{background:#6a4bd8;color:#fff;animation:rkBlink .8s infinite alternate}#gbaHelpPanel .rkn{margin:6px 0 10px;font-size:13px;opacity:.85;line-height:1.45}' +
+    '@keyframes rkBlink{from{opacity:1}to{opacity:.6}}';
+  document.head.appendChild(st);
+})();
+function remapDone(code){
+  const L = remapListen; remapListen = null;
+  if(L && code && code !== 'Escape'){
+    if(EK_RESERVED[code]){ exitHint(tr('Esta tecla é fixa do app (Esc, F, H, F1, F5, F9). Escolha outra.', 'This key is reserved by the app (Esc, F, H, F1, F5, F9). Pick another.'), 0); $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer); hintTimer = setTimeout(exitHintHide, 2500); }
+    else { ekAssign(cur, L.bit, code); snd('menuAccept'); }
+  }
+  paintRemap();
+}
+/* consoles nativos (N64, PS1...): abre o remapeador do próprio EmulatorJS (guarda as mudanças sozinho) */
+function ejsOpenControls(){
+  try{
+    const d = frame.contentDocument;
+    const btns = Array.from(d.querySelectorAll('.ejs_menu_bar button, .ejs_menu_bar [role="button"], .ejs_menu_button'));
+    const b = btns.find(x => /control/i.test((x.textContent || '') + ' ' + (x.title || '') + ' ' + (x.getAttribute('aria-label') || '')));
+    if(b){ b.click(); try{ frame.focus(); frame.contentWindow.focus(); }catch(e){} return true; }
+  }catch(e){}
+  return false;
+}
+function paintRemap(){
+  const esc2 = t => String(t).replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' })[c]);
+  let h = '<div class="hw"><h2>⌨ ' + esc2(tr('REMAPEAR TECLAS / MOUSE', 'REBIND KEYS / MOUSE')) + ' · ' + esc2(cur.name) + '</h2>';
+  if(cur.native){
+    h += '<div class="rkn">' + esc2(isPlaying()
+      ? tr('Este console usa o remapeador do próprio emulador (teclado e controle). Toque no botão abaixo, clique no campo do botão que quer trocar e aperte a nova tecla. As mudanças ficam salvas pelo emulador.',
+           'This console uses the emulator’s own remapper (keyboard and gamepad). Tap the button below, click the field of the button you want to change and press the new key. Changes are saved by the emulator.')
+      : tr('Abra um jogo deste console para remapear: ele usa o remapeador do próprio emulador (teclado e controle).', 'Open a game on this console to rebind: it uses the emulator’s own remapper (keyboard and gamepad).')) + '</div>';
+    if(isPlaying()) h += '<button type="button" class="hx" id="gbaEjsKeys">🎮 ' + esc2(tr('ABRIR CONTROLES DO EMULADOR', 'OPEN EMULATOR CONTROLS')) + '</button>';
+  } else {
+    h += '<div class="rkn">' + esc2(tr('Clique num botão e aperte a nova tecla ou botão do mouse (Esc cancela). Se a tecla já estiver em uso, os dois botões trocam de lugar. Fixas do app: Esc, F, H, F1, F5, F9. Fica salvo neste aparelho.',
+      'Click a button, then press the new key or mouse button (Esc cancels). If the key is already used, the two buttons swap. Reserved by the app: Esc, F, H, F1, F5, F9. Saved on this device.')) + '</div>';
+    ekBits(cur).forEach(b => {
+      const on = remapListen && remapListen.bit === b, c = ekCodes(cur, b)[0];
+      h += '<div class="hr2"><b>' + esc2(ekBitName(cur, b)) + '</b><button type="button" class="rk' + (on ? ' on' : '') + '" data-bit="' + b + '">' + esc2(on ? tr('APERTE UMA TECLA…', 'PRESS A KEY…') : (c ? ekName(c) : '—')) + '</button></div>';
+    });
+    h += '<button type="button" class="hx" id="gbaRkReset">↺ ' + esc2(tr('RESTAURAR PADRÃO', 'RESTORE DEFAULTS')) + '</button>';
+  }
+  h += '<button type="button" class="hx" id="gbaRkBack">← ' + esc2(tr('VOLTAR À AJUDA', 'BACK TO HELP')) + '</button>' +
+       '<button type="button" class="hx" id="gbaHelpX">✕ ' + esc2(tr('FECHAR (B / Esc)', 'CLOSE (B / Esc)')) + '</button></div>';
+  helpEl.innerHTML = h;
+  $('gbaHelpX').addEventListener('click', () => toggleHelp());
+  $('gbaRkBack').addEventListener('click', () => { remapListen = null; helpView = 'help'; paintHelp(); });
+  const rs = $('gbaRkReset'); if(rs) rs.addEventListener('click', () => { remapListen = null; ekReset(cur); snd('menuSelect'); paintRemap(); });
+  const ej = $('gbaEjsKeys');
+  if(ej) ej.addEventListener('click', () => {
+    toggleHelp();
+    setTimeout(() => {
+      if(!ejsOpenControls()){ emuBarOn = true; try{ emuBarApply(); }catch(e){} exitHint(tr('Abra o ícone de controles na barra do emulador (embaixo).', 'Open the controls icon on the emulator bar (bottom).'), 0); $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer); hintTimer = setTimeout(exitHintHide, 5000); }
+    }, 120);
+  });
+  helpEl.querySelectorAll('.rk').forEach(btn => btn.addEventListener('click', () => { remapListen = { bit:+btn.dataset.bit }; remapT0 = performance.now(); paintRemap(); }));
+}
+/* botão do mouse como botão do console: durante a captura (tela REMAPEAR) e durante o jogo */
+window.addEventListener('mousedown', e => {
+  if(!isOpen()) return;
+  if(remapListen){
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(performance.now() - remapT0 < 250) return;
+    const sw = ev => { ev.stopImmediatePropagation(); ev.preventDefault(); }; window.addEventListener('click', sw, true); setTimeout(() => window.removeEventListener('click', sw, true), 350);
+    remapDone('Mouse' + e.button); return;
+  }
+  if(!isPlaying() || helpOpen || cur.native) return;
+  const i = cur.keys['Mouse' + e.button];
+  if(i === undefined) return;
+  if(!$('gbaScreen').contains(e.target) || e.target.closest('#gbaPad')) return;   /* só na área do jogo (não nos botões da tela) */
+  e.preventDefault(); e.stopImmediatePropagation();
+  src.key |= (1 << i); ov.classList.remove('showpad'); sync();
+}, true);
+window.addEventListener('mouseup', e => {
+  if(!isOpen() || !isPlaying() || cur.native) return;
+  const i = cur.keys['Mouse' + e.button];
+  if(i === undefined) return;
+  src.key &= ~(1 << i); sync();
+}, true);
+window.addEventListener('contextmenu', e => { if(isOpen() && (remapListen || (isPlaying() && !cur.native && cur.keys.Mouse2 !== undefined && $('gbaScreen').contains(e.target)))) e.preventDefault(); }, true);
 $('gbaHelpBtn').addEventListener('click', () => toggleHelp());
 function playFile(f){
   if(!f) return;
