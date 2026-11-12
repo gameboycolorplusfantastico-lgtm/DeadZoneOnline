@@ -23072,6 +23072,61 @@ $('gbaEmuRestart').addEventListener('click', () => {
   if(typeof window.dzAsk === 'function') window.dzAsk(tr('Reiniciar o jogo? O que não foi salvo se perde.', 'Restart the game? Anything unsaved is lost.'), null, ok => { if(ok) go(); }, 'confirm');
   else go();
 });
+/* ===== N64: o EmulatorJS desenha DOIS círculos (cruzeta digital + analógico). Fica só UM analógico, o do controle de verdade ===== */
+function n64Pad(doc){
+  if(!doc || !doc.body || doc.__dzN64) return;
+  if(!(window.matchMedia && matchMedia('(pointer:coarse)').matches)) return;
+  doc.__dzN64 = true;
+  const win = doc.defaultView;
+  const send = (i, v) => { try{ const g = win.EJS_emulator && win.EJS_emulator.gameManager; if(g && typeof g.simulateInput === 'function') g.simulateInput(0, i, v); }catch(e){} };
+  /* some as duas zonas redondas do EmulatorJS (elas também param de receber toque) */
+  const hideZones = () => doc.querySelectorAll('.nipple').forEach(n => { const z = n.parentElement; if(z && !(z.textContent || '').trim() && z.style.display !== 'none') z.style.setProperty('display', 'none', 'important'); });
+  hideZones(); [300, 1000, 2500].forEach(ms => setTimeout(hideZones, ms));
+  try{ new win.MutationObserver(hideZones).observe(doc.body, { childList:true, subtree:true }); }catch(e){}
+  const st = doc.createElement('style');
+  st.textContent = '#dzpRoot{position:fixed;inset:0;z-index:50;pointer-events:none;-webkit-user-select:none;user-select:none;touch-action:none}' +
+    '#dzpSt{position:absolute;pointer-events:auto;touch-action:none;box-sizing:border-box;border-radius:50%;background:rgba(30,30,30,.5);border:2px solid rgba(255,255,255,.55);-webkit-tap-highlight-color:transparent}' +
+    '#dzpKn{position:absolute;width:46%;height:46%;left:27%;top:27%;border-radius:50%;background:rgba(255,255,255,.55);border:2px solid rgba(255,255,255,.8);pointer-events:none}' +
+    '#dzpDp{position:absolute;pointer-events:auto;touch-action:none;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr)}' +
+    '.dzc{box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:rgba(30,30,30,.62);border:2px solid rgba(255,255,255,.55);border-radius:8px;color:#fff;font:800 2.6vh Arial,sans-serif}.dzc.on{background:rgba(106,75,216,.9);border-color:#fff}';
+  doc.head.appendChild(st);
+  const root = doc.createElement('div'); root.id = 'dzpRoot'; doc.body.appendChild(root);
+  const base = doc.createElement('div'); base.id = 'dzpSt';
+  Object.assign(base.style, { left:'2vw', bottom:'6vh', width:'28vh', height:'28vh' });
+  const kn = doc.createElement('div'); kn.id = 'dzpKn'; base.appendChild(kn); root.appendChild(base);
+  let spid = null;
+  const mag = v => Math.round(Math.min(1, Math.abs(v)) * 0x7fff);
+  const sSet = (x, y) => {
+    send(16, x > 0 ? mag(x) : 0); send(17, x < 0 ? mag(x) : 0); send(18, y > 0 ? mag(y) : 0); send(19, y < 0 ? mag(y) : 0);
+    kn.style.transform = 'translate(' + (x * 61) + '%,' + (y * 61) + '%)';
+  };
+  const sCalc = ev => {
+    const r = base.getBoundingClientRect(); let x = (ev.clientX - (r.left + r.width / 2)) / (r.width / 2), y = (ev.clientY - (r.top + r.height / 2)) / (r.height / 2);
+    const len = Math.hypot(x, y); if(len > 1){ x /= len; y /= len; }
+    if(len < .1){ x = 0; y = 0; } sSet(x, y);
+  };
+  base.addEventListener('pointerdown', ev => { if(spid !== null) return; ev.preventDefault(); spid = ev.pointerId; try{ base.setPointerCapture(spid); }catch(x){} sCalc(ev); });
+  base.addEventListener('pointermove', ev => { if(ev.pointerId === spid) sCalc(ev); });
+  const sOff = ev => { if(ev.pointerId !== spid) return; spid = null; sSet(0, 0); };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => base.addEventListener(t, sOff));
+  /* cruzeta pequena (digital: 4 a 7 do EmulatorJS) em cima do analógico; um dedo, aceita diagonal */
+  const dp = doc.createElement('div'); dp.id = 'dzpDp';
+  Object.assign(dp.style, { left:'calc(2vw + 3vh)', bottom:'36vh', width:'22vh', height:'22vh' });
+  const cells = { 1:['▲', 2, 1], 4:['◀', 1, 2], 8:['▶', 3, 2], 2:['▼', 2, 3] }, cellEl = {};
+  Object.keys(cells).forEach(k => { const c = cells[k], e = doc.createElement('div'); e.className = 'dzc'; e.style.gridColumn = c[1]; e.style.gridRow = c[2]; e.textContent = c[0]; dp.appendChild(e); cellEl[k] = e; });
+  root.appendChild(dp);
+  const dIdx = { 1:4, 2:5, 4:6, 8:7 }; let dirs = 0, dpid = null;
+  const dSet = m => { if(m === dirs) return; [1, 2, 4, 8].forEach(b => { if((m & b) !== (dirs & b)){ send(dIdx[b], (m & b) ? 1 : 0); cellEl[b].classList.toggle('on', !!(m & b)); } }); dirs = m; };
+  const dCalc = ev => {
+    const r = dp.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width - .5, y = (ev.clientY - r.top) / r.height - .5, ax = Math.abs(x), ay = Math.abs(y);
+    if(ax < .1 && ay < .1) return 0;
+    let m = 0; if(ay >= ax * .5 && ay > .06) m |= (y < 0 ? 1 : 2); if(ax >= ay * .5 && ax > .06) m |= (x < 0 ? 4 : 8); return m;
+  };
+  dp.addEventListener('pointerdown', ev => { if(dpid !== null) return; ev.preventDefault(); dpid = ev.pointerId; try{ dp.setPointerCapture(dpid); }catch(x){} dSet(dCalc(ev)); });
+  dp.addEventListener('pointermove', ev => { if(ev.pointerId === dpid) dSet(dCalc(ev)); });
+  const dOff = ev => { if(ev.pointerId !== dpid) return; dpid = null; dSet(0); };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => dp.addEventListener(t, dOff));
+}
 const NP_HIDE = /^(r[aá]pido|lento|fast|slow|quick|salvar r[aá]pido|carregar r[aá]pido)\b/i;
 const NP_NAME = { esq:'L', dir:'R', start:'START', select:'SELECT' };
 function nativePad(doc){
@@ -23097,7 +23152,7 @@ function onEmuReady(){
     frame.style.pointerEvents = '';
     try{ frame.focus(); if(frame.contentWindow) frame.contentWindow.focus(); }catch(e){}
     userPaused = false; emuBarOn = false; emuBarApply(); emuExtraLabels();
-    try{ if(cur.id === 'psx') psxPad(frame.contentDocument); }catch(e){}
+    try{ if(cur.id === 'psx') psxPad(frame.contentDocument); if(cur.id === 'n64') n64Pad(frame.contentDocument); }catch(e){}
     try{ nativePad(frame.contentDocument); }catch(e){}
     try{ localStorage.setItem('dz_gba_ready', '1'); }catch(e){}
     return;
@@ -23150,6 +23205,10 @@ function play(url, name, useAlt, healed, tryN){
   curGameName = name || 'game';
   menuFx(false);   /* entrou no jogo: para a música e a animação do menu */
   stop(); initPad(); regSw();
+  if(!tryN && (cur.id === 'psx' || cur.id === 'n64')){   /* aviso: esses jogos demoram para entrar (PS1 mais ainda) */
+    exitHint(tr('⏳ Jogos de N64 e PS1 (principalmente PS1) podem demorar para entrar no jogo. Aguarde, não feche.', '⏳ N64 and PS1 games (mostly PS1) can take a while to start. Please wait, do not close.'), 0);
+    $('gbaExitBar').style.width = '0%'; clearTimeout(hintTimer); hintTimer = setTimeout(exitHintHide, 15000);
+  }
   const cfg = { core:(useAlt && cur.alt) ? cur.alt : cur.core, url:(() => { try{ return new URL(url, location.href).href; }catch(e){ return url; } })(), name:name || 'game', cdn:EJS_CDN, native:!!cur.native, bios:'', vol:ecfg.vol, pad1:(cur.id === 'psx' && psxAnalog()) ? 'dualshock' : '' };
   const legacy = !!(window.DZ_CONSOLE && window.DZ_CONSOLE.legacy);   /* Xbox One / PS4: hardware fraco */
   /* sem barra/menus do EmulatorJS (menos DOM e menos CPU); em Xbox One/PS4 também frameskip automático e remoção de loops ociosos do mGBA */
@@ -23669,7 +23728,7 @@ SEL_ORDER.filter(id => SHOWN.indexOf(id) >= 0).forEach(id => (window.dzEmus = wi
    1) Em segundo plano: 6 s depois do Dead Zone carregar, um arquivo por vez e com o navegador ocioso.
    2) Ao abrir a aba EMULADORES: se ainda falta algo, o seletor mostra um pequeno "carregando" até terminar (dzEmuPrep.ensure).
    Os dois usam as mesmas requisições (nada é baixado duas vezes). Se um arquivo falhar, ignora e o jogo abre normal. */
-const EJS_CORE_FILE = { nes:'fceumm', gb:'gambatte', gbc:'gambatte', gba:'mgba', snes:'snes9x', md:'genesis_plus_gx', ms:'genesis_plus_gx' };
+const EJS_CORE_FILE = { nes:'fceumm', gb:'gambatte', gbc:'gambatte', gba:'mgba', snes:'snes9x', md:'genesis_plus_gx', ms:'genesis_plus_gx', psx:'pcsx_rearmed', n64:'mupen64plus_next' };
 function prepUrls(){
   const urls = [EJS_CDN + 'loader.js', EJS_CDN + 'emulator.min.js', EJS_CDN + 'emulator.min.css'], seen = {};
   SHOWN.forEach(id => { const c = EJS_CORE_FILE[id]; if(!c || seen[c]) return; seen[c] = 1; urls.push(EJS_CDN + 'cores/' + c + '-wasm.data'); });
@@ -23843,7 +23902,9 @@ function selfTest(onStatus){
   })();
   return testBusy;
 }
-window.dzEmuPrep = { ready: prepReady, ensure: prepEnsure, test: selfTest, tested: () => testPlan().every(t => testDone[t.core]) };
+const PREP_NAMES = { nes:'NES', ms:'MASTER SYSTEM', md:'MEGA DRIVE', gb:'GAME BOY', snes:'SNES', psx:'PS1', n64:'N64', gbc:'GB COLOR', gba:'GBA' };
+window.dzEmuPrep = { ready: prepReady, ensure: prepEnsure, test: selfTest, tested: () => testPlan().every(t => testDone[t.core]),
+  chips: () => SEL_ORDER.filter(id => SHOWN.indexOf(id) >= 0).map(id => { const f = EJS_CORE_FILE[id]; return { icon:SYSTEMS[id].icon || '', name:PREP_NAMES[id] || SYSTEMS[id].name, ok:!f || !!prepSettled[EJS_CDN + 'cores/' + f + '-wasm.data'] }; }) };
 function preloadEmus(){
   try{
     const nc = navigator.connection;
@@ -23959,6 +24020,7 @@ function showTest(st){
     : tr('— ligando para confirmar que funciona (só na primeira vez).', '— starting to confirm it works (first time only).'));
   $('emuPrepBar').firstChild.style.width = Math.max(6, Math.round(100 * ((st.idx - 1) + (st.step - 1) / st.of) / st.total)) + '%';
   const rb = $('emuPrepRetry'); if(rb) rb.style.display = 'none';
+  prepChips();
 }
 function showTestFail(P, tok, failed, why){
   if(!$('emuPrep')) showPrep(1, 1);
@@ -23984,6 +24046,24 @@ function runTest(P, tok){
   });
 }
 let prepTok = 0;
+/* lista de consoles na tela de preparo: ✓ quando o núcleo dele já foi baixado (a lista vem de window.dzEmuPrep.chips) */
+function prepChips(){
+  const w = $('emuPrep'); if(!w) return;
+  let items = []; try{ items = (window.dzEmuPrep && window.dzEmuPrep.chips) ? window.dzEmuPrep.chips() : []; }catch(e){}
+  let l = $('emuPrepList');
+  if(!l){
+    l = document.createElement('div'); l.id = 'emuPrepList';
+    l.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0 4px';
+    const sk = $('emuPrepSkip'); if(sk) w.insertBefore(l, sk); else w.appendChild(l);
+  }
+  l.innerHTML = '';
+  items.forEach(it => {
+    const c = document.createElement('span');
+    c.style.cssText = 'font:700 11px/1 system-ui,sans-serif;letter-spacing:.04em;padding:5px 8px;border-radius:999px;border:1px solid ' + (it.ok ? 'rgba(120,255,160,.6)' : 'rgba(255,255,255,.25)') + ';color:' + (it.ok ? '#9dffb8' : 'rgba(255,255,255,.65)') + ';background:rgba(255,255,255,.06)';
+    c.textContent = (it.ok ? '✓ ' : '… ') + it.icon + ' ' + it.name;
+    l.appendChild(c);
+  });
+}
 function showPrep(done, total){
   let w = $('emuPrep');
   if(!w){
@@ -23998,6 +24078,7 @@ function showPrep(done, total){
   $('emuPrepT').textContent = tr('PREPARANDO OS EMULADORES…', 'GETTING THE EMULATORS READY…');
   $('emuPrepS').textContent = tr('Baixando o necessário pra rodar sem engasgar (só na primeira vez).', 'Downloading what is needed to run smoothly (first time only).') + '  ' + done + '/' + total;
   $('emuPrepBar').firstChild.style.width = Math.max(6, Math.round(100 * done / Math.max(1, total))) + '%';
+  prepChips();
 }
 function close(quiet, keepFx){
   if(!isOpen()) return;
