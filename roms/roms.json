@@ -421,5 +421,10 @@
     "file": "SM64.z64",
     "title": "SM64",
     "system": "n64"
+  },
+  {
+    "file": "SSB64.z64",
+    "title": "SSB64",
+    "system": "n64"
   }
 ]
