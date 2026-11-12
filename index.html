@@ -22586,8 +22586,10 @@ addSys({ id:'gg', icon:'🟦', name:'GAME GEAR', core:'segaGG', coreName:'Genesi
 /* --- controles do próprio EmulatorJS (native) --- */
 addSys({ id:'sega32x', icon:'⚡', name:'SEGA 32X', core:'sega32x', coreName:'PicoDrive', exts:['32x'], hints:['32x','sega32x'] });
 addSys({ id:'saturn', icon:'🪐', name:'SEGA SATURN', core:'segaSaturn', coreName:'Yabause', exts:['ccd','mds'], pick:'.chd,.cue,.ccd,.mds,.iso,.zip,.7z', hints:['saturn','segasaturn','ss'], bios:'saturn.bin' });
-addSys({ id:'n64', icon:'🎮', name:'NINTENDO 64', core:'n64', coreName:'Mupen64Plus-Next', exts:['z64','n64','v64'], hints:['n64','nintendo64'] });
-addSys({ id:'psx', icon:'💽', name:'PLAYSTATION (PS1)', core:'psx', coreName:'PCSX ReARMed', exts:['cue','pbp','m3u','iso','chd'], hints:['psx','ps1','playstation','playstation1'], bios:'psx.bin' });
+addSys({ id:'n64', icon:'🎮', name:'NINTENDO 64', core:'n64', coreName:'Mupen64Plus-Next', exts:['z64','n64','v64'], hints:['n64','nintendo64'],
+  keyTxt:['setas = direcional · X = A · S = B · Q = L · E = R · Tab = Z · Enter = START · F = tela cheia · Esc = voltar','arrows = D-pad · X = A · S = B · Q = L · E = R · Tab = Z · Enter = START · F = fullscreen · Esc = back'] });
+addSys({ id:'psx', icon:'💽', name:'PLAYSTATION (PS1)', core:'psx', coreName:'PCSX ReARMed', exts:['cue','pbp','m3u','iso','chd'], hints:['psx','ps1','playstation','playstation1'], bios:'psx.bin',
+  keyTxt:['setas = direcional · X = ✕ · Z = ○ · S = □ · A = △ · Q = L1 · E = R1 · Tab = L2 · R = R2 · Enter = START · V = SELECT · F = tela cheia · Esc = voltar','arrows = D-pad · X = ✕ · Z = ○ · S = □ · A = △ · Q = L1 · E = R1 · Tab = L2 · R = R2 · Enter = START · V = SELECT · F = fullscreen · Esc = back'] });
 addSys({ id:'nds', icon:'📱', name:'NINTENDO DS (BETA)', core:'nds', coreName:'melonDS', exts:['nds','dsi'], hints:['nds','ds','nintendods'] });
 addSys({ id:'psp', icon:'📺', name:'PSP (BETA)', core:'psp', coreName:'PPSSPP', exts:['cso'], hints:['psp','playstationportable'] });
 addSys({ id:'atari2600', icon:'👾', name:'ATARI 2600', core:'atari2600', coreName:'Stella', exts:['a26'], hints:['atari2600','2600'] });
