@@ -21830,9 +21830,9 @@ html.console #jdName{height:clamp(44px,6.2vh,58px);font-size:clamp(14px,2.2vh,20
 @media (max-width:600px){#jdLogo span{display:none}.jb{padding:0 7px}}
 #jdMain{flex:1;min-height:0;display:flex;gap:5px}
 #jdEd{flex:1.35;min-width:0;display:flex;background:#14110a;border:1px solid rgba(232,185,58,.3);border-radius:5px;overflow:hidden}
-#jdGut{width:42px;flex:0 0 42px;box-sizing:border-box;padding:10px 6px 20px 0;text-align:right;color:#6b6040;background:#0f0c07;font:14px/1.5 Consolas,'Courier New',monospace;overflow:hidden;white-space:pre;-webkit-user-select:none;user-select:none}
+#jdGut{width:42px;flex:0 0 42px;box-sizing:border-box;padding:10px 6px 20px 0;text-align:right;color:#6b6040;background:#0f0c07;font:var(--jdfs,14px)/1.5 Consolas,'Courier New',monospace;overflow:hidden;white-space:pre;-webkit-user-select:none;user-select:none}
 #jdWrap{position:relative;flex:1;min-width:0}
-#jdHl,#jdCode{position:absolute;inset:0;margin:0;padding:10px 10px 20px;font:14px/1.5 Consolas,'Courier New',monospace;white-space:pre;tab-size:4;box-sizing:border-box;border:0;letter-spacing:0}
+#jdHl,#jdCode{position:absolute;inset:0;margin:0;padding:10px 10px 20px;font:var(--jdfs,14px)/1.5 Consolas,'Courier New',monospace;white-space:pre;tab-size:4;box-sizing:border-box;border:0;letter-spacing:0}
 #jdHl{overflow:hidden;color:#ece3c8;pointer-events:none}
 #jdHl i{font-style:normal}#jdHl .c{color:#7a8a6a}#jdHl .s{color:#9fe8a4}#jdHl .n{color:#ffb35a}#jdHl .k{color:#ff7a55}
 #jdCode{background:transparent;color:transparent;-webkit-text-fill-color:transparent;caret-color:#fff;resize:none;outline:none;overflow:auto;-webkit-user-select:text;user-select:text}
@@ -21846,14 +21846,51 @@ html.console #jdName{height:clamp(44px,6.2vh,58px);font-size:clamp(14px,2.2vh,20
 #jdFrame{flex:1;min-height:0;border:0;background:#fff;display:none}
 #jdPad{display:none;flex-wrap:wrap;gap:4px;align-items:center}
 #jdPad.padon{display:flex}
+#jdTerm{display:none;gap:6px;align-items:center;padding:6px 8px;background:#0f0c07;border-top:1px solid rgba(232,185,58,.3);color:#e8b93a}
+#jdTerm.on{display:flex}
+#jdTin{flex:1;min-width:0;font:13px Consolas,'Courier New',monospace;color:#fff;background:#000;border:1px solid rgba(127,196,255,.5);border-radius:5px;padding:6px 8px;outline:none}
+@media (pointer:coarse){#jdTin{font-size:16px}}
 @media (max-width:760px){#jdMain{flex-direction:column}#jdEd{flex:1.2}}
-@media (pointer:coarse){#jdHl,#jdCode,#jdGut,#jdIn{font-size:16px}}   /* 16px evita o zoom automático do iPhone ao tocar no campo */
+#jdFm{position:absolute;inset:0;margin:0;padding:10px 10px 20px;font:var(--jdfs,14px)/1.5 Consolas,'Courier New',monospace;white-space:pre;tab-size:4;box-sizing:border-box;border:0;overflow:hidden;color:transparent;pointer-events:none;letter-spacing:0}
+#jdFm mark{background:rgba(255,211,90,.35);color:transparent;border-radius:2px}
+#jdFm mark.cur{background:rgba(255,122,85,.7)}
+#jdFindBar{display:none;flex-wrap:wrap;gap:4px;align-items:center}
+#jdFindBar.on{display:flex}
+#jdFq,#jdFr,#jdArgs{flex:1 1 110px;min-width:80px;height:32px;box-sizing:border-box;font:13px Consolas,'Courier New',monospace;color:#fff;background:#000;border:1px solid rgba(232,185,58,.5);border-radius:5px;padding:0 8px;outline:none;-webkit-user-select:text;user-select:text}
+#jdFq:focus,#jdFr:focus,#jdArgs:focus{border-color:#ff7a55}
+#jdFc{font-size:11px;color:#9a8a5a;min-width:34px;text-align:center}
+#jdArgs{display:none;flex:0 0 32px}
+#jdArgs.open{display:block}
+@media (pointer:coarse){#jdFq,#jdFr,#jdArgs{height:42px;font-size:16px}}
+#jdOutH .jdOb{display:flex;gap:4px}
+#jdOutH .jb{min-height:24px;min-width:0;font-size:10px;padding:0 7px}
+#jdOverlay.jdl{background:rgba(228,228,228,.97);color:#222}
+.jdl #jdBox{background:#f4f4f4;box-shadow:0 0 20px rgba(0,0,0,.25)}
+.jdl .jb,.jdl .jsel{color:#333;background:#e6e6e6;border-color:#aaa}
+.jdl .jb.on{background:#ffe9a8;color:#6a4a00;border-color:#c99a1c}
+.jdl .jb.run{background:#1f8f3a;color:#fff;border-color:#157a2e}
+.jdl .jb.clr{background:#fbe3dc;color:#a33;border-color:#c94b2c}
+.jdl .jb.pri{background:#c94b2c;color:#fff;border-color:#ff7a55}
+.jdl #jdLogo{color:#222}.jdl #jdLogo span{color:#777}
+.jdl #jdName,.jdl #jdTin,.jdl #jdIn,.jdl #jdArgs,.jdl #jdFq,.jdl #jdFr{background:#fff;color:#111;border-color:#aaa}
+.jdl #jdEd{background:#fff;border-color:#bbb}
+.jdl #jdGut{background:#eee;color:#999}
+.jdl #jdHl{color:#222}
+.jdl #jdHl .c{color:#6a8a5a}.jdl #jdHl .s{color:#1a7f37}.jdl #jdHl .n{color:#b25000}.jdl #jdHl .k{color:#c4361b}
+.jdl #jdCode{caret-color:#000}
+.jdl #jdOut{background:#fff;border-color:#bbb}
+.jdl #jdOutH{background:#eee;color:#666;border-color:#ccc}
+.jdl #jdOutT{color:#145a1e}.jdl #jdOutT.err{color:#b3261e}
+.jdl #jdTerm{background:#eee;color:#555;border-color:#bbb}
+
+@media (pointer:coarse){#jdHl,#jdCode,#jdGut,#jdFm{font-size:max(16px,var(--jdfs,14px))}#jdIn{font-size:16px}}   /* 16px evita o zoom automático do iPhone ao tocar no campo */
 </style>
 <div id="jdOverlay" aria-hidden="true">
   <div id="jdBox" role="dialog" aria-label="Código Legal">
     <div id="jdHead">
       <div id="jdLogo"><b>CÓDIGO</b> LEGAL<span>COMPILADOR ONLINE</span></div>
       <select id="jdLang" class="jsel"></select>
+      <select id="jdVer" class="jsel" style="display:none" title="Versão do compilador"></select>
       <input type="text" id="jdName" maxlength="80" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Nome do arquivo">
       <button type="button" class="jb" id="jdRename" title="Trocar o nome do arquivo">RENOMEAR</button>
       <button type="button" class="jb run" id="jdRun">▶ EXECUTAR</button>
@@ -21862,14 +21899,31 @@ html.console #jdName{height:clamp(44px,6.2vh,58px);font-size:clamp(14px,2.2vh,20
       <button type="button" class="jb" id="jdOpen">ABRIR</button>
       <button type="button" class="jb" id="jdSave">BAIXAR</button>
       <button type="button" class="jb" id="jdCopy">COPIAR</button>
+      <button type="button" class="jb" id="jdFind" title="Buscar e substituir (Ctrl+F)">🔍</button>
+      <button type="button" class="jb" id="jdFsM" title="Diminuir fonte">A−</button>
+      <button type="button" class="jb" id="jdFsP" title="Aumentar fonte">A+</button>
+      <button type="button" class="jb" id="jdTheme" title="Tema claro / escuro">☀</button>
+      <button type="button" class="jb" id="jdShare" title="Copiar link com o código">LINK</button>
+      <button type="button" class="jb" id="jdApi" title="Servidor de execução (Judge0): endereço e token">API</button>
       <button type="button" class="jb" id="jdPadBtn" title="Teclado / controle">⌨</button>
       <button type="button" class="jb clr" id="jdClose">✕</button>
+    </div>
+    <div id="jdFindBar">
+      <input type="text" id="jdFq" placeholder="Buscar" spellcheck="false" autocomplete="off" autocapitalize="off">
+      <input type="text" id="jdFr" placeholder="Substituir por" spellcheck="false" autocomplete="off" autocapitalize="off">
+      <span id="jdFc"></span>
+      <button type="button" class="jb" id="jdFp" title="Anterior (Shift+Enter)">◀</button>
+      <button type="button" class="jb" id="jdFn" title="Próximo (Enter)">▶</button>
+      <button type="button" class="jb" id="jdFrep">SUBST.</button>
+      <button type="button" class="jb" id="jdFall">TODOS</button>
+      <button type="button" class="jb clr" id="jdFx">✕</button>
     </div>
     <div id="jdMain">
       <div id="jdEd"><div id="jdGut"></div><div id="jdWrap"><pre id="jdHl" aria-hidden="true"></pre><textarea id="jdCode" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" wrap="off"></textarea></div></div>
       <div id="jdRight">
+        <input type="text" id="jdArgs" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Argumentos da linha de comando (args)">
         <textarea id="jdIn" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" wrap="off" placeholder="Stdin"></textarea>
-        <div id="jdOut"><div id="jdOutH"><span id="jdOutL">OUTPUT</span><span id="jdStat"></span></div><pre id="jdOutT"></pre><iframe id="jdFrame" sandbox="allow-scripts allow-modals" title="Preview"></iframe></div>
+        <div id="jdOut"><div id="jdOutH"><span id="jdOutL">OUTPUT</span><span id="jdStat"></span><span class="jdOb"><button type="button" class="jb" id="jdOCopy">COPIAR</button><button type="button" class="jb clr" id="jdOClr">LIMPAR</button></span></div><pre id="jdOutT"></pre><div id="jdTerm"><span>›</span><input type="text" id="jdTin" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="O programa pede entrada: digite e Enter"><button type="button" class="jb" id="jdTsend">ENVIAR</button><button type="button" class="jb" id="jdTeof" title="Encerrar a entrada (Ctrl+D)">EOF</button></div><iframe id="jdFrame" sandbox="allow-scripts allow-modals" title="Preview"></iframe></div>
       </div>
     </div>
     <div id="jdPad">
@@ -21886,7 +21940,7 @@ html.console #jdName{height:clamp(44px,6.2vh,58px);font-size:clamp(14px,2.2vh,20
 /* ===== JDOODLE SECRETO (menu DEBUG) =====
    Abre ao digitar o código abaixo no campo de SENHA do menu DEBUG (PC, celular e console).
    Para mudar o código, altere a constante JD_SECRET_CODE.
-   Offline: JavaScript (real), Python 3 (subconjunto) e HTML/CSS/JS (pré-visualização).
+   Offline: JavaScript (real), Python 3 (transpilador próprio com semântica de Python) e HTML/CSS/JS (pré-visualização).
    Online (precisa de internet): Java, C, C++, C#, Go, Rust, PHP, Ruby, Kotlin, TypeScript, Bash e Python completo, via Judge0 CE (JD_API). */
 (function(){
 'use strict';
@@ -21902,7 +21956,7 @@ const LANGS = {
   html:{ n:'HTML / CSS / JS', file:'index.html', ind:'  ', code:'<!DOCTYPE html>\n<html>\n<body>\n  <h1 id="t">Hello, World!</h1>\n  <script>document.getElementById("t").style.color = "tomato";<\/script>\n</body>\n</html>\n' }
 };
 const JD_API = 'https://ce.judge0.com';   /* servidor de execução (Judge0 CE). Troque pela sua instância se quiser */
-LANGS.js.n = 'JavaScript (offline)'; LANGS.py.n = 'Python 3 (offline, básico)';
+LANGS.js.n = 'JavaScript (offline)'; LANGS.py.n = 'Python 3 (offline)';
 Object.assign(LANGS, {
   pyx:{ n:'Python 3 (online)', j:/^Python \(3/, hl:'py', file:'main.py', ind:'    ', code:'# Python 3 completo (executa no servidor)\nprint("Hello, World!")\nnome = input() if False else "Mundo"\nprint(f"Olá, {nome}!", [x**2 for x in range(5)])\n' },
   java:{ n:'Java (online)', j:/^Java \(/, hl:'c', file:'Main.java', ind:'    ', code:'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}\n' },
@@ -21917,18 +21971,19 @@ Object.assign(LANGS, {
   ts:{ n:'TypeScript (online)', j:/^TypeScript \(/, hl:'js', file:'main.ts', ind:'  ', code:'const msg: string = "Hello, World!";\nconsole.log(msg);\n' },
   bash:{ n:'Bash (online)', j:/^Bash \(/, hl:'py', file:'main.sh', ind:'  ', code:'#!/bin/bash\necho "Hello, World!"\n' }
 });
-const S = { lang:'js', code:{}, names:{}, sin:'', inOpen:false, padForce:false };
+const S = { lang:'js', code:{}, names:{}, sin:'', inOpen:false, padForce:false, args:'', ver:{}, fs:14, light:false };
+let fm = null, fOn = false, fCur = -1, fHits = [], sharedLoaded = false;
 try{ Object.assign(S, JSON.parse(localStorage.getItem('dz_jd') || '{}')); }catch(e){}
-if(!LANGS[S.lang]) S.lang = 'js'; if(!S.code || typeof S.code !== 'object') S.code = {}; if(!S.names || typeof S.names !== 'object') S.names = {};
-const save = () => { S.code[S.lang] = ta.value; S.sin = sin.value; try{ localStorage.setItem('dz_jd', JSON.stringify({ lang:S.lang, code:S.code, names:S.names, sin:S.sin, inOpen:S.inOpen })); }catch(e){} };
+if(!LANGS[S.lang]) S.lang = 'js'; if(!S.ver || typeof S.ver !== 'object') S.ver = {}; S.fs = Math.min(28, Math.max(10, +S.fs || 14)); S.args = String(S.args || ''); S.light = !!S.light; if(!S.code || typeof S.code !== 'object') S.code = {}; if(!S.names || typeof S.names !== 'object') S.names = {};
+const save = () => { S.code[S.lang] = ta.value; S.sin = sin.value; try{ localStorage.setItem('dz_jd', JSON.stringify({ lang:S.lang, code:S.code, names:S.names, sin:S.sin, inOpen:S.inOpen, args:S.args, ver:S.ver, fs:S.fs, light:S.light })); }catch(e){} };
 
 /* ---------- realce de sintaxe ---------- */
 const RX = {
-  js:/(\/\/.*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`[^`]*`)|\b(\d+\.?\d*)\b|\b(const|let|var|function|return|if|else|for|while|do|break|continue|new|class|this|true|false|null|undefined|typeof|of|in|switch|case|default|try|catch|throw|async|await)\b/g,
-  py:/(#.*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|\b(\d+\.?\d*)\b|\b(def|return|if|elif|else|for|while|in|not|and|or|True|False|None|break|continue|pass|import|from|print|input|lambda|range)\b/g,
+  js:/(\/\/.*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\b(\d+\.?\d*)\b|\b(const|let|var|function|return|if|else|for|while|do|break|continue|new|class|extends|this|super|true|false|null|undefined|typeof|instanceof|of|in|switch|case|default|try|catch|finally|throw|async|await|import|export|from|delete|void|yield)\b/g,
+  py:/(#.*)|("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|\b(\d+\.?\d*)\b|\b(def|class|return|if|elif|else|for|while|in|not|and|or|is|True|False|None|break|continue|pass|import|from|as|print|input|lambda|range|try|except|finally|raise|with|global|nonlocal|yield|del|assert|async|await)\b/g,
   html:/(<!--[\s\S]*?-->)|("[^"]*"|'[^']*')|(\b\d+\b)|(<\/?[a-zA-Z0-9]+)/g
 };
-RX.c = /(\/\/.*|#(?:include|define)\b.*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|\b(\d+\.?\d*)\b|\b(public|private|protected|static|void|int|long|double|float|char|bool|boolean|string|String|class|struct|namespace|using|import|package|return|if|else|for|while|do|break|continue|new|this|true|false|null|nullptr|func|fn|let|mut|val|var|fun|const|switch|case|default|try|catch|throw|echo|include|auto|std)\b/g;
+RX.c = /(\/\/.*|\/\*[\s\S]*?\*\/|#(?:include|define|pragma|if|ifdef|ifndef|endif|else)\b.*)|("""[\s\S]*?"""|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|\b(\d+\.?\d*)\b|\b(public|private|protected|static|void|int|long|double|float|char|bool|boolean|string|String|class|struct|namespace|using|import|package|return|if|else|for|while|do|break|continue|new|this|true|false|null|nullptr|func|fn|let|mut|val|var|fun|const|switch|case|default|try|catch|throw|echo|include|auto|std)\b/g;
 const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 function hi(s, l){
   const re = RX[LANGS[l].hl || l]; re.lastIndex = 0; let o = '', i = 0, m;
@@ -21939,141 +21994,881 @@ function hi(s, l){
   }
   return o + esc(s.slice(i)) + '\n';
 }
-function sync(){ hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; gut.scrollTop = ta.scrollTop; }
+function sync(){ hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; gut.scrollTop = ta.scrollTop; if(fm){ fm.scrollTop = ta.scrollTop; fm.scrollLeft = ta.scrollLeft; } }
 function paint(){
   hl.innerHTML = hi(ta.value, S.lang);
   const n = ta.value.split('\n').length;
   if(gut._n !== n){ gut._n = n; let g = ''; for(let i = 1; i <= n; i++) g += i + '\n'; gut.textContent = g; }
   sync();
+  if(fOn){ fScan(); if(fCur >= fHits.length) fCur = fHits.length - 1; fPaint(); }
 }
 
-/* ---------- Python (subconjunto) -> JavaScript ---------- */
-const PRE = `var __r=v=>typeof v==='string'?"'"+v+"'":__s(v);
-var __s=v=>v===true?'True':v===false?'False':v==null?'None':typeof v==='string'?v:Array.isArray(v)?'['+v.map(__r).join(', ')+']':typeof v==='object'?'{'+Object.keys(v).map(k=>__r(k)+': '+__r(v[k])).join(', ')+'}':String(v);
-var __kw=(k,v)=>({__kw:k,v:v});
-var print=(...a)=>{let sp=' ',en='\\n';while(a.length&&a[a.length-1]&&a[a.length-1].__kw){const k=a.pop();if(k.__kw==='sep')sp=__s(k.v);else en=__s(k.v)}o+=a.map(__s).join(sp)+en};
-var input=p=>{if(p!==undefined)o+=__s(p);const l=readline();if(l===null)throw new Error('EOFError: EOF when reading a line');return l};
-var len=v=>v.length,str=__s,abs=Math.abs,pow=Math.pow;
-var int=v=>{const n=parseInt(v,10);if(isNaN(n))throw new Error("ValueError: invalid literal for int(): '"+v+"'");return n};
-var float=v=>{const n=parseFloat(v);if(isNaN(n))throw new Error("ValueError: could not convert string to float: '"+v+"'");return n};
-var range=(a,b,c)=>{if(b===undefined){b=a;a=0}c=c||1;const r=[];for(let i=a;c>0?i<b:i>b;i+=c)r.push(i);return r};
-var __it=v=>typeof v==='object'&&v&&!Array.isArray(v)?Object.keys(v):v;
-var __in=(a,b)=>typeof b==='object'&&!Array.isArray(b)?a in b:b.includes(a);
-var enumerate=l=>[...l].map((x,i)=>[i,x]);
-var sum=l=>l.reduce((a,b)=>a+b,0);
-var max=(...a)=>Math.max(...(a.length===1?a[0]:a)),min=(...a)=>Math.min(...(a.length===1?a[0]:a));
-var sorted=l=>[...l].sort((a,b)=>a<b?-1:a>b?1:0),list=l=>[...l];
-var round=(x,n=0)=>Math.round(x*10**n)/10**n;
-var math=Object.assign({},Math,{pi:Math.PI,factorial:n=>{let r=1;for(let i=2;i<=n;i++)r*=i;return r}});
-`;
+/* ---------- Python 3 offline: transpilador (Python -> JS) + runtime com a semântica do Python ---------- */
+/* PYRT = runtime (ints grandes, floats, listas, dicts, f-strings, exceções, math/random/collections...). Fonte legível em pyrt.js do projeto. */
+const PYRT = "/* ===== Runtime do Python offline: semântica de Python (int grande, float, listas, dicts, strings, exceções...) =====\n   Nenhum nome daqui conflita com variáveis do usuário: internos começam com __ e as exceções viram __E_Nome. */\nvar __ln = 0;\nclass PyF extends Number {}\nclass __KW { constructor(o){ this.o = o; } }\nclass __Sl { constructor(a, b, c){ this.a = a; this.b = b; this.c = c; } }\nclass PyRange {\n  constructor(a, b, c){ if(c === 0) throw new __E_ValueError('range() arg 3 must not be zero'); this.a = a; this.b = b; this.c = c; this.n = Math.max(0, c > 0 ? Math.ceil((b - a) / c) : Math.ceil((a - b) / -c)); }\n  *[Symbol.iterator](){ for(let i = 0, v = this.a; i < this.n; i++, v += this.c) yield v; }\n}\nclass PyDict {\n  constructor(){ this.m = new Map(); }\n  set(k, v){ this.m.set(__hk(k), [k, v]); }\n  get(k){ const e = this.m.get(__hk(k)); return e ? e[1] : undefined; }\n  has(k){ return this.m.has(__hk(k)); }\n  delete(k){ return this.m.delete(__hk(k)); }\n  get size(){ return this.m.size; }\n  *[Symbol.iterator](){ for(const e of this.m.values()) yield e[0]; }\n  *items(){ for(const e of this.m.values()) yield [e[0], e[1]]; }\n}\nclass PySet {\n  constructor(){ this.m = new Map(); }\n  add(v){ const k = __hk(v); if(!this.m.has(k)) this.m.set(k, v); }\n  has(v){ return this.m.has(__hk(v)); }\n  delete(v){ return this.m.delete(__hk(v)); }\n  get size(){ return this.m.size; }\n  [Symbol.iterator](){ return this.m.values(); }\n}\nclass __DD extends PyDict { constructor(f){ super(); this.f = f; } }\nfunction __hk(k){\n  if(typeof k === 'number') return k;\n  if(typeof k === 'boolean') return k ? 1 : 0;\n  if(k instanceof PyF) return +k;\n  if(typeof k === 'bigint') return __ni(k);\n  if(Array.isArray(k)) return '\\u0000t' + k.map(x => { const h = __hk(x); return typeof h + ':' + String(h); }).join('\\u0001');\n  if(k instanceof PySet) return '\\u0000s' + Array.from(k).map(__hk).sort().join('\\u0001');\n  return k;\n}\nfunction __tup(a){ a.__tup = 1; return a; }\n/* ---------- exceções ---------- */\nclass __E_BaseException extends Error {\n  constructor(...a){ super(a.length ? (a.length === 1 ? __s(a[0]) : __r(__tup(a))) : ''); this.args = a; this.name = this.constructor.pyname || 'Exception'; }\n  __str__(){ return this.message; }\n}\n__E_BaseException.pyname = 'BaseException'; __E_BaseException.__name__ = 'BaseException';\nvar __EXC = { BaseException: __E_BaseException };\n(function(){\n  const defs = ['Exception:BaseException', 'ArithmeticError:Exception', 'ZeroDivisionError:ArithmeticError', 'OverflowError:ArithmeticError', 'AssertionError:Exception', 'AttributeError:Exception',\n    'EOFError:Exception', 'ImportError:Exception', 'ModuleNotFoundError:ImportError', 'LookupError:Exception', 'IndexError:LookupError', 'KeyError:LookupError', 'NameError:Exception', 'UnboundLocalError:NameError',\n    'OSError:Exception', 'FileNotFoundError:OSError', 'RuntimeError:Exception', 'NotImplementedError:RuntimeError', 'RecursionError:RuntimeError', 'StopIteration:Exception', 'SyntaxError:Exception',\n    'TypeError:Exception', 'ValueError:Exception', 'UnicodeError:ValueError', 'KeyboardInterrupt:BaseException', 'SystemExit:BaseException', 'GeneratorExit:BaseException'];\n  defs.forEach(d => { const p = d.split(':'), B = __EXC[p[1]], C = class extends B {}; C.pyname = p[0]; C.__name__ = p[0]; __EXC[p[0]] = C; globalThis['__E_' + p[0]] = C; });\n})();\nglobalThis.__E_BaseException = __E_BaseException;\n__E_KeyError.prototype.__str__ = function(){ return this.args.length === 1 ? __r(this.args[0]) : this.message; };\nfunction __pyexc(e){\n  if(e instanceof __E_BaseException) return e;\n  if(e && (e.__need || e.__exit)) throw e;\n  if(e instanceof RangeError) return new __E_RecursionError('maximum recursion depth exceeded');\n  if(e instanceof ReferenceError){ const m = /^(\\w+) is not defined/.exec(e.message) || /^Cannot access '(\\w+)'/.exec(e.message); return new __E_NameError(m ? \"name '\" + m[1].replace(/\\$$/, '') + \"' is not defined\" : e.message); }\n  if(e instanceof TypeError) return new __E_TypeError(e.message);\n  return new __E_Exception(String(e && e.message || e));\n}\nfunction __isinst(x, t){\n  if(Array.isArray(t)) return t.some(u => __isinst(x, u));\n  if(t && t.__isinst) return t.__isinst(x);\n  return typeof t === 'function' && x instanceof t;\n}\nfunction __kwd(k, name){ return k; }\n/* ---------- números ---------- */\nconst __isn = x => typeof x === 'number' || typeof x === 'bigint' || x instanceof PyF || typeof x === 'boolean';\nconst __num = x => typeof x === 'boolean' ? (x ? 1 : 0) : (x instanceof PyF ? +x : x);\nconst __isf = x => x instanceof PyF || (typeof x === 'number' && !Number.isInteger(x));\nconst __fl = x => (Number.isInteger(x) || x === Infinity || x === -Infinity) ? new PyF(x) : x;\nconst __ni = r => (typeof r === 'bigint' && r >= -9007199254740991n && r <= 9007199254740991n) ? Number(r) : r;\nfunction __tn(op, a, b){\n  if(op === '+' && (typeof a === 'string' || Array.isArray(a)) ) return new __E_TypeError('can only concatenate ' + __tname(a) + ' (not \"' + __tname(b) + '\") to ' + __tname(a));\n  if(op === '*' && (typeof a === 'string' || typeof b === 'string' || Array.isArray(a) || Array.isArray(b))){ const o = (typeof a === 'string' || Array.isArray(a)) ? b : a; return new __E_TypeError(\"can't multiply sequence by non-int of type '\" + __tname(o) + \"'\"); }\n  return new __E_TypeError(\"unsupported operand type(s) for \" + op + \": '\" + __tname(a) + \"' and '\" + __tname(b) + \"'\"); }\nfunction __tname(x){\n  if(x === null) return 'NoneType'; if(typeof x === 'string') return 'str'; if(typeof x === 'boolean') return 'bool';\n  if(typeof x === 'number' || typeof x === 'bigint') return Number.isInteger(x) || typeof x === 'bigint' ? 'int' : 'float';\n  if(x instanceof PyF) return 'float'; if(Array.isArray(x)) return x.__tup ? 'tuple' : 'list'; if(x instanceof PyDict) return 'dict'; if(x instanceof PySet) return 'set';\n  if(x instanceof PyRange) return 'range'; if(typeof x === 'function') return 'function'; return (x && x.constructor && (x.constructor.__name__ || x.constructor.name)) || 'object';\n}\nfunction __ar(op, a, b){\n  if(op === '+' || op === '*' || op === '-' || op === '%'){ const o = a && typeof a === 'object' && !(a instanceof PyF) ? a : (b && typeof b === 'object' && !(b instanceof PyF) ? b : null);\n    if(o && !Array.isArray(o) && !(o instanceof PyDict) && !(o instanceof PySet)){ const nm = { '+':'add', '-':'sub', '*':'mul', '%':'mod' }[op]; if(typeof a.__add__ !== 'undefined' || true){ if(a && typeof a['__' + nm + '__'] === 'function') return a['__' + nm + '__'](b); if(b && typeof b['__r' + nm + '__'] === 'function') return b['__r' + nm + '__'](a); } } }\n  if(op === '*'){\n    if(typeof a === 'string' && __isn(b)) return b > 0 ? a.repeat(Number(__num(b))) : '';\n    if(typeof b === 'string' && __isn(a)) return a > 0 ? b.repeat(Number(__num(a))) : '';\n    if(Array.isArray(a) && __isn(b)){ let r = []; for(let i = 0; i < __num(b); i++) r = r.concat(a); if(a.__tup) r.__tup = 1; return r; }\n    if(Array.isArray(b) && __isn(a)) return __ar('*', b, a);\n  }\n  if(op === '%' && typeof a === 'string') return __pf(a, b);\n  if(op === '-' && a instanceof PySet && b instanceof PySet){ const r = new PySet(); for(const x of a) if(!b.has(x)) r.add(x); return r; }\n  if(!__isn(a) || !__isn(b)) throw __tn(op, a, b);\n  const x = __num(a), y = __num(b), fl = __isf(a) || __isf(b);\n  if(typeof x === 'bigint' || typeof y === 'bigint'){\n    if(fl || op === '/'){ const X = Number(x), Y = Number(y); return __arf(op, X, Y); }\n    const X = BigInt(x), Y = BigInt(y);\n    switch(op){\n      case '+': return __ni(X + Y); case '-': return __ni(X - Y); case '*': return __ni(X * Y);\n      case '//': if(Y === 0n) throw new __E_ZeroDivisionError('integer division or modulo by zero'); { let q = X / Y; if((X % Y !== 0n) && ((X < 0n) !== (Y < 0n))) q -= 1n; return __ni(q); }\n      case '%': if(Y === 0n) throw new __E_ZeroDivisionError('integer modulo by zero'); { let m = X % Y; if(m !== 0n && ((m < 0n) !== (Y < 0n))) m += Y; return __ni(m); }\n      case '**': if(Y < 0n) return __fl(Math.pow(Number(X), Number(Y))); return __ni(X ** Y);\n    }\n  }\n  if(fl || op === '/') return __arf(op, x, y);\n  switch(op){\n    case '+': { const r = x + y; return Number.isSafeInteger(r) ? r : __ni(BigInt(x) + BigInt(y)); }\n    case '-': { const r = x - y; return Number.isSafeInteger(r) ? r : __ni(BigInt(x) - BigInt(y)); }\n    case '*': { const r = x * y; return Number.isSafeInteger(r) ? r : __ni(BigInt(x) * BigInt(y)); }\n    case '//': if(y === 0) throw new __E_ZeroDivisionError('integer division or modulo by zero'); return Math.floor(x / y) + ((x / y) % 1 === 0 || Math.abs(x) < 9007199254740991 ? 0 : 0);\n    case '%': if(y === 0) throw new __E_ZeroDivisionError('integer modulo by zero'); { const m = x % y; return (m !== 0 && (m < 0) !== (y < 0)) ? m + y : (m === 0 ? 0 : m); }\n    case '**': if(y < 0){ if(x === 0) throw new __E_ZeroDivisionError('0.0 cannot be raised to a negative power'); return __fl(Math.pow(x, y)); } { const r = Math.pow(x, y); return Number.isSafeInteger(r) ? r : __ni(BigInt(x) ** BigInt(y)); }\n  }\n}\nfunction __arf(op, x, y){\n  switch(op){\n    case '+': return __fl(x + y); case '-': return __fl(x - y); case '*': return __fl(x * y);\n    case '/': if(y === 0) throw new __E_ZeroDivisionError('division by zero'); return __fl(x / y);\n    case '//': if(y === 0) throw new __E_ZeroDivisionError('float floor division by zero'); return __fl(Math.floor(x / y));\n    case '%': if(y === 0) throw new __E_ZeroDivisionError('float modulo'); { const m = x - y * Math.floor(x / y); return __fl(m); }\n    case '**': if(x === 0 && y < 0) throw new __E_ZeroDivisionError('0.0 cannot be raised to a negative power'); return __fl(Math.pow(x, y));\n  }\n}\nfunction __add(a, b){\n  if(typeof a === 'number' && typeof b === 'number'){ const r = a + b; if(Number.isSafeInteger(r) || !Number.isInteger(r) && (!Number.isInteger(a) || !Number.isInteger(b))) return r; }\n  else if(typeof a === 'string' && typeof b === 'string') return a + b;\n  else if(Array.isArray(a) && Array.isArray(b)){ const r = a.concat(b); if(a.__tup && b.__tup) r.__tup = 1; return r; }\n  return __ar('+', a, b);\n}\nfunction __sub(a, b){ if(typeof a === 'number' && typeof b === 'number'){ const r = a - b; if(Number.isSafeInteger(r) || !Number.isInteger(r)) return r; } return __ar('-', a, b); }\nfunction __mul(a, b){ if(typeof a === 'number' && typeof b === 'number'){ const r = a * b; if(Number.isSafeInteger(r) || (!Number.isInteger(r) && Number.isFinite(r))) return r; } return __ar('*', a, b); }\nfunction __mod(a, b){ if(typeof a === 'number' && typeof b === 'number' && b !== 0 && Number.isInteger(a) && Number.isInteger(b)){ const m = a % b; return m === 0 ? 0 : ((m < 0) !== (b < 0) ? m + b : m); } return __ar('%', a, b); }\nfunction __fdiv(a, b){ if(typeof a === 'number' && typeof b === 'number' && b !== 0 && Number.isInteger(a) && Number.isInteger(b)){ const m = a % b; const mm = m === 0 ? 0 : ((m < 0) !== (b < 0) ? m + b : m); return (a - mm) / b; } return __ar('//', a, b); }\nfunction __div(a, b){ if(typeof a === 'number' && typeof b === 'number' && b !== 0){ const r = a / b; return Number.isInteger(r) ? new PyF(r) : r; } return __ar('/', a, b); }\nconst __pow = (a, b) => __ar('**', a, b);\nfunction __neg(a){ if(typeof a === 'number') return -a; if(typeof a === 'bigint') return __ni(-a); if(a instanceof PyF) return __fl(-a); if(typeof a === 'boolean') return a ? -1 : 0; if(a && typeof a.__neg__ === 'function') return a.__neg__(); throw new __E_TypeError(\"bad operand type for unary -: '\" + __tname(a) + \"'\"); }\nfunction __bitop(op, a, b){\n  if(a instanceof PySet && b instanceof PySet){ const r = new PySet();\n    if(op === '|'){ for(const x of a) r.add(x); for(const x of b) r.add(x); } else if(op === '&'){ for(const x of a) if(b.has(x)) r.add(x); } else if(op === '^'){ for(const x of a) if(!b.has(x)) r.add(x); for(const x of b) if(!a.has(x)) r.add(x); }\n    return r; }\n  if(typeof a === 'boolean' && typeof b === 'boolean') return op === '|' ? a || b : op === '&' ? a && b : a !== b;\n  if(!__isn(a) || !__isn(b) || __isf(a) || __isf(b)) throw __tn(op, a, b);\n  const X = BigInt(__num(a)), Y = BigInt(__num(b));\n  return __ni(op === '|' ? X | Y : op === '&' ? X & Y : op === '^' ? X ^ Y : op === '<<' ? X << Y : X >> Y);\n}\n/* ---------- comparação ---------- */\nfunction __eq(a, b){\n  if(a === b) return true;\n  if(__isn(a) && __isn(b)) return __num(a) == __num(b);\n  if(Array.isArray(a) && Array.isArray(b)){ if(a.length !== b.length || !a.__tup !== !b.__tup) return false; for(let i = 0; i < a.length; i++) if(!__eq(a[i], b[i])) return false; return true; }\n  if(a instanceof PyDict && b instanceof PyDict){ if(a.size !== b.size) return false; for(const [k, v] of a.items()) if(!b.has(k) || !__eq(v, b.get(k))) return false; return true; }\n  if(a instanceof PySet && b instanceof PySet){ if(a.size !== b.size) return false; for(const x of a) if(!b.has(x)) return false; return true; }\n  if(a && typeof a.__eq__ === 'function') return !!a.__eq__(b);\n  return false;\n}\nfunction __cmpv(a, b){\n  if(__isn(a) && __isn(b)){ const x = __num(a), y = __num(b); return x < y ? -1 : x > y ? 1 : 0; }\n  if(typeof a === 'string' && typeof b === 'string') return a < b ? -1 : a > b ? 1 : 0;\n  if(Array.isArray(a) && Array.isArray(b)){ const n = Math.min(a.length, b.length); for(let i = 0; i < n; i++){ if(!__eq(a[i], b[i])) return __cmpv(a[i], b[i]); } return a.length - b.length < 0 ? -1 : a.length > b.length ? 1 : 0; }\n  if(a && typeof a.__lt__ === 'function'){ if(a.__lt__(b)) return -1; if(b && typeof b.__lt__ === 'function' && b.__lt__(a)) return 1; return 0; }\n  if(a && typeof a.__gt__ === 'function'){ if(a.__gt__(b)) return 1; if(b && typeof b.__gt__ === 'function' && b.__gt__(a)) return -1; return 0; }\n  return null;\n}\nfunction __cmpop(op, a, b){\n  const nm = { '<':'lt', '>':'gt', '<=':'le', '>=':'ge' }[op];\n  if(a && typeof a['__' + nm + '__'] === 'function') return a['__' + nm + '__'](b);\n  const c = __cmpv(a, b);\n  if(c === null) throw new __E_TypeError(\"'\" + op + \"' not supported between instances of '\" + __tname(a) + \"' and '\" + __tname(b) + \"'\");\n  return op === '<' ? c < 0 : op === '>' ? c > 0 : op === '<=' ? c <= 0 : c >= 0;\n}\nfunction __lt(a, b){ return typeof a === 'number' && typeof b === 'number' ? a < b : __cmpop('<', a, b); }\nfunction __gt(a, b){ return typeof a === 'number' && typeof b === 'number' ? a > b : __cmpop('>', a, b); }\nfunction __le(a, b){ return typeof a === 'number' && typeof b === 'number' ? a <= b : __cmpop('<=', a, b); }\nfunction __ge(a, b){ return typeof a === 'number' && typeof b === 'number' ? a >= b : __cmpop('>=', a, b); }\nfunction __in(x, c){\n  if(typeof c === 'string'){ if(typeof x !== 'string') throw new __E_TypeError(\"'in <string>' requires string as left operand, not \" + __tname(x)); return c.includes(x); }\n  if(Array.isArray(c)){ for(let i = 0; i < c.length; i++) if(__eq(c[i], x)) return true; return false; }\n  if(c instanceof PyDict || c instanceof PySet) return c.has(x);\n  if(c instanceof PyRange){ if(!__isn(x)) return false; const v = Number(__num(x)); return Number.isInteger(v) && (c.c > 0 ? v >= c.a && v < c.b : v <= c.a && v > c.b) && (v - c.a) % c.c === 0; }\n  if(c && typeof c.__contains__ === 'function') return !!c.__contains__(x);\n  if(c && typeof c[Symbol.iterator] === 'function'){ for(const v of c) if(__eq(v, x)) return true; return false; }\n  throw new __E_TypeError(\"argument of type '\" + __tname(c) + \"' is not iterable\");\n}\nfunction __t(x){\n  if(x === true) return true;\n  if(x === null || x === false || x === 0 || x === '' || x === undefined || x === 0n) return false;\n  if(x === true || typeof x === 'number' || typeof x === 'string') return true;\n  if(x instanceof PyF) return +x !== 0;\n  if(Array.isArray(x)) return x.length > 0;\n  if(x instanceof PyDict || x instanceof PySet) return x.size > 0;\n  if(x instanceof PyRange) return x.n > 0;\n  if(x && typeof x.__bool__ === 'function') return !!x.__bool__();\n  if(x && typeof x.__len__ === 'function') return x.__len__() > 0;\n  return true;\n}\nconst __is = (a, b) => a === b || (a !== null && b !== null && typeof a === 'object' && a instanceof Number && b instanceof Number && false);\n/* ---------- texto ---------- */\nfunction __fs(x){\n  if(x !== x) return 'nan'; if(x === Infinity) return 'inf'; if(x === -Infinity) return '-inf';\n  const a = Math.abs(x); let s;\n  if(a !== 0 && (a >= 1e16 || a < 1e-4)){ s = x.toExponential(); s = s.replace(/e([+-])(\\d)$/, 'e$10$2'); }\n  else { s = String(x); if(/e/.test(s)) s = x.toFixed(20).replace(/0+$/, ''); if(/^-?\\d+$/.test(s)) s += '.0'; }\n  return s;\n}\nfunction __qs(s){\n  const q = (s.indexOf(\"'\") >= 0 && s.indexOf('\"') < 0) ? '\"' : \"'\"; let r = q;\n  for(const ch of s){\n    const c = ch.codePointAt(0);\n    if(ch === '\\\\') r += '\\\\\\\\'; else if(ch === q) r += '\\\\' + q; else if(ch === '\\n') r += '\\\\n'; else if(ch === '\\r') r += '\\\\r'; else if(ch === '\\t') r += '\\\\t';\n    else if(c < 32 || c === 127) r += '\\\\x' + c.toString(16).padStart(2, '0'); else r += ch;\n  }\n  return r + q;\n}\nfunction __r(x){\n  if(x === null || x === undefined) return 'None'; if(x === true) return 'True'; if(x === false) return 'False';\n  if(typeof x === 'string') return __qs(x);\n  if(typeof x === 'number') return Number.isInteger(x) ? String(x) : __fs(x);\n  if(typeof x === 'bigint') return String(x);\n  if(x instanceof PyF) return __fs(+x);\n  if(Array.isArray(x)){ const b = x.map(__r); return x.__tup ? '(' + b.join(', ') + (b.length === 1 ? ',' : '') + ')' : '[' + b.join(', ') + ']'; }\n  if(x instanceof PyDict){ const b = []; for(const [k, v] of x.items()) b.push(__r(k) + ': ' + __r(v)); return '{' + b.join(', ') + '}'; }\n  if(x instanceof PySet){ if(!x.size) return 'set()'; return '{' + Array.from(x).map(__r).join(', ') + '}'; }\n  if(x instanceof PyRange) return 'range(' + x.a + ', ' + x.b + (x.c !== 1 ? ', ' + x.c : '') + ')';\n  if(typeof x === 'function') return x.__istype ? \"<class '\" + x.__name__ + \"'>\" : '<function ' + (x.__name__ || x.name || 'lambda') + '>';\n  if(x instanceof __E_BaseException) return x.constructor.pyname + '(' + x.args.map(__r).join(', ') + ')';\n  if(typeof x.__repr__ === 'function') return x.__repr__();\n  if(typeof x.__str__ === 'function' && false) return x.__str__();\n  return '<__main__.' + ((x.constructor && (x.constructor.__name__ || x.constructor.name)) || 'object') + ' object>';\n}\nfunction __s(x){\n  if(typeof x === 'string') return x;\n  if(x && typeof x === 'object' && typeof x.__str__ === 'function') return x.__str__();\n  return __r(x);\n}\nfunction __sh(x){ return (typeof x === 'string') ? x : __s(x); }\n/* ---------- formatação (format / f-string / %) ---------- */\nfunction __fixed(x, p){\n  if(!Number.isFinite(x)) return x !== x ? 'nan' : (x < 0 ? '-inf' : 'inf');\n  const neg = x < 0 || Object.is(x, -0), ax = Math.abs(x);\n  if(ax >= 1e21 || p > 60) return (neg ? '-' : '') + ax.toFixed(Math.min(p, 100));\n  const ext = ax.toFixed(Math.min(100, p + 40)), dot = ext.indexOf('.'), ip = ext.slice(0, dot), fr = ext.slice(dot + 1);\n  const keep = fr.slice(0, p), tail = fr.slice(p);\n  let n = BigInt(ip + keep);\n  if(tail[0] > '5' || (tail[0] === '5' && /[1-9]/.test(tail.slice(1))) || (tail[0] === '5' && n % 2n === 1n)) n += 1n;\n  let s = n.toString().padStart(p + 1, '0'); if(p > 0) s = s.slice(0, s.length - p) + '.' + s.slice(s.length - p);\n  return (neg && /[1-9]/.test(s) ? '-' : (neg ? '-' : '')) + s;\n}\nfunction __fmt(v, spec){\n  if(spec === '' || spec === undefined) return __s(v);\n  if(v && typeof v === 'object' && typeof v.__format__ === 'function') return v.__format__(spec);\n  const m = /^(?:(.)?([<>=^]))?([+\\- ])?(#)?(0)?(\\d+)?([,_])?(?:\\.(\\d+))?([bcdeEfFgGnosxX%])?$/s.exec(spec);\n  if(!m) throw new __E_ValueError('Invalid format specifier');\n  let fill = m[1], align = m[2], sign = m[3] || '-', alt = m[4], zero = m[5], width = m[6] ? +m[6] : 0, grp = m[7], prec = m[8] !== undefined ? +m[8] : null, type = m[9];\n  if(zero && !align){ fill = '0'; align = '='; } if(fill === undefined) fill = ' ';\n  let body, neg = false, isNum = __isn(v);\n  if(type === 's' || (!type && typeof v === 'string')){ body = __s(v); if(prec !== null) body = body.slice(0, prec); align = align || '<'; }\n  else if(type === 'c'){ body = String.fromCodePoint(Number(__num(v))); }\n  else if(isNum){\n    let x = __num(v);\n    if(type === 'd' && __isf(v)) throw new __E_ValueError(\"Unknown format code 'd' for object of type 'float'\");\n    if(!type) type = (__isf(v)) ? 'r' : 'd';\n    neg = typeof x === 'bigint' ? x < 0n : (x < 0 || Object.is(x, -0));\n    if(typeof x === 'bigint'){ if(neg) x = -x; } else x = Math.abs(x);\n    if(type === 'd' || type === 'n') body = typeof x === 'bigint' ? String(x) : String(Math.trunc(x));\n    else if(type === 'x') body = x.toString(16); else if(type === 'X') body = x.toString(16).toUpperCase(); else if(type === 'o') body = x.toString(8); else if(type === 'b') body = x.toString(2);\n    else if(type === 'f' || type === 'F') body = Number.isFinite(Number(x)) ? __fixed(Number(x), prec === null ? 6 : prec) : (Number(x) !== Number(x) ? 'nan' : 'inf');\n    else if(type === '%') body = __fixed(Number(x) * 100, prec === null ? 6 : prec) + '%';\n    else if(type === 'e' || type === 'E'){ body = Number(x).toExponential(prec === null ? 6 : prec).replace(/e([+-])(\\d)$/, 'e$10$2'); if(type === 'E') body = body.toUpperCase(); }\n    else if(type === 'g' || type === 'G'){ const P = prec === null ? 6 : (prec === 0 ? 1 : prec), X = Number(x); if(X === 0) body = '0'; else { const ex = Math.floor(Math.log10(X)); if(ex < -4 || ex >= P){ body = X.toExponential(P - 1).replace(/\\.?0+e/, 'e').replace(/e([+-])(\\d)$/, 'e$10$2'); } else { body = X.toFixed(Math.max(0, P - 1 - ex)); if(body.indexOf('.') >= 0) body = body.replace(/\\.?0+$/, ''); } } if(type === 'G') body = body.toUpperCase(); }\n    else if(type === 'r'){ body = __fs(Number(x)); if(prec !== null) body = __fixed(Number(x), prec); }\n    else throw new __E_ValueError(\"Unknown format code '\" + type + \"' for object of type '\" + __tname(v) + \"'\");\n    if(alt && /[xob]/.test(type.toLowerCase())) body = '0' + type + body;\n    if(grp && /^\\d/.test(body)){ const p = body.split('.'); p[0] = p[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, grp); body = p.join('.'); }\n    body = (neg ? '-' : (sign === '+' ? '+' : sign === ' ' ? ' ' : '')) + body; align = align || '>';\n  } else { body = __s(v); align = align || '<'; if(type && type !== 's') throw new __E_ValueError(\"Unknown format code '\" + type + \"' for object of type '\" + __tname(v) + \"'\"); }\n  const pad = width - [...body].length; if(pad <= 0) return body;\n  if(align === '<') return body + fill.repeat(pad); if(align === '>') return fill.repeat(pad) + body;\n  if(align === '^'){ const l = Math.floor(pad / 2); return fill.repeat(l) + body + fill.repeat(pad - l); }\n  const sg = /^[+\\- ]/.test(body) ? body[0] : ''; const rest = sg ? body.slice(1) : body; return sg + fill.repeat(pad) + rest;\n}\nfunction __fmtv(v, conv, spec){ if(conv === 'r') v = __r(v); else if(conv === 's') v = __s(v); else if(conv === 'a') v = __r(v); return __fmt(v, spec); }\nfunction __pf(f, args){\n  let i = 0, dict = null; const list = (args instanceof PyDict) ? (dict = args, []) : (Array.isArray(args) && args.__tup ? args : [args]);\n  const out = f.replace(/%(?:\\(([^)]*)\\))?([#0\\- +]*)(\\*|\\d+)?(?:\\.(\\*|\\d+))?[hlL]?([diouxXeEfFgGcrsa%])/g, (m, key, flags, w, p, t) => {\n    if(t === '%') return '%';\n    let v; if(key !== undefined){ if(!dict) throw new __E_TypeError('format requires a mapping'); v = dict.get(key); if(v === undefined) throw new __E_KeyError(key); }\n    else { if(w === '*') w = list[i++]; if(p === '*') p = list[i++]; if(i >= list.length) throw new __E_TypeError('not enough arguments for format string'); v = list[i++]; }\n    let sp = '';\n    const left = flags.indexOf('-') >= 0, zero = flags.indexOf('0') >= 0 && !left, plus = flags.indexOf('+') >= 0, space = flags.indexOf(' ') >= 0, alt = flags.indexOf('#') >= 0;\n    let body;\n    if(t === 's') body = __s(v); else if(t === 'r' || t === 'a') body = __r(v); else if(t === 'c') body = typeof v === 'string' ? v : String.fromCodePoint(Number(__num(v)));\n    else {\n      if(!__isn(v)) throw new __E_TypeError('%' + t + ' format: a real number is required, not ' + __tname(v));\n      const tt = (t === 'i' || t === 'u') ? 'd' : t; if(tt === 'd' || tt === 'x' || tt === 'X' || tt === 'o') v = typeof __num(v) === 'bigint' ? __num(v) : Math.trunc(Number(__num(v)));\n      body = __fmt(v, (plus ? '+' : space ? ' ' : '') + (alt && /[xXo]/.test(tt) ? '#' : '') + (p !== undefined && tt !== 'd' ? '.' + p : '') + tt);\n    }\n    if(t === 's' || t === 'r' || t === 'a'){ if(p !== undefined) body = body.slice(0, +p); }\n    if(w !== undefined && +w > body.length){ const n = +w - body.length; if(left) body += ' '.repeat(n); else if(zero && t !== 's' && t !== 'r'){ const sg = /^[+\\- ]/.test(body) ? body[0] : ''; body = sg + '0'.repeat(n) + body.slice(sg.length); } else body = ' '.repeat(n) + body; }\n    return body;\n  });\n  if(!dict && i < list.length && !(args instanceof PyDict)) throw new __E_TypeError('not all arguments converted during string formatting');\n  return out;\n}\nfunction __sformat(s, args, kw){\n  let auto = 0;\n  return s.replace(/\\{\\{|\\}\\}|\\{([^{}]*)\\}/g, (m, f) => {\n    if(m === '{{') return '{'; if(m === '}}') return '}';\n    let name = f, conv = '', spec = '';\n    const c1 = f.indexOf(':'); if(c1 >= 0){ spec = f.slice(c1 + 1); name = f.slice(0, c1); }\n    const c2 = name.indexOf('!'); if(c2 >= 0){ conv = name.slice(c2 + 1); name = name.slice(0, c2); }\n    if(spec.indexOf('{') >= 0) spec = spec.replace(/\\{([^{}]*)\\}/g, (mm, n2) => __s(__fld(n2, args, kw, () => auto++)));\n    return __fmtv(__fld(name, args, kw, () => auto++), conv, spec);\n  });\n}\nfunction __fld(name, args, kw, nextAuto){\n  const m = /^([^.\\[]*)(.*)$/.exec(name); let base = m[1], v;\n  if(base === '') v = args[nextAuto()]; else if(/^\\d+$/.test(base)) v = args[+base]; else { v = kw ? kw[base] : undefined; if(v === undefined) throw new __E_KeyError(base); }\n  if(v === undefined && base !== '' && /^\\d+$/.test(base) || (base === '' && v === undefined)) throw new __E_IndexError('Replacement index out of range for positional args tuple');\n  let rest = m[2];\n  while(rest){ const a = /^\\.(\\w+)/.exec(rest); if(a){ v = v[a[1]]; rest = rest.slice(a[0].length); continue; } const b = /^\\[([^\\]]*)\\]/.exec(rest); if(b){ v = __get(v, /^\\d+$/.test(b[1]) ? +b[1] : b[1]); rest = rest.slice(b[0].length); continue; } break; }\n  return v;\n}\n/* ---------- coleções ---------- */\nfunction __iter(x){\n  if(Array.isArray(x) || x instanceof PyRange || x instanceof PySet || x instanceof PyDict) return x;\n  if(typeof x === 'string') return Array.from(x);\n  if(x && typeof x.__iter__ === 'function') return __iter(x.__iter__());\n  if(x && typeof x[Symbol.iterator] === 'function') return x;\n  if(x && typeof x.__next__ === 'function') return { *[Symbol.iterator](){ try{ while(true) yield x.__next__(); }catch(e){ if(!(e instanceof __E_StopIteration)) throw e; } } };\n  throw new __E_TypeError(\"'\" + __tname(x) + \"' object is not iterable\");\n}\nfunction __unp(v, n, star){\n  const a = Array.from(__iter(v));\n  if(star === undefined || star < 0){ if(a.length !== n) throw new __E_ValueError(a.length > n ? 'too many values to unpack (expected ' + n + ')' : 'not enough values to unpack (expected ' + n + ', got ' + a.length + ')'); return a; }\n  if(a.length < n - 1) throw new __E_ValueError('not enough values to unpack (expected at least ' + (n - 1) + ', got ' + a.length + ')');\n  const after = n - 1 - star, r = a.slice(0, star); r.push(a.slice(star, a.length - after)); return r.concat(a.slice(a.length - after));\n}\nfunction __idx(i, n, what){\n  if(typeof i === 'boolean') i = i ? 1 : 0; if(i instanceof PyF || typeof i === 'bigint' && false) i = +i;\n  if(typeof i === 'bigint') throw new __E_IndexError(what + ' index out of range');\n  if(typeof i !== 'number' || !Number.isInteger(i)) throw new __E_TypeError(what + ' indices must be integers or slices, not ' + __tname(i));\n  const j = i < 0 ? i + n : i; if(j < 0 || j >= n) throw new __E_IndexError(what + ' index out of range'); return j;\n}\nfunction __slr(sl, n){\n  let st = sl.c === null || sl.c === undefined ? 1 : Number(__num(sl.c)); if(st === 0) throw new __E_ValueError('slice step cannot be zero');\n  let a, b;\n  if(st > 0){ a = sl.a == null ? 0 : Number(__num(sl.a)); b = sl.b == null ? n : Number(__num(sl.b)); if(a < 0) a = Math.max(0, a + n); if(b < 0) b = Math.max(0, b + n); a = Math.min(a, n); b = Math.min(b, n); }\n  else { a = sl.a == null ? n - 1 : Number(__num(sl.a)); b = sl.b == null ? -1 : Number(__num(sl.b)); if(a < 0) a += n; if(b < -1) b += n; if(sl.b != null && Number(__num(sl.b)) < 0 && b < 0) b = -1; a = Math.min(a, n - 1); b = Math.max(b, -1); }\n  const r = []; if(st > 0) for(let i = a; i < b; i += st) r.push(i); else for(let i = a; i > b; i += st) r.push(i); return r;\n}\nfunction __get(o, i){\n  if(Array.isArray(o)){ if(i instanceof __Sl){ const r = __slr(i, o.length).map(k => o[k]); if(o.__tup) r.__tup = 1; return r; } return o[__idx(i, o.length, o.__tup ? 'tuple' : 'list')]; }\n  if(typeof o === 'string'){ if(i instanceof __Sl) return __slr(i, o.length).map(k => o[k]).join(''); return o[__idx(i, o.length, 'string')]; }\n  if(o instanceof PyDict){ const v = o.get(i); if(v === undefined){ if(o instanceof __DD){ const d = o.f === null ? undefined : o.f(); o.set(i, d); return d; } throw new __E_KeyError(i); } return v; }\n  if(o instanceof PyRange){ if(i instanceof __Sl){ const r = __slr(i, o.n).map(k => o.a + k * o.c); return r; } return o.a + __idx(i, o.n, 'range object') * o.c; }\n  if(o && typeof o.__getitem__ === 'function') return o.__getitem__(i);\n  throw new __E_TypeError(\"'\" + __tname(o) + \"' object is not subscriptable\");\n}\nfunction __set(o, i, v){\n  if(Array.isArray(o)){ if(o.__tup) throw new __E_TypeError(\"'tuple' object does not support item assignment\"); if(i instanceof __Sl){ const ix = __slr(i, o.length); if(i.c == null || i.c === 1){ const a = ix.length ? ix[0] : (i.a == null ? 0 : Math.min(o.length, Math.max(0, Number(__num(i.a)) < 0 ? Number(__num(i.a)) + o.length : Number(__num(i.a))))); o.splice(a, ix.length, ...Array.from(__iter(v))); } else { const vs = Array.from(__iter(v)); if(vs.length !== ix.length) throw new __E_ValueError('attempt to assign sequence of size ' + vs.length + ' to extended slice of size ' + ix.length); ix.forEach((k, n) => { o[k] = vs[n]; }); } return; } o[__idx(i, o.length, 'list assignment')] = v; return; }\n  if(o instanceof PyDict){ o.set(i, v); return; }\n  if(o && typeof o.__setitem__ === 'function'){ o.__setitem__(i, v); return; }\n  throw new __E_TypeError(\"'\" + __tname(o) + \"' object does not support item assignment\");\n}\nfunction __del(o, i){\n  if(Array.isArray(o)){ if(i instanceof __Sl){ const ix = __slr(i, o.length).sort((x, y) => y - x); ix.forEach(k => o.splice(k, 1)); return; } o.splice(__idx(i, o.length, 'list assignment'), 1); return; }\n  if(o instanceof PyDict){ if(!o.delete(i)) throw new __E_KeyError(i); return; }\n  throw new __E_TypeError(\"'\" + __tname(o) + \"' object doesn't support item deletion\");\n}\nfunction __iadd(a, b){ if(typeof a === 'number' && typeof b === 'number') return __add(a, b); if(Array.isArray(a) && !a.__tup){ for(const x of __iter(b)) a.push(x); return a; } if(a instanceof PySet && b instanceof PySet){ for(const x of b) a.add(x); return a; } return __add(a, b); }\nfunction __len(x){\n  if(typeof x === 'string') return x.length; if(Array.isArray(x)) return x.length; if(x instanceof PyDict || x instanceof PySet) return x.size; if(x instanceof PyRange) return x.n;\n  if(x && typeof x.__len__ === 'function') return x.__len__();\n  throw new __E_TypeError(\"object of type '\" + __tname(x) + \"' has no len()\");\n}\n/* ---------- métodos de str / list / dict / set ---------- */\nconst __WS = /[ \\t\\n\\r\\f\\v\\u00a0\\u2028\\u2029]/;\nfunction __strip(s, ch, l, r){ const set = ch == null ? null : ch; let a = 0, b = s.length; const isw = c => set === null ? __WS.test(c) : set.indexOf(c) >= 0; if(l) while(a < b && isw(s[a])) a++; if(r) while(b > a && isw(s[b - 1])) b--; return s.slice(a, b); }\nconst __SM = {\n  upper: s => s.toUpperCase(), lower: s => s.toLowerCase(), casefold: s => s.toLowerCase(), swapcase: s => Array.from(s).map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(''),\n  capitalize: s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(), title: s => s.toLowerCase().replace(/(^|[^A-Za-z\\u00C0-\\u024F])([A-Za-z\\u00C0-\\u024F])/g, (m, a, b) => a + b.toUpperCase()),\n  strip: (s, c) => __strip(s, c, 1, 1), lstrip: (s, c) => __strip(s, c, 1, 0), rstrip: (s, c) => __strip(s, c, 0, 1),\n  split: (s, sep, mx) => { if(mx instanceof __KW){ mx = mx.o.maxsplit; } if(sep instanceof __KW){ const k = sep.o; sep = k.sep; mx = k.maxsplit; } mx = mx === undefined || mx === null ? -1 : mx;\n    if(sep === undefined || sep === null){ const t = s.replace(/^\\s+/, ''); if(!t) return []; if(mx < 0) return t.split(/\\s+/).filter((x, i, a) => !(i === a.length - 1 && x === '')); const out = []; let rest = t; while(mx-- > 0){ const m = /\\s+/.exec(rest); if(!m) break; out.push(rest.slice(0, m.index)); rest = rest.slice(m.index + m[0].length); } if(rest.length) out.push(rest); return out; }\n    if(sep === '') throw new __E_ValueError('empty separator'); const p = s.split(sep); if(mx >= 0 && p.length > mx + 1){ const h = p.slice(0, mx); h.push(p.slice(mx).join(sep)); return h; } return p; },\n  rsplit: (s, sep, mx) => { if(sep === undefined || sep === null || mx === undefined || mx < 0) return __SM.split(s, sep); const p = s.split(sep); if(p.length <= mx + 1) return p; const t = p.slice(p.length - mx); return [p.slice(0, p.length - mx).join(sep)].concat(t); },\n  join: (s, it) => { const a = Array.from(__iter(it)); for(const x of a) if(typeof x !== 'string') throw new __E_TypeError('sequence item ' + a.indexOf(x) + ': expected str instance, ' + __tname(x) + ' found'); return a.join(s); },\n  replace: (s, a, b, n) => { if(n === undefined || n < 0) return s.split(a).join(b); let r = '', i = 0, k = 0; while(k < n){ const j = s.indexOf(a, i); if(j < 0) break; r += s.slice(i, j) + b; i = j + a.length; k++; if(a === ''){ r += s[i] || ''; i++; } } return r + s.slice(i); },\n  find: (s, x, a, b) => { const r = s.slice(0, b === undefined ? s.length : b).indexOf(x, a || 0); return r; }, rfind: (s, x) => s.lastIndexOf(x),\n  index: (s, x, a) => { const r = s.indexOf(x, a || 0); if(r < 0) throw new __E_ValueError('substring not found'); return r; }, rindex: (s, x) => { const r = s.lastIndexOf(x); if(r < 0) throw new __E_ValueError('substring not found'); return r; },\n  count: (s, x) => x === '' ? s.length + 1 : s.split(x).length - 1,\n  startswith: (s, p, a) => (Array.isArray(p) ? p : [p]).some(q => s.startsWith(q, a || 0)), endswith: (s, p) => (Array.isArray(p) ? p : [p]).some(q => s.endsWith(q)),\n  isdigit: s => /^[0-9\\u00b2\\u00b3\\u00b9]+$/.test(s), isnumeric: s => /^\\p{N}+$/u.test(s), isdecimal: s => /^\\p{Nd}+$/u.test(s), isalpha: s => /^\\p{L}+$/u.test(s), isalnum: s => /^[\\p{L}\\p{N}]+$/u.test(s),\n  isspace: s => s.length > 0 && /^\\s+$/.test(s), isupper: s => /\\p{Lu}/u.test(s) && s === s.toUpperCase(), islower: s => /\\p{Ll}/u.test(s) && s === s.toLowerCase(), istitle: s => s.length > 0 && __SM.title(s) === s && /\\p{L}/u.test(s),\n  isidentifier: s => /^[A-Za-z_\\u0080-\\uffff][\\w\\u0080-\\uffff]*$/.test(s),\n  center: (s, w, f) => { f = f || ' '; const n = w - s.length; if(n <= 0) return s; const l = Math.floor(n / 2) + (n % 2 && w % 2 ? 1 : 0); return f.repeat(l) + s + f.repeat(n - l); },\n  ljust: (s, w, f) => s + (f || ' ').repeat(Math.max(0, w - s.length)), rjust: (s, w, f) => (f || ' ').repeat(Math.max(0, w - s.length)) + s,\n  zfill: (s, w) => { const sg = /^[+-]/.test(s) ? s[0] : ''; const r = sg ? s.slice(1) : s; return sg + '0'.repeat(Math.max(0, w - s.length)) + r; },\n  splitlines: s => { const r = s.split(/\\r\\n|\\r|\\n/); if(r.length && r[r.length - 1] === '') r.pop(); return r; },\n  partition: (s, sep) => { const i = s.indexOf(sep); return __tup(i < 0 ? [s, '', ''] : [s.slice(0, i), sep, s.slice(i + sep.length)]); }, rpartition: (s, sep) => { const i = s.lastIndexOf(sep); return __tup(i < 0 ? ['', '', s] : [s.slice(0, i), sep, s.slice(i + sep.length)]); },\n  removeprefix: (s, p) => s.startsWith(p) ? s.slice(p.length) : s, removesuffix: (s, p) => p && s.endsWith(p) ? s.slice(0, s.length - p.length) : s,\n  expandtabs: (s, n) => s.replace(/\\t/g, ' '.repeat(n || 8)), encode: s => s, translate: s => s,\n  format: (s, ...a) => { let kw = null; const l = a[a.length - 1]; if(l instanceof __KW){ a.pop(); kw = l.o; } return __sformat(s, a, kw); }\n};\nfunction __sortkey(a, kw){ let key = null, rev = false; if(kw instanceof __KW){ key = kw.o.key || null; rev = !!kw.o.reverse; }\n  const dec = a.map((v, i) => [key ? key(v) : v, v, i]); dec.sort((x, y) => { const c = __cmpv(x[0], y[0]); if(c === null) throw new __E_TypeError(\"'<' not supported between instances of '\" + __tname(x[0]) + \"' and '\" + __tname(y[0]) + \"'\"); return rev ? -c || (x[2] - y[2]) * 0 + (x[2] - y[2]) : c; });\n  if(rev){ dec.sort((x, y) => 0); }\n  return dec; }\nfunction __sorted(a, kw){ const key = kw instanceof __KW ? kw.o.key || null : null, rev = kw instanceof __KW && !!kw.o.reverse;\n  const dec = a.map((v, i) => [key ? key(v) : v, v, i]);\n  dec.sort((x, y) => { const c = __cmpv(x[0], y[0]); if(c === null) throw new __E_TypeError(\"'<' not supported between instances of '\" + __tname(y[0]) + \"' and '\" + __tname(x[0]) + \"'\"); return rev ? (c === 0 ? x[2] - y[2] : -c) : (c === 0 ? x[2] - y[2] : c); });\n  return dec.map(d => d[1]); }\nconst __LM = {\n  append: (l, x) => { l.push(x); return null; }, extend: (l, it) => { for(const x of Array.from(__iter(it))) l.push(x); return null; }, insert: (l, i, x) => { if(i < 0) i = Math.max(0, i + l.length); l.splice(Math.min(i, l.length), 0, x); return null; },\n  pop: (l, i) => { if(!l.length) throw new __E_IndexError('pop from empty list'); if(i === undefined) return l.pop(); return l.splice(__idx(i, l.length, 'pop'), 1)[0]; },\n  remove: (l, x) => { for(let i = 0; i < l.length; i++) if(__eq(l[i], x)){ l.splice(i, 1); return null; } throw new __E_ValueError('list.remove(x): x not in list'); },\n  index: (l, x, a) => { for(let i = a || 0; i < l.length; i++) if(__eq(l[i], x)) return i; throw new __E_ValueError(__r(x) + ' is not in list'); },\n  count: (l, x) => l.reduce((n, v) => n + (__eq(v, x) ? 1 : 0), 0), reverse: l => { l.reverse(); return null; }, copy: l => l.slice(), clear: l => { l.length = 0; return null; },\n  sort: (l, kw) => { const r = __sorted(l, kw); for(let i = 0; i < r.length; i++) l[i] = r[i]; return null; }\n};\nconst __DM = {\n  get: (d, k, df) => { const v = d.get(k); return v === undefined ? (df === undefined ? null : df) : v; }, keys: d => Array.from(d), values: d => Array.from(d.items()).map(e => e[1]), items: d => Array.from(d.items()).map(e => __tup(e)),\n  pop: (d, k, df) => { const v = d.get(k); if(v === undefined){ if(df !== undefined) return df; throw new __E_KeyError(k); } d.delete(k); return v; },\n  setdefault: (d, k, v) => { const c = d.get(k); if(c !== undefined) return c; v = v === undefined ? null : v; d.set(k, v); return v; },\n  update: (d, o, kw) => { if(o instanceof __KW){ for(const k in o.o) d.set(k, o.o[k]); return null; } if(o instanceof PyDict){ for(const [k, v] of o.items()) d.set(k, v); } else if(o) for(const e of __iter(o)){ const p = Array.from(e); d.set(p[0], p[1]); } if(kw instanceof __KW) for(const k in kw.o) d.set(k, kw.o[k]); return null; },\n  copy: d => { const r = d instanceof __DD ? new __DD(d.f) : new PyDict(); for(const [k, v] of d.items()) r.set(k, v); return r; }, clear: d => { d.m.clear(); return null; },\n  popitem: d => { const e = Array.from(d.items()); if(!e.length) throw new __E_KeyError('popitem(): dictionary is empty'); const l = e[e.length - 1]; d.delete(l[0]); return __tup(l); },\n  most_common: (d, n) => { const e = Array.from(d.items()).map((x, i) => [x[0], x[1], i]); e.sort((a, b) => b[1] - a[1] || a[2] - b[2]); return e.slice(0, n === undefined ? e.length : n).map(x => __tup([x[0], x[1]])); },\n  elements: d => { const r = []; for(const [k, v] of d.items()) for(let i = 0; i < v; i++) r.push(k); return r; }\n};\nconst __STM = {\n  add: (s, x) => { s.add(x); return null; }, remove: (s, x) => { if(!s.delete(x)) throw new __E_KeyError(x); return null; }, discard: (s, x) => { s.delete(x); return null; },\n  pop: s => { for(const x of s){ s.delete(x); return x; } throw new __E_KeyError('pop from an empty set'); }, clear: s => { s.m.clear(); return null; }, copy: s => { const r = new PySet(); for(const x of s) r.add(x); return r; },\n  union: (s, ...o) => { const r = __STM.copy(s); o.forEach(t => { for(const x of __iter(t)) r.add(x); }); return r; },\n  intersection: (s, ...o) => { const r = new PySet(); for(const x of s) if(o.every(t => __in(x, t))) r.add(x); return r; },\n  difference: (s, ...o) => { const r = new PySet(); for(const x of s) if(!o.some(t => __in(x, t))) r.add(x); return r; },\n  symmetric_difference: (s, t) => __bitop('^', s, __set0(t)), update: (s, ...o) => { o.forEach(t => { for(const x of __iter(t)) s.add(x); }); return null; },\n  issubset: (s, t) => { for(const x of s) if(!__in(x, t)) return false; return true; }, issuperset: (s, t) => { for(const x of __iter(t)) if(!s.has(x)) return false; return true; }, isdisjoint: (s, t) => { for(const x of s) if(__in(x, t)) return false; return true; }\n};\nfunction __set0(it){ const s = new PySet(); for(const x of __iter(it)) s.add(x); return s; }\nfunction __mc(o, n, ...a){\n  if(typeof o === 'string'){ const f = __SM[n]; if(f) return f(o, ...a); }\n  else if(Array.isArray(o)){ if(o.__tup){ if(n === 'index') return __LM.index(o, ...a); if(n === 'count') return __LM.count(o, ...a); } else { const f = __LM[n]; if(f) return f(o, ...a); } }\n  else if(o instanceof PyDict){ const f = __DM[n]; if(f) return f(o, ...a); }\n  else if(o instanceof PySet){ const f = __STM[n]; if(f) return f(o, ...a); }\n  else if(o instanceof PyF || typeof o === 'number' || typeof o === 'bigint' || typeof o === 'boolean'){\n    if(n === 'is_integer') return Number.isInteger(+o); if(n === 'bit_length') return o === 0 ? 0 : BigInt(o).toString(2).replace('-', '').length; if(n === 'conjugate') return o; if(n === 'real') return o;\n    if(n === '__str__') return __s(o);\n  }\n  if(o !== null && o !== undefined && typeof o[n] === 'function') return o[n](...a);\n  throw new __E_AttributeError(\"'\" + __tname(o) + \"' object has no attribute '\" + n + \"'\");\n}\nfunction __attr(o, n){\n  if(o === null || o === undefined) throw new __E_AttributeError(\"'NoneType' object has no attribute '\" + n + \"'\");\n  const tb = typeof o === 'string' ? __SM : Array.isArray(o) ? (o.__tup ? null : __LM) : o instanceof PyDict ? __DM : o instanceof PySet ? __STM : null;\n  if(tb && Object.prototype.hasOwnProperty.call(tb, n)) return (...a) => __mc(o, n, ...a);\n  const v = o[n]; if(v === undefined){\n    if(typeof o === 'number' || o instanceof PyF){ if(n === 'real') return o; if(n === 'imag') return 0; }\n    throw new __E_AttributeError(\"'\" + __tname(o) + \"' object has no attribute '\" + n + \"'\"); }\n  return v;\n}\nfunction __callk(f, args, kw){\n  if(typeof f !== 'function') throw new __E_TypeError(\"'\" + __tname(f) + \"' object is not callable\");\n  if(f.__kwb) return f(...args, new __KW(kw));\n  const ps = f.__params; if(!ps) throw new __E_TypeError('keyword arguments are not supported for this call');\n  const a = args.slice(); for(const k in kw){ const i = ps.indexOf(k); if(i < 0) throw new __E_TypeError(f.__name__ + \"() got an unexpected keyword argument '\" + k + \"'\"); if(i < args.length) throw new __E_TypeError(f.__name__ + \"() got multiple values for argument '\" + k + \"'\"); a[i] = kw[k]; }\n  return f(...a);\n}\nfunction __sp(x){ return Array.from(__iter(x)); }\n/* ---------- builtins ---------- */\nconst __KWB = f => { f.__kwb = 1; return f; };\nfunction __print(...a){ let sep = ' ', end = '\\n'; const l = a[a.length - 1]; if(l instanceof __KW){ a.pop(); if(l.o.sep != null) sep = __s(l.o.sep); if(l.o.end != null) end = __s(l.o.end); }\n  o += a.map(__s).join(sep) + end; if(o.length > 400000){ o += '\\n...'; throw { __exit: 1 }; } return null; }\nfunction __input(p){ if(p !== undefined){ o += __s(p); } const l = readline(); if(l === null) throw new __E_EOFError('EOF when reading a line'); return l.replace(/\\r$/, ''); }\nfunction __int(x, b){\n  if(b instanceof __KW){ b = b.o.base; }\n  if(x === undefined) return 0;\n  if(typeof x === 'string'){ let t = x.trim().replace(/_/g, ''); const base = b === undefined ? 10 : b; let sg = 1;\n    if(/^[+-]/.test(t)){ if(t[0] === '-') sg = -1; t = t.slice(1); }\n    if((base === 16 || base === 0) && /^0[xX]/.test(t)) t = t.slice(2); else if((base === 2) && /^0[bB]/.test(t)) t = t.slice(2); else if((base === 8) && /^0[oO]/.test(t)) t = t.slice(2);\n    const dg = '0123456789abcdefghijklmnopqrstuvwxyz'.slice(0, base); const ok = t.length > 0 && Array.from(t.toLowerCase()).every(c => dg.indexOf(c) >= 0);\n    if(!ok) throw new __E_ValueError('invalid literal for int() with base ' + base + ': ' + __qs(x));\n    if(base === 10){ const v = Number(t); return Number.isSafeInteger(v) ? sg * v : __ni(sg < 0 ? -BigInt(t) : BigInt(t)); }\n    let r = 0n; for(const c of t.toLowerCase()) r = r * BigInt(base) + BigInt(dg.indexOf(c)); return __ni(sg < 0 ? -r : r); }\n  if(typeof x === 'number'){ if(Number.isInteger(x)) return x; if(!Number.isFinite(x)) throw new __E_OverflowError('cannot convert float infinity to integer'); const t = Math.trunc(x); return Number.isSafeInteger(t) ? t : __ni(BigInt(t)); }\n  if(x instanceof PyF){ const v = +x; if(!Number.isFinite(v)) throw new __E_OverflowError('cannot convert float infinity to integer'); return Number.isSafeInteger(v) ? v : __ni(BigInt(v)); }\n  if(typeof x === 'bigint') return x; if(typeof x === 'boolean') return x ? 1 : 0;\n  if(x && typeof x.__int__ === 'function') return x.__int__();\n  throw new __E_TypeError(\"int() argument must be a string, a bytes-like object or a real number, not '\" + __tname(x) + \"'\");\n}\nfunction __float(x){\n  if(x === undefined) return __fl(0);\n  if(typeof x === 'string'){ const t = x.trim().replace(/_/g, '').toLowerCase();\n    if(/^[+-]?(\\d+\\.?\\d*|\\.\\d+)(e[+-]?\\d+)?$/.test(t)) return __fl(Number(t));\n    if(/^[+-]?(inf|infinity)$/.test(t)) return __fl(t[0] === '-' ? -Infinity : Infinity); if(/^[+-]?nan$/.test(t)) return NaN;\n    throw new __E_ValueError('could not convert string to float: ' + __qs(x)); }\n  if(__isn(x)) return __fl(Number(__num(x)));\n  if(x && typeof x.__float__ === 'function') return x.__float__();\n  throw new __E_TypeError(\"float() argument must be a string or a real number, not '\" + __tname(x) + \"'\");\n}\nfunction __minmax(sign, a, name){\n  let kw = null; const l = a[a.length - 1]; if(l instanceof __KW){ a.pop(); kw = l.o; }\n  const items = a.length === 1 ? Array.from(__iter(a[0])) : a;\n  if(!items.length){ if(kw && kw.default !== undefined) return kw.default; throw new __E_ValueError(name + '() arg is an empty sequence'); }\n  const key = kw && kw.key ? kw.key : null; let best = items[0], bk = key ? key(best) : best;\n  for(let i = 1; i < items.length; i++){ const k = key ? key(items[i]) : items[i]; const c = __cmpv(k, bk); if(c === null) throw new __E_TypeError(\"'\" + (sign > 0 ? '>' : '<') + \"' not supported between instances of '\" + __tname(k) + \"' and '\" + __tname(bk) + \"'\"); if(c * sign > 0){ best = items[i]; bk = k; } }\n  return best;\n}\nfunction __round(x, n){\n  if(n instanceof __KW) n = n.o.ndigits; if(x === undefined) throw new __E_TypeError('round() missing required argument');\n  if(!__isn(x)) { if(x && typeof x.__round__ === 'function') return x.__round__(n); throw new __E_TypeError(\"type \" + __tname(x) + \" doesn't define __round__ method\"); }\n  const v = Number(__num(x));\n  if(n === undefined || n === null){ if(!Number.isFinite(v)) throw new __E_OverflowError('cannot convert float infinity to integer'); const f = Math.floor(v), d = v - f; const r = d < 0.5 ? f : d > 0.5 ? f + 1 : (f % 2 === 0 ? f : f + 1); return Number.isSafeInteger(r) ? r : __ni(BigInt(r)); }\n  if(!__isf(x)) return x;\n  if(n < 0){ const m = Math.pow(10, -n), q = v / m, f = Math.floor(q), d = q - f; const r = d < 0.5 ? f : d > 0.5 ? f + 1 : (f % 2 === 0 ? f : f + 1); return __fl(r * m); }\n  return __fl(Number(__fixed(v, n)));\n}\nfunction __enumerate(it, st){ if(st instanceof __KW) st = st.o.start; st = st || 0; const r = []; let i = st; for(const x of __iter(it)) r.push(__tup([i++, x])); return r; }\nfunction __zip(...a){ if(a[a.length - 1] instanceof __KW) a.pop(); const ls = a.map(x => Array.from(__iter(x))); const n = ls.length ? Math.min(...ls.map(l => l.length)) : 0; const r = []; for(let i = 0; i < n; i++) r.push(__tup(ls.map(l => l[i]))); return r; }\nfunction __map(f, ...its){ const ls = its.map(x => Array.from(__iter(x))); const n = Math.min(...ls.map(l => l.length)); const r = []; for(let i = 0; i < n; i++) r.push(f(...ls.map(l => l[i]))); return r; }\nfunction __filter(f, it){ const r = []; for(const x of __iter(it)) if(f === null ? __t(x) : __t(f(x))) r.push(x); return r; }\nfunction __sum(it, st){ if(st instanceof __KW) st = st.o.start; let s = st === undefined ? 0 : st; const a = Array.from(__iter(it));\n  if(a.length && a.every(x => typeof x === 'number' || x instanceof PyF) && (typeof s === 'number' || s instanceof PyF) && (a.some(x => !Number.isInteger(+x) || x instanceof PyF) || !Number.isInteger(+s))){\n    let sum = +s, c = 0; for(const v of a){ const x = +v, t = sum + x; if(Math.abs(sum) >= Math.abs(x)) c += (sum - t) + x; else c += (x - t) + sum; sum = t; } return __fl(sum + c); }\n  for(const x of a) s = __add(s, x); return s; }\nfunction __abs(x){ if(typeof x === 'number') return Math.abs(x); if(typeof x === 'bigint') return x < 0n ? __ni(-x) : x; if(x instanceof PyF) return __fl(Math.abs(+x)); if(typeof x === 'boolean') return x ? 1 : 0; if(x && typeof x.__abs__ === 'function') return x.__abs__(); throw new __E_TypeError(\"bad operand type for abs(): '\" + __tname(x) + \"'\"); }\nfunction __divmod(a, b){ return __tup([__fdiv(a, b), __mod(a, b)]); }\nfunction __ord(c){ if(typeof c !== 'string' || [...c].length !== 1) throw new __E_TypeError('ord() expected a character, but string of length ' + (typeof c === 'string' ? [...c].length : 1) + ' found'); return c.codePointAt(0); }\nfunction __chr(n){ n = Number(__num(n)); if(n < 0 || n > 1114111) throw new __E_ValueError('chr() arg not in range(0x110000)'); return String.fromCodePoint(n); }\nfunction __base(p, b, x){ const v = __num(x); return (v < 0 ? '-' : '') + p + (typeof v === 'bigint' ? (v < 0n ? -v : v) : Math.abs(v)).toString(b); }\nfunction __type(x){ const t = x === null ? __NoneType : typeof x === 'string' ? __str : typeof x === 'boolean' ? __bool : (typeof x === 'number' && Number.isInteger(x)) || typeof x === 'bigint' ? __intT : (x instanceof PyF || typeof x === 'number') ? __floatT : Array.isArray(x) ? (x.__tup ? __tupleT : __listT) : x instanceof PyDict ? __dictT : x instanceof PySet ? __setT : x.constructor; return t; }\nfunction __mkt(n, chk){ const f = function(){ }; f.__name__ = n; f.__istype = 1; f.__isinst = chk; return f; }\nvar __NoneType = __mkt('NoneType', x => x === null), __str = __mkt('str', x => typeof x === 'string'), __bool = __mkt('bool', x => typeof x === 'boolean'), __intT = __mkt('int', x => (typeof x === 'number' && Number.isInteger(x)) || typeof x === 'bigint' || typeof x === 'boolean'),\n  __floatT = __mkt('float', x => x instanceof PyF || (typeof x === 'number' && !Number.isInteger(x))), __listT = __mkt('list', x => Array.isArray(x) && !x.__tup), __tupleT = __mkt('tuple', x => Array.isArray(x) && !!x.__tup),\n  __dictT = __mkt('dict', x => x instanceof PyDict), __setT = __mkt('set', x => x instanceof PySet);\nfunction __listf(x){ return x === undefined ? [] : Array.from(__iter(x)); }\nfunction __tuplef(x){ return __tup(x === undefined ? [] : Array.from(__iter(x))); }\nfunction __dictf(x, kw){\n  const d = new PyDict(); if(x instanceof __KW){ kw = x; x = undefined; }\n  if(x instanceof PyDict){ for(const [k, v] of x.items()) d.set(k, v); } else if(x !== undefined) for(const e of __iter(x)){ const p = Array.from(__iter(e)); if(p.length !== 2) throw new __E_ValueError('dictionary update sequence element has length ' + p.length + '; 2 is required'); d.set(p[0], p[1]); }\n  if(kw instanceof __KW) for(const k in kw.o) d.set(k, kw.o[k]); return d;\n}\nfunction __getattr(o, n, d){ const v = o == null ? undefined : o[n]; if(v === undefined){ if(d !== undefined) return d; throw new __E_AttributeError(\"'\" + __tname(o) + \"' object has no attribute '\" + n + \"'\"); } return v; }\nfunction __next(it, d){ if(it && typeof it.next === 'function' && it[Symbol.iterator]){ const r = it.next(); if(r.done){ if(d !== undefined) return d; throw new __E_StopIteration(); } return r.value; }\n  if(it && typeof it.__next__ === 'function') return it.__next__(); if(it && it.__it){ const r = it.__it.next(); if(r.done){ if(d !== undefined) return d; throw new __E_StopIteration(); } return r.value; } throw new __E_TypeError(\"'\" + __tname(it) + \"' object is not an iterator\"); }\nfunction __iterf(x){ const g = __iter(x)[Symbol.iterator](); return { __it: g, [Symbol.iterator](){ return g; }, next(){ return g.next(); } }; }\nfunction __exit(c){ throw { __exit: 1 }; }\nfunction __pyname(f, n, params){ f.__name__ = n; if(params) f.__params = params; return f; }\nvar print = __KWB(__print), input = __input, len = __len, range = (a, b, c) => b === undefined ? new PyRange(0, Number(__num(a)), 1) : new PyRange(Number(__num(a)), Number(__num(b)), c === undefined ? 1 : Number(__num(c))),\n  abs = __abs, min = __KWB((...a) => __minmax(-1, a, 'min')), max = __KWB((...a) => __minmax(1, a, 'max')), sum = __KWB(__sum), sorted = __KWB((it, kw) => __sorted(Array.from(__iter(it)), kw)),\n  reversed = x => Array.from(__iter(x)).reverse(), enumerate = __KWB(__enumerate), zip = __KWB(__zip), map = __map, filter = __filter, any = it => { for(const x of __iter(it)) if(__t(x)) return true; return false; }, all = it => { for(const x of __iter(it)) if(!__t(x)) return false; return true; },\n  round = __KWB(__round), pow = (a, b, m) => m === undefined ? __pow(a, b) : __ni(((BigInt(a) ** BigInt(b)) % BigInt(m) + BigInt(m)) % BigInt(m)), divmod = __divmod, ord = __ord, chr = __chr,\n  hex = x => __base('0x', 16, x), oct = x => __base('0o', 8, x), bin = x => __base('0b', 2, x), repr = __r, ascii = __r, isinstance = __isinst, type = __type, callable = f => typeof f === 'function',\n  getattr = __getattr, hasattr = (o, n) => o != null && o[n] !== undefined, setattr = (o, n, v) => { o[n] = v; return null; }, iter = __iterf, next = __next, id = x => 0, hash = x => 0,\n  format = (v, s) => __fmt(v, s === undefined ? '' : s), exit = __exit, quit = __exit, object = function(){}, __name__ = '__main__';\nvar int = __KWB(__int), float = __float, str = x => x === undefined ? '' : __s(x), bool = x => x === undefined ? false : __t(x), list = __listf, tuple = __tuplef, dict = __KWB(__dictf), set = x => x === undefined ? new PySet() : __set0(x), frozenset = set;\nint.__name__ = 'int'; int.__istype = 1; int.__isinst = __intT.__isinst; float.__name__ = 'float'; float.__istype = 1; float.__isinst = __floatT.__isinst; str.__name__ = 'str'; str.__istype = 1; str.__isinst = __str.__isinst;\nbool.__name__ = 'bool'; bool.__istype = 1; bool.__isinst = __bool.__isinst; list.__name__ = 'list'; list.__istype = 1; list.__isinst = __listT.__isinst; tuple.__name__ = 'tuple'; tuple.__istype = 1; tuple.__isinst = __tupleT.__isinst;\ndict.__name__ = 'dict'; dict.__istype = 1; dict.__isinst = __dictT.__isinst; set.__name__ = 'set'; set.__istype = 1; set.__isinst = __setT.__isinst; object.__isinst = x => true;\n__intT = int; __floatT = float; __str = str; __bool = bool; __listT = list; __tupleT = tuple; __dictT = dict; __setT = set;\n/* ---------- módulos ---------- */\nconst __mathErr = () => new __E_ValueError('math domain error');\nconst __MODS = {\n  math: { pi: Math.PI, e: Math.E, tau: 2 * Math.PI, inf: Infinity, nan: NaN, sqrt: x => { const v = Number(__num(x)); if(v < 0) throw __mathErr(); return __fl(Math.sqrt(v)); }, floor: x => __int(Math.floor(Number(__num(x)))), ceil: x => __int(Math.ceil(Number(__num(x)))), trunc: x => __int(Number(__num(x))),\n    fabs: x => __fl(Math.abs(Number(__num(x)))), pow: (a, b) => __fl(Math.pow(Number(__num(a)), Number(__num(b)))), exp: x => __fl(Math.exp(Number(__num(x)))),\n    log: (x, b) => { const v = Number(__num(x)); if(v <= 0) throw __mathErr(); return __fl(b === undefined ? Math.log(v) : Math.log(v) / Math.log(Number(__num(b)))); }, log10: x => { const v = Number(__num(x)); if(v <= 0) throw __mathErr(); return __fl(Math.log10(v)); }, log2: x => { const v = Number(__num(x)); if(v <= 0) throw __mathErr(); return __fl(Math.log2(v)); },\n    sin: x => __fl(Math.sin(Number(__num(x)))), cos: x => __fl(Math.cos(Number(__num(x)))), tan: x => __fl(Math.tan(Number(__num(x)))), asin: x => __fl(Math.asin(Number(__num(x)))), acos: x => __fl(Math.acos(Number(__num(x)))), atan: x => __fl(Math.atan(Number(__num(x)))), atan2: (a, b) => __fl(Math.atan2(Number(__num(a)), Number(__num(b)))),\n    sinh: x => __fl(Math.sinh(Number(__num(x)))), cosh: x => __fl(Math.cosh(Number(__num(x)))), tanh: x => __fl(Math.tanh(Number(__num(x)))), degrees: x => __fl(Number(__num(x)) * 180 / Math.PI), radians: x => __fl(Number(__num(x)) * Math.PI / 180), hypot: (...a) => __fl(Math.hypot(...a.map(v => Number(__num(v))))),\n    isnan: x => Number.isNaN(Number(__num(x))), isinf: x => Math.abs(Number(__num(x))) === Infinity, isfinite: x => Number.isFinite(Number(__num(x))), fmod: (a, b) => __fl(Number(__num(a)) % Number(__num(b))), copysign: (a, b) => __fl(Math.sign(Number(__num(b))) < 0 || Object.is(Number(__num(b)), -0) ? -Math.abs(Number(__num(a))) : Math.abs(Number(__num(a)))),\n    factorial: n => { if(!__isn(n) || __isf(n)) throw new __E_TypeError(\"'\" + __tname(n) + \"' object cannot be interpreted as an integer\"); if(__num(n) < 0) throw new __E_ValueError('factorial() not defined for negative values'); let r = 1n; for(let i = 2n; i <= BigInt(__num(n)); i++) r *= i; return __ni(r); },\n    gcd: (...a) => { let g = 0n; a.forEach(v => { let x = BigInt(__num(v)), y = g; x = x < 0n ? -x : x; while(y){ const t = x % y; x = y; y = t; } g = x; }); return __ni(g); }, lcm: (a, b) => { const x = BigInt(__num(a)), y = BigInt(__num(b)); if(!x || !y) return 0; let g = x < 0n ? -x : x, h = y < 0n ? -y : y; while(h){ const t = g % h; g = h; h = t; } const r = x * y / g; return __ni(r < 0n ? -r : r); },\n    isqrt: n => { if(__num(n) < 0) throw new __E_ValueError('isqrt() argument must be nonnegative'); let x = BigInt(__num(n)); if(x < 2n) return __ni(x); let r = BigInt(Math.floor(Math.sqrt(Number(x)))); while(r * r > x) r--; while((r + 1n) * (r + 1n) <= x) r++; return __ni(r); },\n    comb: (n, k) => { let r = 1n; n = BigInt(__num(n)); k = BigInt(__num(k)); if(k > n) return 0; for(let i = 1n; i <= k; i++) r = r * (n - k + i) / i; return __ni(r); }, perm: (n, k) => { n = BigInt(__num(n)); k = k === undefined ? n : BigInt(__num(k)); let r = 1n; for(let i = 0n; i < k; i++) r *= (n - i); return __ni(r); },\n    prod: it => { let r = 1; for(const x of __iter(it)) r = __mul(r, x); return r; }, dist: (p, q) => __fl(Math.hypot(...Array.from(p).map((v, i) => Number(__num(v)) - Number(__num(q[i]))))) },\n  random: (() => { const R = { random: () => __fl(Math.random()), randint: (a, b) => { a = Number(__num(a)); b = Number(__num(b)); return a + Math.floor(Math.random() * (b - a + 1)); }, randrange: (a, b, c) => { if(b === undefined){ b = a; a = 0; } c = c || 1; const n = Math.max(0, Math.ceil((b - a) / c)); if(!n) throw new __E_ValueError('empty range for randrange()'); return a + c * Math.floor(Math.random() * n); },\n    uniform: (a, b) => __fl(Number(__num(a)) + Math.random() * (Number(__num(b)) - Number(__num(a)))), choice: s => { const a = Array.from(__iter(s)); if(!a.length) throw new __E_IndexError('Cannot choose from an empty sequence'); return a[Math.floor(Math.random() * a.length)]; },\n    shuffle: l => { for(let i = l.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = l[i]; l[i] = l[j]; l[j] = t; } return null; }, sample: (s, k) => { const a = Array.from(__iter(s)); R.shuffle(a); if(k > a.length) throw new __E_ValueError('Sample larger than population or is negative'); return a.slice(0, k); },\n    choices: (s, kw) => { const a = Array.from(__iter(s)); const k = kw instanceof __KW ? kw.o.k || 1 : 1; const r = []; for(let i = 0; i < k; i++) r.push(a[Math.floor(Math.random() * a.length)]); return r; }, seed: () => null, gauss: (m, s) => { let u = 0, v = 0; while(!u) u = Math.random(); v = Math.random(); return __fl(Number(__num(m)) + Number(__num(s)) * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)); } }; return R; })(),\n  time: { time: () => __fl(Date.now() / 1000), sleep: () => null, perf_counter: () => __fl(performance.now() / 1000), monotonic: () => __fl(performance.now() / 1000), process_time: () => __fl(performance.now() / 1000) },\n  string: { ascii_lowercase: 'abcdefghijklmnopqrstuvwxyz', ascii_uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', ascii_letters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', digits: '0123456789', punctuation: '!\"#$%&\\'()*+,-./:;<=>?@[\\\\]^_`{|}~', whitespace: ' \\t\\n\\r\\x0b\\x0c', hexdigits: '0123456789abcdefABCDEF', octdigits: '01234567' },\n  copy: { copy: x => Array.isArray(x) ? Object.assign(x.slice(), x.__tup ? { __tup: 1 } : {}) : x instanceof PyDict ? __DM.copy(x) : x instanceof PySet ? __STM.copy(x) : x, deepcopy: function dc(x){ if(Array.isArray(x)){ const r = x.map(dc); if(x.__tup) r.__tup = 1; return r; } if(x instanceof PyDict){ const r = new PyDict(); for(const [k, v] of x.items()) r.set(dc(k), dc(v)); return r; } if(x instanceof PySet){ const r = new PySet(); for(const v of x) r.add(dc(v)); return r; } return x; } },\n  functools: { reduce: (f, it, init) => { const a = Array.from(__iter(it)); let i = 0, acc; if(init === undefined){ if(!a.length) throw new __E_TypeError('reduce() of empty iterable with no initial value'); acc = a[i++]; } else acc = init; for(; i < a.length; i++) acc = f(acc, a[i]); return acc; } },\n  itertools: { permutations: (it, r) => { const a = Array.from(__iter(it)); r = r === undefined ? a.length : r; const out = []; const rec = (cur, used) => { if(cur.length === r){ out.push(__tup(cur.slice())); return; } for(let i = 0; i < a.length; i++){ if(used[i]) continue; used[i] = 1; cur.push(a[i]); rec(cur, used); cur.pop(); used[i] = 0; } }; rec([], []); return out; },\n    combinations: (it, r) => { const a = Array.from(__iter(it)); const out = []; const rec = (s, cur) => { if(cur.length === r){ out.push(__tup(cur.slice())); return; } for(let i = s; i < a.length; i++){ cur.push(a[i]); rec(i + 1, cur); cur.pop(); } }; rec(0, []); return out; },\n    product: (...its) => { let kw = null; if(its[its.length - 1] instanceof __KW) kw = its.pop().o; let ls = its.map(x => Array.from(__iter(x))); if(kw && kw.repeat){ const b = ls; ls = []; for(let i = 0; i < kw.repeat; i++) ls = ls.concat(b); } let out = [[]]; ls.forEach(l => { const n = []; out.forEach(p => l.forEach(x => n.push(p.concat([x])))); out = n; }); return out.map(__tup); },\n    chain: (...its) => { const r = []; its.forEach(i => { for(const x of __iter(i)) r.push(x); }); return r; }, accumulate: (it, f) => { const a = Array.from(__iter(it)); const r = []; a.forEach((x, i) => r.push(i === 0 ? x : (f ? f(r[i - 1], x) : __add(r[i - 1], x)))); return r; }, count: (s) => { throw new __E_NotImplementedError('itertools.count infinito não é suportado'); } },\n  collections: { defaultdict: f => new __DD(f === undefined ? null : f), Counter: it => { const d = new __DD(() => 0); if(it !== undefined) { if(it instanceof PyDict){ for(const [k, v] of it.items()) d.set(k, v); } else for(const x of __iter(it)) d.set(x, (d.get(x) || 0) + 1); } return d; }, OrderedDict: x => __dictf(x) },\n  statistics: { mean: it => { const a = Array.from(__iter(it)); if(!a.length) throw new __E_ValueError('mean requires at least one data point'); return __div(__sum(a), a.length); }, median: it => { const a = __sorted(Array.from(__iter(it))); const n = a.length; if(!n) throw new __E_ValueError('no median for empty data'); return n % 2 ? a[(n - 1) / 2] : __div(__add(a[n / 2 - 1], a[n / 2]), 2); } },\n  sys: { argv: [], maxsize: 9223372036854775807n, exit: __exit, stdout: { write: s => { o += s; return null; }, flush: () => null }, stderr: { write: s => null, flush: () => null }, stdin: { readline: () => { const l = readline(); return l === null ? '' : l + '\\n'; } }, version: '3.12.0' },\n  os: { name: 'posix', getcwd: () => '/' }\n};\n__MODS.sys.argv = __tup0();\nfunction __tup0(){ return ['main.py'].concat(ARGS); }\nfunction __imp(n, ln){ const m = __MODS[n]; if(!m){ throw new __E_ModuleNotFoundError(\"No module named '\" + n + \"'\"); } return m; }\nfunction __impfrom(n, what){ const m = __imp(n); const v = m[what]; if(v === undefined) throw new __E_ImportError(\"cannot import name '\" + what + \"' from '\" + n + \"'\"); return v; }\n[__MODS.math.sqrt, __MODS.math.log, __MODS.math.pow].forEach(f => f.__kwb = 0);\nfunction __fmtexc(e){\n  if(e && e.__need) throw e; if(e && e.__exit) throw e;\n  const x = __pyexc(e);\n  let msg = x.constructor.pyname + (x.message !== '' ? ': ' + (x instanceof __E_KeyError ? __r(x.args[0]) : x.message) : '');\n  return { message: 'Traceback (most recent call last):\\n  File \"main.py\", line ' + __ln + ', in <module>\\n' + msg };\n}\nfunction __bitinv(a){ return __sub(__neg(__num(a)), 1); }\nfunction __newk(C, args, kw){ const ps = C.__initp; if(!ps){ if(C.prototype instanceof __E_BaseException || C === __E_BaseException) return new C(...args); throw new __E_TypeError('keyword arguments are not supported for this call'); }\n  const a = args.slice(); for(const k in kw){ const i = ps.indexOf(k); if(i < 0) throw new __E_TypeError(C.__name__ + \"() got an unexpected keyword argument '\" + k + \"'\"); a[i] = kw[k]; } return new C(...a); }\nfunction __clsattr(C, n, v){ C.prototype[n] = v; Object.defineProperty(C, n, { get(){ return C.prototype[n]; }, set(x){ C.prototype[n] = x; }, configurable: true }); }\n\nfunction __call(f, ...a){\n  if(typeof f !== 'function') throw new __E_TypeError(\"'\" + __tname(f) + \"' object is not callable\");\n  if(f.prototype && f.prototype.constructor === f && /^class[\\s{]/.test(Function.prototype.toString.call(f))) return new f(...a);\n  return f(...a);\n}\n";
+/* ===== Transpilador Python 3 -> JavaScript (roda no jogo; o resultado executa no Worker com o runtime acima) ===== */
 function py2js(src){
-  const out = [], st = [0]; let pend = false;
-  const cut = l => { let q = null; for(let i = 0; i < l.length; i++){ const c = l[i]; if(q){ if(c === '\\') i++; else if(c === q) q = null; } else if(c === '"' || c === "'") q = c; else if(c === '#') return l.slice(0, i); } return l; };
-  const ex = e => {
-    const K = [];
-    e = e.replace(/(f?)("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g, (m, f, s) => { K.push(f ? '`' + s.slice(1, -1).replace(/\{([^}]*)\}/g, '${__s($1)}') + '`' : s); return '\u0001' + (K.length - 1) + '\u0001'; });
-    e = e.replace(/(\u0001\d+\u0001)\.join\(((?:[^()]|\([^()]*\))*)\)/g, '($2).join($1)')
-      .replace(/([\w.\]\u0001]+)\s+not\s+in\s+([\w.\[\]\u0001]+(?:\([^)]*\))?)/g, '!__in($1,$2)')
-      .replace(/([\w.\]\u0001]+)\s+in\s+([\w.\[\]\u0001]+(?:\([^)]*\))?)/g, '__in($1,$2)')
-      .replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null')
-      .replace(/\band\b/g, '&&').replace(/\bor\b/g, '||').replace(/\bnot\b/g, '!')
-      .replace(/([\w.)\]\u0001]+)\s*\/\/\s*([\w.(\u0001]+)/g, 'Math.floor($1/$2)')
-      .replace(/,\s*(sep|end)\s*=\s*([^,()]+?)\s*(?=[,)])/g, ', __kw("$1",$2)')
-      .replace(/\.append\(/g, '.push(').replace(/\.upper\(\)/g, '.toUpperCase()').replace(/\.lower\(\)/g, '.toLowerCase()').replace(/\.strip\(\)/g, '.trim()')
-      .replace(/\.split\(\)/g, '.split(/\\s+/)').replace(/\.startswith\(/g, '.startsWith(').replace(/\.endswith\(/g, '.endsWith(')
-      .replace(/\.sort\(\)/g, '.sort((a,b)=>a<b?-1:a>b?1:0)').replace(/\blambda\s*([^:]*):/g, '($1)=>');
-    return e.replace(/\u0001(\d+)\u0001/g, (m, i) => K[i]);
-  };
-  for(const raw of src.split('\n')){
-    let ln = cut(raw.replace(/\t/g, '    '));
-    if(!ln.trim()){ out.push(''); continue; }
-    const ind = ln.match(/^ */)[0].length; ln = ln.trim();
-    if(pend){ st.push(ind); pend = false; }
-    while(ind < st[st.length - 1]){ st.pop(); out.push('}'); }
-    let m, js;
-    if((m = /^(elif\s+(.*)|else\s*):$/.exec(ln))){
-      let j = out.length - 1; while(j >= 0 && out[j] === '') j--;
-      if(j < 0 || out[j] !== '}') throw new Error('SyntaxError: ' + ln);
-      out.length = j; js = '}' + (m[2] ? 'else if(' + ex(m[2]) + '){' : 'else{');
+'use strict';
+const PYERR = (m, ln) => { const e = new Error(m); e.pySyntax = true; e.pyLine = ln; e.pyKind = /^(expected an indented block|unexpected indent|unindent)/.test(m) ? 'IndentationError' : 'SyntaxError'; return e; };
+const NOSUP = (m, ln) => { const e = new Error(m); e.pyUnsupported = true; e.pyLine = ln; return e; };
+/* ---------- 1. tokens ---------- */
+function tokenize(s){
+  const lines = []; let toks = [], depth = 0, i = 0, ln = 1, cur = 1, indent = 0, start = true; const n = s.length;
+  const O3 = ['**=', '//=', '>>=', '<<=', '...'], O2 = ['==', '!=', '<=', '>=', '**', '//', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '->', ':=', '<<', '>>'];
+  while(i < n){
+    if(start && depth === 0){
+      let col = 0, j = i;
+      while(j < n && (s[j] === ' ' || s[j] === '\t' || s[j] === '\f')){ col = s[j] === '\t' ? (Math.floor(col / 8) + 1) * 8 : col + 1; j++; }
+      if(j >= n) break;
+      if(s[j] === '\n' || s[j] === '\r'){ i = j + (s[j] === '\r' && s[j + 1] === '\n' ? 2 : 1); ln++; continue; }
+      if(s[j] === '#'){ while(j < n && s[j] !== '\n') j++; i = j; continue; }
+      indent = col; i = j; start = false; cur = ln;
     }
-    else if((m = /^def\s+(\w+)\s*\((.*)\)\s*:$/.exec(ln))) js = 'function ' + m[1] + '(' + ex(m[2]) + '){';
-    else if((m = /^(if|while)\s+(.*):$/.exec(ln))) js = m[1] + '(' + ex(m[2]) + '){';
-    else if((m = /^for\s+(.+?)\s+in\s+(.*):$/.exec(ln))) js = 'for(let ' + (m[1].includes(',') ? '[' + m[1] + ']' : m[1]) + ' of __it(' + ex(m[2]) + ')){';
-    else if(/^(pass|import\b.*|from\b.*|global\b.*)$/.test(ln)) js = '';
-    else if((m = /^([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*=(?!=)\s*(.+)$/.exec(ln))){
-      const r = ex(m[2]); js = m[1].includes(',') ? 'var [' + m[1] + ']=' + (r.includes(',') ? '[' + r + ']' : r) + ';' : 'var ' + m[1] + '=' + r + ';';
+    const c = s[i];
+    if(c === '\n' || c === '\r'){ if(c === '\r' && s[i + 1] === '\n') i++; i++; ln++; if(depth > 0) continue; if(toks.length){ lines.push({ ind:indent, toks, ln:cur }); toks = []; } start = true; continue; }
+    if(c === ' ' || c === '\t' || c === '\f'){ i++; continue; }
+    if(c === '#'){ while(i < n && s[i] !== '\n') i++; continue; }
+    if(c === '\\' && (s[i + 1] === '\n' || (s[i + 1] === '\r' && s[i + 2] === '\n'))){ i += s[i + 1] === '\r' ? 3 : 2; ln++; continue; }
+    const sm = /^([rRbBuUfF]{0,2})('''|"""|'|")/.exec(s.slice(i, i + 5));
+    if(sm && (sm[1] === '' || /^(r|b|u|f|rb|br|fr|rf)$/i.test(sm[1]))){
+      const pre = sm[1].toLowerCase(), q = sm[2], raw = pre.indexOf('r') >= 0; let j = i + sm[0].length, body = '';
+      for(;;){
+        if(j >= n) throw PYERR('unterminated string literal', cur);
+        const ch = s[j];
+        if(ch === '\\'){ body += ch + (s[j + 1] || ''); if(s[j + 1] === '\n') ln++; j += 2; continue; }
+        if(q.length === 3){ if(s.startsWith(q, j)){ j += 3; break; } if(ch === '\n') ln++; body += ch; j++; continue; }
+        if(ch === q){ j++; break; }
+        if(ch === '\n') throw PYERR('unterminated string literal', cur);
+        body += ch; j++;
+      }
+      toks.push({ t:'str', v:body, pre, raw, ln:cur }); i = j; continue;
     }
-    else js = ex(ln) + ';';
-    if(/\{$/.test(js)) pend = true;
-    out.push(js);
+    const nm = /^(0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|(?:\d[\d_]*\.?[\d_]*|\.\d[\d_]*)(?:[eE][+-]?\d+)?[jJ]?)/.exec(s.slice(i, i + 64));
+    if(nm && (c !== '.' || /\d/.test(s[i + 1] || ''))){ toks.push({ t:'num', v:nm[0], ln:cur }); i += nm[0].length; continue; }
+    const id = /^[A-Za-z_\u0080-\uFFFF][\w\u0080-\uFFFF]*/.exec(s.slice(i, i + 128));
+    if(id){ toks.push({ t:'name', v:id[0], ln:cur }); i += id[0].length; continue; }
+    let op = null;
+    if(O3.indexOf(s.substr(i, 3)) >= 0) op = s.substr(i, 3); else if(O2.indexOf(s.substr(i, 2)) >= 0) op = s.substr(i, 2); else if('+-*/%<>=()[]{},:.;@&|^~'.indexOf(c) >= 0) op = c;
+    if(!op) throw PYERR("invalid character '" + c + "'", cur);
+    if('([{'.indexOf(op) >= 0) depth++; else if(')]}'.indexOf(op) >= 0) depth = Math.max(0, depth - 1);
+    toks.push({ t:'op', v:op, ln:cur }); i += op.length;
   }
-  while(st.length > 1){ st.pop(); out.push('}'); }
-  return out.join('\n');
+  if(depth > 0){ const stack = []; lines.concat(toks.length ? [{ toks }] : []).forEach(L => L.toks.forEach(t => { if(t.t === 'op'){ if('([{'.indexOf(t.v) >= 0) stack.push(t); else if(')]}'.indexOf(t.v) >= 0) stack.pop(); } })); const o = stack[0] || { v:'(', ln:cur }; throw PYERR("'" + o.v + "' was never closed", o.ln); }
+  if(toks.length) lines.push({ ind:indent, toks, ln:cur });
+  return lines;
+}
+/* ---------- 2. strings / f-strings ---------- */
+function unesc(b, raw){
+  if(raw) return b;
+  return b.replace(/\\(\r?\n|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[0-7]{1,3}|N\{[^}]*\}|.)/gs, (m, e) => {
+    const c = e[0];
+    if(e === '\n' || e === '\r\n') return '';
+    if(c === 'x' && e.length === 3 || c === 'u' && e.length === 5) return String.fromCharCode(parseInt(e.slice(1), 16));
+    if(c === 'U' && e.length === 9) return String.fromCodePoint(parseInt(e.slice(1), 16));
+    if(/[0-7]/.test(c)) return String.fromCharCode(parseInt(e, 8));
+    switch(c){ case 'n': return '\n'; case 't': return '\t'; case 'r': return '\r'; case 'a': return '\x07'; case 'b': return '\b'; case 'f': return '\f'; case 'v': return '\v'; case '\\': return '\\'; case "'": return "'"; case '"': return '"'; }
+    return m;
+  });
+}
+function fparts(body, raw, ln){
+  const parts = []; let lit = '', i = 0; const n = body.length;
+  const flush = () => { if(lit){ parts.push(unesc(lit, raw)); lit = ''; } };
+  while(i < n){
+    const c = body[i];
+    if(c === '{'){
+      if(body[i + 1] === '{'){ lit += '{'; i += 2; continue; }
+      flush(); let j = i + 1, d = 0, q = null; const st = j;
+      for(; j < n; j++){ const ch = body[j]; if(q){ if(ch === '\\') j++; else if(ch === q) q = null; continue; } if(ch === "'" || ch === '"') q = ch; else if('([{'.indexOf(ch) >= 0) d++; else if(')]}'.indexOf(ch) >= 0){ if(d === 0) break; d--; } }
+      if(j >= n) throw PYERR("f-string: expecting '}'", ln);
+      let inner = body.slice(st, j), conv = '', spec = null, dbg = false;
+      let k = 0; d = 0; q = null; let cpos = -1, bpos = -1;
+      for(; k < inner.length; k++){ const ch = inner[k]; if(q){ if(ch === '\\') k++; else if(ch === q) q = null; continue; } if(ch === "'" || ch === '"'){ q = ch; continue; } if('([{'.indexOf(ch) >= 0) d++; else if(')]}'.indexOf(ch) >= 0) d--;
+        else if(d === 0 && ch === '!' && inner[k + 1] !== '=' && bpos < 0 && cpos < 0) bpos = k; else if(d === 0 && ch === ':' && cpos < 0){ cpos = k; break; } }
+      let ex = inner; if(cpos >= 0){ spec = inner.slice(cpos + 1); ex = inner.slice(0, cpos); } if(bpos >= 0){ conv = ex.slice(bpos + 1).trim(); ex = ex.slice(0, bpos); }
+      const mdbg = /^([\s\S]*[^=!<>=\s])\s*=\s*$/.exec(ex); if(mdbg && !/[<>!=]=\s*$/.test(ex)){ dbg = true; parts.push(ex); ex = mdbg[1]; if(!conv && spec === null) conv = 'r'; }
+      const ptoks = tokenize('(' + ex + ')'); if(!ptoks.length) throw PYERR('f-string: empty expression not allowed', ln);
+      const P = new Parser(ptoks[0].toks, ln); const e = P.exprList(); if(!P.end()) throw PYERR('f-string: invalid syntax', ln);
+      parts.push({ e, conv, spec: spec === null ? null : fparts(spec, raw, ln) });
+      i = j + 1; continue;
+    }
+    if(c === '}'){ if(body[i + 1] === '}'){ lit += '}'; i += 2; continue; } throw PYERR("f-string: single '}' is not allowed", ln); }
+    if(c === '\\' && !raw){ lit += c + (body[i + 1] || ''); i += 2; continue; }
+    lit += c; i++;
+  }
+  flush(); return parts;
+}
+/* ---------- 3. parser de expressões ---------- */
+const KW = new Set(['False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield']);
+class Parser {
+  constructor(toks, ln){ this.t = toks; this.i = 0; this.ln = ln; }
+  get cur(){ return this.t[this.i]; }
+  end(){ return this.i >= this.t.length; }
+  isOp(v){ const c = this.t[this.i]; return !!c && c.t === 'op' && c.v === v; }
+  isKw(v){ const c = this.t[this.i]; return !!c && c.t === 'name' && c.v === v; }
+  eatOp(v){ if(this.isOp(v)){ this.i++; return true; } return false; }
+  eatKw(v){ if(this.isKw(v)){ this.i++; return true; } return false; }
+  err(m){ const c = this.t[this.i] || this.t[this.t.length - 1]; return PYERR(m || 'invalid syntax', c ? c.ln : this.ln); }
+  expectOp(v){ if(!this.eatOp(v)) throw this.err("invalid syntax (esperado '" + v + "')"); }
+  name(){ const c = this.cur; if(!c || c.t !== 'name' || KW.has(c.v)) throw this.err(); this.i++; return c.v; }
+  exprList(allowStar){ // a, b, c  -> tupla se houver vírgula
+    const first = this.starOrTest(); if(!this.isOp(',')) return first;
+    const els = [first]; while(this.eatOp(',')){ if(this.end() || this.isOp(')') || this.isOp('=') || this.isOp(':') || this.isOp(']') || this.isOp('}') || this.isKw('in') || this.isKw('for')) break; els.push(this.starOrTest()); }
+    return { k:'tuple', els };
+  }
+  starOrTest(){ if(this.isOp('*')){ this.i++; return { k:'star', e:this.bitor() }; } return this.test(); }
+  test(){
+    if(this.isKw('lambda')) return this.lambda();
+    const a = this.orTest();
+    if(this.isKw('if')){ const save = this.i; this.i++; const c = this.orTest(); if(!this.eatKw('else')){ this.i = save; return a; } const b = this.test(); return { k:'ifx', test:c, a, b }; }
+    if(this.isOp(':=') && a.k === 'name'){ this.i++; return { k:'walrus', name:a.v, e:this.test() }; }
+    return a;
+  }
+  lambda(){
+    this.i++; const params = this.params(':'); this.expectOp(':'); return { k:'lambda', params, body:this.test() };
+  }
+  params(end){
+    const ps = [];
+    while(!this.isOp(end) && !this.end()){
+      if(this.eatOp('**')){ throw NOSUP('**kwargs em def/lambda não é suportado no Python offline (use Python online)', this.cur ? this.cur.ln : this.ln); }
+      let star = false; if(this.eatOp('*')){ star = true; if(this.isOp(',') ){ this.i++; continue; } }
+      if(this.isOp('/')){ this.i++; this.eatOp(','); continue; }
+      const nm = this.name(); let def = null;
+      if(end === ')' && this.eatOp(':')) this.test();   // anotação de tipo
+      if(this.eatOp('=')) def = this.test();
+      ps.push({ name:nm, def, star }); if(!this.eatOp(',')) break;
+    }
+    return ps;
+  }
+  orTest(){ let l = this.andTest(); while(this.isKw('or')){ this.i++; l = { k:'bool', op:'or', l, r:this.andTest() }; } return l; }
+  andTest(){ let l = this.notTest(); while(this.isKw('and')){ this.i++; l = { k:'bool', op:'and', l, r:this.notTest() }; } return l; }
+  notTest(){ if(this.isKw('not')){ this.i++; return { k:'not', e:this.notTest() }; } return this.cmp(); }
+  cmp(){
+    const first = this.bitor(), ops = [];
+    for(;;){
+      const c = this.cur; let op = null;
+      if(c && c.t === 'op' && ['<', '>', '==', '!=', '<=', '>='].indexOf(c.v) >= 0){ op = c.v; this.i++; }
+      else if(this.isKw('in')){ op = 'in'; this.i++; }
+      else if(this.isKw('not') && this.t[this.i + 1] && this.t[this.i + 1].v === 'in'){ op = 'not in'; this.i += 2; }
+      else if(this.isKw('is')){ this.i++; op = this.eatKw('not') ? 'is not' : 'is'; }
+      if(!op) break; ops.push([op, this.bitor()]);
+    }
+    return ops.length ? { k:'cmp', first, ops } : first;
+  }
+  bin(next, ops){ let l = this[next](); for(;;){ const c = this.cur; if(c && c.t === 'op' && ops.indexOf(c.v) >= 0){ this.i++; l = { k:'bin', op:c.v, l, r:this[next]() }; } else break; } return l; }
+  bitor(){ return this.bin('bitxor', ['|']); } bitxor(){ return this.bin('bitand', ['^']); } bitand(){ return this.bin('shift', ['&']); }
+  shift(){ return this.bin('arith', ['<<', '>>']); } arith(){ return this.bin('term', ['+', '-']); } term(){ return this.bin('factor', ['*', '/', '//', '%', '@']); }
+  factor(){ const c = this.cur; if(c && c.t === 'op' && (c.v === '-' || c.v === '+' || c.v === '~')){ this.i++; return { k:'un', op:c.v, e:this.factor() }; } return this.power(); }
+  power(){ const b = this.primary(); if(this.eatOp('**')) return { k:'bin', op:'**', l:b, r:this.factor() }; return b; }
+  primary(){
+    let e = this.atom();
+    for(;;){
+      if(this.isOp('(')){ this.i++; e = { k:'call', f:e, args:this.callArgs() }; }
+      else if(this.isOp('[')){ this.i++; e = { k:'sub', o:e, i:this.subscript() }; this.expectOp(']'); }
+      else if(this.isOp('.')){ this.i++; const c = this.cur; if(!c || c.t !== 'name') throw this.err(); this.i++; e = { k:'attr', o:e, n:c.v }; }
+      else break;
+    }
+    return e;
+  }
+  callArgs(){
+    const args = [];
+    while(!this.isOp(')')){
+      if(this.end()) throw this.err("'(' was never closed");
+      if(this.eatOp('**')) args.push({ e:this.test(), star:2 });
+      else if(this.eatOp('*')) args.push({ e:this.test(), star:1 });
+      else { const c = this.cur, n = this.t[this.i + 1]; if(c.t === 'name' && !KW.has(c.v) && n && n.t === 'op' && n.v === '='){ this.i += 2; args.push({ e:this.test(), name:c.v }); }
+        else { const e = this.test(); if(this.isKw('for') || this.isKw('async')) args.push({ e:this.compFor(e, 'gen') }); else args.push({ e }); } }
+      if(!this.eatOp(',')) break;
+    }
+    this.expectOp(')'); return args;
+  }
+  subscript(){
+    const items = []; let tup = false;
+    for(;;){
+      let a = null, b = null, c = null, sl = false;
+      if(!this.isOp(':') ) a = this.test();
+      if(this.isOp(':')){ sl = true; this.i++; if(!this.isOp(':') && !this.isOp(']') && !this.isOp(',')) b = this.test(); if(this.eatOp(':')){ if(!this.isOp(']') && !this.isOp(',')) c = this.test(); } }
+      items.push(sl ? { k:'slice', a, b, c } : a);
+      if(this.eatOp(',')){ tup = true; if(this.isOp(']')) break; continue; } break;
+    }
+    return tup ? { k:'tuple', els:items } : items[0];
+  }
+  atom(){
+    const c = this.cur; if(!c) throw this.err('unexpected EOF while parsing');
+    if(c.t === 'num'){ this.i++; return { k:'num', v:c.v }; }
+    if(c.t === 'str'){
+      const parts = []; let any = false;
+      while(this.cur && this.cur.t === 'str'){ const s = this.cur; this.i++; if(s.pre.indexOf('f') >= 0){ any = true; fparts(s.v, s.raw, s.ln).forEach(p => parts.push(p)); } else parts.push(unesc(s.v, s.raw)); }
+      if(!any) return { k:'str', v:parts.join('') };
+      return { k:'fstr', parts };
+    }
+    if(c.t === 'name'){
+      if(c.v === 'None' || c.v === 'True' || c.v === 'False'){ this.i++; return { k:'const', v:c.v === 'None' ? 'null' : c.v === 'True' ? 'true' : 'false' }; }
+      if(c.v === 'await' || c.v === 'async') throw NOSUP('async/await não é suportado no Python offline', c.ln);
+      if(c.v === 'yield'){ this.i++; if(this.eatKw('from')) return { k:'yieldfrom', e:this.test() }; if(this.end() || this.isOp(')') ) return { k:'yield', e:null }; return { k:'yield', e:this.exprList() }; }
+      if(KW.has(c.v)) throw this.err();
+      this.i++; return { k:'name', v:c.v, ln:c.ln };
+    }
+    if(c.t === 'op'){
+      if(c.v === '('){ this.i++; if(this.eatOp(')')) return { k:'tuple', els:[] }; if(this.isKw('yield')){ const y = this.atom(); this.expectOp(')'); return y; }
+        const first = this.starOrTest(); if(this.isKw('for') || this.isKw('async')){ const g = this.compFor(first, 'gen'); this.expectOp(')'); return g; }
+        if(this.isOp(',')){ const els = [first]; while(this.eatOp(',')){ if(this.isOp(')')) break; els.push(this.starOrTest()); } this.expectOp(')'); return { k:'tuple', els }; }
+        this.expectOp(')'); return first.k === 'name' || true ? { k:'paren', e:first } : first; }
+      if(c.v === '['){ this.i++; if(this.eatOp(']')) return { k:'list', els:[] }; const first = this.starOrTest(); if(this.isKw('for')){ const g = this.compFor(first, 'list'); this.expectOp(']'); return g; }
+        const els = [first]; while(this.eatOp(',')){ if(this.isOp(']')) break; els.push(this.starOrTest()); } this.expectOp(']'); return { k:'list', els }; }
+      if(c.v === '{'){ this.i++; if(this.eatOp('}')) return { k:'dict', items:[] };
+        if(this.eatOp('**')){ const items = [['**', this.bitor()]]; while(this.eatOp(',')){ if(this.isOp('}')) break; if(this.eatOp('**')) items.push(['**', this.bitor()]); else { const k = this.test(); this.expectOp(':'); items.push([k, this.test()]); } } this.expectOp('}'); return { k:'dict', items }; }
+        const first = this.starOrTest();
+        if(this.isOp(':')){ this.i++; const v = this.test(); if(this.isKw('for')){ const g = this.compFor(first, 'dict', v); this.expectOp('}'); return g; }
+          const items = [[first, v]]; while(this.eatOp(',')){ if(this.isOp('}')) break; if(this.eatOp('**')) items.push(['**', this.bitor()]); else { const k = this.test(); this.expectOp(':'); items.push([k, this.test()]); } } this.expectOp('}'); return { k:'dict', items }; }
+        if(this.isKw('for')){ const g = this.compFor(first, 'set'); this.expectOp('}'); return g; }
+        const els = [first]; while(this.eatOp(',')){ if(this.isOp('}')) break; els.push(this.starOrTest()); } this.expectOp('}'); return { k:'set', els }; }
+      if(c.v === '...'){ this.i++; return { k:'const', v:'null' }; }
+    }
+    throw this.err();
+  }
+  compFor(elt, kind, val){
+    const gens = [];
+    while(this.isKw('for') || this.isKw('async')){
+      if(this.eatKw('async')) throw NOSUP('async não é suportado no Python offline', this.ln);
+      this.i++; const target = this.targetList(); if(!this.eatKw('in')) throw this.err(); const iter = this.orTest(); const ifs = [];
+      while(this.isKw('if')){ this.i++; ifs.push(this.orTestNoCond()); }
+      gens.push({ target, iter, ifs });
+    }
+    return { k:'comp', kind, elt, val, gens };
+  }
+  orTestNoCond(){ return this.orTest(); }
+  targetList(){ const first = this.targetAtom(); if(!this.isOp(',')) return first; const els = [first]; while(this.eatOp(',')){ if(this.isKw('in')) break; els.push(this.targetAtom()); } return { k:'tuple', els }; }
+  targetAtom(){ if(this.isOp('*')){ this.i++; return { k:'star', e:this.bitor() }; } return this.bitor(); }
+}
+/* ---------- 4. parser de instruções ---------- */
+function parseProgram(lines){
+  const pos = { i:0 };
+  const stmts = block(lines, pos, lines.length ? lines[0].ind : 0);
+  if(pos.i < lines.length) throw PYERR('unindent does not match any outer indentation level', lines[pos.i].ln);
+  return stmts;
+}
+function block(lines, pos, indent){
+  const out = [];
+  while(pos.i < lines.length){
+    const L = lines[pos.i];
+    if(L.ind < indent) break;
+    if(L.ind > indent) throw PYERR('unexpected indent', L.ln);
+    pos.i++; stmt(L, lines, pos, out);
+  }
+  return out;
+}
+function headerColon(toks){ let d = 0, lam = 0; for(let i = 0; i < toks.length; i++){ const t = toks[i]; if(t.t === 'name' && t.v === 'lambda' && d === 0) lam++; if(t.t !== 'op') continue; if('([{'.indexOf(t.v) >= 0) d++; else if(')]}'.indexOf(t.v) >= 0) d--; else if(t.v === ':' && d === 0){ if(lam > 0) lam--; else return i; } } return -1; }
+function body(L, rest, lines, pos){
+  if(rest.length){ return simpleList(rest, L.ln); }
+  const nx = lines[pos.i]; if(!nx || nx.ind <= L.ind) throw PYERR('expected an indented block', L.ln);
+  return block(lines, pos, nx.ind);
+}
+function simpleList(toks, ln){
+  const out = []; let cur = [], d = 0;
+  const flush = () => { if(cur.length) simple(cur, ln, out); cur = []; };
+  for(const t of toks){ if(t.t === 'op'){ if('([{'.indexOf(t.v) >= 0) d++; else if(')]}'.indexOf(t.v) >= 0) d--; else if(t.v === ';' && d === 0){ flush(); continue; } } cur.push(t); }
+  flush(); return out;
+}
+function peekKw(lines, pos, ind, kw){ const n = lines[pos.i]; return n && n.ind === ind && n.toks[0].t === 'name' && n.toks[0].v === kw ? n : null; }
+function stmt(L, lines, pos, out){
+  const toks = L.toks, f = toks[0], ln = L.ln;
+  if(f.t === 'op' && f.v === '@'){ // decorador
+    const P = new Parser(toks.slice(1), ln); const d = P.test(); const decos = [d];
+    const nx = lines[pos.i]; if(!nx) throw PYERR('expected def', ln);
+    pos.i++; const tmp = []; stmt(nx, lines, pos, tmp); const s = tmp[0]; if(s) { s.decos = (s.decos || []).concat(decos); out.push(s); } return;
+  }
+  if(f.t === 'name'){
+    switch(f.v){
+      case 'if': { const ci = headerColon(toks); if(ci < 0) throw PYERR('invalid syntax', ln); const P = new Parser(toks.slice(1, ci), ln); const test = P.exprList(); if(!P.end()) throw P.err();
+        const b = body(L, toks.slice(ci + 1), lines, pos); const node = { t:'if', test, body:b, orelse:[], ln }; let tail = node;
+        for(;;){ const nx = lines[pos.i]; if(!nx || nx.ind !== L.ind || nx.toks[0].t !== 'name') break;
+          if(nx.toks[0].v === 'elif'){ pos.i++; const c2 = headerColon(nx.toks); const P2 = new Parser(nx.toks.slice(1, c2), nx.ln); const t2 = P2.exprList(); const b2 = body(nx, nx.toks.slice(c2 + 1), lines, pos); const n2 = { t:'if', test:t2, body:b2, orelse:[], ln:nx.ln }; tail.orelse = [n2]; tail = n2; continue; }
+          if(nx.toks[0].v === 'else'){ pos.i++; const c2 = headerColon(nx.toks); tail.orelse = body(nx, nx.toks.slice(c2 + 1), lines, pos); } break; }
+        out.push(node); return; }
+      case 'while': { const ci = headerColon(toks); if(ci < 0) throw PYERR('invalid syntax', ln); const P = new Parser(toks.slice(1, ci), ln); const test = P.exprList();
+        const b = body(L, toks.slice(ci + 1), lines, pos); let orelse = []; const nx = peekKw(lines, pos, L.ind, 'else'); if(nx){ pos.i++; orelse = body(nx, nx.toks.slice(headerColon(nx.toks) + 1), lines, pos); }
+        out.push({ t:'while', test, body:b, orelse, ln }); return; }
+      case 'for': { const ci = headerColon(toks); if(ci < 0) throw PYERR('invalid syntax', ln); const P = new Parser(toks.slice(1, ci), ln); const target = P.targetList(); if(!P.eatKw('in')) throw P.err(); const iter = P.exprList();
+        const b = body(L, toks.slice(ci + 1), lines, pos); let orelse = []; const nx = peekKw(lines, pos, L.ind, 'else'); if(nx){ pos.i++; orelse = body(nx, nx.toks.slice(headerColon(nx.toks) + 1), lines, pos); }
+        out.push({ t:'for', target, iter, body:b, orelse, ln }); return; }
+      case 'try': { const b = body(L, toks.slice(headerColon(toks) + 1), lines, pos); const handlers = []; let orelse = [], fin = [];
+        for(;;){ const nx = lines[pos.i]; if(!nx || nx.ind !== L.ind || nx.toks[0].t !== 'name') break; const k = nx.toks[0].v;
+          if(k === 'except'){ pos.i++; const ci = headerColon(nx.toks); const P = new Parser(nx.toks.slice(1, ci), nx.ln); let type = null, nm = null; if(P.eatOp('*')) throw NOSUP('except* não é suportado', nx.ln); if(!P.end()){ type = P.test(); if(P.isOp(',')){ const els = [type]; while(P.eatOp(',')) els.push(P.test()); type = { k:'tuple', els }; } if(P.eatKw('as')) nm = P.name(); }
+            handlers.push({ type, name:nm, body:body(nx, nx.toks.slice(ci + 1), lines, pos), ln:nx.ln }); continue; }
+          if(k === 'else'){ pos.i++; orelse = body(nx, nx.toks.slice(headerColon(nx.toks) + 1), lines, pos); continue; }
+          if(k === 'finally'){ pos.i++; fin = body(nx, nx.toks.slice(headerColon(nx.toks) + 1), lines, pos); continue; } break; }
+        if(!handlers.length && !fin.length) throw PYERR("expected 'except' or 'finally' block", ln);
+        out.push({ t:'try', body:b, handlers, orelse, fin, ln }); return; }
+      case 'with': { const ci = headerColon(toks); const P = new Parser(toks.slice(1, ci), ln); const items = []; const paren = P.isOp('(') && false;
+        for(;;){ const e = P.test(); let tgt = null; if(P.eatKw('as')) tgt = P.targetAtom(); items.push({ e, tgt }); if(!P.eatOp(',')) break; }
+        out.push({ t:'with', items, body:body(L, toks.slice(ci + 1), lines, pos), ln }); return; }
+      case 'def': { const ci = headerColon(toks); const P = new Parser(toks.slice(1, ci), ln); const name = P.name(); P.expectOp('('); const params = P.params(')'); P.expectOp(')'); if(P.eatOp('->')) P.test();
+        out.push({ t:'def', name, params, body:body(L, toks.slice(ci + 1), lines, pos), ln }); return; }
+      case 'class': { const ci = headerColon(toks); const P = new Parser(toks.slice(1, ci), ln); const name = P.name(); let bases = []; if(P.eatOp('(')){ while(!P.isOp(')')){ if(P.cur && P.cur.t === 'name' && P.t[P.i + 1] && P.t[P.i + 1].v === '=') throw NOSUP('class com palavra-chave (metaclass) não é suportada', ln); bases.push(P.test()); if(!P.eatOp(',')) break; } P.expectOp(')'); }
+        out.push({ t:'class', name, bases, body:body(L, toks.slice(ci + 1), lines, pos), ln }); return; }
+      case 'match': { const ci = headerColon(toks); if(ci > 0 && !(toks[1] && toks[1].t === 'op' && ['=', '.', '(', '[', ',', ':'].indexOf(toks[1].v) >= 0 && toks[1].v !== '(' && toks[1].v !== '[')){
+          const nx = lines[pos.i]; if(nx && nx.ind > L.ind && nx.toks[0].t === 'name' && nx.toks[0].v === 'case'){
+            const P = new Parser(toks.slice(1, ci), ln); const subj = P.exprList(); const cases = []; const ind = nx.ind;
+            while(pos.i < lines.length && lines[pos.i].ind === ind && lines[pos.i].toks[0].v === 'case'){ const cl = lines[pos.i++]; const cc = headerColon(cl.toks); const Q = new Parser(cl.toks.slice(1, cc), cl.ln); const pat = pattern(Q, true); let guard = null; if(Q.eatKw('if')) guard = Q.test(); if(!Q.end()) throw Q.err();
+              cases.push({ pat, guard, body:body(cl, cl.toks.slice(cc + 1), lines, pos), ln:cl.ln }); }
+            out.push({ t:'match', subj, cases, ln }); return; } } break; }
+      case 'async': throw NOSUP('async não é suportado no Python offline', ln);
+      case 'elif': case 'except': case 'finally': throw PYERR('invalid syntax', ln);
+      case 'else': throw PYERR('invalid syntax', ln);
+    }
+  }
+  simpleList(toks, ln).forEach(x => out.push(x));
+}
+function pattern(P, top){
+  let first = patOr(P);
+  if(top && P.isOp(',')){ const els = [first]; while(P.eatOp(',')){ if(P.end() || P.isKw('if')) break; els.push(patOr(P)); } return { p:'seq', els }; }
+  return first;
+}
+function patOr(P){ let a = patAs(P); if(P.isOp('|')){ const alts = [a]; while(P.eatOp('|')) alts.push(patAs(P)); return { p:'or', alts }; } return a; }
+function patAs(P){ const a = patAtom(P); if(P.eatKw('as')) return { p:'as', pat:a, name:P.name() }; return a; }
+function patAtom(P){
+  const c = P.cur; if(!c) throw P.err();
+  if(c.t === 'num' || c.t === 'str' || (c.t === 'op' && c.v === '-')){ const e = P.arith(); return { p:'val', e }; }
+  if(c.t === 'name'){
+    if(c.v === 'None' || c.v === 'True' || c.v === 'False'){ P.i++; return { p:'val', e:{ k:'const', v:c.v === 'None' ? 'null' : c.v === 'True' ? 'true' : 'false' } }; }
+    if(P.t[P.i + 1] && P.t[P.i + 1].v === '.' ){ let e = { k:'name', v:c.v }; P.i++; while(P.eatOp('.')){ e = { k:'attr', o:e, n:P.cur.v }; P.i++; } return { p:'val', e }; }
+    if(P.t[P.i + 1] && P.t[P.i + 1].v === '(') throw NOSUP('match com padrão de classe não é suportado no Python offline', c.ln);
+    P.i++; return c.v === '_' ? { p:'any' } : { p:'cap', name:c.v };
+  }
+  if(c.t === 'op' && (c.v === '(' || c.v === '[')){ const close = c.v === '(' ? ')' : ']'; P.i++; const els = []; let comma = false;
+    while(!P.isOp(close)){ if(P.eatOp('*')){ const nm = P.name(); els.push({ p:'star', name:nm === '_' ? null : nm }); } else els.push(patOr(P)); if(P.eatOp(',')){ comma = true; continue; } break; }
+    P.expectOp(close); if(close === ')' && els.length === 1 && !comma && els[0].p !== 'star') return els[0]; return { p:'seq', els }; }
+  if(c.t === 'op' && c.v === '{') throw NOSUP('match com padrão de dicionário não é suportado no Python offline', c.ln);
+  throw P.err();
+}
+function simple(toks, ln, out, single){
+  const f = toks[0];
+  if(f.t === 'name'){
+    switch(f.v){
+      case 'pass': out.push({ t:'pass', ln }); return;
+      case 'break': out.push({ t:'break', ln }); return;
+      case 'continue': out.push({ t:'continue', ln }); return;
+      case 'return': { const P = new Parser(toks.slice(1), ln); out.push({ t:'return', e:P.end() ? null : P.exprList(), ln }); return; }
+      case 'global': case 'nonlocal': { const names = []; for(let i = 1; i < toks.length; i += 2) names.push(toks[i].v); out.push({ t:f.v, names, ln }); return; }
+      case 'del': { const P = new Parser(toks.slice(1), ln); const e = P.exprList(); out.push({ t:'del', e, ln }); return; }
+      case 'assert': { const P = new Parser(toks.slice(1), ln); const test = P.test(); let msg = null; if(P.eatOp(',')) msg = P.test(); out.push({ t:'assert', test, msg, ln }); return; }
+      case 'raise': { const P = new Parser(toks.slice(1), ln); let e = null, cause = null; if(!P.end()){ e = P.test(); if(P.eatKw('from')) cause = P.test(); } out.push({ t:'raise', e, ln }); return; }
+      case 'import': { const P = new Parser(toks.slice(1), ln); const items = []; do { let n = P.name(); while(P.eatOp('.')) n += '.' + P.name(); let as = null; if(P.eatKw('as')) as = P.name(); items.push({ n, as }); } while(P.eatOp(',')); out.push({ t:'import', items, ln }); return; }
+      case 'from': { const P = new Parser(toks.slice(1), ln); let n = P.name(); while(P.eatOp('.')) n += '.' + P.name(); if(!P.eatKw('import')) throw P.err(); const items = []; const par = P.eatOp('(');
+        if(P.eatOp('*')) items.push({ n:'*', as:null }); else do { if(par && P.isOp(')')) break; const w = P.name(); let as = null; if(P.eatKw('as')) as = P.name(); items.push({ n:w, as }); } while(P.eatOp(',')); if(par) P.expectOp(')'); out.push({ t:'from', mod:n, items, ln }); return; }
+      case 'class': case 'def': case 'if': case 'while': case 'for': case 'try': case 'with': throw PYERR('invalid syntax', ln);
+    }
+  }
+  // atribuição / expressão
+  const P = new Parser(toks, ln);
+  const first = P.exprList();
+  if(P.isOp(':') && !P.end()){ // anotação x: int = 5
+    P.i++; P.test(); if(P.eatOp('=')){ const v = P.exprList(); out.push({ t:'assign', targets:[first], value:v, ln }); return; } return; }
+  const c = P.cur;
+  if(c && c.t === 'op' && ['+=', '-=', '*=', '/=', '//=', '%=', '**=', '&=', '|=', '^=', '>>=', '<<=', '@='].indexOf(c.v) >= 0){ P.i++; const v = P.exprList(); if(!P.end()) throw P.err(); out.push({ t:'aug', op:c.v.slice(0, -1), target:first, value:v, ln }); return; }
+  if(P.isOp('=')){ const targets = [first]; let value = null; while(P.eatOp('=')){ const e = P.exprList(); if(P.isOp('=')) targets.push(e); else value = e; } if(!P.end()) throw P.err(); out.push({ t:'assign', targets, value, ln }); return; }
+  if(!P.end()) throw P.err();
+  out.push({ t:'expr', e:first, ln });
+}
+/* ---------- 5. geração de código ---------- */
+const RESERVED = new Set(('o L ip fm ARGS process console EOF readline prompt onmessage postMessage self name top window document length event status arguments eval var let const new this typeof void delete function default switch case enum export extends super static interface package private protected public implements null undefined true false instanceof do catch throw debugger yield await Object Array Map Set Math Number String Boolean Symbol JSON Error BigInt Date RegExp Promise Infinity NaN Function parseInt parseFloat isNaN isFinite globalThis performance constructor prototype toString valueOf hasOwnProperty').split(' '));
+const BUILTIN_EXC = new Set(['BaseException', 'Exception', 'ArithmeticError', 'ZeroDivisionError', 'OverflowError', 'AssertionError', 'AttributeError', 'EOFError', 'ImportError', 'ModuleNotFoundError', 'LookupError', 'IndexError', 'KeyError', 'NameError', 'UnboundLocalError', 'OSError', 'FileNotFoundError', 'RuntimeError', 'NotImplementedError', 'RecursionError', 'StopIteration', 'SyntaxError', 'TypeError', 'ValueError', 'UnicodeError', 'KeyboardInterrupt', 'SystemExit', 'GeneratorExit']);
+const BUILTIN_FUNCS = new Set('print input len range abs min max sum sorted reversed enumerate zip map filter any all round pow divmod ord chr hex oct bin repr ascii isinstance type callable getattr hasattr setattr iter next id hash format exit quit int float str bool list tuple dict set frozenset object'.split(' '));
+const KWB_NAMES = new Set(['print', 'sorted', 'sum', 'min', 'max', 'round', 'int', 'enumerate', 'dict', 'zip']);
+let tmpN = 0, classes = new Set(), funcs = new Map(), mods = new Map();
+const ctx = { scopes:[], loops:[], cls:null, genFn:false, params:new Set() };
+function id(n){ if(BUILTIN_EXC.has(n) && !ctx.shadow) return '__E_' + n; return RESERVED.has(n) ? n + '$' : n; }
+function js(s){ return JSON.stringify(s).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'); }
+function lit(v){ if(/^0[xX]/.test(v)) return /_/.test(v) ? v.replace(/_/g, '') : v; if(/^0[bBoO]/.test(v)) return v.replace(/_/g, ''); const t = v.replace(/_/g, ''); if(/[jJ]$/.test(t)) throw NOSUP('números complexos não são suportados no Python offline', 0);
+  if(/[.eE]/.test(t)){ const x = Number(t); return Number.isInteger(x) ? '__fl(' + t + ')' : t; } if(!Number.isSafeInteger(Number(t))) return '__ni(' + t + 'n)'; return String(Number(t)); }
+/* coleta de variáveis atribuídas no escopo (para "let" no topo da função) */
+function targetNames(t, set){ if(!t) return; if(t.k === 'name') set.add(t.v); else if(t.k === 'tuple' || t.k === 'list') t.els.forEach(e => targetNames(e, set)); else if(t.k === 'star') targetNames(t.e, set); else if(t.k === 'paren') targetNames(t.e, set); }
+function patNames(p, set){ if(!p) return; if(p.p === 'cap') set.add(p.name); else if(p.p === 'as'){ set.add(p.name); patNames(p.pat, set); } else if(p.p === 'or') p.alts.forEach(a => patNames(a, set)); else if(p.p === 'seq') p.els.forEach(e => patNames(e, set)); else if(p.p === 'star' && p.name) set.add(p.name); }
+function exprWalrus(e, set){ if(!e || typeof e !== 'object') return; if(e.k === 'walrus') set.add(e.name); for(const k in e){ const v = e[k]; if(Array.isArray(v)) v.forEach(x => { if(x && typeof x === 'object') exprWalrus(x.e || x, set); if(Array.isArray(x)) x.forEach(y => exprWalrus(y, set)); }); else if(v && typeof v === 'object' && k !== 'params') exprWalrus(v, set); } }
+function collect(stmts, set, glob, nonl){
+  for(const s of stmts){
+    switch(s.t){
+      case 'assign': s.targets.forEach(t => targetNames(t, set)); exprWalrus(s.value, set); break;
+      case 'aug': targetNames(s.target, set); break;
+      case 'for': targetNames(s.target, set); collect(s.body, set, glob, nonl); collect(s.orelse, set, glob, nonl); break;
+      case 'while': case 'if': exprWalrus(s.test, set); collect(s.body, set, glob, nonl); collect(s.orelse, set, glob, nonl); break;
+      case 'try': collect(s.body, set, glob, nonl); s.handlers.forEach(h => { if(h.name) set.add(h.name); collect(h.body, set, glob, nonl); }); collect(s.orelse, set, glob, nonl); collect(s.fin, set, glob, nonl); break;
+      case 'with': s.items.forEach(i => targetNames(i.tgt, set)); collect(s.body, set, glob, nonl); break;
+      case 'match': s.cases.forEach(c => { patNames(c.pat, set); collect(c.body, set, glob, nonl); }); break;
+      case 'def': case 'class': set.add(s.name); break;
+      case 'import': s.items.forEach(i => set.add(i.as || i.n.split('.')[0])); break;
+      case 'from': s.items.forEach(i => set.add(i.as || i.n)); break;
+      case 'global': s.names.forEach(n => glob.add(n)); break;
+      case 'nonlocal': s.names.forEach(n => nonl.add(n)); break;
+      case 'expr': exprWalrus(s.e, set); break;
+    }
+  }
+}
+function hasYield(stmts){ let y = false; const walk = o => { if(y || !o || typeof o !== 'object') return; if(Array.isArray(o)){ o.forEach(walk); return; } if(o.t === 'def' || o.t === 'class' || o.k === 'lambda') return; if(o.k === 'yield' || o.k === 'yieldfrom'){ y = true; return; } for(const k in o) if(k !== 'ln') walk(o[k]); }; walk(stmts); return y; }
+function declare(set, params){ const arr = Array.from(set).filter(n => !params.has(n)).map(id); return arr.length ? 'let ' + arr.join(',') + ';' : ''; }
+/* ---- expressões ---- */
+function tmp(){ return '__t' + (++tmpN); }
+function ex(e){
+  switch(e.k){
+    case 'num': return lit(e.v);
+    case 'str': return js(e.v);
+    case 'fstr': { const bits = e.parts.map(p => typeof p === 'string' ? js(p) : '__fmtv(' + ex(p.e) + ',' + js(p.conv || '') + ',' + (p.spec === null ? "''" : fspec(p.spec)) + ')'); return '(' + (bits.length ? bits.join('+') : "''") + ')'; }
+    case 'const': return e.v;
+    case 'name': return id(e.v);
+    case 'paren': return '(' + ex(e.e) + ')';
+    case 'walrus': return '(' + id(e.name) + '=' + ex(e.e) + ')';
+    case 'tuple': return '__tup([' + e.els.map(exArg).join(',') + '])';
+    case 'list': return '[' + e.els.map(exArg).join(',') + ']';
+    case 'set': return '__set0([' + e.els.map(exArg).join(',') + '])';
+    case 'dict': { if(!e.items.length) return 'new PyDict()'; return '__dictf([' + e.items.map(it => it[0] === '**' ? '...Array.from(' + ex(it[1]) + '.items()).map(__tup)' : '__tup([' + ex(it[0]) + ',' + ex(it[1]) + '])').join(',') + '])'; }
+    case 'star': return '...__sp(' + ex(e.e) + ')';
+    case 'attr': { if(e.o.k === 'name' && mods.has(e.o.v)) return id(e.o.v) + '.' + e.n; if(e.o.k === 'call' && e.o.f.k === 'name' && e.o.f.v === 'super' && !e.o.args.length) return 'super.' + e.n; return '__attr(' + ex(e.o) + ',' + js(e.n) + ')'; }
+    case 'sub': return '__get(' + ex(e.o) + ',' + exIdx(e.i) + ')';
+    case 'slice': return exIdx(e);
+    case 'call': return call(e);
+    case 'bin': return binop(e);
+    case 'un': return e.op === '-' ? '__neg(' + ex(e.e) + ')' : e.op === '+' ? '__num(' + ex(e.e) + ')' : '__bitinv(' + ex(e.e) + ')';
+    case 'not': return '!__t(' + ex(e.e) + ')';
+    case 'bool': { const t = tmp(); regTmp(t); return e.op === 'and' ? '(__t(' + t + '=' + ex(e.l) + ')?' + ex(e.r) + ':' + t + ')' : '(__t(' + t + '=' + ex(e.l) + ')?' + t + ':' + ex(e.r) + ')'; }
+    case 'ifx': return '(__t(' + ex(e.test) + ')?' + ex(e.a) + ':' + ex(e.b) + ')';
+    case 'cmp': return cmpx(e);
+    case 'lambda': return lambda(e);
+    case 'comp': return comp(e);
+    case 'yield': ctx.genFn = true; return '(yield ' + (e.e ? ex(e.e) : 'null') + ')';
+    case 'yieldfrom': ctx.genFn = true; return '(yield* __iter(' + ex(e.e) + '))';
+  }
+  throw PYERR('expressão não suportada: ' + e.k, 0);
+}
+function fspec(parts){ if(!parts.length) return "''"; return '(' + parts.map(p => typeof p === 'string' ? js(p) : '__s(' + ex(p.e) + ')').join('+') + ')'; }
+function exArg(e){ return ex(e); }
+function exIdx(i){ if(i.k === 'slice') return 'new __Sl(' + [i.a, i.b, i.c].map(x => x ? ex(x) : 'null').join(',') + ')'; if(i.k === 'tuple') return ex(i); return ex(i); }
+function regTmp(t){ const sc = ctx.scopes[ctx.scopes.length - 1]; if(sc) sc.tmps.add(t); }
+function binop(e){
+  const a = ex(e.l), b = ex(e.r);
+  switch(e.op){ case '+': return '__add(' + a + ',' + b + ')'; case '-': return '__sub(' + a + ',' + b + ')'; case '*': return '__mul(' + a + ',' + b + ')'; case '/': return '__div(' + a + ',' + b + ')'; case '//': return '__fdiv(' + a + ',' + b + ')'; case '%': return '__mod(' + a + ',' + b + ')'; case '**': return '__pow(' + a + ',' + b + ')';
+    case '|': case '&': case '^': case '<<': case '>>': return '__bitop(' + js(e.op) + ',' + a + ',' + b + ')'; case '@': throw NOSUP('operador @ não é suportado', 0); }
+}
+function cmpx(e){
+  const operands = [e.first].concat(e.ops.map(o => o[1])); const ops = e.ops.map(o => o[0]);
+  const one = (op, a, b) => { switch(op){ case '<': return '__lt(' + a + ',' + b + ')'; case '>': return '__gt(' + a + ',' + b + ')'; case '<=': return '__le(' + a + ',' + b + ')'; case '>=': return '__ge(' + a + ',' + b + ')'; case '==': return '__eq(' + a + ',' + b + ')'; case '!=': return '!__eq(' + a + ',' + b + ')'; case 'in': return '__in(' + a + ',' + b + ')'; case 'not in': return '!__in(' + a + ',' + b + ')'; case 'is': return '(' + a + '===' + b + ')'; case 'is not': return '(' + a + '!==' + b + ')'; } };
+  if(ops.length === 1) return '(' + one(ops[0], ex(operands[0]), ex(operands[1])) + ')';
+  const ps = operands.map((_, i) => '__c' + i); let body = ops.map((op, i) => one(op, ps[i], ps[i + 1])).join('&&');
+  return '((' + ps.join(',') + ')=>' + body + ')(' + operands.map(ex).join(',') + ')';
+}
+function lambda(e){
+  const sc = { vars:new Set(), tmps:new Set(), params:new Set(e.params.map(p => p.name)) }; ctx.scopes.push(sc); const saveG = ctx.genFn; ctx.genFn = false;
+  ctx.scopes.pop(); ctx.scopes.push(sc);
+  const defs = []; const ps = e.params.map((p, i) => { if(p.def){ ctx.scopes.pop(); const d = ex(p.def); ctx.scopes.push(sc); const nm = '__d' + (++tmpN); defs.push([nm, d]); return id(p.name) + '=' + nm; } return (p.star ? '...' : '') + id(p.name); }).join(','); const b = ex(e.body); ctx.scopes.pop(); ctx.genFn = saveG;
+  const t = Array.from(sc.tmps); const fn = '((' + ps + ')=>' + (t.length ? '{let ' + t.join(',') + ';return ' + b + '}' : b) + ')';
+  return defs.length ? '((' + defs.map(d => d[0]).join(',') + ')=>' + fn + ')(' + defs.map(d => d[1]).join(',') + ')' : fn;
+}
+function comp(e){
+  const sc = { vars:new Set(), tmps:new Set(), params:new Set() }; ctx.scopes.push(sc); const saveG = ctx.genFn; ctx.genFn = false;
+  e.gens.forEach(g => targetNames(g.target, sc.vars));
+  let inner = e.kind === 'dict' ? '__r1.set(' + ex(e.elt) + ',' + ex(e.val) + ');' : e.kind === 'set' ? '__r1.add(' + ex(e.elt) + ');' : '__r1.push(' + ex(e.elt) + ');';
+  for(let i = e.gens.length - 1; i >= 0; i--){ const g = e.gens[i]; const v = '__v' + i + '_' + tmpN; let assign = assignTo(g.target, v); const conds = g.ifs.map(c => '__t(' + ex(c) + ')').join('&&');
+    inner = 'for(const ' + v + ' of __iter(' + ex(g.iter) + ')){' + assign + (conds ? 'if(' + conds + '){' + inner + '}' : inner) + '}'; }
+  ctx.scopes.pop(); ctx.genFn = saveG;
+  const init = e.kind === 'dict' ? 'new PyDict()' : e.kind === 'set' ? 'new PySet()' : '[]'; const decl = Array.from(new Set([...Array.from(sc.vars).map(id), ...sc.tmps]));
+  return '(()=>{' + (decl.length ? 'let ' + decl.join(',') + ';' : '') + 'const __r1=' + init + ';' + inner + 'return __r1})()';
+}
+function kwObj(args){ const kws = args.filter(a => a.name); return '{' + kws.map(a => js(a.name) + ':' + ex(a.e)).join(',') + '}'; }
+function call(e){
+  const f = e.f, args = e.args; const star = args.some(a => a.star), kws = args.filter(a => a.name || a.star === 2), pos = args.filter(a => !a.name && a.star !== 2);
+  const posJs = pos.map(a => a.star === 1 ? '...__sp(' + ex(a.e) + ')' : ex(a.e));
+  const dstar = args.find(a => a.star === 2);
+  let kwjs = null; if(kws.length){ if(dstar){ kwjs = '(()=>{const __k={};' + args.map(a => a.star === 2 ? 'for(const [k,v] of ' + ex(a.e) + '.items())__k[k]=v;' : a.name ? '__k[' + js(a.name) + ']=' + ex(a.e) + ';' : '').join('') + 'return __k})()'; } else kwjs = kwObj(args); }
+  if(f.k === 'name'){
+    const n = f.v;
+    if(n === 'super' && !args.length) return 'super';
+    if(n === 'print' || KWB_NAMES.has(n)){ if(!ctx.userDefs || !ctx.userDefs.has(n)) return id(n) + '(' + posJs.concat(kwjs ? ['new __KW(' + kwjs + ')'] : []).join(',') + ')'; }
+    if(n === 'input' && !kwjs && !(ctx.userDefs && ctx.userDefs.has('input'))) return 'input(' + posJs.join(',') + ')';
+    if(classes.has(n) || (BUILTIN_EXC.has(n) && !(ctx.userDefs && ctx.userDefs.has(n)))){ return kwjs ? '__newk(' + id(n) + ',[' + posJs.join(',') + '],' + kwjs + ')' : 'new ' + id(n) + '(' + posJs.join(',') + ')'; }
+    if(kwjs) return '__callk(' + id(n) + ',[' + posJs.join(',') + '],' + kwjs + ')';
+    if(BUILTIN_FUNCS.has(n) || (ctx.userDefs && ctx.userDefs.has(n) && !ctx.params.has(n))) return id(n) + '(' + posJs.join(',') + ')';
+    return '__call(' + [id(n)].concat(posJs).join(',') + ')';
+  }
+  if(f.k === 'attr'){
+    const o = f.o;
+    if(o.k === 'name' && mods.has(o.v)){ const m = id(o.v) + '.' + f.n; return m + '(' + posJs.concat(kwjs ? ['new __KW(' + kwjs + ')'] : []).join(',') + ')'; }
+    if(o.k === 'call' && o.f.k === 'name' && o.f.v === 'super' && !o.args.length) return 'super.' + f.n + '(' + posJs.join(',') + ')';
+    if(o.k === 'name' && classes.has(o.v)) return id(o.v) + '.' + f.n + '(' + posJs.join(',') + ')';
+    return '__mc(' + [ex(o), js(f.n)].concat(posJs).concat(kwjs ? ['new __KW(' + kwjs + ')'] : []).join(',') + ')';
+  }
+  if(kwjs) return '__callk(' + ex(f) + ',[' + posJs.join(',') + '],' + kwjs + ')';
+  return '__call(' + [ex(f)].concat(posJs).join(',') + ')';
+}
+/* ---- atribuição a alvos ---- */
+function assignTo(t, v){ // v: expressão JS já avaliada (identificador ou expressão simples)
+  switch(t.k){
+    case 'name': return id(t.v) + '=' + v + ';';
+    case 'paren': return assignTo(t.e, v);
+    case 'attr': return ex(t.o) + '.' + t.n + '=' + v + ';';
+    case 'sub': return '__set(' + ex(t.o) + ',' + exIdx(t.i) + ',' + v + ');';
+    case 'tuple': case 'list': { const si = t.els.findIndex(x => x.k === 'star'); const u = tmp(); regTmp(u); let code = u + '=__unp(' + v + ',' + t.els.length + (si >= 0 ? ',' + si : '') + ');'; t.els.forEach((x, i) => { code += assignTo(x.k === 'star' ? x.e : x, u + '[' + i + ']'); }); return code; }
+  }
+  throw PYERR('cannot assign to expression', 0);
+}
+/* ---- instruções ---- */
+function lnmark(s){ return s.ln ? '__ln=' + s.ln + ';' : ''; }
+function stmts(list){ return list.map(st).join('\n'); }
+function brk(){ const L = ctx.loops[ctx.loops.length - 1]; return L && L.flag ? '{' + L.flag + '=false;break;}' : 'break;'; }
+function st(s){
+  const m = lnmark(s);
+  switch(s.t){
+    case 'pass': return ';';
+    case 'expr': return m + ex(s.e) + ';';
+    case 'assign': {
+      if(!s.value) return '';
+      if(s.targets.length === 1){ const t = s.targets[0];
+        if((t.k === 'tuple' || t.k === 'list') && s.value.k === 'tuple' && !s.value.els.some(x => x.k === 'star') && !t.els.some(x => x.k === 'star') && t.els.length === s.value.els.length){
+          const tmps = s.value.els.map(() => { const u = tmp(); regTmp(u); return u; }); return m + tmps.map((u, i) => u + '=' + ex(s.value.els[i]) + ';').join('') + t.els.map((x, i) => assignTo(x, tmps[i])).join(''); }
+        if(t.k === 'name') return m + id(t.v) + '=' + ex(s.value) + ';';
+        const u = tmp(); regTmp(u); return m + u + '=' + ex(s.value) + ';' + assignTo(t, u); }
+      const u = tmp(); regTmp(u); return m + u + '=' + ex(s.value) + ';' + s.targets.map(t => assignTo(t, u)).join(''); }
+    case 'aug': {
+      const op = s.op, fnm = { '+':'__iadd', '-':'__sub', '*':'__mul', '/':'__div', '//':'__fdiv', '%':'__mod', '**':'__pow' }[op];
+      const apply = (cur, val) => fnm ? fnm + '(' + cur + ',' + val + ')' : '__bitop(' + js(op) + ',' + cur + ',' + val + ')';
+      const t = s.target;
+      if(t.k === 'name') return m + id(t.v) + '=' + apply(id(t.v), ex(s.value)) + ';';
+      if(t.k === 'attr'){ const o = tmp(); regTmp(o); return m + o + '=' + ex(t.o) + ';' + o + '.' + t.n + '=' + apply('__attr(' + o + ',' + js(t.n) + ')', ex(s.value)) + ';'; }
+      if(t.k === 'sub'){ const o = tmp(), i = tmp(); regTmp(o); regTmp(i); return m + o + '=' + ex(t.o) + ';' + i + '=' + exIdx(t.i) + ';__set(' + o + ',' + i + ',' + apply('__get(' + o + ',' + i + ')', ex(s.value)) + ');'; }
+      throw PYERR("illegal expression for augmented assignment", s.ln); }
+    case 'if': return m + 'if(__t(' + ex(s.test) + ')){' + stmts(s.body) + '}' + (s.orelse.length ? 'else{' + stmts(s.orelse) + '}' : '');
+    case 'while': { const flag = s.orelse.length ? '__f' + (++tmpN) : null; ctx.loops.push({ flag }); const b = stmts(s.body); ctx.loops.pop();
+      return (flag ? 'let ' + flag + '=true;' : '') + m + 'while(__t(' + ex(s.test) + ')){' + b + '}' + (flag ? 'if(' + flag + '){' + stmts(s.orelse) + '}' : ''); }
+    case 'for': return forLoop(s);
+    case 'break': return brk();
+    case 'continue': return 'continue;';
+    case 'return': return m + 'return ' + (s.e ? ex(s.e) : 'null') + ';';
+    case 'global': case 'nonlocal': return '';
+    case 'import': return s.items.map(i => { const nm = i.as || i.n.split('.')[0]; mods.set(nm, i.n); return id(nm) + '=__imp(' + js(i.n.split('.')[0]) + ');'; }).join('');
+    case 'from': return s.items.map(i => { if(i.n === '*') return Object.keys({}).join(''); const nm = i.as || i.n; return id(nm) + '=__impfrom(' + js(s.mod) + ',' + js(i.n) + ');'; }).join('');
+    case 'del': return m + delx(s.e);
+    case 'assert': return m + 'if(!__t(' + ex(s.test) + '))throw new __E_AssertionError(' + (s.msg ? ex(s.msg) : '') + ');';
+    case 'raise': { if(!s.e) return m + 'throw __cur_exc;'; const e = s.e; if(e.k === 'name' && (classes.has(e.v) || BUILTIN_EXC.has(e.v))) return m + 'throw new ' + id(e.v) + '();'; return m + 'throw ' + ex(e) + ';'; }
+    case 'try': return tryx(s);
+    case 'with': return withx(s);
+    case 'def': return defx(s);
+    case 'class': return classx(s);
+    case 'match': return matchx(s);
+  }
+  throw PYERR('instrução não suportada: ' + s.t, s.ln);
+}
+function delx(e){ const items = e.k === 'tuple' ? e.els : [e]; return items.map(t => t.k === 'sub' ? '__del(' + ex(t.o) + ',' + exIdx(t.i) + ');' : t.k === 'name' ? id(t.v) + '=undefined;' : t.k === 'attr' ? 'delete ' + ex(t.o) + '.' + t.n + ';' : '').join(''); }
+function forLoop(s){
+  const m = lnmark(s), flag = s.orelse.length ? '__f' + (++tmpN) : null; ctx.loops.push({ flag });
+  let out;
+  const it = s.iter;
+  if(s.target.k === 'name' && it.k === 'call' && it.f.k === 'name' && it.f.v === 'range' && !it.args.some(a => a.name || a.star) && it.args.length >= 1 && it.args.length <= 3 && !(ctx.userDefs && ctx.userDefs.has('range'))){
+    const a = it.args.map(x => ex(x.e)); const v = '__i' + (++tmpN), lo = '__a' + tmpN, hi = '__b' + tmpN, stp = '__s' + tmpN;
+    const start = a.length > 1 ? a[0] : '0', stop = a.length > 1 ? a[1] : a[0], step = a.length > 2 ? a[2] : '1';
+    const b = stmts(s.body);
+    out = '{const ' + lo + '=Number(__num(' + start + ')),' + hi + '=Number(__num(' + stop + ')),' + stp + '=Number(__num(' + step + '));if(' + stp + '===0)throw new __E_ValueError("range() arg 3 must not be zero");' +
+      'for(let ' + v + '=' + lo + ';' + stp + '>0?' + v + '<' + hi + ':' + v + '>' + hi + ';' + v + '+=' + stp + '){' + id(s.target.v) + '=' + v + ';' + b + '}}';
+  } else {
+    const v = '__v' + (++tmpN); const b = stmts(s.body);
+    out = m + 'for(const ' + v + ' of __iter(' + ex(s.iter) + ')){' + assignTo(s.target, v) + b + '}';
+  }
+  ctx.loops.pop();
+  return (flag ? 'let ' + flag + '=true;' : '') + m + out + (flag ? 'if(' + flag + '){' + stmts(s.orelse) + '}' : '');
+}
+function tryx(s){
+  const m = lnmark(s), e = '__e' + (++tmpN), ok = s.orelse.length ? '__ok' + tmpN : null;
+  let code = (ok ? 'let ' + ok + '=true;' : '') + 'try{' + stmts(s.body) + '}';
+  if(s.handlers.length){
+    code += 'catch(' + e + '){' + (ok ? ok + '=false;' : '') + e + '=__pyexc(' + e + ');';
+    let first = true, bare = false;
+    s.handlers.forEach(h => {
+      let cond = h.type ? '__isinst(' + e + ',' + typeRef(h.type) + ')' : 'true'; if(!h.type) bare = true;
+      code += (first ? '' : 'else ') + 'if(' + cond + '){' + (h.name ? id(h.name) + '=' + e + ';' : '') + 'var __cur_exc=' + e + ';' + stmts(h.body) + '}'; first = false; });
+    if(!bare) code += 'else throw ' + e + ';';
+    code += '}';
+  }
+  if(s.fin.length) code += 'finally{' + stmts(s.fin) + '}';
+  if(ok) code += 'if(' + ok + '){' + stmts(s.orelse) + '}';
+  return m + code;
+}
+function typeRef(t){ if(t.k === 'tuple') return '[' + t.els.map(typeRef).join(',') + ']'; if(t.k === 'name'){ return id(t.v); } return ex(t); }
+function withx(s){
+  const m = lnmark(s); let code = ''; let close = '';
+  s.items.forEach((it, i) => { const u = '__w' + (++tmpN); code += 'const ' + u + '=' + ex(it.e) + ';' + (it.tgt ? assignTo(it.tgt, 'typeof ' + u + '.__enter__==="function"?' + u + '.__enter__():' + u) : '') + 'try{'; close = '}finally{if(' + u + '&&typeof ' + u + '.__exit__==="function")' + u + '.__exit__(null,null,null);}' + close; });
+  return m + '{' + code + stmts(s.body) + close + '}';
+}
+function paramList(params){ return params.map(p => (p.star ? '...' : '') + id(p.name) + (p.def ? '=' + ex(p.def) : '')).join(','); }
+function funcBody(params, bodyStmts, extraDecl){
+  const sc = { vars:new Set(), tmps:new Set(), params:new Set(params.map(p => p.name)) }; const glob = new Set(), nonl = new Set();
+  collect(bodyStmts, sc.vars, glob, nonl); glob.forEach(n => sc.vars.delete(n)); nonl.forEach(n => sc.vars.delete(n)); sc.params.forEach(n => sc.vars.delete(n));
+  ctx.scopes.push(sc); const saveP = ctx.params; ctx.params = new Set([...saveP, ...sc.params]); const saveLoops = ctx.loops; ctx.loops = []; const saveG = ctx.genFn; ctx.genFn = hasYield(bodyStmts);
+  const b = stmts(bodyStmts); const gen = ctx.genFn; ctx.genFn = saveG; ctx.loops = saveLoops; ctx.scopes.pop(); ctx.params = saveP;
+  const decl = Array.from(sc.vars).map(id).concat(Array.from(sc.tmps)); return { code:(decl.length ? 'let ' + decl.join(',') + ';' : '') + (extraDecl || '') + b, gen };
+}
+function defx(s){
+  const m = lnmark(s); const fb = funcBody(s.params, s.body);
+  let code = id(s.name) + '=' + (fb.gen ? 'function*' : 'function') + '(' + paramList(s.params) + '){' + fb.code + '\nreturn null;};';
+  code += '__pyname(' + id(s.name) + ',' + js(s.name) + ',' + js(s.params.map(p => p.name)) + ');';
+  (s.decos || []).forEach(d => { if(!(d.k === 'name' && (d.v === 'staticmethod' || d.v === 'classmethod' || d.v === 'property'))) code += id(s.name) + '=' + ex(d) + '(' + id(s.name) + ');'; });
+  return m + code;
+}
+function classx(s){
+  const m = lnmark(s); const nm = id(s.name); classes.add(s.name);
+  const base = s.bases.length ? ex(s.bases[0].k === 'name' ? s.bases[0] : s.bases[0]) : null;
+  let methods = '', after = '';
+  const pre = ctx.cls; ctx.cls = s.name;
+  const props = {};
+  s.body.forEach(b => {
+    if(b.t === 'def'){
+      const decos = (b.decos || []).map(d => d.k === 'name' ? d.v : (d.k === 'attr' ? d.n : ''));
+      const isStatic = decos.indexOf('staticmethod') >= 0, isCls = decos.indexOf('classmethod') >= 0, isProp = decos.indexOf('property') >= 0, isSetter = (b.decos || []).some(d => d.k === 'attr' && d.n === 'setter');
+      const selfName = (!isStatic && b.params.length) ? b.params[0].name : null; const ps = isStatic ? b.params : b.params.slice(1);
+      const fb = funcBody(ps, b.body, selfName ? 'const ' + id(selfName) + '=' + (isCls ? 'this' : 'this') + ';' : '');
+      const star = fb.gen ? '*' : '';
+      if(b.name === '__init__'){ methods += '__init__(' + paramList(ps) + '){' + fb.code + '\nreturn null;}\n'; return; }
+      if(isSetter){ methods += 'set ' + id(b.name) + '(' + paramList(ps) + '){' + fb.code + '}\n'; return; }
+      if(isProp){ methods += 'get ' + id(b.name) + '(){' + fb.code + '}\n'; return; }
+      if(b.name === '__iter__'){ methods += '*[Symbol.iterator](){ const __it=this.__iter__(); yield* __iter(__it); }\n__iter__(' + paramList(ps) + '){' + fb.code + '}\n'; return; }
+      methods += (isStatic || isCls ? 'static ' : '') + star + id(b.name) + '(' + paramList(ps) + '){' + fb.code + '\nreturn null;}\n';
+    } else if(b.t === 'assign' && b.targets.length === 1 && b.targets[0].k === 'name' && b.value){ after += '__clsattr(' + nm + ',' + js(b.targets[0].v) + ',' + ex(b.value) + ');'; }
+    else if(b.t === 'pass' || (b.t === 'expr' && b.e.k === 'str')){ }
+    else throw NOSUP('instrução dentro de class não suportada no Python offline', b.ln);
+  });
+  ctx.cls = pre;
+  const bd = base || null;
+  const initDef = s.body.find(b => b.t === 'def' && b.name === '__init__'); const initP = initDef ? initDef.params.slice(1).map(x => x.name) : null;
+  return m + nm + '=class' + (bd ? ' extends ' + bd : '') + '{constructor(...a){' + (bd ? 'super(...a);' : '') + (bd ? '' : '') + 'if(new.target===' + nm + '&&typeof this.__init__==="function")this.__init__(...a);}\n' + methods + '};' + nm + '.__name__=' + js(s.name) + ';' + (initP ? nm + '.__initp=' + js(initP) + ';' : '') + after +
+    (bd ? '' : '') ;
+}
+function matchx(s){
+  const m = lnmark(s), u = '__m' + (++tmpN); regTmp(u); let code = m + u + '=' + ex(s.subj) + ';'; let first = true;
+  s.cases.forEach(c => { const cond = pat(c.pat, u) + (c.guard ? '&&__t(' + ex(c.guard) + ')' : ''); code += (first ? '' : 'else ') + 'if(' + cond + '){' + stmts(c.body) + '}'; first = false; });
+  return code;
+}
+function pat(p, v){
+  switch(p.p){
+    case 'any': return 'true';
+    case 'cap': return '((' + id(p.name) + '=' + v + '),true)';
+    case 'val': return '__eq(' + v + ',' + ex(p.e) + ')';
+    case 'as': return '(' + pat(p.pat, v) + '&&((' + id(p.name) + '=' + v + '),true))';
+    case 'or': return '(' + p.alts.map(a => pat(a, v)).join('||') + ')';
+    case 'seq': { const si = p.els.findIndex(x => x.p === 'star'); const n = p.els.length; let c = '(Array.isArray(' + v + ')&&' + (si >= 0 ? v + '.length>=' + (n - 1) : v + '.length===' + n);
+      p.els.forEach((x, i) => { if(x.p === 'star'){ if(x.name) c += '&&((' + id(x.name) + '=' + v + '.slice(' + i + ',' + v + '.length-' + (n - 1 - i) + ')),true)'; } else { const at = si >= 0 && i > si ? v + '[' + v + '.length-' + (n - i) + ']' : v + '[' + i + ']'; c += '&&' + pat(x, at); } }); return c + ')'; }
+  }
+  return 'false';
+}
+/* ---------- 6. programa ---------- */
+const lines = tokenize(src);
+if(!lines.length) return '';
+const prog = parseProgram(lines);
+classes = new Set(); mods = new Map(); tmpN = 0;
+const userDefs = new Set(); (function walk(l){ l.forEach(s => { if(s.t === 'def' || s.t === 'class') userDefs.add(s.name); if(s.t === 'assign') s.targets.forEach(t => { if(t.k === 'name') userDefs.add(t.v); }); }); })(prog);
+ctx.userDefs = userDefs;
+// classes conhecidas antes de gerar (chamadas anteriores à definição)
+(function walk(l){ l.forEach(s => { if(s.t === 'class') classes.add(s.name); if(s.body && Array.isArray(s.body)) walk(s.body); }); })(prog);
+const top = { vars:new Set(), tmps:new Set(), params:new Set() }; const g = new Set(), n = new Set(); collect(prog, top.vars, g, n);
+ctx.scopes = [top];
+const code = stmts(prog);
+const decl = Array.from(top.vars).map(id).concat(Array.from(top.tmps));
+return 'try{(function(){\n' + (decl.length ? 'let ' + decl.join(',') + ';\n' : '') + code + '\n})();}catch(__e){throw __fmtexc(__e);}';
 }
 
 /* ---------- execução (Web Worker com limite de tempo) ---------- */
-const WSRC = `var o='',L=[],ip=0;
+const WSRC = `var o='',L=[],ip=0,ARGS=[];
+var process={argv:[],env:{},stdout:{write:function(s){o+=s;return true}},exit:function(){throw {__exit:1}}};
 var fm=v=>typeof v==='string'?v:(typeof v==='object'&&v!==null)?JSON.stringify(v):String(v);
 var console={log:(...a)=>{o+=a.map(fm).join(' ')+'\\n'}};console.error=console.warn=console.info=console.log;
-var readline=()=>ip<L.length?L[ip++]:null,prompt=readline;
-onmessage=e=>{const d=e.data;L=d.stdin.split('\\n');if(L.length&&L[L.length-1]==='')L.pop();let err='';const t=performance.now();
-try{(0,eval)(d.code)}catch(x){err=(x&&x.name?x.name+': ':'')+((x&&x.message)||x)}
-postMessage({o:o.slice(0,200000),err:err,ms:performance.now()-t,mem:(performance.memory||{}).usedJSHeapSize||0})}`;
+var EOF=false,readline=()=>{if(ip<L.length)return L[ip++];if(EOF)return null;throw {__need:1}},prompt=p=>{if(p)o+=p;return readline()};
+var __lh=[],__ch=[];
+var require=function(n){
+if(n==='readline')return{createInterface:function(){var rl={question:function(q,cb){o+=q;var l=readline();if(l===null)return;cb(l)},on:function(e,f){if(e==='line')__lh.push(f);else if(e==='close')__ch.push(f);return rl},close:function(){var c=__ch.slice();__ch=[];c.forEach(function(f){f()})},setPrompt:function(){},prompt:function(){},write:function(){}};return rl}};
+if(n==='fs')return{readFileSync:function(){var r=[];while(ip<L.length)r.push(L[ip++]);if(!r.length&&!EOF)throw{__need:1};return r.join('\\n')+(r.length?'\\n':'')}};
+if(n==='prompt-sync')return function(){return function(p){return prompt(p)}};
+throw new Error("Cannot find module '"+n+"'")};
+function __flush(){if(__lh.length||__ch.length){while(ip<L.length){var l=L[ip++];__lh.forEach(function(f){f(l)})}if(EOF){var c=__ch.slice();__ch=[];c.forEach(function(f){f()})}else if(__lh.length)throw{__need:1}}}
+onmessage=e=>{const d=e.data;ARGS=d.args||[];process.argv=['node','main.js'].concat(ARGS);EOF=!!d.eof;L=d.stdin.split('\\n');if(L.length&&L[L.length-1]==='')L.pop();let err='',need=0;const t=performance.now();
+try{(0,eval)(d.code);__flush()}catch(x){if(x&&x.__need)need=1;else if(!(x&&x.__exit))err=(x&&x.name?x.name+': ':'')+((x&&x.message)||x)}
+postMessage({o:o.slice(0,200000),err:err,need:need,ms:performance.now()-t,mem:(performance.memory||{}).usedJSHeapSize||0})}`;
 let wk = null, tmo = 0;
 const stat = t => { $('jdStat').textContent = t; };
 function showFrame(b){ frame.style.display = b ? 'block' : 'none'; outT.style.display = b ? 'none' : 'block'; $('jdOutL').textContent = b ? 'PREVIEW' : 'OUTPUT'; }
 function done(r){
   clearTimeout(tmo); $('jdRun').disabled = false;
-  const o = r.o || '', err = r.err || '';
+  const o = r.o || '', err = r.need ? '' : (r.err || '');
   outT.className = err ? 'err' : '';
-  outT.textContent = (o + (err ? (o && !o.endsWith('\n') ? '\n' : '') + err : '')) || tr('(sem saída)', '(no output)');
-  outT.scrollTop = 0;
+  outT.textContent = (echo(o) + (err ? (o && !o.endsWith('\n') ? '\n' : '') + err : '')) || (r.need ? '' : tr('(sem saída)', '(no output)'));
+  outT.scrollTop = r.need ? outT.scrollHeight : 0;
   stat('CPU: ' + ((r.ms || 0) / 1000).toFixed(2) + ' s' + (r.mem ? ' · ' + tr('Memória', 'Memory') + ': ' + Math.round(r.mem / 1024) + ' KB' : ''));
+  if(r.need) termShow(o.length); else termHide();
 }
-function run(){
-  save(); snd('menuAccept');
+function stopRun(){
   if(wk){ try{ wk.terminate(); }catch(e){} wk = null; }
   if(rac){ rac.abort(); rac = null; }
+}
+function run(){
+  save(); snd('menuAccept'); stopRun(); termHide(); term.typed = []; term.marks = []; term.eof = false;
   if(S.lang === 'html'){ showFrame(true); frame.srcdoc = ta.value; stat(tr('Pré-visualização atualizada', 'Preview updated')); return; }
-  showFrame(false);
+  exec();
+}
+function parseArgs(s){
+  const r = [], re = /"((?:\\.|[^"\\])*)"|'([^']*)'|(\S+)/g; let m;
+  while((m = re.exec(s || ''))) r.push(m[1] !== undefined ? m[1].replace(/\\(.)/g, '$1') : m[2] !== undefined ? m[2] : m[3]);
+  return r;
+}
+function exec(){
+  stopRun(); showFrame(false);
   if(LANGS[S.lang].j){ remote(); return; }
   let code = ta.value;
-  if(S.lang === 'py'){ try{ code = PRE + py2js(code); }catch(e){ outT.className = 'err'; outT.textContent = String(e.message || e); return; } }
-  outT.className = ''; outT.textContent = tr('Executando…', 'Running…'); stat(''); $('jdRun').disabled = true;
+  if(S.lang === 'py'){
+    try{ code = PYRT + '\n' + py2js(code); }
+    catch(e){
+      const src = code.split('\n'), ln = e.pyLine || 0, line = ln && src[ln - 1] !== undefined ? src[ln - 1] : '';
+      outT.className = 'err';
+      outT.textContent = e.pyUnsupported ? 'NotImplementedError: ' + e.message + '\n' + tr('Dica: escolha "Python 3 (online)" na lista de linguagens para rodar este código.', 'Tip: pick "Python 3 (online)" in the language list to run this code.')
+        : e.pySyntax ? 'File "main.py", line ' + ln + '\n    ' + line.trim() + '\n' + (e.pyKind || 'SyntaxError') + ': ' + e.message
+        : 'SyntaxError: ' + String(e.message || e);
+      return;
+    }
+  }
+  if(!term.typed.length && !term.eof){ outT.className = ''; outT.textContent = tr('Executando…', 'Running…'); stat(''); }
+  $('jdRun').disabled = true;
   try{ wk = new Worker(URL.createObjectURL(new Blob([WSRC], { type:'text/javascript' }))); }
   catch(e){ done({ err:tr('Não foi possível iniciar o executor neste navegador.', 'Could not start the runner in this browser.') }); return; }
   wk.onmessage = e => { try{ wk.terminate(); }catch(x){} wk = null; done(e.data); };
   wk.onerror = e => { try{ wk.terminate(); }catch(x){} wk = null; done({ err:'SyntaxError: ' + (e.message || '') }); };
   tmo = setTimeout(() => { if(wk){ try{ wk.terminate(); }catch(e){} wk = null; } done({ err:tr('Tempo limite excedido (5 s). Possível laço infinito.', 'Time limit exceeded (5 s). Possible infinite loop.'), ms:5000 }); }, 5000);
-  wk.postMessage({ code:code, stdin:sin.value });
+  wk.postMessage({ code:code, stdin:buildIn(), eof:term.eof, args:parseArgs(S.args) });
+}
+
+/* ---------- entrada interativa ----------
+   O programa é executado de novo com as linhas já digitadas. Quando ele tenta ler além delas,
+   a execução para ali (offline: readline lança um sinal; online: o código recebe um gancho que
+   imprime SENT e sai) e o jogo mostra a linha de entrada no OUTPUT. EOF = fim da entrada (Ctrl+D). */
+const SENT = '\x01DZEOF';
+const term = { typed:[], marks:[], eof:false, wait:false, pos:0 };
+function buildIn(){ let b = sin.value; if(b && !b.endsWith('\n')) b += '\n'; return b + term.typed.map(x => x + '\n').join(''); }
+function echo(o){ let r = '', p = 0; term.marks.forEach((m, i) => { const q = Math.min(m, o.length); r += o.slice(p, q) + term.typed[i] + '\n'; p = q; }); return r + o.slice(p); }
+function termHide(){ term.wait = false; $('jdTerm').classList.remove('on'); }
+function termShow(pos){ term.wait = true; term.pos = pos; $('jdTerm').classList.add('on'); const i = $('jdTin'); i.value = ''; try{ i.focus({ preventScroll:true }); }catch(e){} }
+function tSend(eof){
+  if(!term.wait) return; const i = $('jdTin');
+  if(eof) term.eof = true; else { term.typed.push(i.value); term.marks.push(term.pos); }
+  i.value = ''; termHide(); exec();
+}
+/* C/C++: o stdin do programa é trocado por um FILE* (fopencookie). Qualquer leitura (scanf, fgets, getchar, cin, fread...)
+   que precise de mais dados do que foi digitado dispara o aviso (DZEOF) e o jogo mostra a linha de entrada. Assim um scanf("%d %d")
+   com só um número digitado também espera, e switch / if / laços nunca "passam direto" com lixo de memória. */
+const CBASE = ['#ifndef _GNU_SOURCE', '#define _GNU_SOURCE', '#endif', '#include <stdio.h>', '#include <stdlib.h>', '#include <unistd.h>', '#include <errno.h>'];
+const CTAIL = ['static ssize_t __dzrd(void*c,char*b,size_t n){ssize_t r;do{r=read(0,b,n);}while(r<0&&errno==EINTR);if(r<=0)__dz();return r;}',
+  'static void __dzinit(void)__attribute__((constructor(101)));',
+  'static void __dzinit(void){cookie_io_functions_t f;f.read=__dzrd;f.write=0;f.seek=0;f.close=0;FILE*s=fopencookie(0,"r",f);if(s)stdin=s;}', '#line 1', ''];
+const CPRE_C = ['#ifndef _GNU_SOURCE', '#define _GNU_SOURCE', '#endif', '#include <stdio.h>', '#include <stdlib.h>', '#include <errno.h>', '#include <sys/types.h>', '#include <sys/syscall.h>', 'extern long syscall(long,...);',
+  'static void __dz(void){fflush(stdout);fputs("\\x01""DZEOF",stdout);fflush(stdout);_Exit(0);}',
+  'static ssize_t __dzrd(void*c,char*b,size_t n){long r;do{r=syscall(SYS_read,0,b,n);}while(r<0&&errno==EINTR);if(r<=0)__dz();return (ssize_t)r;}'].concat(CTAIL.slice(1)).join('\n');
+const CPRE_CPP = CBASE.concat(['#include <iostream>', '#include <ext/stdio_sync_filebuf.h>', 'static void __dz(void){std::cout.flush();fflush(stdout);fputs("\\x01""DZEOF",stdout);fflush(stdout);_exit(0);}'], CTAIL.slice(0, 3), ['static void __dzinit2(void)__attribute__((constructor(102)));',
+  'static void __dzinit2(void){std::ios_base::Init __i;std::cin.rdbuf(new __gnu_cxx::stdio_sync_filebuf<char>(stdin));}', '#line 1', '']).join('\n');
+const PYP = 'exec("' + ['import sys,os', 'class _Dz:', ' def __init__(s,f):s.f=f', ' def __getattr__(s,n):return getattr(s.f,n)', ' def readline(s,*a):', '  l=s.f.readline(*a)', "  if l=='':", '   sys.stdout.flush();sys.stdout.write(chr(1)+\'DZEOF\');sys.stdout.flush();os._exit(0)', '  return l', ' def __iter__(s):return s', ' def __next__(s):return s.readline()', 'sys.stdin=_Dz(sys.stdin)'].join('\\n') + '")\n';
+const TSP = "// @ts-nocheck\n{const rl=require('readline'),P=rl.Interface.prototype,q=P.question;let pend=0;P.question=function(...a){pend=1;const i=a.length-1,cb=a[i];a[i]=(...r)=>{pend=0;cb(...r)};return q.apply(this,a)};process.on('exit',()=>{if(pend)process.stdout.write(String.fromCharCode(1)+'DZEOF')})}\n";
+function instrument(src){
+  const l = S.lang;
+  if(l === 'c') return CPRE_C + src;
+  if(l === 'cpp') return CPRE_CPP + src.replace(/\bsync_with_stdio\s*\(\s*(?:false|0)\s*\)/g, 'sync_with_stdio(true)');   /* cin "solto" lê o descritor direto e ignoraria o aviso */
+  if(l === 'java') return src.replace(/\bSystem\.in\b/g, 'DzIn.I') + '\nclass DzIn{static final java.io.InputStream I=new java.io.InputStream(){public int read()throws java.io.IOException{int c=System.in.read();if(c<0){System.out.flush();System.out.print((char)1+"DZEOF");System.out.flush();Runtime.getRuntime().halt(0);}return c;}public int read(byte[] b,int o,int n)throws java.io.IOException{int c=read();b[o]=(byte)c;int k=1;while(k<n&&System.in.available()>0){int d=System.in.read();if(d<0)break;b[o+k++]=(byte)d;}return k;}public int available()throws java.io.IOException{return System.in.available();}};}\n';
+  if(l === 'cs') return src.replace(/\b(?:System\.)?Console\.ReadKey\(/g, 'DzIn.K(').replace(/\b(?:System\.)?Console\.(?:In\.)?(ReadLine|Read)\(/g, (m, f) => 'DzIn.' + (f === 'Read' ? 'R(' : 'RL(')) + '\nstatic class DzIn{public static System.ConsoleKeyInfo K(bool x=false){int c=R();return new System.ConsoleKeyInfo((char)c,System.ConsoleKey.A,false,false,false);}static void E(){System.Console.Out.Flush();System.Console.Out.Write((char)1+"DZEOF");System.Console.Out.Flush();System.Environment.Exit(0);}public static string RL(){var s=System.Console.In.ReadLine();if(s==null)E();return s;}public static int R(){int c=System.Console.In.Read();if(c<0)E();return c;}}\n';
+  if(l === 'go' && /^package main\b/m.test(src)){
+    let g = src.replace(/\bos\.Stdin\b/g, 'dzStdin').replace(/\bfmt\.(Scan|Scanln|Scanf)\(/g, (m, f) => 'fmt.F' + f.toLowerCase() + '(dzStdin, ').replace(/\(dzStdin, \)/g, '(dzStdin)').replace(/^package main\b[ \t]*/m, 'package main; import dzos "os"; import dzio "io"; ');
+    return g + '\ntype dzR struct{}\nfunc (dzR) Read(p []byte) (int, error) { n, e := dzos.Stdin.Read(p); if n == 0 && e == dzio.EOF { dzos.Stdout.WriteString("\\x01DZEOF"); dzos.Exit(0) }; return n, e }\nvar dzStdin = dzR{}\n' + (/(^|[\s(;])"os"/m.test(src) ? 'var _ = os.Args\n' : '');
+  }
+  if(l === 'rust') return src.replace(/\.read_line\(/g, '.dz_rl(').replace(/\.read_to_string\(/g, '.dz_rts(').replace(/\.lines\(\)/g, /stdin/.test(src) ? '.dz_ln()' : '.lines()') + '\nfn dz_eof()->!{use std::io::Write;let mut o=std::io::stdout();let _=o.flush();let _=o.write_all(b"\\x01DZEOF");let _=o.flush();std::process::exit(0)}\ntrait DzRlA{fn dz_rl(&self,s:&mut String)->std::io::Result<usize>;}\nimpl DzRlA for std::io::Stdin{fn dz_rl(&self,s:&mut String)->std::io::Result<usize>{let n=self.read_line(s)?;if n==0{dz_eof()}Ok(n)}}\ntrait DzRlB{fn dz_rl(&mut self,s:&mut String)->std::io::Result<usize>;}\nimpl<T:std::io::BufRead> DzRlB for T{fn dz_rl(&mut self,s:&mut String)->std::io::Result<usize>{let n=std::io::BufRead::read_line(self,s)?;if n==0{dz_eof()}Ok(n)}}\nstruct DzIt<B>(B);\nimpl<B:std::io::BufRead> Iterator for DzIt<B>{type Item=std::io::Result<String>;fn next(&mut self)->Option<Self::Item>{let mut s=String::new();match std::io::BufRead::read_line(&mut self.0,&mut s){Ok(0)=>dz_eof(),Ok(_)=>{if s.ends_with(\'\\n\'){s.pop();if s.ends_with(\'\\r\'){s.pop();}}Some(Ok(s))}Err(e)=>Some(Err(e))}}}\ntrait DzLnB:std::io::BufRead+Sized{fn dz_ln(self)->DzIt<Self>{DzIt(self)}}\nimpl<T:std::io::BufRead> DzLnB for T{}\ntrait DzLnA{fn dz_ln(self)->DzIt<std::io::StdinLock<\'static>>;}\nimpl DzLnA for std::io::Stdin{fn dz_ln(self)->DzIt<std::io::StdinLock<\'static>>{DzIt(self.lock())}}\ntrait DzRts{fn dz_rts(&mut self,s:&mut String)->std::io::Result<usize>;}\nimpl<T:std::io::Read> DzRts for T{fn dz_rts(&mut self,s:&mut String)->std::io::Result<usize>{let n=std::io::Read::read_to_string(self,s)?;if n==0{dz_eof()}Ok(n)}}\n';
+  if(l === 'kotlin') return src.replace(/\b(?:readLine|readln|readlnOrNull)\(\)/g, 'dzRL()').replace(/System\.`in`/g, 'DzIn.I') + '\nobject DzIn{val I:java.io.InputStream=object:java.io.InputStream(){override fun read():Int{val c=System.`in`.read();if(c<0){System.out.flush();print(1.toChar().toString()+"DZEOF");System.out.flush();Runtime.getRuntime().halt(0)};return c}override fun read(b:ByteArray,o:Int,n:Int):Int{val c=read();b[o]=c.toByte();var k=1;while(k<n&&System.`in`.available()>0){val d=System.`in`.read();if(d<0)break;b[o+k]=d.toByte();k++};return k}override fun available():Int=System.`in`.available()}}' + '\nfun dzRL(): String { val s = kotlin.io.readLine(); if (s == null) { System.out.flush(); print(1.toChar().toString() + "DZEOF"); System.out.flush(); Runtime.getRuntime().halt(0) }; return s ?: "" }\n';
+    if(l === 'php' && src.indexOf('<?php') >= 0){
+    const H = 'function __dzm(){echo chr(1)."DZEOF";exit;} function __dzg($h=null,...$a){if($h===null)$h=STDIN;$l=fgets($h,...$a);if($l===false)__dzm();return $l;} function __dzs($h,$f,&...$v){$l=__dzg($h);return sscanf($l,$f,...$v);} function __dzc($h=null){if($h===null)$h=STDIN;$c=fgetc($h);if($c===false)__dzm();return $c;} function __dza(){$s=stream_get_contents(STDIN);if($s===""||$s===false)__dzm();return $s;} function __dzr($p=""){echo $p;return rtrim(__dzg(STDIN),"\\r\\n");} ';
+    const t = src.replace(/\bfgets\(/g, '__dzg(').replace(/\bfscanf\(\s*([^,()]+),/g, '__dzs($1,').replace(/\bfgetc\(\s*([^()]+)\)/g, '__dzc($1)').replace(/\b(?:file_get_contents\(\s*['"]php:\/\/stdin['"]\s*\)|stream_get_contents\(\s*STDIN\s*\))/g, '__dza()').replace(/\breadline\(/g, '__dzr(');
+    return /declare\s*\(\s*strict_types/.test(t) ? t.replace(/declare\s*\(\s*strict_types\s*=\s*1\s*\)\s*;/, m => m + ' ' + H) : t.replace('<?php', m => m + ' ' + H);
+  }
+  if(l === 'pyx') return PYP + src;
+  if(l === 'ts') return TSP + src;
+  if(l === 'ruby') return "class << $stdin;def dz_m;$stdout.flush;$stdout.print(1.chr+'DZEOF');$stdout.flush;exit!(0);end;def gets(*a);l=super;dz_m if l.nil?;l;end;def readline(*a);gets(*a);end;def read(*a);s=super;dz_m if s.nil?||s.empty?;s;end;def readlines(*a);r=super;dz_m if r.empty?;r;end;def each_line(*a);return enum_for(:each_line) unless block_given?;while(l=gets);yield l;end;end;def getc;c=super;dz_m if c.nil?;c;end;end;module Kernel;def gets(*a);$stdin.gets(*a);end;def readline(*a);$stdin.gets(*a);end;def readlines(*a);$stdin.readlines(*a);end;end;" + src;
+  if(l === 'bash') return src.replace(/^(#!.*\n)?/, (m, sh) => (sh || '') + "read(){ builtin read \"$@\" || { printf '\\001DZEOF'; exit 0; }; };");
+  return src;
 }
 
 /* ---------- execução online (Judge0 CE) ---------- */
 let rac = null, jIds = null;
+const jdCfg = (() => { try{ const c = JSON.parse(localStorage.getItem('dz_jd_api') || '{}'); return { url:typeof c.url === 'string' ? c.url : '', token:typeof c.token === 'string' ? c.token : '' }; }catch(e){ return { url:'', token:'' }; } })();
+const jdApiUrl = () => (jdCfg.url || JD_API).replace(/\/+$/, '');
+const jdHdr = h => Object.assign({}, h || {}, jdCfg.token ? { 'X-Auth-Token':jdCfg.token } : {});
+const PROBE = '0\n0\n0\n', PROBE2 = '42\n17\n99\n';
 const b64 = t => { const u = new TextEncoder().encode(t); let b = ''; for(let i = 0; i < u.length; i++) b += String.fromCharCode(u[i]); return btoa(b); };
 const unb64 = t => { if(!t) return ''; try{ const b = atob(t.replace(/\s/g, '')), u = new Uint8Array(b.length); for(let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return new TextDecoder().decode(u); }catch(e){ return ''; } };
 async function remote(){
   const L = LANGS[S.lang], ac = new AbortController(); rac = ac;
-  outT.className = ''; outT.textContent = tr('Enviando ao servidor…', 'Sending to the server…'); stat(''); $('jdRun').disabled = true;
-  const j = async (u, o) => { const r = await fetch(JD_API + u, Object.assign({ signal:ac.signal }, o)); if(!r.ok) throw new Error('HTTP ' + r.status + (r.status === 429 ? ' — ' + tr('limite de uso atingido, espere um pouco', 'rate limit reached, wait a bit') : '')); return r.json(); };
+  const quiet = term.typed.length || term.eof;
+  const say = t => { if(!quiet && rac === ac){ outT.className = ''; outT.textContent = t; } };
+  say(tr('Enviando ao servidor…', 'Sending to the server…')); if(!quiet) stat(''); $('jdRun').disabled = true;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  /* requisição com nova tentativa automática (limite de uso, servidor ocupado, rede instável) */
+  const j = async (u, o) => {
+    let last = null;
+    for(let a = 0; a < 4; a++){
+      try{
+        const r = await fetch(jdApiUrl() + u, Object.assign({ signal:ac.signal }, o, { headers:jdHdr(o && o.headers) }));
+        if(r.ok) return await r.json();
+        last = new Error('HTTP ' + r.status + (r.status === 429 ? ' — ' + tr('limite de uso do servidor atingido', 'server rate limit reached') : ''));
+        if(r.status !== 429 && r.status < 500) throw last;
+      }catch(x){ if(ac.signal.aborted || (x && /^HTTP [1-4]/.test(x.message) && !/^HTTP 429/.test(x.message))) throw x; last = x; }
+      if(a < 3){ say(tr('Servidor ocupado, tentando de novo… (', 'Server busy, retrying… (') + (a + 1) + '/3)'); await sleep(1500 * (a + 1)); }
+    }
+    throw last;
+  };
   try{
     if(!jIds) jIds = await j('/languages');
-    const lg = jIds.filter(x => L.j.test(x.name)).sort((a, b) => b.id - a.id)[0];
+    const lg = jIds.find(x => x.id === S.ver[S.lang] && L.j.test(x.name)) || jIds.filter(x => L.j.test(x.name)).sort((a, b) => b.id - a.id)[0];
     if(!lg) throw new Error(tr('Linguagem indisponível no servidor', 'Language unavailable on the server'));
-    const sub = await j('/submissions?base64_encoded=true', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ source_code:b64(ta.value), language_id:lg.id, stdin:b64(sin.value) }) });
-    let d = null;
-    for(let i = 0; i < 40; i++){
-      await new Promise(r => setTimeout(r, i ? 800 : 400));
-      d = await j('/submissions/' + sub.token + '?base64_encoded=true&fields=stdout,stderr,compile_output,message,status,time,memory');
-      if(d.status && d.status.id > 2) break;
+    const go = async (code, stdinTxt) => {
+      const sub = await j('/submissions?base64_encoded=true', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ source_code:b64(code), language_id:lg.id, stdin:b64(stdinTxt), command_line_arguments:S.args || undefined }) });
+      let d = null;
+      for(let i = 0; i < 60; i++){
+        await sleep(i ? 700 : 350);
+        d = await j('/submissions/' + sub.token + '?base64_encoded=true&fields=stdout,stderr,compile_output,message,status,time,memory,exit_code,exit_signal');
+        if(d.status && d.status.id > 2) break;
+        say(d.status && d.status.id === 2 ? tr('Executando…', 'Running…') : tr('Na fila do servidor…', 'Waiting in the server queue…'));
+      }
+      if(!d || !d.status || d.status.id <= 2) throw new Error(tr('Tempo esgotado esperando o servidor', 'Timed out waiting for the server'));
+      return d;
+    };
+    const dec = d => ({ o:unb64(d.stdout), cmp:unb64(d.compile_output), er:unb64(d.stderr), msg:unb64(d.message), d });
+    const base = buildIn();
+    let r;
+    if(term.eof) r = dec(await go(ta.value, base));
+    else {
+      const hooked = instrument(ta.value);
+      r = dec(await go(hooked, base));
+      if(hooked !== ta.value && r.d.status.id === 6){
+        /* o gancho de entrada não compilou nesta linguagem: roda o código original (erros com as linhas certas) */
+        const r0 = dec(await go(ta.value, base));
+        if(r0.d.status.id === 6) r = r0;
+        else {
+          /* detecção sem gancho: roda de novo com linhas extras; se a saída muda, o programa pediu mais entrada */
+          let r1 = dec(await go(ta.value, base + PROBE));
+          if(r0.o === r1.o) r1 = dec(await go(ta.value, base + PROBE2));   /* confirma com outros valores (evita coincidência) */
+          if(r0.o !== r1.o){ let p = 0; const n = Math.min(r0.o.length, r1.o.length); while(p < n && r0.o[p] === r1.o[p]) p++; r = Object.assign({}, r0, { o:r0.o.slice(0, p) + SENT }); }
+          else r = r0;
+        }
+      }
     }
-    if(!d || !d.status || d.status.id <= 2) throw new Error(tr('Tempo esgotado esperando o servidor', 'Timed out waiting for the server'));
     if(rac !== ac) return; rac = null;
-    const o = unb64(d.stdout), e = [unb64(d.compile_output), unb64(d.stderr), unb64(d.message)].filter(Boolean).join('\n') || (d.status.id !== 3 ? d.status.description : '');
-    done({ o:o, err:e, ms:(parseFloat(d.time) || 0) * 1000, mem:(d.memory || 0) * 1024 });
+    const st = r.d.status; let o = r.o;
+    let e = [r.cmp, r.er, r.msg].filter(Boolean).join('\n');
+    let need = false; const k = o.indexOf(SENT);
+    if(k >= 0){ o = o.slice(0, k); need = true; } else if(!term.eof && S.lang === 'pyx' && /EOFError/.test(e)) need = true;
+    if(need) e = '';
+    else if(st.id !== 3){
+      const desc = st.id === 5 ? tr('Tempo limite excedido (5 s de CPU)', 'Time limit exceeded (5 s CPU)') : st.description + (r.d.exit_code != null && st.id !== 6 ? ' — ' + tr('código de saída ', 'exit code ') + r.d.exit_code : '');
+      if(st.id !== 6 || !e) e = e ? e + '\n[' + desc + ']' : '[' + desc + ']';
+    }
+    done({ o:o, err:e, need:need, ms:(parseFloat(r.d.time) || 0) * 1000, mem:(r.d.memory || 0) * 1024 });
   }catch(x){
     if(ac.signal.aborted || rac !== ac) return; rac = null;
-    done({ err:tr('Não foi possível usar o servidor de execução: ', 'Could not use the execution server: ') + (x && x.message || x) });
+    done({ err:tr('Não foi possível usar o servidor de execução: ', 'Could not use the execution server: ') + (x && x.message || x) + '\n' + tr('Dica: confira a internet ou troque o servidor no botão API.', 'Tip: check your connection or change the server with the API button.') });
   }
 }
 
@@ -22104,9 +22899,10 @@ function renameBtn(){
 }
 function setLang(l){
   if(!LANGS[l]) return;
+  termHide(); term.typed = []; term.marks = []; term.eof = false;
   save(); S.lang = l; sel.value = l; showName();
   ta.value = (typeof S.code[l] === 'string') ? S.code[l] : LANGS[l].code;
-  paint(); outT.textContent = ''; outT.className = ''; stat(''); showFrame(l === 'html');
+  paint(); outT.textContent = ''; outT.className = ''; stat(''); showFrame(l === 'html'); if(typeof fillVer === 'function') fillVer();
 }
 function newDoc(){ ta.value = LANGS[S.lang].code; delete S.names[S.lang]; showName(); paint(); save(); }
 function dl(){
@@ -22159,7 +22955,7 @@ function fit(){
   const t = vv.offsetTop + 'px', h = vv.height + 'px';
   if(ov.style.top !== t) ov.style.top = t; if(ov.style.height !== h) ov.style.height = h;
 }
-function setStdin(b){ S.inOpen = b; sin.classList.toggle('open', b); $('jdStdinBtn').classList.toggle('on', b); tgt = b ? sin : ta; }
+function setStdin(b){ S.inOpen = b; sin.classList.toggle('open', b); $('jdArgs').classList.toggle('open', b); $('jdStdinBtn').classList.toggle('on', b); tgt = b ? sin : ta; }
 function open(){
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
@@ -22178,6 +22974,16 @@ if(window.visualViewport){ window.visualViewport.addEventListener('resize', fit)
 window.addEventListener('resize', fit); window.addEventListener('orientationchange', () => setTimeout(fit, 200));
 
 /* ---------- ligações ---------- */
+(function(){
+  const m = /[#&]jd=([A-Za-z0-9_-]+)/.exec(location.hash); if(!m) return;
+  try{
+    const d = JSON.parse(unb64(m[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if(d && LANGS[d.l] && typeof d.c === 'string'){
+      S.lang = d.l; S.code[d.l] = d.c; if(d.n) S.names[d.l] = cleanName(d.n, d.l);
+      if(typeof d.i === 'string') S.sin = d.i; S.args = String(d.a || ''); sharedLoaded = true;
+    }
+  }catch(e){}
+})();
 sel.innerHTML = Object.keys(LANGS).map(k => '<option value="' + k + '">' + LANGS[k].n + '</option>').join('');
 sel.value = S.lang; ta.value = (typeof S.code[S.lang] === 'string') ? S.code[S.lang] : LANGS[S.lang].code; sin.value = S.sin || '';
 setStdin(!!S.inOpen); showFrame(S.lang === 'html'); paint();
@@ -22198,8 +23004,133 @@ document.querySelectorAll('#jdPad [data-pad]').forEach(b => { b.addEventListener
 nameIn.addEventListener('input', () => { S.names[S.lang] = nameIn.value; later(); });
 nameIn.addEventListener('change', () => setName(nameIn.value, true));
 nameIn.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); setName(nameIn.value); nameIn.blur(); } });
+$('jdTsend').addEventListener('click', () => { snd('menuSelect'); tSend(false); });
+$('jdTeof').addEventListener('click', () => { snd('menuSelect'); tSend(true); });
+$('jdTin').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); tSend(false); } else if(e.ctrlKey && (e.key === 'd' || e.key === 'D')){ e.preventDefault(); tSend(true); } });
 $('jdRename').addEventListener('click', () => { snd('menuSelect'); renameBtn(); });
 showName();
+/* ---------- extras estilo JDoodle: buscar/substituir, fonte, tema, link, versão, saída ---------- */
+fm = document.createElement('pre'); fm.id = 'jdFm'; fm.setAttribute('aria-hidden', 'true'); hl.after(fm);
+const fbar = $('jdFindBar'), fq = $('jdFq'), fr = $('jdFr'), fc = $('jdFc'), argsIn = $('jdArgs'), ver = $('jdVer');
+function fScan(){
+  fHits = []; const q = fq.value; if(!fOn || !q) return;
+  const t = ta.value.toLowerCase(), qq = q.toLowerCase(); let i = 0;
+  while(fHits.length < 3000 && (i = t.indexOf(qq, i)) >= 0){ fHits.push(i); i += qq.length; }
+}
+function fPaint(){
+  if(!fOn || !fHits.length){ fm.innerHTML = ''; fc.textContent = fOn && fq.value ? '0/0' : ''; return; }
+  const v = ta.value, L = fq.value.length; let o = '', p = 0;
+  fHits.forEach((h, k) => { o += esc(v.slice(p, h)) + '<mark' + (k === fCur ? ' class="cur"' : '') + '>' + esc(v.substr(h, L)) + '</mark>'; p = h + L; });
+  fm.innerHTML = o + esc(v.slice(p)) + '\n'; fc.textContent = (fCur + 1) + '/' + fHits.length;
+  fm.scrollTop = ta.scrollTop; fm.scrollLeft = ta.scrollLeft;
+}
+function fReveal(){
+  const h = fHits[fCur]; if(h === undefined) return;
+  const lh = parseFloat(getComputedStyle(ta).lineHeight) || 21; let n = 0, i = -1; const v = ta.value;
+  while((i = v.indexOf('\n', i + 1)) >= 0 && i < h) n++;
+  const top = n * lh + 10;
+  if(top < ta.scrollTop + lh || top > ta.scrollTop + ta.clientHeight - 3 * lh) ta.scrollTop = Math.max(0, top - ta.clientHeight / 3);
+  sync();
+}
+function fFind(step){
+  fScan();
+  if(!fHits.length){ fCur = -1; fPaint(); return; }
+  if(step === 0){ const c = ta.selectionStart; fCur = fHits.findIndex(h => h >= c); if(fCur < 0) fCur = 0; }
+  else fCur = ((fCur < 0 ? (step > 0 ? -1 : 0) : fCur) + step + fHits.length) % fHits.length;
+  fReveal(); fPaint();
+}
+function fRep(){
+  if(!fHits.length || fCur < 0){ fFind(0); return; }
+  const h = fHits[fCur], L = fq.value.length;
+  ta.setRangeText(fr.value, h, h + L, 'end'); ta.setSelectionRange(h + fr.value.length, h + fr.value.length); ta.dispatchEvent(new Event('input'));
+  fFind(0);
+}
+function fAll(){
+  fScan(); if(!fHits.length) return;
+  const v = ta.value, L = fq.value.length, n = fHits.length; let o = '', p = 0;
+  fHits.forEach(h => { o += v.slice(p, h) + fr.value; p = h + L; });
+  ta.value = o + v.slice(p); ta.dispatchEvent(new Event('input')); fCur = -1; fFind(0);
+  toast(n + ' ' + tr('substituições', 'replacements'));
+}
+function openFind(){
+  fOn = true; fbar.classList.add('on'); $('jdFind').classList.add('on');
+  const s = ta.value.slice(ta.selectionStart, ta.selectionEnd); if(s && s.indexOf('\n') < 0) fq.value = s;
+  fq.focus(); try{ fq.select(); }catch(e){} fFind(0);
+}
+function closeFind(){
+  fOn = false; fbar.classList.remove('on'); $('jdFind').classList.remove('on'); fm.innerHTML = ''; fHits = []; fCur = -1;
+  if(!matchMedia('(pointer:coarse)').matches) try{ ta.focus({ preventScroll:true }); }catch(e){}
+}
+fq.addEventListener('input', () => { fCur = -1; fFind(0); });
+fq.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); if(fCur < 0) fFind(0); else fFind(e.shiftKey ? -1 : 1); } });
+fr.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); fRep(); } });
+$('jdFind').addEventListener('click', () => { snd('menuSelect'); if(fOn) closeFind(); else openFind(); });
+$('jdFp').addEventListener('click', () => { snd('menuSelect'); fFind(-1); });
+$('jdFn').addEventListener('click', () => { snd('menuSelect'); fFind(1); });
+$('jdFrep').addEventListener('click', () => { snd('menuSelect'); fRep(); });
+$('jdFall').addEventListener('click', () => { snd('menuSelect'); fAll(); });
+$('jdFx').addEventListener('click', () => { snd('menuBack'); closeFind(); });
+
+/* fonte e tema */
+function setFs(n){ S.fs = Math.max(10, Math.min(28, n)); ov.style.setProperty('--jdfs', S.fs + 'px'); save(); paint(); }
+function setLight(b){ S.light = !!b; ov.classList.toggle('jdl', S.light); $('jdTheme').textContent = S.light ? '☾' : '☀'; save(); }
+$('jdFsM').addEventListener('click', () => { snd('menuSelect'); setFs(S.fs - 1); });
+$('jdFsP').addEventListener('click', () => { snd('menuSelect'); setFs(S.fs + 1); });
+$('jdTheme').addEventListener('click', () => { snd('menuSelect'); setLight(!S.light); });
+setFs(S.fs); setLight(S.light);
+
+/* argumentos da linha de comando */
+argsIn.value = S.args;
+argsIn.addEventListener('input', () => { S.args = argsIn.value; later(); });
+argsIn.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); run(); } });
+
+/* versão do compilador (linguagens online) */
+async function fillVer(){
+  const L = LANGS[S.lang], cur = S.lang;
+  if(!L || !L.j){ ver.style.display = 'none'; return; }
+  ver.style.display = '';
+  const render = list => {
+    ver.innerHTML = '<option value="">' + tr('Versão: automática', 'Version: auto') + '</option>' + list.map(x => '<option value="' + x.id + '">' + esc(x.name) + '</option>').join('');
+    ver.value = String(S.ver[cur] || ''); if(ver.value !== String(S.ver[cur] || '')) ver.value = '';
+  };
+  render([]);
+  try{ if(!jIds){ const r = await fetch(jdApiUrl() + '/languages', { headers:jdHdr() }); if(!r.ok) return; jIds = await r.json(); } }catch(e){ return; }
+  if(cur !== S.lang) return;
+  render(jIds.filter(x => L.j.test(x.name)).sort((a, b) => b.id - a.id));
+}
+ver.addEventListener('change', () => { snd('menuSelect'); if(ver.value) S.ver[S.lang] = +ver.value; else delete S.ver[S.lang]; save(); });
+fillVer();
+
+/* link para compartilhar (código vai dentro do endereço, depois do #) */
+const b64u = t => b64(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+$('jdShare').addEventListener('click', () => {
+  snd('menuSelect'); save();
+  const url = location.href.split('#')[0] + '#jd=' + b64u(JSON.stringify({ l:S.lang, n:S.names[S.lang] || '', c:ta.value, i:sin.value, a:S.args }));
+  try{ navigator.clipboard.writeText(url).then(() => toast(tr('Link copiado', 'Link copied')), () => toast(tr('Não foi possível copiar', 'Could not copy'), 'err')); }catch(e){ toast(tr('Não foi possível copiar', 'Could not copy'), 'err'); }
+});
+if(sharedLoaded){
+  const go = () => setTimeout(() => { open(); try{ history.replaceState(null, '', location.href.split('#')[0]); }catch(e){} }, 600);
+  if(document.readyState === 'complete') go(); else window.addEventListener('load', go);
+}
+
+/* servidor de execução: endereço (Judge0 próprio ou outro) e token opcional */
+function askOne(title, cur, cb){
+  if(window.dzVk && window.dzVk.wanted()) window.dzVk.open({ title:title, value:cur, max:200, upper:false, onOk:cb });
+  else { const v = window.prompt(title, cur); if(v !== null) cb(v); }
+}
+$('jdApi').addEventListener('click', () => {
+  snd('menuSelect');
+  askOne(tr('URL DO SERVIDOR JUDGE0 (vazio = padrão)', 'JUDGE0 SERVER URL (empty = default)'), jdCfg.url, u => {
+    jdCfg.url = u.trim();
+    askOne(tr('TOKEN (opcional, vazio = nenhum)', 'TOKEN (optional, empty = none)'), jdCfg.token, t => {
+      jdCfg.token = t.trim(); try{ localStorage.setItem('dz_jd_api', JSON.stringify(jdCfg)); }catch(e){}
+      jIds = null; fillVer(); toast(jdCfg.url ? tr('Servidor: ', 'Server: ') + jdCfg.url : tr('Servidor padrão restaurado', 'Default server restored'));
+    });
+  });
+});
+/* saída: copiar e limpar */
+$('jdOCopy').addEventListener('click', () => { snd('menuSelect'); try{ navigator.clipboard.writeText(outT.textContent).then(() => toast(tr('Saída copiada', 'Output copied')), () => {}); }catch(e){} });
+$('jdOClr').addEventListener('click', () => { snd('menuSelect'); outT.textContent = ''; outT.className = ''; stat(''); if(S.lang === 'html') frame.srcdoc = ''; });
 function jdLoadFile(f){
   const r = new FileReader();
   r.onload = () => { const x = (f.name.split('.').pop() || '').toLowerCase(); setLang(({ java:'java', c:'c', cpp:'cpp', cs:'cs', go:'go', rs:'rust', php:'php', rb:'ruby', kt:'kotlin', ts:'ts', sh:'bash' })[x] || (x === 'py' ? 'py' : /^html?$/.test(x) ? 'html' : x === 'js' ? 'js' : S.lang)); ta.value = String(r.result); setName(f.name, true); paint(); save(); };
@@ -22208,20 +23139,87 @@ function jdLoadFile(f){
 $('jdFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if(f){ jdLink = null; jdLoadFile(f); } });
 
 /* teclado (PC): atalhos; as teclas nunca chegam ao jogo */
+const OPEN = { '(':')', '[':']', '{':'}', '"':'"', "'":"'", '`':'`' };
+function lineRange(){
+  const v = ta.value, s = ta.selectionStart; let e = ta.selectionEnd; if(e > s && v[e - 1] === '\n') e--;
+  const a = v.lastIndexOf('\n', s - 1) + 1, b0 = v.indexOf('\n', e);
+  return [a, b0 < 0 ? v.length : b0];
+}
+function blockEdit(fn){
+  const ss = ta.selectionStart, se = ta.selectionEnd, r = lineRange(), res = fn(ta.value.slice(r[0], r[1]).split('\n')), out = res.lines.join('\n');
+  ta.focus(); ta.setSelectionRange(r[0], r[1]);
+  let ok = false; try{ ok = document.execCommand && document.execCommand('insertText', false, out); }catch(x){}
+  if(!ok){ ta.setRangeText(out, r[0], r[1], 'end'); ta.dispatchEvent(new Event('input')); }
+  ta.setSelectionRange(Math.max(r[0], ss + res.ds), Math.max(r[0], se + res.de));
+}
+function indentSel(back){
+  const ind = LANGS[S.lang].ind, re = new RegExp('^(\\t| {1,' + Math.max(1, ind.length) + '})');
+  blockEdit(L => { let ds = 0, de = 0; const lines = L.map((l, i) => { let d = 0, r = l;
+    if(back){ const m = re.exec(l); if(m){ r = l.slice(m[0].length); d = -m[0].length; } } else if(l){ r = ind + l; d = ind.length; }
+    if(i === 0) ds = d; de += d; return r; }); return { lines, ds, de }; });
+}
+function toggleComment(){
+  const h = LANGS[S.lang].hl || S.lang, html = h === 'html', c = h === 'py' ? '#' : '//';
+  blockEdit(L => {
+    const ne = L.filter(l => l.trim()), isC = l => html ? /^\s*<!--.*-->\s*$/.test(l) : l.trimStart().startsWith(c), all = ne.length > 0 && ne.every(isC);
+    let ds = 0, de = 0;
+    const lines = L.map((l, i) => { let r = l;
+      if(l.trim()){
+        const m = l.match(/^\s*/)[0];
+        if(all) r = html ? l.replace(/<!--\s?/, '').replace(/\s?-->\s*$/, '') : l.replace(c === '#' ? /^(\s*)# ?/ : /^(\s*)\/\/ ?/, '$1');
+        else r = html ? m + '<!-- ' + l.slice(m.length) + ' -->' : m + c + ' ' + l.slice(m.length);
+      }
+      const d = r.length - l.length; if(i === 0) ds = d; de += d; return r; });
+    return { lines, ds, de };
+  });
+}
 ta.addEventListener('keydown', e => {
   if(performance.now() - (window.dzPadT || 0) < 450) return;
-  if(e.key === 'Tab'){ e.preventDefault(); if(!e.shiftKey) ins(LANGS[S.lang].ind); return; }
-  if(e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.altKey){
-    const v = ta.value, p = ta.selectionStart, line = v.slice(v.lastIndexOf('\n', p - 1) + 1, p);
-    let sp = line.match(/^\s*/)[0]; if(/[:{(\[]\s*$/.test(line)) sp += LANGS[S.lang].ind;
-    e.preventDefault(); ins('\n' + sp);
+  const k = e.key, mod = e.ctrlKey || e.metaKey;
+  if(!k) return;
+  if(k === 'Tab'){
+    e.preventDefault();
+    if(e.shiftKey || ta.value.slice(ta.selectionStart, ta.selectionEnd).indexOf('\n') >= 0) indentSel(e.shiftKey); else ins(LANGS[S.lang].ind);
+    return;
+  }
+  if(mod && !e.altKey && k === '/'){ e.preventDefault(); toggleComment(); return; }
+  if(!mod && !e.altKey && k.length === 1){
+    const v = ta.value, s = ta.selectionStart, en = ta.selectionEnd, nx = v[en], pv = v[s - 1];
+    if(OPEN[k] && s !== en){ e.preventDefault(); ins(k + v.slice(s, en) + OPEN[k]); ta.setSelectionRange(s + 1, en + 1); return; }
+    if(s === en && nx === k && (')]}"\'`'.indexOf(k) >= 0)){ e.preventDefault(); ta.setSelectionRange(s + 1, s + 1); return; }
+    if(s === en && OPEN[k]){
+      const quote = OPEN[k] === k;
+      if(quote && (/\w/.test(pv || '') || /\w/.test(nx || '') || pv === k)) return;   /* apóstrofo, dentro de palavra ou aspas triplas */
+      if(!quote && nx && !/[\s)\]};,.:]/.test(nx)) return;
+      e.preventDefault(); ins(k + OPEN[k]); ta.setSelectionRange(s + 1, s + 1); return;
+    }
+  }
+  if(k === 'Backspace' && !mod && !e.altKey){
+    const v = ta.value, s = ta.selectionStart;
+    if(s === ta.selectionEnd && s > 0 && OPEN[v[s - 1]] && OPEN[v[s - 1]] === v[s]){
+      e.preventDefault(); ta.setSelectionRange(s - 1, s + 1);
+      let ok = false; try{ ok = document.execCommand && document.execCommand('delete'); }catch(x){}
+      if(!ok){ ta.setRangeText('', s - 1, s + 1, 'end'); ta.dispatchEvent(new Event('input')); }
+      return;
+    }
+  }
+  if(k === 'Enter' && !mod && !e.altKey){
+    const v = ta.value, p = ta.selectionStart, q = ta.selectionEnd, line = v.slice(v.lastIndexOf('\n', p - 1) + 1, p), ind = LANGS[S.lang].ind;
+    let sp = line.match(/^\s*/)[0]; if(/[:{(\[]\s*$/.test(line)) sp += ind;
+    e.preventDefault();
+    if(p === q && '([{'.indexOf(v[p - 1]) >= 0 && OPEN[v[p - 1]] === v[q]){
+      const base = sp.slice(0, Math.max(0, sp.length - ind.length)); ins('\n' + sp + '\n' + base);
+      const np = p + 1 + sp.length; ta.setSelectionRange(np, np);
+    } else ins('\n' + sp);
   }
 });
 ov.addEventListener('keydown', e => {
   e.stopPropagation();
   if(performance.now() - (window.dzPadT || 0) < 450){ e.preventDefault(); return; }
   const k = e.key, mod = e.ctrlKey || e.metaKey;
-  if(k === 'Escape'){ e.preventDefault(); goBack(); return; }
+  if(k === 'Escape'){ e.preventDefault(); if(fOn) closeFind(); else goBack(); return; }
+  if(mod && !e.altKey && k.toLowerCase() === 'f'){ e.preventDefault(); openFind(); return; }
+  if(k === 'F3'){ e.preventDefault(); if(!fOn) openFind(); else fFind(e.shiftKey ? -1 : 1); return; }
   if((mod && k === 'Enter') || k === 'F9'){ e.preventDefault(); run(); return; }
   if(mod && !e.altKey && k.toLowerCase() === 's'){ e.preventDefault(); dl(); }
 });
