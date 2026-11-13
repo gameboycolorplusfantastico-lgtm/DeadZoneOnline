@@ -14255,7 +14255,9 @@ function gpHintsHtml(rootId){
     L.push(it(['B'], d.gpBack));
   } else if(rootId === 'gbaOverlay'){
     L.push(it(['B'], d.gpBack), it(['X'], LTX('ABRIR', 'OPEN')));
-  } else if(rootId === 'lgOverlay' || rootId === 'mgOverlay'){
+  } else if(rootId === 'mgOverlay'){
+    L.push(it(['B'], d.gpBack), it(['Y'], LTX('JOGAR', 'PLAY')));
+  } else if(rootId === 'lgOverlay'){
     L.push(it(['B'], d.gpBack));
   } else if(rootId === 'jdOverlay'){
     L.push(it(['B'], d.gpBack), it(['X'], 'STDIN'), it(['Y'], LTX('DIGITAR', 'TYPE')), it(['START'], LTX('EXECUTAR', 'RUN')));
@@ -14419,6 +14421,8 @@ function gpClickId(id){
 }
 
 function gpMenuUpdate(gp, root, btn, prev){
+  // Joguinhos (Extras): o controle JOGA de verdade; Y alterna para o modo menu (D-pad navega os botões)
+  if(root.id === 'mgOverlay' && window.dzMgPad && window.dzMgPad(gp, btn, prev)) return;
   const pressed = (i) => btn(i) && !prev(i);
   const now = performance.now();
 
@@ -25492,6 +25496,23 @@ html.console #mgOverlay .gp-focus{outline-width:4px}
 .mgm.n1{color:#6fd3ff}.mgm.n2{color:#7dff9a}.mgm.n3{color:#ff7b7b}.mgm.n4{color:#b08cff}.mgm.n5{color:#ffb454}.mgm.n6{color:#5ff0e0}.mgm.n7{color:#fff}.mgm.n8{color:#999}
 #mgOverlay .mgm:focus-visible{outline:2px solid #39ff14;outline-offset:0;position:relative;z-index:2}
 .mgpw{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:1px;justify-content:center}
+.mgcell.kc,.mgm.kc{outline:3px solid #39ff14;outline-offset:1px;position:relative;z-index:2}
+.mgm.kc{outline-width:2px;outline-offset:0}
+#mgPadBar{display:none;flex:none;flex-wrap:wrap;gap:4px 12px;justify-content:center;align-items:center;padding:5px 10px;border-radius:10px;background:rgba(0,0,0,.45);border:1px solid rgba(80,200,140,.3);font-size:11px;letter-spacing:.6px;color:#d6f5e4}
+#mgPadBar .gpb{margin:0 3px 0 0}
+#mgPadBar .gpb+.gpb{margin-left:2px}
+#mgBox{position:relative}
+.mgMb{display:none}html.dz-xp .mgMb{display:flex}
+.mgsmile{display:none;min-width:40px;min-height:34px;padding:0;font-size:20px;border-radius:3px}
+html.dz-xp .mgsmile{display:inline-flex;align-items:center;justify-content:center;background:#c0c0c0!important;border:2px solid;border-color:#fff #808080 #808080 #fff!important;box-shadow:none!important;color:#000}
+html.dz-xp .mgsmile:active{border-color:#808080 #fff #fff #808080!important}
+#mgBox .xpDd{z-index:90}#mgBox .xpDi:focus{background:#316ac5;color:#fff;outline:0}
+#mgHelpDlg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,400px);z-index:95;background:#ece9d8;border:3px solid #0831d9;border-top:0;border-radius:7px 7px 0 0;box-shadow:3px 4px 14px rgba(0,0,0,.55);font:11px/1.4 var(--xf,Tahoma,sans-serif);color:#000}
+#mgHelpDlg .t{display:flex;align-items:center;justify-content:space-between;height:26px;padding:0 4px 0 8px;margin:0 -3px;border-radius:5px 5px 0 0;background:linear-gradient(#3d95ff,#0058e6 8%,#0054e3 80%,#003fc9);color:#fff;font-weight:700;font-size:12px}
+#mgHelpDlg .t button{width:21px;height:21px;border:1px solid #fff;border-radius:3px;background:linear-gradient(#e8836a,#c1411d);color:#fff;font-weight:700;padding:0;cursor:var(--xc-arrow)}
+#mgHelpDlg .b{padding:12px 14px;white-space:pre-line;max-height:60vh;overflow:auto}
+#mgHelpDlg .f{text-align:center;padding:0 0 10px}
+#mgHelpDlg .f button{min-width:75px;height:23px;border:1px solid #003c74;border-radius:3px;background:linear-gradient(#fff,#ece9d8 85%,#d6d0c0);font:11px var(--xf,Tahoma,sans-serif);color:#000;cursor:var(--xc-arrow)}
 /* polimento visual dos joguinhos (só aparência) */
 #mgBox{background:radial-gradient(120% 80% at 50% 0%,#17302a,#070d0a 70%);box-shadow:0 18px 50px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.08)}
 .mgb{background:linear-gradient(180deg,rgba(50,110,82,.9),rgba(24,60,44,.9));box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.15)}
@@ -25555,6 +25576,7 @@ html.console #mgOverlay .gp-focus{outline-width:4px}
       <button type="button" class="mgb clr" id="mgClose">✕</button>
     </div>
     <div id="mgBody"></div>
+    <div id="mgPadBar" aria-hidden="true"></div>
   </div>
 </div>
 <script id="dzMgScript">
@@ -25574,13 +25596,20 @@ let cur = null;
 const isOpen = () => ov.classList.contains('open');
 function el(tag, cls, txt){ const e = document.createElement(tag); if(cls) e.className = cls; if(txt !== undefined) e.textContent = txt; return e; }
 function btn(label, fn, cls, quiet){ const b = el('button', 'mgb' + (cls ? ' ' + cls : ''), label); b.type = 'button'; b.addEventListener('click', () => { if(!quiet) snd('menuAccept'); fn(); }); return b; }
+function btnD(label, fn, cls){   /* botão de AÇÃO: dispara no toque (pointerdown), sem esperar o "clique" — resposta imediata no celular */
+  const b = el('button', 'mgb' + (cls ? ' ' + cls : ''), label); b.type = 'button';
+  b.addEventListener('pointerdown', e => { if(e.pointerType === 'mouse' && e.button !== 0) return; e.preventDefault(); fn(); });
+  b.addEventListener('click', e => { if(e.detail === 0) fn(); });   /* teclado / controle (click() sem ponteiro) */
+  return b;
+}
+const XP = () => document.documentElement.classList.contains('dz-xp');
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, String(v)); }catch(e){} }
 
 /* ================= JOGO DA VELHA ================= */
 function velha(host){
   const LN = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  let b, turn, starter = 'X', over, wl, mode = 'hard', sc = { X:0, O:0, D:0 }, tm = null;
+  let b, turn, starter = 'X', over, wl, mode = 'hard', sc = { X:0, O:0, D:0 }, tm = null, kc = 4, showKc = false;
   const modes = el('div', 'mgrow'), stat = el('div', 'mgstat'), grid = el('div', 'mgvg'), scEl = el('div', 'mgstat'), hint = el('div', 'mghint');
   const mb = {};
   [['easy', 'FÁCIL', 'EASY'], ['hard', 'DIFÍCIL', 'HARD'], ['2p', '2 JOGADORES', '2 PLAYERS']].forEach(m => {
@@ -25588,7 +25617,8 @@ function velha(host){
   });
   const cells = [];
   for(let i = 0; i < 9; i++){ const c = el('button', 'mgcell'); c.type = 'button'; c.addEventListener('click', () => play(i)); if(i === 4) c.id = 'mgPrimary'; grid.appendChild(c); cells.push(c); }
-  hint.textContent = tr('Toque numa casa. No teclado: números 1–9 (como o teclado numérico) ou setas + Enter. R reinicia.', 'Tap a square. Keyboard: numbers 1–9 (like the numpad) or arrows + Enter. R restarts.');
+  hint.textContent = tr('Clique/toque numa casa. Teclado: setas ou WASD + Enter/Espaço, ou números 1–9 (teclado numérico = mesmo desenho do teclado) · M troca o modo · R reinicia. Controle: D-pad/analógico + A.', 'Click/tap a square. Keyboard: arrows or WASD + Enter/Space, or numbers 1–9 (numpad = same layout) · M changes mode · R restarts. Gamepad: D-pad/stick + A.');
+  grid.addEventListener('pointerdown', () => { if(showKc){ showKc = false; render(); } });
   host.append(modes, stat, grid, scEl, hint);
   const winner = bd => { for(const l of LN) if(bd[l[0]] && bd[l[0]] === bd[l[1]] && bd[l[0]] === bd[l[2]]) return { p:bd[l[0]], l:l }; return null; };
   function mm(bd, p, d){
@@ -25603,7 +25633,7 @@ function velha(host){
   }
   const cpu = () => mode !== '2p';
   function render(){
-    cells.forEach((c, i) => { c.textContent = b[i]; c.className = 'mgcell' + (b[i] ? ' ' + b[i] : '') + (wl && wl.indexOf(i) >= 0 ? ' win' : ''); c.setAttribute('aria-label', tr('Casa ', 'Square ') + (i + 1) + (b[i] ? ': ' + b[i] : '')); });
+    cells.forEach((c, i) => { c.textContent = b[i]; c.className = 'mgcell' + (b[i] ? ' ' + b[i] : '') + (wl && wl.indexOf(i) >= 0 ? ' win' : '') + (showKc && i === kc ? ' kc' : ''); c.setAttribute('aria-label', tr('Casa ', 'Square ') + (i + 1) + (b[i] ? ': ' + b[i] : '')); });
     Object.keys(mb).forEach(k => mb[k].classList.toggle('on', k === mode));
     const nameX = cpu() ? tr('VOCÊ (X)', 'YOU (X)') : tr('JOGADOR X', 'PLAYER X'), nameO = cpu() ? tr('COMPUTADOR (O)', 'COMPUTER (O)') : tr('JOGADOR O', 'PLAYER O');
     if(over){
@@ -25636,14 +25666,36 @@ function velha(host){
   }
   newRound();
   const kmap = { Numpad7:0, Numpad8:1, Numpad9:2, Numpad4:3, Numpad5:4, Numpad6:5, Numpad1:6, Numpad2:7, Numpad3:8 };
+  const mvKc = (dx, dy) => {
+    if(!showKc){ showKc = true; render(); return; }
+    const r = Math.floor(kc / 3) + dy, c = kc % 3 + dx;
+    if(r >= 0 && r < 3) kc = r * 3 + (c >= 0 && c < 3 ? c : kc % 3);
+    if(c >= 0 && c < 3) kc = Math.floor(kc / 3) * 3 + c;
+    render();
+  };
+  const okKc = () => { if(!showKc){ showKc = true; render(); } else play(kc); };
+  const AR = { ArrowLeft:[-1,0], a:[-1,0], A:[-1,0], ArrowRight:[1,0], d:[1,0], D:[1,0], ArrowUp:[0,-1], w:[0,-1], W:[0,-1], ArrowDown:[0,1], s:[0,1], S:[0,1] };
+  const unfocus = () => { try{ const a = document.activeElement; if(a && a !== document.body && a.blur) a.blur(); }catch(er){} };
   return {
     reset(){ starter = starter === 'X' ? 'O' : 'X'; newRound(); },
+    xm(){ return [[tr('Fácil', 'Easy'), () => mb.easy.click(), mode === 'easy'], [tr('Difícil', 'Hard'), () => mb.hard.click(), mode === 'hard'], [tr('2 jogadores', '2 players'), () => mb['2p'].click(), mode === '2p']]; },
+    ph: [[['DPAD'], tr('MOVER', 'MOVE')], [['A'], tr('JOGAR', 'PLAY')], [['START'], tr('REINICIAR', 'RESTART')]],
     key(e){
-      if(e.type !== 'keydown') return false;
-      if(/^[1-9]$/.test(e.key)){ play(parseInt(e.key, 10) - 1); return true; }
-      if(kmap[e.code] !== undefined && e.key.length > 1){ play(kmap[e.code]); return true; }
-      if(e.key === 'r' || e.key === 'R'){ this.reset(); return true; }
+      const k = e.key;
+      if(e.type !== 'keydown') return k === ' ' || k === 'Enter';
+      if(kmap[e.code] !== undefined){ play(kmap[e.code]); return true; }      /* teclado numérico: mesmo desenho dele (7-8-9 em cima) */
+      if(/^[1-9]$/.test(k)){ play(parseInt(k, 10) - 1); return true; }
+      if(AR[k]){ unfocus(); mvKc(AR[k][0], AR[k][1]); return true; }
+      if(k === ' ' || k === 'Enter'){ unfocus(); if(!e.repeat) okKc(); return true; }
+      if(k === 'm' || k === 'M'){ const ms = ['easy', 'hard', '2p']; mode = ms[(ms.indexOf(mode) + 1) % 3]; sc = { X:0, O:0, D:0 }; starter = 'X'; newRound(); return true; }
+      if(k === 'r' || k === 'R'){ this.reset(); return true; }
       return false;
+    },
+    pad(p){
+      if(!showKc){ if(p.any){ showKc = true; render(); } return; }
+      if(p.mv) mvKc(p.mv[0], p.mv[1]);
+      if(p.pressed(0)) play(kc);
+      if(p.pressed(9)) this.reset();
     },
     destroy(){ if(tm){ clearTimeout(tm); tm = null; } }
   };
@@ -25655,16 +25707,18 @@ function dino(host){
   const cv = el('canvas', 'mgcv px'); cv.width = W; cv.height = H; const cx = cv.getContext('2d');
   const stat = el('div', 'mgstat'), row = el('div', 'mgrow'), hint = el('div', 'mghint');
   let hi = parseInt(lsGet('dz_mg_dino_hi', '0'), 10) || 0;
-  let st, raf = 0, last = 0, duck = false;
-  const jumpB = btn('⬆ ' + tr('PULAR', 'JUMP'), () => press(), 'big', true); jumpB.id = 'mgPrimary';
+  let st, raf = 0, last = 0, duck = false, paused = false, duckPtr = -1;
+  const jumpB = btnD('⬆ ' + tr('PULAR', 'JUMP'), () => press(), 'big'); jumpB.id = 'mgPrimary';
   const duckB = btn('⬇ ' + tr('AGACHAR (SEGURE)', 'DUCK (HOLD)'), () => {}, 'big', true);
   duckB.addEventListener('pointerdown', e => { duck = true; e.preventDefault(); });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => duckB.addEventListener(t, () => { duck = false; }));
   row.append(jumpB, duckB);
-  hint.textContent = tr('Espaço / ↑ / W ou toque na tela = pular · ↓ / S (segure) = agachar. No controle: A pula.', 'Space / ↑ / W or tap the screen = jump · ↓ / S (hold) = duck. On a gamepad: A jumps.');
+  hint.textContent = tr('Espaço / ↑ / W / clique = pular · ↓ / S / botão direito do mouse (segure) = agachar · R reinicia. Controle: A ou ↑ pula, ↓ ou X agacha. Celular: toque = pular, segurar na parte de baixo = agachar. P pausa.', 'Space / ↑ / W / click = jump · ↓ / S / right mouse button (hold) = duck · R restarts. Gamepad: A or ↑ jumps, ↓ or X ducks. Phone: tap = jump, hold the lower part = duck. P pauses.');
   host.append(stat, cv, row, hint);
-  function init(){ st = { run:false, dead:false, t:0, dist:0, speed:270, y:0, vy:0, obs:[], nextGap:420, clouds:[{ x:120, y:34 }, { x:380, y:58 }, { x:560, y:28 }], gx:0, started:false }; }
+  function init(){ paused = false; st = { run:false, dead:false, t:0, dist:0, speed:270, y:0, vy:0, obs:[], nextGap:420, clouds:[{ x:120, y:34 }, { x:380, y:58 }, { x:560, y:28 }], gx:0, started:false }; }
+  function pause(){ if(st.started && !st.dead) paused = !paused; }
   function press(){
+    if(paused){ paused = false; return; }
     if(!st.started){ st.started = true; st.run = true; }
     else if(st.dead){ init(); st.started = true; st.run = true; }
     if(st.run && st.y === 0){ st.vy = -690; }
@@ -25743,23 +25797,47 @@ function dino(host){
     cx.textAlign = 'center';
     if(!st.started){ cx.font = 'bold 16px monospace'; cx.fillText(tr('PRESSIONE ESPAÇO OU TOQUE PARA COMEÇAR', 'PRESS SPACE OR TAP TO START'), W / 2, 100); }
     if(st.dead){ cx.font = 'bold 22px monospace'; cx.fillText('GAME OVER', W / 2, 90); cx.font = 'bold 14px monospace'; cx.fillText(tr('ESPAÇO / TOQUE PARA TENTAR DE NOVO', 'SPACE / TAP TO TRY AGAIN'), W / 2, 116); }
+    if(paused){ cx.font = 'bold 22px monospace'; cx.fillText(tr('PAUSADO', 'PAUSED'), W / 2, 90); }
     stat.textContent = st.dead ? tr('FIM! PONTOS: ', 'GAME OVER! SCORE: ') + score() : (st.started ? tr('PONTOS: ', 'SCORE: ') + score() : tr('RECORDE: ', 'BEST: ') + hi);
   }
   function loop(t){
     const dt = Math.min(0.033, (t - (last || t)) / 1000); last = t;
-    update(dt); draw(); raf = requestAnimationFrame(loop);
+    if(!paused) update(dt); draw(); raf = requestAnimationFrame(loop);
   }
-  cv.addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+  cv.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if(e.pointerType === 'mouse' && e.button === 2){ duck = true; return; }
+    if(e.pointerType !== 'mouse' && st.started && !st.dead && !paused){   /* toque: parte de baixo da tela = agachar (segure), resto = pular */
+      const r = cv.getBoundingClientRect();
+      if(e.clientY - r.top > r.height * .62){ duck = true; duckPtr = e.pointerId; return; }
+    }
+    press();
+  });
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  ['pointerup', 'pointercancel'].forEach(t => cv.addEventListener(t, e => { if((e.pointerType === 'mouse' && e.button === 2) || e.pointerId === duckPtr){ duck = false; duckPtr = -1; } }));
+  const tapAny = e => { if(e.target.closest('button,canvas')) return; e.preventDefault(); press(); };   /* toque em qualquer lugar da janela = pular */
+  host.addEventListener('pointerdown', tapAny); host.style.touchAction = 'none';
+  const onBlur = () => { if(st && st.started && !st.dead) paused = true; };
+  window.addEventListener('blur', onBlur);
   init(); raf = requestAnimationFrame(loop);
   return {
     reset(){ init(); },
+    pause(){ pause(); },
+    ph: [[['A'], tr('PULAR', 'JUMP')], [['DPAD'], tr('↓ AGACHA', '↓ DUCK')], [['X'], tr('AGACHAR', 'DUCK')], [['START'], tr('REINICIAR', 'RESTART')]],
     key(e){
       const k = e.key, down = e.type === 'keydown';
-      if(k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W'){ if(down && !e.repeat) press(); return true; }
+      if(k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'Enter'){ if(down && !e.repeat) press(); return true; }
       if(k === 'ArrowDown' || k === 's' || k === 'S'){ duck = down; return true; }
+      if((k === 'p' || k === 'P') && down){ pause(); return true; }
+      if((k === 'r' || k === 'R') && down){ init(); return true; }
       return false;
     },
-    destroy(){ cancelAnimationFrame(raf); duck = false; }
+    pad(p){
+      duck = p.down(13) || p.ly > .5 || p.down(2) || p.lt > .4;
+      if(p.pressed(0) || p.pressed(5) || p.pressed(7) || p.e.U) press();
+      if(p.pressed(9)) init();
+    },
+    destroy(){ cancelAnimationFrame(raf); duck = false; host.removeEventListener('pointerdown', tapAny); host.style.touchAction = ''; window.removeEventListener('blur', onBlur); }
   };
 }
 
@@ -25790,13 +25868,13 @@ function sinuca(host){
   [['◀◀', .03], ['◀', .004]].forEach(a => shootRow.appendChild(btn(a[0], () => { if(human() && !hand) ang += a[1]; }, '', true)));
   shootRow.appendChild(shootB);
   [['▶', -.004], ['▶▶', -.03]].forEach(a => shootRow.appendChild(btn(a[0], () => { if(human() && !hand) ang += a[1]; }, '', true)));
-  hint.textContent = tr('Mouse: mova para mirar, clique para tacar (roda = força). Toque: arraste na mesa para mirar, ajuste FORÇA e EFEITO nos painéis à direita e use TACAR. Teclado: ←/→ mira (Shift = rápido), ↑/↓ força, I/J/K/L efeito, G ajuda de mira, Espaço taca.', 'Mouse: move to aim, click to shoot (wheel = power). Touch: drag on the table to aim, set POWER and ENGLISH on the right panels, then SHOOT. Keyboard: ←/→ aim (Shift = fast), ↑/↓ power, I/J/K/L english, G aim aid, Space shoots.');
+  hint.textContent = tr('Mouse: mova para mirar, clique para tacar (roda = força; arraste no painel de efeito/força). Teclado: ←/→ ou A/D mira (segure = acelera, Shift = rápido), ↑/↓ ou W/S força, I/J/K/L efeito (C zera), G ajuda de mira, Espaço/Enter taca (com bola na mão: setas movem a branca). Controle: analógico esq. mira, D-pad ↑↓ ou LT/RT força, analógico dir. efeito, A taca, X ajuda de mira.', 'Mouse: move to aim, click to shoot (wheel = power; drag on the english/power panels). Keyboard: ←/→ or A/D aim (hold = speeds up, Shift = fast), ↑/↓ or W/S power, I/J/K/L english (C resets), G aim aid, Space/Enter shoots (ball in hand: arrows move the cue ball). Gamepad: left stick aims, D-pad ↑↓ or LT/RT power, right stick english, A shoots, X aim aid.');
   host.append(stat, topRow, botRow, optRow, cv, shootRow, hint);
 
   /* ---------- estado ---------- */
   let balls, cue, ang = 0, power = .55, sp = [0, 0], moving = false, turn = 0, over = false, msg = '', raf = 0, last = 0, acc = 0, bt = null;
   let groups = [null, null], hand = 0, breaking = true, first = null, pot = [], cuePot = false, cushAfter = false, cushBalls = null, lowBefore = 0, ownLeft = 0, tray = [], anim = -1, pull0 = 0, banner = '', bannerT = 0, score = 0, shots = 0;
-  let dragSpin = false, dragPow = false, tAim = false, hover = null;
+  let dragSpin = false, dragPow = false, tAim = false, hover = null, held = {}, holdT = 0, fast = false;
   const human = () => !moving && !over && anim < 0 && !(vs === 3 && game !== 'T' && turn === 1);
   const names = () => game === 'T' ? [tr('VOCÊ', 'YOU'), ''] : vs === 3 ? [tr('VOCÊ', 'YOU'), 'BOT'] : [tr('JOGADOR 1', 'PLAYER 1'), tr('JOGADOR 2', 'PLAYER 2')];
   const flash = t => { banner = t; bannerT = 2.2; };
@@ -26187,6 +26265,7 @@ function sinuca(host){
   function loop(t){
     const dt = Math.min(1 / 20, (t - (last || t)) / 1000); last = t;
     if(bannerT > 0) bannerT -= dt;
+    kbTick(dt);
     if(anim >= 0){ anim += dt; if(anim >= .12) strike(); }
     if(moving){
       acc += dt; let n = 0, mv = false; while(acc >= DT && n < 28){ if(step()) mv = true; acc -= DT; n++; }
@@ -26224,38 +26303,93 @@ function sinuca(host){
   const up = e => { dragSpin = dragPow = false; if(tAim && hand && human() && e.pointerType !== 'mouse'){ hand = 0; sync(); } tAim = false; };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('wheel', e => { e.preventDefault(); power = Math.max(.04, Math.min(1, power + (e.deltaY < 0 ? .03 : -.03))); }, { passive: false });
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  /* ---------- teclado/controle: movimento contínuo (aceleração ao segurar) ---------- */
+  const clampP = v => Math.max(.04, Math.min(1, v));
+  const clampSp = () => { const l = Math.hypot(sp[0], sp[1]); if(l > 1) sp = [sp[0] / l, sp[1] / l]; sp = [Math.round(sp[0] * 20) / 20, Math.round(sp[1] * 20) / 20]; };
+  const moveCue = (dx, dy) => {   /* bola na mão: desliza a branca (dy > 0 = para cima na tela) */
+    if(place(cue.x + dx + OX, OY - (cue.y + dy))) return;
+    if(dx && place(cue.x + dx + OX, OY - cue.y)) return;
+    if(dy) place(cue.x + OX, OY - (cue.y + dy));
+  };
+  const KH = { arrowleft:1, arrowright:1, arrowup:1, arrowdown:1, a:1, d:1, w:1, s:1, i:1, j:1, k:1, l:1 };
+  function kbTick(dt){
+    let any = false; for(const q in held){ any = true; break; }
+    if(!any){ holdT = 0; return; }
+    holdT += dt;
+    const dh = ((held.arrowleft || held.a) ? 1 : 0) - ((held.arrowright || held.d) ? 1 : 0);
+    const dv = ((held.arrowup || held.w) ? 1 : 0) - ((held.arrowdown || held.s) ? 1 : 0);
+    if(hand){ if(human() && (dh || dv)){ const v = 150 * (fast ? 3 : 1) * dt; moveCue(-dh * v, dv * v); } }
+    else {
+      if(human() && dh){ const rate = fast ? 1.6 : .22 + Math.min(1, holdT / .9) * .9; ang += dh * rate * dt; }
+      if(dv) power = clampP(power + dv * (fast ? 1 : .55) * dt);
+    }
+    const sx = (held.l ? 1 : 0) - (held.j ? 1 : 0), sy = (held.i ? 1 : 0) - (held.k ? 1 : 0);
+    if(sx || sy){ sp = [sp[0] + sx * 1.4 * dt, sp[1] + sy * 1.4 * dt]; clampSp(); }
+  }
+  const onBlur = () => { held = {}; };
+  window.addEventListener('blur', onBlur);
+  const confirmShot = () => { if(!human()) return; if(hand){ hand = 0; sync(); } else shoot(); };
   bake(); reset(); raf = requestAnimationFrame(loop);
   return {
     reset: reset,
+    xm(){ return [
+      [tr('Bola 8', '8-Ball'), () => { game = '8'; reset(); }, game === '8'], [tr('Bola 9', '9-Ball'), () => { game = '9'; reset(); }, game === '9'], [tr('Treino', 'Practice'), () => { game = 'T'; reset(); }, game === 'T'], '-',
+      [tr('Você x Bot', 'You vs Bot'), () => { vs = 3; reset(); }, vs === 3], [tr('2 jogadores', '2 players'), () => { vs = 2; reset(); }, vs === 2], '-',
+      [tr('Bot fácil', 'Easy bot'), () => { botLv = 'easy'; sync(); }, botLv === 'easy'], [tr('Bot médio', 'Medium bot'), () => { botLv = 'mid'; sync(); }, botLv === 'mid'], [tr('Bot difícil', 'Hard bot'), () => { botLv = 'hard'; sync(); }, botLv === 'hard'], '-',
+      [tr('Ajuda de mira\u2003G', 'Aim aid\u2003G'), () => { aid = (aid + 1) % 4; sync(); }], [tr('Cor da mesa', 'Table color'), () => { felt = (felt + 1) % FELTS.length; bake(); sync(); }]]; },
+    ph: [[['LS'], tr('MIRAR', 'AIM')], [['DPAD', 'LT', 'RT'], tr('FORÇA', 'POWER')], [['RS'], tr('EFEITO', 'ENGLISH')], [['LB', 'RB'], tr('FINO / RÁPIDO', 'FINE / FAST')], [['A'], tr('TACAR', 'SHOOT')], [['X'], tr('AJUDA', 'AID')]],
     key(e){
-      if(e.type !== 'keydown') return (e.key === ' ');
-      const k = e.key, f = e.shiftKey ? 5 : 1;
-      if(k === 'ArrowLeft' || k === 'a' || k === 'A'){ if(human() && !hand) ang += .012 * f; return true; }
-      if(k === 'ArrowRight' || k === 'd' || k === 'D'){ if(human() && !hand) ang -= .012 * f; return true; }
-      if(k === 'ArrowUp' || k === 'w' || k === 'W'){ power = Math.min(1, power + .04); return true; }
-      if(k === 'ArrowDown' || k === 's' || k === 'S'){ power = Math.max(.04, power - .04); return true; }
-      if(k === 'j' || k === 'J'){ sp[0] = Math.max(-1, sp[0] - .1); return true; } if(k === 'l' || k === 'L'){ sp[0] = Math.min(1, sp[0] + .1); return true; }
-      if(k === 'i' || k === 'I'){ sp[1] = Math.min(1, sp[1] + .1); return true; } if(k === 'k' || k === 'K'){ sp[1] = Math.max(-1, sp[1] - .1); return true; }
-      if(k === 'g' || k === 'G'){ aid = (aid + 1) % 4; sync(); return true; }
-      if(k === ' '){ if(!e.repeat && human()){ if(hand){ hand = 0; sync(); } else shoot(); } return true; }
-      if(k === 'r' || k === 'R'){ reset(); return true; }
+      fast = !!e.shiftKey;
+      const k = e.key.length === 1 ? e.key.toLowerCase() : e.key, kk = k.toLowerCase();
+      if(KH[kk]){ if(e.type === 'keydown') held[kk] = 1; else delete held[kk]; return true; }
+      if(e.type !== 'keydown') return k === ' ';
+      if(k === 'g'){ aid = (aid + 1) % 4; sync(); return true; }
+      if(k === 'c'){ sp = [0, 0]; return true; }
+      if(k === 'PageUp'){ power = clampP(power + .1); return true; }
+      if(k === 'PageDown'){ power = clampP(power - .1); return true; }
+      if(k === ' ' || k === 'Enter'){
+        const a = document.activeElement;
+        if(k === 'Enter' && a && a.classList && a.classList.contains('mgb')) return false;   /* Enter num botão: ativa o botão */
+        if(!e.repeat) confirmShot();
+        return true;
+      }
+      if(k === 'r'){ reset(); return true; }
       return false;
     },
-    destroy(){ cancelAnimationFrame(raf); if(bt){ clearTimeout(bt); bt = null; } try{ if(ac) ac.close(); }catch(e){} }
+    pad(p){
+      const h = human(), fine = p.down(4) ? .3 : (p.down(5) ? 2.5 : 1);
+      const cu = v => v ? Math.sign(v) * Math.pow(Math.min(1, (Math.abs(v) - .2) / .8), 1.6) : 0;
+      const ax = cu(p.lx) + p.dpx, ay = cu(p.ly) + p.dpy;
+      if(hand){ if(h && (ax || ay)){ const v = 170 * fine * p.dt; moveCue(ax * v, -ay * v); } }
+      else {
+        if(h && ax) ang -= ax * 1.1 * fine * p.dt;
+        if(p.dpy) power = clampP(power - p.dpy * .5 * p.dt);
+        if(p.rt || p.lt) power = clampP(power + (p.rt - p.lt) * .8 * p.dt);
+      }
+      const m = Math.hypot(p.rx, p.ry);
+      if(m){ sp = [p.rx, -p.ry]; clampSp(); }
+      if(p.pressed(11)) sp = [0, 0];
+      if(p.pressed(2)){ aid = (aid + 1) % 4; sync(); }
+      if(p.pressed(0)) confirmShot();
+    },
+    destroy(){ cancelAnimationFrame(raf); window.removeEventListener('blur', onBlur); held = {}; if(bt){ clearTimeout(bt); bt = null; } try{ if(ac) ac.close(); }catch(e){} }
   };
 }
 
 /* ================= CAMPO MINADO ================= */
 function minas(host){
   const LV = { easy:[9, 9, 10], mid:[12, 12, 25], hard:[16, 16, 50] };
-  let lv = 'easy', R, C, M, cells, over, won, started, nrev, nflag, secs, timer = null, flagMode = false, lp = false, lpT = null;
+  let lv = 'easy', R, C, M, cells, over, won, started, nrev, nflag, secs, timer = null, flagMode = false, lp = false, lpT = null, kc = -1;
   const modes = el('div', 'mgrow'), stat = el('div', 'mgstat'), grid = el('div', 'mgmg'), ctl = el('div', 'mgrow'), hint = el('div', 'mghint');
   const mb = {};
   [['easy', 'FÁCIL', 'EASY'], ['mid', 'MÉDIO', 'MEDIUM'], ['hard', 'DIFÍCIL', 'HARD']].forEach(m => { mb[m[0]] = btn(tr(m[1], m[2]), () => { lv = m[0]; build(); }); modes.appendChild(mb[m[0]]); });
   const flagB = btn('🚩 ' + tr('BANDEIRA: DESLIGADA', 'FLAG: OFF'), () => { flagMode = !flagMode; flagB.classList.toggle('on', flagMode); flagB.textContent = '🚩 ' + (flagMode ? tr('BANDEIRA: LIGADA', 'FLAG: ON') : tr('BANDEIRA: DESLIGADA', 'FLAG: OFF')); }, '', true);
-  ctl.appendChild(flagB);
-  hint.textContent = tr('Toque = abrir · segure (ou clique direito / F) = bandeira · toque num número já aberto com as bandeiras certas abre os vizinhos. Setas movem, Espaço abre.', 'Tap = open · hold (or right-click / F) = flag · tap an opened number with the right flags to open its neighbours. Arrows move, Space opens.');
+  const smile = btn('🙂', () => build(), 'mgsmile', true); smile.title = 'F2';
+  ctl.append(smile, flagB);
+  hint.textContent = tr('Clique/toque = abrir · botão direito, segurar ou F = bandeira · clicar num número já aberto com as bandeiras certas abre os vizinhos. Teclado: setas/WASD movem, Espaço/Enter abre, F bandeira, R reinicia. Botão do meio num número = abre os vizinhos. Controle: D-pad move, A abre, X bandeira.', 'Click/tap = open · right-click, hold or F = flag · click an opened number with the right flags to open its neighbours. Keyboard: arrows/WASD move, Space/Enter opens, F flags, R restarts. Gamepad: D-pad moves, A opens, X flags.');
   host.append(modes, stat, grid, ctl, hint);
+  grid.addEventListener('pointerdown', () => { if(kc >= 0){ kc = -1; paint(); } });
   const nb = i => { const r = (i / C) | 0, c = i % C, o = []; for(let dr = -1; dr <= 1; dr++) for(let dc = -1; dc <= 1; dc++){ if(!dr && !dc) continue; const rr = r + dr, cc = c + dc; if(rr >= 0 && rr < R && cc >= 0 && cc < C) o.push(rr * C + cc); } return o; };
   function stopT(){ if(timer){ clearInterval(timer); timer = null; } }
   function paint(){
@@ -26263,21 +26397,23 @@ function minas(host){
       const e = c.el; let cl = 'mgm', tx = '';
       if(c.r){ cl += ' r'; if(c.m){ cl += ' x'; tx = '💣'; } else if(c.n){ cl += ' n' + c.n; tx = c.n; } }
       else if(c.f){ tx = '🚩'; } else if(over && c.m){ tx = '💣'; cl += ' x2'; }
-      e.className = cl; e.textContent = tx;
+      e.className = cl + (i === kc ? ' kc' : ''); e.textContent = tx;
       e.setAttribute('aria-label', tr('Casa ', 'Cell ') + (i + 1));
     });
+    smile.textContent = over ? (won ? '😎' : '😵') : '🙂';
     Object.keys(mb).forEach(k => mb[k].classList.toggle('on', k === lv));
     const left = M - nflag;
     stat.textContent = (over ? (won ? '🏆 ' + tr('VOCÊ GANHOU!', 'YOU WIN!') : '💥 ' + tr('BOOM! VOCÊ PERDEU.', 'BOOM! YOU LOST.')) + '  ·  ' : '') + '💣 ' + left + '  ·  ⏱ ' + secs + 's';
   }
   function build(){
-    stopT(); [R, C, M] = LV[lv]; cells = []; over = false; won = false; started = false; nrev = 0; nflag = 0; secs = 0; grid.innerHTML = '';
+    stopT(); kc = -1; [R, C, M] = LV[lv]; cells = []; over = false; won = false; started = false; nrev = 0; nflag = 0; secs = 0; grid.innerHTML = '';
     grid.style.gridTemplateColumns = 'repeat(' + C + ',1fr)';
     for(let i = 0; i < R * C; i++){
       const e = el('button', 'mgm'); e.type = 'button';
       const c = { m:false, n:0, r:false, f:false, el:e };
       e.addEventListener('click', () => { if(lp){ lp = false; return; } act(i); });
       e.addEventListener('contextmenu', ev => { ev.preventDefault(); flag(i); });
+      e.addEventListener('auxclick', ev => { if(ev.button === 1){ ev.preventDefault(); if(cells[i].r) act(i); } });   /* botão do meio = abrir os vizinhos (como no Windows) */
       e.addEventListener('pointerdown', ev => { if(ev.pointerType === 'mouse') return; lp = false; lpT = setTimeout(() => { lp = true; flag(i); }, 450); });
       ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => e.addEventListener(t, () => { if(lpT){ clearTimeout(lpT); lpT = null; } }));
       if(i === ((R / 2) | 0) * C + ((C / 2) | 0)) e.id = 'mgPrimary';
@@ -26317,19 +26453,40 @@ function minas(host){
   }
   function flag(i){ if(over) return; const c = cells[i]; if(c.r) return; c.f = !c.f; nflag += c.f ? 1 : -1; paint(); }
   build();
+  const midC = () => ((R / 2) | 0) * C + ((C / 2) | 0);
+  function kmove(dx, dy){
+    if(kc < 0){ const a = cells.findIndex(c => c.el === document.activeElement); kc = a >= 0 ? a : midC(); }
+    else {
+      const r = ((kc / C) | 0) + dy, c = kc % C + dx;
+      if(r >= 0 && r < R) kc = r * C + (c >= 0 && c < C ? c : kc % C);
+      if(c >= 0 && c < C) kc = ((kc / C) | 0) * C + c;
+    }
+    paint(); try{ cells[kc].el.focus({ preventScroll:true }); }catch(er){}
+  }
+  const target = () => { if(kc >= 0) return kc; return cells.findIndex(c => c.el === document.activeElement); };
+  const MV = { ArrowLeft:[-1,0], a:[-1,0], A:[-1,0], ArrowRight:[1,0], d:[1,0], D:[1,0], ArrowUp:[0,-1], w:[0,-1], W:[0,-1], ArrowDown:[0,1], s:[0,1], S:[0,1] };
   return {
     reset(){ build(); },
+    xm(){ return [[tr('Iniciante', 'Beginner'), () => mb.easy.click(), lv === 'easy'], [tr('Intermediário', 'Intermediate'), () => mb.mid.click(), lv === 'mid'], [tr('Avançado', 'Expert'), () => mb.hard.click(), lv === 'hard'], '-', [tr('Modo bandeira', 'Flag mode'), () => flagB.click(), flagMode]]; },
+    ph: [[['DPAD'], tr('MOVER', 'MOVE')], [['A'], tr('ABRIR', 'OPEN')], [['X'], tr('BANDEIRA', 'FLAG')], [['START'], tr('REINICIAR', 'RESTART')]],
     key(e){
-      if(e.type !== 'keydown') return false;
-      const k = e.key, a = document.activeElement, i = cells.findIndex(c => c.el === a);
-      const mv = d => { const j = i < 0 ? ((R / 2) | 0) * C + ((C / 2) | 0) : i + d; if(j >= 0 && j < R * C && (i < 0 || Math.abs(d) !== 1 || ((j / C) | 0) === ((i / C) | 0))) cells[j].el.focus(); };
-      if(k === 'ArrowLeft'){ mv(-1); return true; }
-      if(k === 'ArrowRight'){ mv(1); return true; }
-      if(k === 'ArrowUp'){ mv(-C); return true; }
-      if(k === 'ArrowDown'){ mv(C); return true; }
-      if((k === 'f' || k === 'F') && i >= 0){ flag(i); return true; }
+      const k = e.key, t = target();
+      if(e.type !== 'keydown') return (k === ' ' || k === 'Enter') && t >= 0;
+      if(MV[k]){ kmove(MV[k][0], MV[k][1]); return true; }
+      if(k === ' ' || k === 'Enter'){
+        if(t < 0){ const a = document.activeElement; if(a && a.classList && a.classList.contains('mgb')) return false; kmove(0, 0); return true; }
+        if(!e.repeat) act(t); return true;
+      }
+      if((k === 'f' || k === 'F') && t >= 0){ flag(t); return true; }
       if(k === 'r' || k === 'R'){ build(); return true; }
       return false;
+    },
+    pad(p){
+      if(kc < 0){ if(p.any) kmove(0, 0); return; }
+      if(p.mv) kmove(p.mv[0], p.mv[1]);
+      if(p.pressed(0)) act(kc);
+      if(p.pressed(2) || p.pressed(7)) flag(kc);
+      if(p.pressed(9)) build();
     },
     destroy(){ stopT(); if(lpT){ clearTimeout(lpT); lpT = null; } }
   };
@@ -26345,9 +26502,9 @@ function cobra(host){
   const wb = btn('', () => { wrap = !wrap; lsSet('dz_mg_snake_wrap', wrap ? 1 : 0); lbl(); init(); });
   const lbl = () => { wb.textContent = wrap ? tr('PAREDES: ATRAVESSAM', 'WALLS: WRAP') : tr('PAREDES: BATEM', 'WALLS: SOLID'); };
   const pb = btn('⏯', () => pause(), '', true);
-  [['⬅','L'],['⬆','U'],['⬇','D'],['➡','R']].forEach((a, i) => { const b = btn(a[0], () => turn(a[1]), 'big', true); if(i === 1) b.id = 'mgPrimary'; row.appendChild(b); });
+  [['⬅','L'],['⬆','U'],['⬇','D'],['➡','R']].forEach((a, i) => { const b = btnD(a[0], () => turn(a[1]), 'big'); if(i === 1) b.id = 'mgPrimary'; row.appendChild(b); });
   row.append(pb, wb); lbl();
-  hint.textContent = tr('Setas / WASD ou deslize na tela = virar · Espaço = pausar · R = reiniciar.', 'Arrows / WASD or swipe = turn · Space = pause · R = restart.');
+  hint.textContent = tr('Setas / WASD ou deslize na tela = virar · Espaço/P/Enter = pausar (ou recomeçar) · R = reiniciar. Controle: D-pad/analógico vira, A pausa.', 'Arrows / WASD or swipe = turn · Space/P/Enter = pause (or restart) · R = restart. Gamepad: D-pad/stick turns, A pauses.');
   host.append(stat, cv, row, hint);
   function init(){ sn = [[10,10],[9,10],[8,10]]; dir = D.R; q = []; score = 0; dead = false; paused = false; started = false; spawn(); }
   function spawn(){ let p; do{ p = [Math.floor(Math.random() * N), Math.floor(Math.random() * N)]; }while(sn.some(s => s[0] === p[0] && s[1] === p[1])); food = p; }
@@ -26385,37 +26542,46 @@ function cobra(host){
     if(dead) cx.fillText(tr('FIM! TOQUE/SETA PARA REINICIAR', 'GAME OVER! TAP/ARROW TO RESTART'), N * S / 2, N * S / 2 + 40);
     stat.textContent = tr('PONTOS: ', 'SCORE: ') + score + '  ·  ' + tr('RECORDE: ', 'BEST: ') + hi;
   }
-  let sx = 0, sy = 0;
-  cv.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; e.preventDefault(); });
-  cv.addEventListener('pointerup', e => {
-    const dx = e.clientX - sx, dy = e.clientY - sy;
-    if(Math.abs(dx) < 18 && Math.abs(dy) < 18){ pause(); return; }
-    turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U'));
-  });
+  /* deslizar em QUALQUER lugar da janela vira na hora (sem esperar soltar o dedo); toque simples na tela = pausa/começa/reinicia */
+  let ox = 0, oy = 0, dn = false, swiped = false;
+  const sd = e => { if(e.target.closest('button')) return; dn = true; swiped = false; ox = e.clientX; oy = e.clientY; };
+  const sm = e => { if(!dn) return; const dx = e.clientX - ox, dy = e.clientY - oy; if(Math.max(Math.abs(dx), Math.abs(dy)) > 22){ turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U')); ox = e.clientX; oy = e.clientY; swiped = true; } };
+  const su = e => { if(dn && !swiped && e.target.closest('canvas')){ if(!started) started = true; else if(dead) init(); else pause(); } dn = false; };
+  host.addEventListener('pointerdown', sd); host.addEventListener('pointermove', sm); host.addEventListener('pointerup', su); host.addEventListener('pointercancel', () => { dn = false; });
+  host.style.touchAction = 'none';
   init(); next();
   const KM = { ArrowUp:'U', w:'U', W:'U', ArrowDown:'D', s:'D', S:'D', ArrowLeft:'L', a:'L', A:'L', ArrowRight:'R', d:'R', D:'R' };
   return {
     reset(){ init(); },
+    pause(){ pause(); },
+    xm(){ return [[tr('Paredes atravessam', 'Walls wrap'), () => wb.click(), wrap], [tr('Paredes batem', 'Walls solid'), () => { if(wrap) wb.click(); }, !wrap]]; },
+    ph: [[['DPAD'], tr('VIRAR', 'TURN')], [['A'], tr('PAUSAR', 'PAUSE')], [['START'], tr('PAUSAR', 'PAUSE')]],
+    pad(p){
+      ['U', 'D', 'L', 'R'].forEach(d => { if(p.e[d]) turn(d); });
+      if(p.pressed(0) || p.pressed(9)){ if(dead) init(); else pause(); }
+    },
     key(e){
-      if(e.type !== 'keydown') return !!KM[e.key] || e.key === ' ';
+      if(e.type !== 'keydown') return !!KM[e.key] || e.key === ' ' || e.key === 'Enter';
       if(KM[e.key]){ turn(KM[e.key]); return true; }
-      if(e.key === ' ' || e.key === 'p' || e.key === 'P'){ pause(); return true; }
+      if(e.key === 'Enter' && dead){ init(); return true; }
+      if(e.key === ' ' || e.key === 'p' || e.key === 'P' || e.key === 'Enter'){ pause(); return true; }
       if(e.key === 'r' || e.key === 'R'){ init(); return true; }
       return false;
     },
-    destroy(){ clearTimeout(tm); }
+    destroy(){ clearTimeout(tm); host.removeEventListener('pointerdown', sd); host.removeEventListener('pointermove', sm); host.removeEventListener('pointerup', su); host.style.touchAction = ''; }
   };
 }
 
 function flappy(host){
   const W = 288, H = 440, G = H - 56, BX = 80, GAP = 112, PW = 52, cv = el('canvas', 'mgcv'); cv.width = W; cv.height = H; const cx = cv.getContext('2d');
   const stat = el('div', 'mgstat'), row = el('div', 'mgrow'), hint = el('div', 'mghint');
-  let hi = parseInt(lsGet('dz_mg_flappy_hi', '0'), 10) || 0, st, raf = 0, last = 0;
-  const fb = btn('⬆ ' + tr('BATER ASAS', 'FLAP'), () => flap(), 'big', true); fb.id = 'mgPrimary'; row.appendChild(fb);
-  hint.textContent = tr('Espaço / ↑ / W ou toque na tela = bater asas. No controle: A.', 'Space / ↑ / W or tap the screen = flap. On a gamepad: A.');
+  let hi = parseInt(lsGet('dz_mg_flappy_hi', '0'), 10) || 0, st, raf = 0, last = 0, paused = false;
+  const fb = btnD('⬆ ' + tr('BATER ASAS', 'FLAP'), () => flap(), 'big'); fb.id = 'mgPrimary'; row.appendChild(fb);
+  hint.textContent = tr('Espaço / ↑ / W / Enter / clique = bater asas · R reinicia, P pausa. No controle: A (ou X, RB, RT). Celular: toque em qualquer lugar.', 'Space / ↑ / W / Enter / click = flap · R restarts, P pauses. On a gamepad: A (or X, RB, RT). Phone: tap anywhere.');
   host.append(stat, cv, row, hint);
-  function init(){ st = { y:H / 2 - 40, vy:0, t:0, dd:0, started:false, dead:false, pipes:[], score:0, gx:0 }; }
+  function init(){ paused = false; st = { y:H / 2 - 40, vy:0, t:0, dd:0, started:false, dead:false, pipes:[], score:0, gx:0 }; }
   function flap(){
+    if(paused){ paused = false; return; }
     if(st.dead){ if(st.dd > .45) init(); return; }
     st.started = true; st.vy = -290;
   }
@@ -26456,20 +26622,32 @@ function flappy(host){
     cx.font = 'bold 15px monospace';
     if(!st.started){ cx.strokeText(tr('TOQUE / ESPAÇO PARA COMEÇAR', 'TAP / SPACE TO START'), W / 2, 150); cx.fillText(tr('TOQUE / ESPAÇO PARA COMEÇAR', 'TAP / SPACE TO START'), W / 2, 150); }
     if(st.dead){ cx.font = 'bold 26px monospace'; cx.strokeText('GAME OVER', W / 2, 150); cx.fillText('GAME OVER', W / 2, 150); }
+    if(paused){ cx.font = 'bold 26px monospace'; cx.strokeText(tr('PAUSADO', 'PAUSED'), W / 2, 150); cx.fillText(tr('PAUSADO', 'PAUSED'), W / 2, 150); }
     stat.textContent = tr('PONTOS: ', 'SCORE: ') + st.score + '  ·  ' + tr('RECORDE: ', 'BEST: ') + hi;
   }
-  function loop(t){ const dt = Math.min(.033, (t - (last || t)) / 1000); last = t; update(dt); draw(); raf = requestAnimationFrame(loop); }
+  function loop(t){ const dt = Math.min(.033, (t - (last || t)) / 1000); last = t; if(!paused) update(dt); draw(); raf = requestAnimationFrame(loop); }
   cv.addEventListener('pointerdown', e => { e.preventDefault(); flap(); });
+  const tapAny = e => { if(e.target.closest('button,canvas')) return; e.preventDefault(); flap(); };   /* toque em qualquer lugar da janela = bater asas */
+  host.addEventListener('pointerdown', tapAny); host.style.touchAction = 'none';
+  const onBlur = () => { if(st && st.started && !st.dead) paused = true; };
+  window.addEventListener('blur', onBlur);
   init(); raf = requestAnimationFrame(loop);
   return {
     reset(){ init(); },
+    pause(){ if(st.started && !st.dead) paused = !paused; },
+    ph: [[['A'], tr('BATER ASAS', 'FLAP')], [['START'], tr('REINICIAR', 'RESTART')]],
+    pad(p){
+      if(p.pressed(0) || p.pressed(2) || p.pressed(5) || p.pressed(7) || p.e.U) flap();
+      if(p.pressed(9)) init();
+    },
     key(e){
-      const k = e.key, ok = k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W';
+      const k = e.key, ok = k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'Enter';
       if(ok){ if(e.type === 'keydown' && !e.repeat) flap(); return true; }
+      if((k === 'p' || k === 'P') && e.type === 'keydown'){ if(st.started && !st.dead) paused = !paused; return true; }
       if((k === 'r' || k === 'R') && e.type === 'keydown'){ init(); return true; }
       return false;
     },
-    destroy(){ cancelAnimationFrame(raf); }
+    destroy(){ cancelAnimationFrame(raf); host.removeEventListener('pointerdown', tapAny); host.style.touchAction = ''; window.removeEventListener('blur', onBlur); }
   };
 }
 
@@ -26509,24 +26687,77 @@ function mgSetup(id){
   });
   if(window.ResizeObserver){ ro = new ResizeObserver(fitAll); ro.observe(body); body.querySelectorAll('.mgslot').forEach(x => ro.observe(x)); }
 }
+const mgBox = $('mgBox');
+function showHelp(){
+  const o = $('mgHelpDlg'); if(o){ o.remove(); return; }
+  const h = body.querySelector('.mghint'), d = el('div'); d.id = 'mgHelpDlg';
+  const t = el('div', 't'), tt = el('span', '', tr('Teclas de atalho', 'Keyboard shortcuts')), x = el('button', '', '✕'); x.type = 'button'; t.append(tt, x);
+  const bd = el('div', 'b', ((h ? h.textContent : '') + '\n\n' + tr('F1 ajuda · F2 novo jogo · F3 / P pausa · Alt+J menu Jogo · Esc fecha', 'F1 help · F2 new game · F3 / P pause · Alt+J Game menu · Esc closes')).replace(/\. /g, '.\n').replace(/ · /g, '\n• ').trim());
+  const f = el('div', 'f'), ok = el('button', '', 'OK'); ok.type = 'button'; f.appendChild(ok);
+  x.onclick = ok.onclick = () => d.remove(); d.append(t, bd, f); mgBox.appendChild(d); try{ ok.focus(); }catch(e){}
+}
+function buildMenu(){   /* barra de menus no estilo Windows XP (só aparece no tema XP) */
+  const old = mgBox.querySelector('.mgMb'); if(old) old.remove();
+  const hd = $('mgHelpDlg'); if(hd) hd.remove();
+  if(!window.dzMenuBar || !cur) return;
+  const bar = window.dzMenuBar(() => [
+    [tr('Jogo', 'Game'), () => { const a = [[tr('Novo jogo\u2003F2', 'New game\u2003F2'), () => { if(cur && cur.reset) cur.reset(); }]];
+      if(cur && cur.pause) a.push([tr('Pausar\u2003P / F3', 'Pause\u2003P / F3'), () => cur.pause()]);
+      if(cur && cur.xm){ a.push('-'); cur.xm().forEach(i => a.push(i)); }
+      a.push('-', [tr('Sair\u2003Esc', 'Exit\u2003Esc'), close]); return a; }],
+    [tr('Ajuda', 'Help'), [[tr('Teclas de atalho\u2003F1', 'Keyboard shortcuts\u2003F1'), showHelp]]]
+  ], mgBox);
+  bar.classList.add('mgMb'); mgBox.insertBefore(bar, $('mgHead'));
+}
 function stop(){ if(ro){ ro.disconnect(); ro = null; } if(cur){ try{ cur.destroy(); }catch(e){} cur = null; } body.innerHTML = ''; delete body.dataset.g; }
 function open(id){
   const g = GAMES[id]; if(!g) return;
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
   stop(); titleEl.textContent = tr(g.pt, g.en); $('mgReset').textContent = '↺ ' + tr('REINICIAR', 'RESTART'); $('mgClose').textContent = '✕ ' + tr('FECHAR', 'CLOSE');
-  cur = g.fn(body); mgSetup(id);
+  padReset(); cur = g.fn(body); mgSetup(id); buildMenu();
   ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); snd('menuAccept');
   fitAll(); requestAnimationFrame(fitAll); setTimeout(fitAll, 120);
 }
-function close(){ if(!isOpen()) return; stop(); ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); snd('menuBack'); }
+function close(){ if(!isOpen()) return; padReset(); stop(); ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); snd('menuBack'); }
 $('mgClose').addEventListener('click', close);
 $('mgReset').addEventListener('click', () => { snd('menuAccept'); if(cur && cur.reset) cur.reset(); });
 
 /* teclado (PC): captura antes do jogo principal */
+let mnI = 0;
+function xpMenuKey(e){   /* menus do tema XP: Alt+J / Alt+A abrem, setas navegam, Enter escolhe, Esc fecha (índice próprio: outro atalho global do menu principal rouba o foco) */
+  const k = e.key, mbs = Array.from(mgBox.querySelectorAll('.mgMb .xpMb')), dd = mgBox.querySelector('.xpDd');
+  const its = () => Array.from(mgBox.querySelectorAll('.xpDd .xpDi:not(:disabled)'));
+  const go = n => { const l = its(); if(!l.length) return; mnI = (n + l.length) % l.length; l[mnI].focus(); };
+  if(e.altKey && !e.ctrlKey && !e.metaKey && (k === 'j' || k === 'J' || k === 'a' || k === 'A') && mbs.length){
+    if(e.type === 'keydown'){ const b = mbs[(k === 'j' || k === 'J') ? 0 : 1]; if(!(dd && b.classList.contains('on'))) b.click(); go(0); }
+    return true;
+  }
+  if(!dd) return false;
+  if(e.type !== 'keydown') return true;
+  if(k === 'ArrowDown'){ go(mnI + 1); return true; }
+  if(k === 'ArrowUp'){ go(mnI - 1); return true; }
+  if(k === 'ArrowLeft' || k === 'ArrowRight'){ const c = mbs.findIndex(b => b.classList.contains('on')), n = mbs[(c + (k === 'ArrowRight' ? 1 : mbs.length - 1)) % mbs.length]; if(n){ n.click(); go(0); } return true; }
+  if(k === 'Escape'){ mgBox.dispatchEvent(new PointerEvent('pointerdown', { bubbles:true })); return true; }
+  if(k === 'Enter' || k === ' '){ const l = its(); if(l[mnI]) l[mnI].click(); return true; }
+  return true;
+}
 function onKey(e){
   if(!isOpen()) return;
   if((window.dzIsPadKey && window.dzIsPadKey(e)) || performance.now() - (window.dzPadT || 0) < 450){ e.preventDefault(); e.stopImmediatePropagation(); return; }
+  if(XP()){
+    const r = xpMenuKey(e);
+    if(r){ e.stopImmediatePropagation(); e.preventDefault(); return; }
+    if(e.type === 'keydown' && !e.ctrlKey && !e.altKey && !e.metaKey){
+      const kf = e.key;
+      if(kf === 'F1' || kf === 'F2' || kf === 'F3'){
+        e.preventDefault(); e.stopImmediatePropagation();
+        if(kf === 'F1') showHelp(); else if(kf === 'F2'){ snd('menuAccept'); if(cur && cur.reset) cur.reset(); } else if(cur && cur.pause) cur.pause();
+        return;
+      }
+      if(kf === 'Escape' && $('mgHelpDlg')){ e.preventDefault(); e.stopImmediatePropagation(); $('mgHelpDlg').remove(); return; }
+    }
+  }
   if(e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key;
   if(k === 'Tab' || (k.length > 1 && /^F\d+$/.test(k))) return;
@@ -26554,6 +26785,50 @@ window.dzMg = { open, close, isOpen, games: [
   { id:'sinuca', icon:'🎱', pt:'SINUCA',        en:'POOL' },
   { id:'minas',  icon:'💣', pt:'CAMPO MINADO',  en:'MINESWEEPER' }
 ] };
+/* ===== controle (Gamepad API): cada joguinho recebe "p" com o estado do controle ===== */
+const bar = $('mgPadBar');
+let padMenu = false, padT = 0, pst = { dirs:{ U:0, D:0, L:0, R:0 }, dk:'', dn:0 };
+const GL = { A:1, B:1, X:1, Y:1, LB:1, RB:1, LT:1, RT:1, START:1, VIEW:1, DPAD:1 };
+const glyph = k => (GL[k] && typeof gpGlyph === 'function') ? gpGlyph(k) : '<span class="gpb gpb-sys">' + (k === 'LS' ? tr('ANALÓG. ESQ.', 'L-STICK') : k === 'RS' ? tr('ANALÓG. DIR.', 'R-STICK') : k) + '</span>';
+function setBar(items){
+  if(!bar) return;
+  const html = items.map(it => '<span>' + it[0].map(glyph).join('') + ' ' + it[1] + '</span>').join('');
+  if(bar.innerHTML !== html) bar.innerHTML = html;
+  bar.style.display = html ? 'flex' : 'none';
+}
+function padReset(){ padMenu = false; padT = 0; pst = { dirs:{ U:0, D:0, L:0, R:0 }, dk:'', dn:0 }; setBar([]); }
+window.dzMgPad = function(gp, btn, prev){
+  if(!isOpen() || !cur) return false;
+  const now = performance.now(), dt = Math.min(.05, Math.max(0, (now - (padT || now)) / 1000)); padT = now;
+  const pressed = i => !!btn(i) && !prev(i);
+  if(pressed(3)){   /* Y: alterna entre jogar e navegar nos botões */
+    padMenu = !padMenu;
+    if(!padMenu){ try{ const a = document.activeElement; if(a && a.blur) a.blur(); }catch(e){} }
+  }
+  if(padMenu){ setBar([]); return false; }
+  try{ if(typeof gpMenuActive !== 'undefined' && gpMenuActive){ gpMenuActive = false; gpClearFocus(); } }catch(e){}
+  if(pressed(1)){ close(); return true; }
+  const hv = v => (Math.abs(v || 0) < .2 ? 0 : v);
+  const lx = hv(gp.axes[0]), ly = hv(gp.axes[1]), rx = hv(gp.axes[2]), ry = hv(gp.axes[3]);
+  const dpx = (btn(15) ? 1 : 0) - (btn(14) ? 1 : 0), dpy = (btn(13) ? 1 : 0) - (btn(12) ? 1 : 0);
+  const sx = dpx || (Math.abs(lx) > .55 && Math.abs(lx) >= Math.abs(ly) ? Math.sign(lx) : 0);
+  const sy = dpy || (Math.abs(ly) > .55 && Math.abs(ly) > Math.abs(lx) ? Math.sign(ly) : 0);
+  const on = { U: sy < 0, D: sy > 0, L: sx < 0, R: sx > 0 }, e = {};
+  for(const k in on){ e[k] = on[k] && !pst.dirs[k]; pst.dirs[k] = on[k]; }
+  let mv = null;   /* movimento discreto com repetição ao segurar */
+  if(sx || sy){
+    const dk = sx + ',' + sy;
+    if(dk !== pst.dk){ mv = [sx, sy]; pst.dk = dk; pst.dn = now + 380; }
+    else if(now >= pst.dn){ mv = [sx, sy]; pst.dn = now + 110; }
+  } else pst.dk = '';
+  const any = !!mv || gp.buttons.some((b, i) => b.pressed && !prev(i));
+  const p = { dt, gp, any, mv, e, lx, ly, rx, ry, dpx, dpy, pressed, down: i => !!btn(i),
+    lt: gp.buttons[6] ? gp.buttons[6].value : 0, rt: gp.buttons[7] ? gp.buttons[7].value : 0 };
+  setBar((cur.ph || []).concat([[['Y'], tr('MENU', 'MENU')], [['B'], tr('SAIR', 'EXIT')]]));
+  try{ if(cur.pad) cur.pad(p); }catch(err){}
+  return true;
+};
+window.dzMgPadMenu = () => padMenu;
 window.dzMgBack = close;
 })();
 </script>
@@ -27364,7 +27639,7 @@ function toViewer(n){   /* Visualizador de Imagens e Fax do Windows (estilo XP);
   const sib = nodes.filter(x => x.parent === n.parent && kind(x) === 'i' && (x.blob || x.url)).sort((a, b) => a.name.localeCompare(b.name));
   XPA().pictureViewer(sib.map(x => ({ name:x.name, blob:x.blob, url:x.url, id:x.id, node:x })), Math.max(0, sib.indexOf(n)), {
     canDelete: it => !(it.node.sys || it.node.remote),
-    onDelete: it => { const nd = it.node; delTree(nd.id); if(clip && clip.id === nd.id) clip = null; sel = null; render(); },
+    onDelete: it => { const nd = it.node; trash(nd.id); xps('windows_xp_recycle'); if(clip && clip.id === nd.id) clip = null; sel = null; render(); },
     onEdit: window.dzPaint ? it => sendTo('paint', it.node) : null });
 }
 function pickApp(title, text, opts, ic){   /* caixa "Abrir com…" (estilo XP no tema XP) */
@@ -27407,6 +27682,18 @@ function openNode(n){
 }
 async function addFiles(files){ if(cwd === 'mc') cwd = 'root'; for(const f of files){ const n = { id:uid(), parent:cwd, name:f.name, type:'f', mime:f.type, size:f.size, blob:f, t:Date.now() }; nodes.push(n); await put(n); } render(); }
 function delTree(id){ nodes.filter(n => n.parent === id).forEach(c => delTree(c.id)); nodes = nodes.filter(n => n.id !== id); rm(id); }
+/* LIXEIRA: "excluir" no estilo XP só move o item para o pai especial '$bin' (guarda o pai original em n.o e a data em n.bt).
+   Como toda listagem filtra por parent === pasta atual, o item some do Explorador sem mexer no resto do código. */
+function trash(id){ const n = nodes.find(x => x.id === id); if(!n || n.sys || n.remote) return; n.o = n.parent; n.bt = Date.now(); n.parent = '$bin'; put(n); try{ if(window.dzXp && window.dzXp.binChanged) window.dzXp.binChanged(); }catch(e){} }
+function inBin(n){ let c = n, g = 0; while(c && g++ < 80){ if(c.parent === '$bin') return true; c = nodes.find(x => x.id === c.parent); } return false; }
+const binApi = {
+  async list(){ await load(); return nodes.filter(n => n.parent === '$bin').map(n => ({ id:n.id, name:n.name, icon:XI[kind(n)], kind:typeOf(n), size:n.type === 'd' ? '' : fmt(n.size || 0), w:n.bt || 0, orig:xpath(n.o || 'root') })); },
+  async restore(id){ await load(); const n = nodes.find(x => x.id === id && x.parent === '$bin'); if(!n) return false;
+    let p = n.o || 'root'; const po = p === 'root' ? null : nodes.find(x => x.id === p); if(p !== 'root' && (!po || inBin(po))) p = 'root';
+    n.name = uniq(p, n.name, n.id); n.parent = p; delete n.o; delete n.bt; put(n); if(isOpen() && isXp()) render(); return true; },
+  async purge(id){ await load(); const n = nodes.find(x => x.id === id && x.parent === '$bin'); if(n) delTree(id); },
+  async empty(){ await load(); nodes.filter(n => n.parent === '$bin').map(n => n.id).forEach(id => delTree(id)); }
+};
 $('exUp').onclick = () => { snd('menuBack'); const c = nodes.find(n => n.id === cwd); cwd = c ? c.parent : 'root'; sel = null; render(); };
 $('exNew').onclick = () => { snd('menuAccept'); if(isXp()) return xNew(); const v = prompt(tr('Nome da nova pasta:', 'New folder name:'), tr('Nova pasta', 'New folder')); if(!v || !v.trim()) return; const n = { id:uid(), parent:cwd, name:v.trim(), type:'d', t:Date.now() }; nodes.push(n); put(n); render(); };
 $('exImp').onclick = () => { snd('menuAccept'); $('exFile').click(); };
@@ -27458,7 +27745,7 @@ async function save(files){   /* usado pelo Media Player: grava na pasta certa (
   for(const f of files){ const n = { id:uid(), parent:await folderFor(kind({ type:'f', name:f.name, mime:f.type })), name:f.name, type:'f', mime:f.type, size:f.size, blob:f, t:Date.now() }; nodes.push(n); await put(n); out.push(n); }
   if(isOpen()) render(); return out;
 }
-async function library(){ await load(); return nodes.filter(n => n.type === 'f' && (n.blob || n.url) && (kind(n) === 'a' || kind(n) === 'v')); }
+async function library(){ await load(); return nodes.filter(n => n.type === 'f' && (n.blob || n.url) && (kind(n) === 'a' || kind(n) === 'v') && !inBin(n)); }
 async function open(){
   try{ if(window.dzVk && window.dzVk.isOpen()) window.dzVk.close(); }catch(e){}
   try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
@@ -27645,8 +27932,8 @@ function xDelete(n){
   if(n.sys || n.remote) return locked(n, ['excluir', 'delete']);
   const f = n.type === 'd';
   xMsg(f ? tr('Confirmar exclusão de pasta', 'Confirm Folder Delete') : tr('Confirmar exclusão de arquivo', 'Confirm File Delete'),
-    f ? tr('Tem certeza de que deseja excluir a pasta "' + n.name + '" e todo o seu conteúdo?', 'Are you sure you want to delete the folder "' + n.name + '" and all its contents?') : tr('Tem certeza de que deseja excluir "' + n.name + '"?', 'Are you sure you want to delete "' + n.name + '"?'),
-    [[tr('Sim', 'Yes'), () => { delTree(n.id); if(clip && clip.id === n.id) clip = null; sel = null; render(); }, true], [tr('Não', 'No'), null]], '❓');
+    f ? tr('Tem certeza de que deseja enviar a pasta "' + n.name + '" e todo o seu conteúdo para a Lixeira?', 'Are you sure you want to send the folder "' + n.name + '" and all its contents to the Recycle Bin?') : tr('Tem certeza de que deseja enviar "' + n.name + '" para a Lixeira?', 'Are you sure you want to send "' + n.name + '" to the Recycle Bin?'),
+    [[tr('Sim', 'Yes'), () => { trash(n.id); xps('windows_xp_recycle'); if(clip && clip.id === n.id) clip = null; sel = null; render(); }, true], [tr('Não', 'No'), null]], '❓');
 }
 function note(title, text){ if(isXp()) xMsg(title, text, [['OK', null, true]], '⚠️'); else alert(text); }
 function locked(n, what){ note(tr('Erro', 'Error'), tr('Não é possível ' + what[0] + ' "' + n.name + '": ' + (n.remote ? 'este arquivo vem do GitHub (somente leitura). Você pode copiá-lo.' : 'esta é uma pasta do sistema.'), 'Cannot ' + what[1] + ' "' + n.name + '": ' + (n.remote ? 'this file comes from GitHub (read-only). You can copy it.' : 'it is a system folder.'))); }
@@ -27682,7 +27969,7 @@ function xpExtra(){
     const t = e.target.closest && e.target.closest('[data-id]'), n = t && nodes.find(x => x.id === t.dataset.id), X = e.clientX, Y = e.clientY;
     if(cwd === 'mc'){ if(t && t.dataset.id === 'drv'){ sel = 'drv'; clr(); t.classList.add('sel'); paintPane(); paintStatus(); ctx(X, Y, [[tr('Abrir', 'Open'), () => go('root'), true], '-', [tr('Propriedades', 'Properties'), () => props('drive')]]); } return; }
     if(n){ sel = n.id; selT = 0; clr(); t.classList.add('sel'); paintPane(); paintStatus();
-      ctx(X, Y, [[tr('Abrir', 'Open'), () => openNode(n), true], ...openWithItems(n), '-', [tr('Recortar', 'Cut'), () => xCopy(true)], [tr('Copiar', 'Copy'), () => xCopy(false)], '-', [tr('Excluir', 'Delete'), () => xDelete(n)], [tr('Renomear', 'Rename'), () => xRename(n.id)], '-', [tr('Propriedades', 'Properties'), () => props(n)]]);
+      ctx(X, Y, [[tr('Abrir', 'Open'), () => openNode(n), true], ...openWithItems(n), ...((kind(n) === 'i' && n.blob && XPA().setWallpaper) ? [[tr('Definir como plano de fundo da área de trabalho', 'Set as desktop background'), () => { XPA().setWallpaper(n.blob).then(ok => { if(ok) xps('windows_navigation_start'); }); }]] : []), '-', [tr('Recortar', 'Cut'), () => xCopy(true)], [tr('Copiar', 'Copy'), () => xCopy(false)], '-', [tr('Excluir', 'Delete'), () => xDelete(n)], [tr('Renomear', 'Rename'), () => xRename(n.id)], '-', [tr('Propriedades', 'Properties'), () => props(n)]]);
     } else { sel = null; clr(); paintPane(); paintStatus();
       const mk = (l, m) => [(vmode === m ? '• ' : '') + l, () => { vmode = m; render(); }];
       ctx(X, Y, [mk(tr('Ícones', 'Icons'), 'icons'), mk(tr('Lista', 'List'), 'list'), mk(tr('Detalhes', 'Details'), 'details'), '-', [tr('Atualizar', 'Refresh'), () => render()], '-', [tr('Colar', 'Paste'), clip ? xPaste : null], '-', [tr('Novo › Pasta', 'New › Folder'), xNew], [tr('Novo › Documento de texto', 'New › Text Document'), newText], '-', [tr('Propriedades', 'Properties'), () => props(cwd === 'root' ? 'drive' : nodes.find(x => x.id === cwd))]]);
@@ -27700,7 +27987,7 @@ window.addEventListener('keydown', e => {
   const k = e.key.toLowerCase(); if(k === 'c'){ e.preventDefault(); xCopy(false); } else if(k === 'x'){ e.preventDefault(); xCopy(true); } else if(k === 'v'){ e.preventDefault(); xPaste(); }
 });
 window.dzExTry = v => String(v || '').trim().toLowerCase() === 'fx123';
-window.dzEx = { open, close, isOpen, save, library }; window.dzExBack = () => { if($('exView').classList.contains('on')) $('exVC').click(); else close(); };
+window.dzEx = { open, close, isOpen, save, library, bin:binApi }; window.dzExBack = () => { if($('exView').classList.contains('on')) $('exVC').click(); else close(); };
 })();
 </script>
 <script id="dzWmpScript">
@@ -30806,6 +31093,7 @@ input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[ty
 .pvShowBar.on{opacity:1;pointer-events:auto}
 .pvShowBar button{width:34px;height:28px;border:1px solid #6d90d8;border-radius:3px;background:linear-gradient(#fff,#d4def6);color:#12327c;font:700 13px var(--xf);cursor:pointer}
 .pvShowBar button:hover{background:linear-gradient(#fff6c8,#ffd86a)}
+#xpIcons .xpIc.binHot{outline:1px dotted #fff;background:rgba(49,106,197,.55)}
 </style>
 <script id="dzXpScript">
 /* ===== ESTILO WINDOWS XP (aba EXTRAS) =====
@@ -30872,6 +31160,36 @@ function muteGameMenuSfx(){ try{ if(window.dzGame) window.dzGame.muteMenu(); }ca
 const WALLS = [['bliss','Bliss'],['ascent','Ascent'],['autumn','Autumn'],['azul','Azul'],['crystal','Crystal'],['follow','Follow'],['friend','Friend'],['home','Home'],['moon_flower','Moon Flower'],['peace','Peace'],['power','Power'],['purple_flower','Purple Flower'],['radiance','Radiance'],['red_moon_desert','Red Moon Desert'],['ripple','Ripple'],['stonehenge','Stonehenge'],['tulips','Tulips'],['vortec_space','Vortec Space'],['wind','Wind'],['windows_xp_home_edition','XP Home Edition'],['windows_xp_professional','XP Professional']];
 let style = 'cur'; try{ if(localStorage.getItem(KEY) === 'xp') style = 'xp'; }catch(e){}
 let wp = 'bliss'; try{ wp = localStorage.getItem('dz_xp_wp') || 'bliss'; }catch(e){}   /* papel de parede: nome da lista acima | blue | teal */
+/* papel de parede de FORA: a foto é reduzida (máx. 1920px) e salva no navegador (dz_xp_wp_img); wp = '@custom' */
+let wpImg = ''; try{ wpImg = localStorage.getItem('dz_xp_wp_img') || ''; }catch(e){}
+let wpMode = 'fill'; try{ wpMode = localStorage.getItem('dz_xp_wp_mode') || 'fill'; }catch(e){}
+if(wp === '@custom' && !wpImg) wp = 'bliss';
+const WP_MODES = { fill:['center / cover no-repeat', tr('Preencher', 'Fill')], center:['center / auto no-repeat', tr('Centralizar', 'Center')], tile:['0 0 / auto repeat', tr('Lado a lado', 'Tile')], stretch:['center / 100% 100% no-repeat', tr('Esticar', 'Stretch')] };
+function paintWp(){
+  const dk = $('xpDesk'); if(!dk) return;
+  if(wp === '@custom' && wpImg){ dk.dataset.wp = 'custom'; dk.style.background = '#3a6ea5 url(' + wpImg + ') ' + (WP_MODES[wpMode] || WP_MODES.fill)[0]; }
+  else{ dk.dataset.wp = wp; dk.style.background = ''; }
+}
+function setWallpaper(file){
+  return new Promise(res => {
+    const im = new Image(), u = URL.createObjectURL(file);
+    im.onerror = () => { URL.revokeObjectURL(u); res(false); };
+    im.onload = () => {
+      URL.revokeObjectURL(u);
+      const enc = (mx, q) => { const k = Math.min(1, mx / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.width * k)); c.height = Math.max(1, Math.round(im.height * k)); const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', q); };
+      let data = '', saved = false;
+      try{ data = enc(1920, .85); }catch(e){ res(false); return; }
+      try{ localStorage.setItem('dz_xp_wp_img', data); saved = true; }catch(e){
+        try{ data = enc(1280, .7); localStorage.setItem('dz_xp_wp_img', data); saved = true; }catch(e2){}
+      }
+      wpImg = data; wp = '@custom'; try{ localStorage.setItem('dz_xp_wp', wp); }catch(e){}
+      paintWp();
+      if(!saved) balloon(tr('Plano de fundo', 'Desktop background'), tr('A imagem está em uso, mas não coube no armazenamento do navegador e vale só até fechar o jogo.', 'The picture is in use, but it did not fit in browser storage and lasts only until you close the game.'));
+      res(true);
+    };
+    im.src = u;
+  });
+}
 const applyStyle = () => { root.classList.toggle('dz-xp', style === 'xp'); bgPlace(); };
 
 /* apps que ganham moldura/barra de tarefas (ov = overlay, box = janela, api = window.dzXxx, btn = botão de fechar) */
@@ -31199,7 +31517,7 @@ function myComputer(){
     entries().forEach(it => {
       if(fq && it.t.toLowerCase().indexOf(fq) < 0) return;
       if(it.g !== g){ g = it.g; const h = mkEl('div', 'xpSec'); h.textContent = g; m.appendChild(h); grid = mkEl('div', 'xpGrid'); m.appendChild(grid); }
-      grid.appendChild(iconBtn(it, w.list ? 16 : 32, x => detail(x.t, x.g)));
+      { const ib = iconBtn(it, w.list ? 16 : 32, x => detail(x.t, x.g)); ib.addEventListener('contextmenu', e => itemCtx(e, it)); grid.appendChild(ib); }
     });
     if(!grid) m.appendChild(mkEl('div', 'xpEmpty', tr('Nenhum item encontrado.', 'No items found.')));
   }
@@ -31208,13 +31526,42 @@ function myComputer(){
   render();
 }
 function recycleBin(){
-  const w = explorer('bin', I.bin, tr('Lixeira', 'Recycle Bin'), { addr:tr('Lixeira', 'Recycle Bin'), menus:common, w:520, h:340 });
-  if(!w.fresh) return;
-  w.pane.append(
-    box(tr('Tarefas da Lixeira', 'Recycle Bin Tasks'), c => { c.append(link(I.bin, tr('Esvaziar a Lixeira', 'Empty the Recycle Bin'), null, true), link(I.folder, tr('Restaurar todos os itens', 'Restore all items'), null, true)); }, true),
-    box(tr('Outros Locais', 'Other Places'), c => { c.append(link(I.pc, tr('Meu Computador', 'My Computer'), myComputer), link(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel())); })
-  );
-  w.main.appendChild(mkEl('div', 'xpEmpty', tr('A Lixeira está vazia.', 'The Recycle Bin is empty.')));
+  const w = explorer('bin', I.bin, tr('Lixeira', 'Recycle Bin'), { addr:tr('Lixeira', 'Recycle Bin'), w:560, h:380,
+    menus: ww => { const c = common(ww), cur = () => items.find(i => i.src + ':' + i.id === sel);
+      c[0] = [tr('Arquivo', 'File'), () => [[tr('Restaurar', 'Restore'), cur() ? () => doRestore([cur()]) : null], [tr('Excluir', 'Delete'), cur() ? () => askPurge(cur()) : null], '-', [tr('Esvaziar a Lixeira', 'Empty Recycle Bin'), items.length ? askEmpty : null], '-', [tr('Fechar', 'Close'), () => ww.close()]]];
+      return c; } });
+  let sel = null, items = [];
+  const key = i => i.src + ':' + i.id, cur = () => items.find(i => key(i) === sel);
+  if(!w.fresh){ binRefresh(); return; }
+  const doRestore = async list => { for(const i of list){ try{ await binRestore(i); }catch(e){} } xps('windows_xp_menu_command', .8); binChanged(); };
+  const askPurge = i => confirmDlg(tr('Confirmar exclusão de arquivo', 'Confirm File Delete'), tr('Tem certeza de que deseja excluir "' + i.name + '"?', 'Are you sure you want to delete "' + i.name + '"?'), async () => { xps('windows_xp_recycle', .9); try{ await binPurge(i); }catch(e){} binChanged(); });
+  const drawPane = () => {
+    const it = cur(); w.pane.innerHTML = '';
+    w.pane.append(
+      box(tr('Tarefas da Lixeira', 'Recycle Bin Tasks'), c => { c.append(link(I.bin, tr('Esvaziar a Lixeira', 'Empty the Recycle Bin'), askEmpty, !items.length), link(I.folder, it ? tr('Restaurar este item', 'Restore this item') : tr('Restaurar todos os itens', 'Restore all items'), () => doRestore(it ? [it] : items.slice()), !items.length)); }, true),
+      box(tr('Outros Locais', 'Other Places'), c => { c.append(link(I.pc, tr('Meu Computador', 'My Computer'), myComputer), link(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel())); }),
+      box(tr('Detalhes', 'Details'), c => {
+        const d = mkEl('div', 'xpDet'); c.appendChild(d);
+        const lines = it ? [it.name, it.kind, tr('Local original: ', 'Original location: ') + it.orig, tr('Excluído em: ', 'Date deleted: ') + new Date(it.w).toLocaleString(), it.size ? tr('Tamanho: ', 'Size: ') + it.size : ''] : [tr('Lixeira', 'Recycle Bin'), tr('Pasta de sistema', 'System Folder'), items.length + ' ' + tr('item(ns)', 'item(s)')];
+        lines.filter(Boolean).forEach((l, n) => { const e = mkEl(n ? 'span' : 'b'); e.textContent = l; e.style.display = 'block'; d.appendChild(e); });
+      })
+    );
+  };
+  const drawMain = () => {
+    const m = w.main; m.innerHTML = '';
+    if(!items.length){ m.appendChild(mkEl('div', 'xpEmpty', tr('A Lixeira está vazia.', 'The Recycle Bin is empty.'))); return; }
+    const g = mkEl('div', 'xpGrid'); m.appendChild(g);
+    items.forEach(i => {
+      const b = iconBtn({ k:'bin:' + key(i), ic:i.ic, t:i.name, run:() => msgBox({ title:i.name, icon:I.info, text:tr('Não é possível abrir "' + i.name + '" na Lixeira. Para abrir este item, primeiro restaure-o.', 'Cannot open "' + i.name + '" in the Recycle Bin. To open this item, restore it first.') }) }, 32, () => { sel = key(i); drawPane(); });
+      if(key(i) === sel) b.classList.add('sel');
+      b.addEventListener('contextmenu', e => { sel = key(i); g.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); drawPane(); ctx(e, [[tr('Restaurar', 'Restore'), () => doRestore([i]), true], '-', [tr('Excluir', 'Delete'), () => askPurge(i)]]); });
+      g.appendChild(b);
+    });
+  };
+  w.binDraw = l => { items = l || items; if(sel && !cur()) sel = null; drawPane(); drawMain(); };
+  w.main.addEventListener('click', e => { if(e.target === w.main || e.target.classList.contains('xpGrid')){ sel = null; w.main.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); drawPane(); } });
+  w.main.addEventListener('contextmenu', e => { if(e.target === w.main || e.target.classList.contains('xpGrid')) ctx(e, [[tr('Esvaziar a Lixeira', 'Empty Recycle Bin'), items.length ? askEmpty : null], [tr('Restaurar todos os itens', 'Restore all items'), items.length ? () => doRestore(items.slice()) : null]]); });
+  binItems().then(l => { binN = l.length; w.binDraw(l); });
 }
 /* Painel de Controle: categorias > tarefas > telas (plano de fundo, estilo, sons, data e hora) */
 function controlPanel(start){
@@ -31251,12 +31598,19 @@ function controlPanel(start){
       t.append(link(I.theme, tr('Alterar o plano de fundo da área de trabalho', 'Change the desktop background'), () => go('wall')), link(I.flag, tr('Alterar o estilo visual (Padrão ou Windows XP)', 'Change the visual style (Default or Windows XP)'), () => go('style')));
     }else if(cur === 'wall'){
       h.textContent = titles.wall; const g = mkEl('div', 'xpWpG'); m.appendChild(g);
-      const all = WALLS.map(k => [k[0], 'background-image:url(' + AS + 'Wallpapers/' + k[0] + '.jpg)', k[1]]).concat([['blue', 'background:#2f77e0', tr('Azul Luna', 'Luna blue')], ['teal', 'background:#008080', tr('Verde-água clássico', 'Classic teal')]]);
+      const all = (wpImg ? [['@custom', 'background:url(' + wpImg + ') center/cover', tr('Sua imagem', 'Your picture')]] : []).concat(WALLS.map(k => [k[0], 'background-image:url(' + AS + 'Wallpapers/' + k[0] + '.jpg)', k[1]]), [['blue', 'background:#2f77e0', tr('Azul Luna', 'Luna blue')], ['teal', 'background:#008080', tr('Verde-água clássico', 'Classic teal')]]);
       all.forEach(a => {
         const b = mkEl('button', 'xpWpB' + (wp === a[0] ? ' on' : ''), '<b class="xpWpT" style="' + a[1] + '"></b><span></span>'); b.type = 'button'; b.lastChild.textContent = a[2];
-        b.onclick = () => { wp = a[0]; try{ localStorage.setItem('dz_xp_wp', wp); }catch(e){} const dk = $('xpDesk'); if(dk) dk.dataset.wp = wp; g.querySelectorAll('.on').forEach(x => x.classList.remove('on')); b.classList.add('on'); xps('windows_navigation_start', .8); };
+        b.onclick = () => { wp = a[0]; try{ localStorage.setItem('dz_xp_wp', wp); }catch(e){} paintWp(); g.querySelectorAll('.on').forEach(x => x.classList.remove('on')); b.classList.add('on'); xps('windows_navigation_start', .8); };
         g.appendChild(b);
       });
+      const fiW = mkEl('input'); fiW.type = 'file'; fiW.accept = 'image/*'; fiW.style.display = 'none';
+      fiW.onchange = async () => { const f = fiW.files && fiW.files[0]; if(!f) return; const ok = await setWallpaper(f); if(ok) xps('windows_navigation_start', .8); else msgBox({ title:tr('Plano de Fundo', 'Desktop Background'), icon:I.err, text:tr('Não foi possível abrir esta imagem.', 'This picture could not be opened.'), sound:'windows_xp_error' }); draw(); };
+      const brW = link(I.folder, tr('Procurar... (usar uma foto sua)', 'Browse... (use your own picture)'), () => fiW.click()); brW.style.margin = '10px 0 0';
+      const posW = mkEl('label', 'xpOpt'), selW = mkEl('select'); Object.keys(WP_MODES).forEach(k => { const o = mkEl('option'); o.value = k; o.textContent = WP_MODES[k][1]; if(k === wpMode) o.selected = true; selW.appendChild(o); });
+      selW.onchange = () => { wpMode = selW.value; try{ localStorage.setItem('dz_xp_wp_mode', wpMode); }catch(e){} paintWp(); };
+      selW.onkeydown = e => e.stopPropagation(); posW.append(document.createTextNode(tr('Posição da imagem: ', 'Picture position: ')), selW);
+      m.append(brW, posW, fiW);
     }else if(cur === 'user' || cur === 'uacc' || cur === 'uname' || cur === 'upic'){
       const acct = () => { const b = mkEl('button', 'uaTile'); b.type = 'button'; const p = mkEl('span', 'p'); p.appendChild(avEl('100%')); const tx = mkEl('span'); tx.innerHTML = '<b></b><small></small>'; tx.firstChild.textContent = userName(); tx.lastChild.textContent = tr('Administrador do computador', 'Computer administrator'); b.append(p, tx); b.onclick = () => { xps('windows_navigation_start', .8); go('uacc'); }; return b; };
       if(cur === 'user'){
@@ -31398,7 +31752,7 @@ function fillStartMenu(){
   list.forEach(it => { if(it.g !== g){ g = it.g; const h = mkEl('div', 'fh'); h.textContent = g; F.appendChild(h); } const b = mi(F, it.ic, 16, it.t, '', () => launch(it)); b.onclick = () => launch(it); b.addEventListener('contextmenu', e => itemCtx(e, it)); });
   if(!list.length) F.appendChild(mkEl('div', 'fh', tr('(Vazio)', '(Empty)')));
   const R1 = (ic, t, fn) => mi(R, ic, 24, t, '', fn);
-  R1(I.pc, tr('Meu Computador', 'My Computer'), myComputer); R1(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin);
+  R1(I.pc, tr('Meu Computador', 'My Computer'), myComputer).addEventListener('contextmenu', e => itemCtx(e, itemOf('sys:pc'))); R1(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin).addEventListener('contextmenu', e => itemCtx(e, itemOf('sys:bin')));
   R.appendChild(mkEl('hr')); R1(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel());
   R1(I.app, fsLabel(), () => deskFs());
   R.appendChild(mkEl('hr')); R1(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox); R1(I.folder, tr('Configurações', 'Settings'), () => leaveDesk());
@@ -31446,8 +31800,60 @@ try{ const a = JSON.parse(localStorage.getItem(QLK)); if(Array.isArray(a)) ql = 
 try{ const o = JSON.parse(localStorage.getItem(IPK)); if(o && typeof o === 'object' && !Array.isArray(o)) ipos = o; }catch(e){}
 const saveQl = () => { try{ localStorage.setItem(QLK, JSON.stringify(ql)); }catch(e){} };
 const saveIp = () => { try{ localStorage.setItem(IPK, JSON.stringify(ipos)); }catch(e){} };
+/* ÁREA DE TRABALHO PADRÃO (como o Windows XP recém-instalado): só a Lixeira, no canto inferior direito. Os programas ficam no menu Iniciar
+   (Todos os Programas); botão direito no programa > "Enviar para > Área de Trabalho" cria o atalho. deskKeys = null => disposição padrão. */
+const DKK = 'dz_xp_desk_v1', BNK = 'dz_xp_bin_v1';
+let deskKeys = null, binS = [], binN = 0;
+try{ const a = JSON.parse(localStorage.getItem(DKK)); if(Array.isArray(a)) deskKeys = a.filter(x => typeof x === 'string'); }catch(e){}
+try{ const a = JSON.parse(localStorage.getItem(BNK)); if(Array.isArray(a)) binS = a.filter(x => x && typeof x.k === 'string'); }catch(e){}
+const saveDk = () => { try{ if(deskKeys) localStorage.setItem(DKK, JSON.stringify(deskKeys)); else localStorage.removeItem(DKK); }catch(e){} };
+const saveBn = () => { try{ localStorage.setItem(BNK, JSON.stringify(binS)); }catch(e){} };
+const deskList = () => deskKeys || ['sys:bin'];
+const onDesk = k => deskList().indexOf(k) >= 0;
+function addDesk(k){ const l = deskList().slice(); if(l.indexOf(k) < 0) l.push(k); deskKeys = l; saveDk(); if($('xpIcons')) fillIcons(); }
+function delDesk(k){ deskKeys = deskList().filter(x => x !== k); saveDk(); if($('xpIcons')) fillIcons(); }
+function confirmDlg(title, text, yes, ic){
+  const d = mkEl('div', 'xpDlg'), tb = mkTb(193, title, { min:false }); tb.classList.remove('off'); d.appendChild(tb);
+  tb.querySelector('.cl').onclick = closeModal; drag(tb, d);
+  const b = mkEl('div', 'xpDlgB'); b.appendChild(ico(ic || I.bin, 32)); const t = mkEl('div'); t.textContent = text; b.appendChild(t); d.appendChild(b);
+  const f = mkEl('div', 'xpDlgF'), y = mkEl('button', 'xpBtn def', tr('Sim', 'Yes')), n = mkEl('button', 'xpBtn', tr('Não', 'No')); y.type = n.type = 'button'; n.onclick = closeModal; y.onclick = () => { closeModal(); yes(); };
+  f.append(y, n); d.appendChild(f); openModal(d, true);
+}
+/* ---- LIXEIRA: atalhos apagados (binS) + arquivos apagados no Explorador (window.dzEx.bin) ---- */
+async function binItems(){
+  const out = binS.map(s => ({ src:'s', id:s.k, name:s.t, ic:s.ic, orig:tr('Área de Trabalho', 'Desktop'), kind:tr('Atalho', 'Shortcut'), size:'', w:s.w || 0 }));
+  try{ if(window.dzEx && window.dzEx.bin){ (await window.dzEx.bin.list()).forEach(f => out.push({ src:'f', id:f.id, name:f.name, ic:f.icon, orig:f.orig, kind:f.kind, size:f.size, w:f.w })); } }catch(e){}
+  return out.sort((a, b) => b.w - a.w);
+}
+async function binRefresh(){
+  const l = await binItems(); binN = l.length;
+  document.querySelectorAll('#xpIcons .xpIc[data-k="sys:bin"] > i').forEach(i => setIc(i, binN > 0 ? 217 : I.bin, 32));   /* 217 = lixeira cheia na folha WinIcons_32 */
+  const w = wins.get('bin'); if(w && w.binDraw) w.binDraw(l);
+}
+const binChanged = () => { binRefresh().catch(() => {}); };
+async function binRestore(i){
+  if(i.src === 's'){ binS = binS.filter(s => s.k !== i.id); saveBn(); addDesk(i.id); }
+  else if(window.dzEx && window.dzEx.bin) await window.dzEx.bin.restore(i.id);
+}
+async function binPurge(i){
+  if(i.src === 's'){ binS = binS.filter(s => s.k !== i.id); saveBn(); }
+  else if(window.dzEx && window.dzEx.bin) await window.dzEx.bin.purge(i.id);
+}
+function askEmpty(){
+  if(!binN) return;
+  confirmDlg(binN === 1 ? tr('Confirmar exclusão de arquivo', 'Confirm File Delete') : tr('Confirmar exclusão de vários arquivos', 'Confirm Multiple File Delete'),
+    binN === 1 ? tr('Tem certeza de que deseja excluir este item permanentemente?', 'Are you sure you want to permanently delete this item?') : tr('Tem certeza de que deseja excluir permanentemente estes ' + binN + ' itens?', 'Are you sure you want to permanently delete these ' + binN + ' items?'),
+    async () => { xps('windows_xp_recycle', .9); binS = []; saveBn(); try{ if(window.dzEx && window.dzEx.bin) await window.dzEx.bin.empty(); }catch(e){} binChanged(); });
+}
+function trashShortcut(it){
+  if(!it || it.k === 'sys:bin') return;
+  if(it.k === 'sys:pc'){ delDesk(it.k); return; }   /* como no XP: Meu Computador só some da área de trabalho */
+  confirmDlg(tr('Confirmar exclusão de atalho', 'Confirm Shortcut Delete'), tr('Tem certeza de que deseja enviar "' + it.t + '" para a Lixeira?', 'Are you sure you want to send "' + it.t + '" to the Recycle Bin?'), () => {
+    xps('windows_xp_recycle', .9); binS = binS.filter(s => s.k !== it.k); binS.push({ k:it.k, t:it.t, ic:it.ic, w:Date.now() }); saveBn(); delDesk(it.k); binChanged();
+  });
+}
 const sysItems = () => [
-  { k:'sys:bin', g:'', ic:I.bin, t:tr('Lixeira', 'Recycle Bin'), run:recycleBin },
+  { k:'sys:bin', g:'', ic:binN > 0 ? 217 : I.bin, t:tr('Lixeira', 'Recycle Bin'), run:recycleBin },
   { k:'sys:pc', g:'', ic:I.pc, t:tr('Meu Computador', 'My Computer'), run:myComputer }
 ];
 const allItems = () => sysItems().concat(entries());
@@ -31493,8 +31899,16 @@ function qlDrag(b, k){
   };
   b.addEventListener('pointerup', end); b.addEventListener('pointercancel', end);
 }
-function itemCtx(e, it){
-  ctx(e, [[tr('Abrir', 'Open'), () => launch(it), true], '-', [isPinned(it.k) ? tr('Desafixar da barra de tarefas', 'Unpin from taskbar') : tr('Fixar na barra de tarefas', 'Pin to taskbar'), () => pin(it.k)]]);
+function itemCtx(e, it, desk){
+  if(!it) return;
+  const rows = [[tr('Abrir', 'Open'), () => launch(it), true]];
+  if(it.k === 'sys:bin') rows.push([tr('Esvaziar Lixeira', 'Empty Recycle Bin'), binN ? askEmpty : null]);
+  else{
+    rows.push('-', [isPinned(it.k) ? tr('Desafixar da barra de tarefas', 'Unpin from taskbar') : tr('Fixar na barra de tarefas', 'Pin to taskbar'), () => pin(it.k)], '-');
+    if(desk) rows.push([it.k === 'sys:pc' ? tr('Remover da área de trabalho', 'Remove from desktop') : tr('Excluir', 'Delete'), () => trashShortcut(it)]);
+    else rows.push([tr('Enviar para › Área de Trabalho (criar atalho)', 'Send to › Desktop (create shortcut)'), onDesk(it.k) ? null : () => addDesk(it.k)]);
+  }
+  ctx(e, rows);
 }
 
 /* ---- ícones da área de trabalho: grade livre, arrastar para reposicionar (salvo no navegador) ---- */
@@ -31504,6 +31918,7 @@ function layoutIcons(){
   const box1 = $('xpIcons'); if(!box1) return;
   const { cols, rows } = gridDims(), btns = Array.prototype.slice.call(box1.querySelectorAll('.xpIc')), taken = new Set(), place = new Map();
   btns.forEach(b => { const p = ipos[b.dataset.k]; if(p && p[0] >= 0 && p[0] < cols && p[1] >= 0 && p[1] < rows && !taken.has(p[0] + ',' + p[1])){ taken.add(p[0] + ',' + p[1]); place.set(b, [p[0], p[1]]); } });
+  btns.forEach(b => { const bc = (cols - 1) + ',' + (rows - 1); if(!place.has(b) && b.dataset.k === 'sys:bin' && !taken.has(bc)){ taken.add(bc); place.set(b, [cols - 1, rows - 1]); } });
   let i = 0;
   btns.forEach(b => {
     if(place.has(b)) return;
@@ -31535,6 +31950,8 @@ function dragIcon(b){
     b.classList.remove('drag'); const bar = $('xpBar'); if(bar) bar.classList.remove('drop');
     moved = true; setTimeout(() => { moved = false; }, 0);
     if(e.type === 'pointercancel'){ layoutIcons(); return; }
+    { b.style.pointerEvents = 'none'; const un = document.elementFromPoint(e.clientX, e.clientY); b.style.pointerEvents = ''; const tg = un && un.closest && un.closest('.xpIc');
+      if(tg && tg !== b && tg.dataset.k === 'sys:bin' && b.dataset.k !== 'sys:bin'){ layoutIcons(); trashShortcut(itemOf(b.dataset.k)); return; } }   /* soltou na Lixeira: exclui o atalho */
     if(e.clientY >= innerHeight - 30){ pin(b.dataset.k, true); layoutIcons(); return; }   /* soltou na barra de tarefas: fixa */
     const box1 = b.parentNode, { cols, rows } = gridDims();
     const want = [Math.max(0, Math.min(cols - 1, Math.round((b.offsetLeft - 3) / CW))), Math.max(0, Math.min(rows - 1, Math.round(b.offsetTop / CH)))];
@@ -31551,7 +31968,8 @@ function dragIcon(b){
 }
 const deskCtx = e => ctx(e, [
   [tr('Organizar ícones automaticamente', 'Arrange icons automatically'), () => { ipos = {}; saveIp(); layoutIcons(); }],
-  [tr('Atualizar', 'Refresh'), () => fillIcons()], '-',
+  [tr('Atualizar', 'Refresh'), () => fillIcons()],
+  [tr('Restaurar área de trabalho padrão', 'Restore default desktop'), () => { deskKeys = null; saveDk(); ipos = {}; saveIp(); fillIcons(); }], '-',
   [fsLabel(), () => deskFs()], '-',
   [tr('Propriedades', 'Properties'), () => controlPanel('wall')]
 ]);
@@ -31567,7 +31985,7 @@ function buildDesk(){
   m.querySelector('.smh i').appendChild(ico(I.user, 32)); paintAvatar();
   const fb = (a, ic, t) => { const b = m.querySelector('[data-a="' + a + '"]'); b.append(ico(ic, 20), document.createTextNode(' ' + t)); b.onclick = () => { xps('windows_xp_menu_command', .8); powerDlg(a); }; };
   fb('logoff', I.key, tr('Fazer Logoff', 'Log Off')); fb('off', I.power, tr('Desligar', 'Turn Off'));
-  document.body.append(d, bar, m);
+  document.body.append(d, bar, m); paintWp();
   d.addEventListener('contextmenu', deskCtx); bar.addEventListener('contextmenu', e => e.preventDefault()); renderQl();
   { const fb = mkEl('button'); fb.type = 'button'; fb.id = 'xpTrFs'; $('xpTray').insertBefore(fb, $('xpTrSnd')); fb.onclick = () => { xps('windows_navigation_start', .8); deskFs(); }; fsSync(); }
   setIc($('xpTrSnd'), I.sound, 16); $('xpTrSnd').onclick = () => { xps('windows_navigation_start', .8); controlPanel('snd'); };
@@ -31582,8 +32000,8 @@ function buildDesk(){
 }
 function fillIcons(){
   const box1 = $('xpIcons'); box1.innerHTML = '';
-  allItems().forEach(it => { const b = iconBtn(it); b.dataset.k = it.k; dragIcon(b); b.addEventListener('contextmenu', e => itemCtx(e, it)); box1.appendChild(b); });
-  layoutIcons(); renderQl();
+  deskList().map(itemOf).filter(Boolean).forEach(it => { const b = iconBtn(it); b.dataset.k = it.k; dragIcon(b); b.addEventListener('contextmenu', e => { box1.querySelectorAll('.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); itemCtx(e, it, true); }); box1.appendChild(b); });
+  layoutIcons(); renderQl(); binChanged();
 }
 
 /* ---- boot: a tela de loading de mentira carrega TUDO (imagens, fontes, sons, menu Iniciar, molduras) antes de entrar ---- */
@@ -31839,7 +32257,7 @@ function pictureViewer(items, idx, o){
   return w;
 }
 
-window.dzXp = { pictureViewer, ico, setIc, xps, I, section, open, close, setStyle, isOpen: () => root.classList.contains('xp-desk'), style: () => style };
+window.dzXp = { setWallpaper, binChanged, pictureViewer, ico, setIc, xps, I, section, open, close, setStyle, isOpen: () => root.classList.contains('xp-desk'), style: () => style };
 })();
 </script>
 
