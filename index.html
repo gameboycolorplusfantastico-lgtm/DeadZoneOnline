@@ -3,6 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<script id="dzKeepFs">
+/* MANTER A TELA CHEIA AO ESCOLHER ARQUIVOS (celular / navegadores): o seletor de arquivos do sistema fecha a tela cheia e o navegador NÃO deixa
+   impedir isso. Então: quando um seletor (input[type=file], showOpenFilePicker...) é aberto DURANTE a tela cheia e ela se perde, o jogo volta para
+   a tela cheia sozinho assim que o seletor fecha (ou no primeiro toque/tecla depois, que é quando o navegador permite). Vale para todos os apps Extras. */
+(function(){
+  var de = document.documentElement, fsEl = function(){ return document.fullscreenElement || document.webkitFullscreenElement; };
+  var picking = 0, wasFs = false, pending = 0, tries = 0;
+  function enter(){
+    if(!pending || fsEl()) { if(fsEl()) pending = 0; return; }
+    if(Date.now() - pending > 180000){ pending = 0; return; }
+    var f = de.requestFullscreen || de.webkitRequestFullscreen; if(!f) { pending = 0; return; }
+    try{ var r = f.call(de, { navigationUI:'hide' }); if(r && r.then) r.then(function(){ pending = 0; }, function(){}); }catch(e){}
+  }
+  function openPicker(){ wasFs = !!fsEl(); picking = Date.now(); }
+  function done(){ if(wasFs){ setTimeout(function(){ if(!fsEl()){ pending = pending || Date.now(); enter(); } }, 60); } picking = 0; wasFs = false; }
+  function onFsChange(){
+    if(fsEl()) { pending = 0; return; }
+    if(wasFs && picking && Date.now() - picking < 60000) pending = Date.now();   /* saiu por causa do seletor: lembra de voltar */
+  }
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(function(t){ document.addEventListener(t, onFsChange); });
+  /* clique (ou label) num input de arquivo */
+  document.addEventListener('click', function(e){ var t = e.target; if(t && t.closest){ var i = t.closest('input[type=file]'); var l = !i && t.closest('label'); if(i || (l && l.control && l.control.type === 'file')) openPicker(); } }, true);
+  /* input.click() feito por código (é o que os apps usam) */
+  try{ var oc = HTMLInputElement.prototype.click; HTMLInputElement.prototype.click = function(){ if(this.type === 'file') openPicker(); return oc.apply(this, arguments); }; }catch(e){}
+  try{ var os = HTMLInputElement.prototype.showPicker; if(os) HTMLInputElement.prototype.showPicker = function(){ if(this.type === 'file') openPicker(); return os.apply(this, arguments); }; }catch(e){}
+  ['showOpenFilePicker', 'showSaveFilePicker', 'showDirectoryPicker'].forEach(function(n){
+    var o = window[n]; if(!o) return;
+    window[n] = function(){ openPicker(); var p = o.apply(this, arguments); if(p && p.finally) p.finally(done); return p; };
+  });
+  document.addEventListener('change', function(e){ if(e.target && e.target.type === 'file') done(); }, true);
+  document.addEventListener('cancel', function(e){ if(e.target && e.target.type === 'file') done(); }, true);
+  /* o seletor fechou e a janela voltou: tenta voltar; se o navegador exigir um gesto, volta no primeiro toque/tecla */
+  window.addEventListener('focus', function(){ if(wasFs || pending) setTimeout(function(){ if(wasFs && !fsEl()) pending = pending || Date.now(); enter(); }, 150); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden && (wasFs || pending)) setTimeout(function(){ if(wasFs && !fsEl()) pending = pending || Date.now(); enter(); }, 150); });
+  ['pointerup', 'touchend', 'click', 'keydown'].forEach(function(t){ document.addEventListener(t, function(){ if(pending) enter(); }, true); });
+})();
+</script>
 <script>
 /* === CONSOLE (Xbox Edge / PlayStation) — detecção e proteção de entrada ===
    Teste no PC: abra o jogo com ?console=xbox ou ?console=ps */
@@ -1187,6 +1224,29 @@ input,select,textarea{-webkit-user-select:text;user-select:text;touch-action:man
   #kickBtn{right:20px;bottom:calc(16% + 105px);width:68px;height:68px;background-image:url('https://i.postimg.cc/cJPFv635/HUDMOBILEKICKBALL.png');}
   #jumpBtn{right:105px;bottom:calc(16% + 90px);background-image:url('https://i.postimg.cc/N0KNGRyq/HUDMOBILEJUMP.png');}
   body.soc-ui #useBtn{bottom:calc(16% + 185px);}
+  /* botões de toque extras (desligados por padrão; ligue em CONFIGURAÇÕES > CONTROLES > EDITAR BOTÕES DE TOQUE) */
+  #qswapBtn,#centerBtn{position:absolute;width:58px;height:58px;border-radius:50%;background-color:rgba(20,60,90,.45);border:2px solid var(--cs-hud,#9fe3ff);
+    box-shadow:0 0 12px var(--cs-hud-glow,rgba(70,185,255,.55)), inset 0 0 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:22;pointer-events:auto;touch-action:none;
+    color:#fff;font:bold 26px sans-serif;text-shadow:1px 1px 0 #000;-webkit-tap-highlight-color:transparent;transition:transform .06s,background-color .06s;}
+  #qswapBtn{right:275px;bottom:calc(16% + 90px);} #centerBtn{right:360px;bottom:calc(16% + 20px);}
+  #qswapBtn:active,#centerBtn:active{transform:scale(.94);background-color:rgba(70,185,255,.45);}
+  /* editor dos botões de toque */
+  #touchLayer .tlb{opacity:var(--tl-op,1);}
+  #touchLayer .tlb.tl-off{display:none !important;}
+  body.tl-editing #touchLayer{display:block !important;position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.45);}
+  body.tl-editing #touchLayer #joyZone,body.tl-editing #touchLayer #lookZone{pointer-events:none;}
+  body.tl-editing #touchLayer .tlb{display:flex !important;opacity:var(--tl-op,1);outline:2px dashed rgba(255,255,255,.7);outline-offset:3px;cursor:grab;}
+  body.tl-editing #touchLayer .tlb.tl-off{opacity:.3;}
+  body.tl-editing #touchLayer .tlb::after{content:attr(data-n);position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;font:bold 10px sans-serif;color:#fff;white-space:nowrap;text-shadow:0 0 3px #000,0 0 3px #000;pointer-events:none}
+  body.tl-editing #touchLayer .tlb.tl-sel{outline:3px solid #ffd24a;}
+  #tlBar{position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:2147483000;display:none;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:center;max-width:96vw;
+    padding:6px 10px;background:rgba(10,10,14,.92);border:1px solid #ffd24a;border-radius:6px;color:#eee;font:11px/1.2 sans-serif;}
+  body.tl-editing #tlBar{display:flex;}
+  #tlBar b{color:#ffd24a;letter-spacing:.5px}
+  #tlBar label{display:flex;align-items:center;gap:4px}
+  #tlBar input[type=range]{width:90px}
+  #tlBar button{font:inherit;font-size:11px;color:#9dff8a;background:rgba(57,255,20,.1);border:1px solid rgba(57,255,20,.4);border-radius:3px;padding:4px 9px;cursor:pointer}
+  #tlBar button.pri{color:#000;background:#ffd24a;border-color:#ffd24a}
   #kickBtn:active,#jumpBtn:active{transform:scale(.94);background-color:rgba(70,185,255,.45);}
   .club-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
   .club-chip{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;background:rgba(0,0,0,.5);border:2px solid var(--panel-border);border-radius:5px;color:#bbb;font-family:'Courier New',monospace;font-size:8.5px;cursor:var(--xc-link);transition:border-color .15s,box-shadow .15s,color .15s;}
@@ -1604,6 +1664,8 @@ html.console #deathFx,#deathFx.noblur{-webkit-backdrop-filter:none;backdrop-filt
     <div id="fireBtn"></div>
     <div id="kickBtn"></div>
     <div id="jumpBtn"></div>
+    <div id="qswapBtn">⇄</div>
+    <div id="centerBtn">◎</div>
   </div>
 </div>
 
@@ -2474,6 +2536,14 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
         <div id="bindList"></div>
         <details id="bindWpnBox"><summary id="bindWpnSum"></summary><div id="bindWpnList"></div></details>
         <button type="button" class="bind-reset" id="bindReset"></button>
+        <div class="bind-title" id="gpBindTitle" style="margin-top:16px"></div>
+        <div class="bind-hint" id="gpBindHint"></div>
+        <div id="gpBindList"></div>
+        <button type="button" class="bind-reset" id="gpBindReset"></button>
+        <div class="bind-title" id="tlTitle" style="margin-top:16px"></div>
+        <div class="bind-hint" id="tlHint"></div>
+        <button type="button" class="bind-reset" id="tlEditBtn" style="margin-top:2px"></button>
+        <button type="button" class="bind-reset" id="tlResetBtn" style="margin-top:2px"></button>
       </div>
 
       <div class="controls-scheme-grid">
@@ -13748,6 +13818,9 @@ const BIND_DEFS = [
   { id:'shop',     pt:'Abrir / fechar loja',     en:'Open / close shop',   def:['b'] },
   { id:'kick',     pt:'Chutar (Futebol)',        en:'Kick (Soccer)',       def:['f'] },
   { id:'jump',     pt:'Pular',                   en:'Jump',                def:[' '] },
+  { id:'nextwpn',  pt:'Próxima arma',            en:'Next weapon',         def:[] },
+  { id:'prevwpn',  pt:'Arma anterior (na lista)', en:'Previous weapon (list)', def:[] },
+  { id:'chat',     pt:'Abrir chat (online)',     en:'Open chat (online)',  def:['enter'] },
   { id:'help',     pt:'Ajuda de controles',      en:'Controls help',       def:['h'] }
 ];
 const BIND_KEY = 'dz_binds_v1';
@@ -13824,6 +13897,7 @@ function bindPress(k, e){
   }
   if(bm('interact', k)){ if(!fnafTryUse() && !testTryUse() && !zomUse()) trySwapWeapon(); }   // interagir (portas/luzes/arma do chão)
   if(bm('quickswap', k) && play && !shopOpen && menuOff) quickSwapWeapon();
+  if(play && !shopOpen && menuOff && !e.repeat){ if(bm('nextwpn', k)) cycleWeapon(1); if(bm('prevwpn', k)) cycleWeapon(-1); }
   if(menuOff){
     Object.keys(WEAPON_CONFIG).forEach(wId => {
       if(bm('w:' + wId, k) && player.unlockedWeapons[wId] && player.weapon !== wId){ SFX.menuSelect(); switchWeapon(wId); }
@@ -13967,6 +14041,47 @@ let gpTurn = 0;
 let gpFireHeld = false;
 let gpTriggerWasHeld = false;
 let gpPrevButtons = [];
+/* ===== REMAPEAR CONTROLE DE VIDEOGAME =====
+   Cada ação guarda uma lista de índices de botão do mapeamento padrão do navegador (0=A/✕ 1=B/○ 2=X/□ 3=Y/△ 4=LB/L1 5=RB/R1 6=LT/L2 7=RT/R2
+   8=VIEW/SHARE 9=START 10=L3 11=R3 12=↑ 13=↓ 14=← 15=→ 16=HOME). START (9) fica sempre como PAUSA. Só as mudanças ficam salvas. */
+const GP_DEFS = [
+  { id:'jump',     pt:'Pular',                                    en:'Jump',                                  def:[0] },
+  { id:'kick',     pt:'Chutar (Futebol)',                         en:'Kick (Soccer)',                         def:[1] },
+  { id:'reload',   pt:'Recarregar',                               en:'Reload',                                def:[2] },
+  { id:'interact', pt:'Interagir (portas, luzes, arma do chão)',  en:'Interact (doors, lights, floor weapon)', def:[3] },
+  { id:'fire',     pt:'Atirar',                                   en:'Fire',                                  def:[7] },
+  { id:'aim',      pt:'Zoom da sniper / agarrar (Gravity Gun)',   en:'Sniper zoom / grab (Gravity Gun)',      def:[6] },
+  { id:'nextwpn',  pt:'Próxima arma',                             en:'Next weapon',                           def:[5] },
+  { id:'prevwpn',  pt:'Arma anterior (na lista)',                 en:'Previous weapon (list)',                def:[4] },
+  { id:'quickswap',pt:'Voltar à arma anterior (troca rápida)',    en:'Previous weapon (quick swap)',          def:[14] },
+  { id:'shop',     pt:'Abrir loja (DM/CTF/Resgate)',              en:'Open shop (DM/CTF/Rescue)',             def:[13] },
+  { id:'firemode', pt:'Modo de tiro (auto / semi / rajada)',      en:'Fire mode (auto / semi / burst)',       def:[15] },
+  { id:'recenter', pt:'Centralizar câmera',                       en:'Center camera',                         def:[11] },
+  { id:'chat',     pt:'Abrir chat (online)',                      en:'Open chat (online)',                    def:[12, 8] }
+];
+const GP_BIND_KEY = 'dz_gpbinds_v1';
+let GP_USER = {};
+try{ GP_USER = JSON.parse(localStorage.getItem(GP_BIND_KEY) || '{}') || {}; }catch(e){ GP_USER = {}; }
+function gpTok(id){ if(Array.isArray(GP_USER[id])) return GP_USER[id]; const d = GP_DEFS.find(x => x.id === id); return d ? d.def : []; }
+function gpSave(){ try{ localStorage.setItem(GP_BIND_KEY, JSON.stringify(GP_USER)); }catch(e){} }
+function gpBtnName(i){
+  const ps = gpIsPS;
+  const n = ['A','B','X','Y','LB','RB','LT','RT','VIEW','☰','L3','R3','D-PAD ↑','D-PAD ↓','D-PAD ←','D-PAD →','HOME'], p = ['✕','○','□','△','L1','R1','L2','R2','SHARE','OPTIONS','L3','R3','D-PAD ↑','D-PAD ↓','D-PAD ←','D-PAD →','PS'];
+  return (ps ? p : n)[i] || ('BTN ' + i);
+}
+function gpBindLabel(id){ const a = gpTok(id); return a.length ? a.map(gpBtnName).join(' / ') : LTX('SEM BOTÃO', 'UNBOUND'); }
+function gpAssign(id, idx){
+  const prim = gpTok(id)[0];
+  GP_DEFS.forEach(o => {
+    if(o.id === id) return;
+    const t = gpTok(o.id); if(t.indexOf(idx) < 0) return;
+    const rest = t.filter(x => x !== idx);
+    GP_USER[o.id] = rest.length ? rest : ((prim !== undefined && prim !== idx) ? [prim] : []);
+  });
+  GP_USER[id] = [idx]; gpSave();
+}
+function gpBindResetAll(){ GP_USER = {}; gpSave(); }
+let gpListen = null;   // {done, t0}: esperando o próximo botão do controle (tela REMAPEAR)
 let GP_DEADZONE = 0.18;
 let gpVibration = true;
 let gpIsPS = false;          // true se o controle for PlayStation (troca os símbolos das dicas)
@@ -14112,6 +14227,14 @@ function pollGamepad(){
   const btn = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed);
   const prev = (i) => !!gpPrevButtons[i];
 
+  // tela REMAPEAR: o próximo botão apertado vira o novo atalho (START cancela; passou de 10 s também cancela)
+  if(gpListen){
+    const L = gpListen; let got = null;
+    for(let i = 0; i < gp.buttons.length && got === null; i++) if(btn(i) && !prev(i)) got = i;
+    if(got !== null || performance.now() - L.t0 > 10000){ gpListen = null; L.done(got === null || got === 9 ? null : got); }
+    gpPrevButtons = gp.buttons.map(b => b.pressed);
+    return;
+  }
   // Qualquer botão novo libera o áudio do navegador (o controle não gera "pointerdown").
   if(gp.buttons.some((b, i) => b.pressed && !gpPrevButtons[i])) SFX.unlock();
 
@@ -14149,35 +14272,33 @@ function pollGamepad(){
     applyControlScheme();
 
     // D-pad cima ou VIEW / SHARE: abre o chat (partida online)
-    if(((btn(12) && !prev(12)) || (btn(8) && !prev(8))) && typeof chatInGame === 'function' && chatInGame()) chatOpenInput();
+    if(gpTok('chat').some(i => btn(i) && !prev(i)) && typeof chatInGame === 'function' && chatInGame()) chatOpenInput();
 
     gpVec.x = applyDeadzone(gp.axes[0] || 0);
     gpVec.y = applyDeadzone(gp.axes[1] || 0);
     gpTurn = gpAimCurve(applyDeadzone(gp.axes[2] || 0)); gpLook = gpAimCurve(applyDeadzone(gp.axes[3] || 0));
 
-    const rt = gp.buttons[7];
-    gpFireHeld = rt ? (rt.value > 0.2 || rt.pressed) : btn(7);
+    const gDown = id => gpTok(id).some(i => btn(i));
+    const gHit = id => gpTok(id).some(i => btn(i) && !prev(i));
+    gpFireHeld = gpTok('fire').some(i => { const b = gp.buttons[i]; return !!b && (b.value > 0.2 || b.pressed); });
     if(gpFireHeld && !gpTriggerWasHeld){ fireHeld = true; tryFire(); }
     else if(!gpFireHeld && gpTriggerWasHeld){ fireHeld = false; }
     gpTriggerWasHeld = gpFireHeld;
-    if(btn(6) && !prev(6) && SCOPE_WEAPONS[player.weapon]) toggleScope();   // LT = zoom da sniper
-    if(btn(15) && !prev(15)) cycleFireMode();                                  // D-pad → = modo de tiro
 
-    // ===== MAPA ÚNICO DE BOTÕES (igual em TODOS os modos; cada botão faz uma coisa só) =====
-    //  A / ✕  pular            B / ○  chutar (Futebol)      X / □  recarregar       Y / △  interagir (portas, luzes, arma do chão)
-    //  RT/R2  atirar           LT/L2  agarrar/soltar (Gravity Gun)
-    //  LB/RB  arma anterior/próxima    D-pad ←  voltar à arma anterior    D-pad ↓  loja (DM/CTF/Resgate)    D-pad ↑ / VIEW  chat
-    //  R3  centralizar câmera          START  pausa
-    if(btn(0) && !prev(0)) socPlayerJump();                                   // A / ✕: pular
-    if(btn(1) && !prev(1)) socPlayerKick();                                   // B / ○: chutar (só tem efeito no Futebol)
-    if(btn(2) && !prev(2) && player.weapon !== 'gravgun') reloadWeapon();     // X / □: recarregar
-    if(btn(3) && !prev(3)){ if(!fnafTryUse() && !testTryUse() && !zomUse()) trySwapWeapon(); }   // Y / △: interagir (usar portas/luzes, trocar a arma do chão)
-    if(btn(6) && !prev(6) && player.weapon === 'gravgun') ggSecondary();      // LT / L2: agarrar / soltar (Gravity Gun)
-    if(btn(13) && !prev(13) && shopOn()) shopOpenMenu();                      // D-pad ↓: abre a loja (DM/CTF/Resgate)
-    if(btn(14) && !prev(14)) quickSwapWeapon();                               // D-pad ←: volta à arma anterior
-    if(btn(11) && !prev(11)) recenterCam();                                   // R3: centraliza a câmera
-    if(btn(5) && !prev(5)) cycleWeapon(1);                                    // RB / R1: próxima arma
-    if(btn(4) && !prev(4)) cycleWeapon(-1);                                   // LB / L1: arma anterior
+    // ===== MAPA ÚNICO DE BOTÕES (igual em TODOS os modos; cada ação tem um botão só — dá para trocar em CONFIGURAÇÕES > CONTROLES) =====
+    //  padrão: A/✕ pular · B/○ chutar · X/□ recarregar · Y/△ interagir · RT/R2 atirar · LT/L2 zoom / agarrar · LB/RB arma anterior/próxima
+    //          D-pad ← arma anterior (troca rápida) · D-pad ↓ loja · D-pad → modo de tiro · D-pad ↑ / VIEW chat · R3 centralizar câmera · START pausa
+    if(gHit('aim')){ if(SCOPE_WEAPONS[player.weapon]) toggleScope(); if(player.weapon === 'gravgun') ggSecondary(); }
+    if(gHit('firemode')) cycleFireMode();
+    if(gHit('jump')) socPlayerJump();
+    if(gHit('kick')) socPlayerKick();
+    if(gHit('reload') && player.weapon !== 'gravgun') reloadWeapon();
+    if(gHit('interact')){ if(!fnafTryUse() && !testTryUse() && !zomUse()) trySwapWeapon(); }
+    if(gHit('shop') && shopOn()) shopOpenMenu();
+    if(gHit('quickswap')) quickSwapWeapon();
+    if(gHit('recenter')) recenterCam();
+    if(gHit('nextwpn')) cycleWeapon(1);
+    if(gHit('prevwpn')) cycleWeapon(-1);
   } else {
     gpVec.x = 0; gpVec.y = 0; gpTurn = 0; gpLook = 0;
   }
@@ -14665,6 +14786,8 @@ document.getElementById('useBtn').addEventListener('pointerdown', e=>{
   e.preventDefault(); e.stopPropagation();
 },{passive:false});
 
+document.getElementById('qswapBtn').addEventListener('pointerdown', e=>{ usingTouch = true; usingKeyboardMouse=false; usingGamepad=false; applyControlScheme(); if(started && !gameOver) quickSwapWeapon(); e.preventDefault(); e.stopPropagation(); },{passive:false});
+document.getElementById('centerBtn').addEventListener('pointerdown', e=>{ usingTouch = true; usingKeyboardMouse=false; usingGamepad=false; applyControlScheme(); recenterCam(); e.preventDefault(); e.stopPropagation(); },{passive:false});
 ['kickBtn', 'jumpBtn'].forEach(id => {   // botões touch do modo Futebol
   document.getElementById(id).addEventListener('pointerdown', e=>{
     usingTouch = true; usingKeyboardMouse=false; usingGamepad=false; applyControlScheme();
@@ -14700,6 +14823,101 @@ function switchSettingsTab(tabId) {
   });
 }
 
+
+/* ===== EDITOR DOS BOTÕES DE TOQUE (celular) =====
+   Cada botão pode ser arrastado, redimensionado, ligado/desligado; a opacidade vale para todos. Posição = centro do botão em fração da tela
+   (funciona em qualquer tamanho / rotação). Só o que o jogador muda fica salvo (dz_tlayout_v1). */
+const TL_KEY = 'dz_tlayout_v1';
+const TL_BTNS = [
+  { id:'fireBtn',   pt:'Atirar',              en:'Fire' },
+  { id:'reloadBtn', pt:'Recarregar',          en:'Reload' },
+  { id:'swapBtn',   pt:'Interagir / pegar arma', en:'Interact / pick weapon' },
+  { id:'scopeBtn',  pt:'Zoom (sniper)',       en:'Zoom (sniper)' },
+  { id:'modeBtn',   pt:'Modo de tiro',        en:'Fire mode' },
+  { id:'useBtn',    pt:'Usar (portas / luzes)', en:'Use (doors / lights)' },
+  { id:'kickBtn',   pt:'Chutar (Futebol)',    en:'Kick (Soccer)' },
+  { id:'jumpBtn',   pt:'Pular',               en:'Jump' },
+  { id:'qswapBtn',  pt:'Arma anterior',       en:'Previous weapon', nw:true },
+  { id:'centerBtn', pt:'Centralizar câmera',  en:'Center camera',   nw:true }
+];
+let TL = { b:{}, op:1 };
+try{ const j = JSON.parse(localStorage.getItem(TL_KEY) || 'null'); if(j && typeof j === 'object') TL = { b:(j.b && typeof j.b === 'object') ? j.b : {}, op:(typeof j.op === 'number') ? j.op : 1 }; }catch(e){}
+const tlLayer = document.getElementById('touchLayer');
+TL_BTNS.forEach(d => { const e = document.getElementById(d.id); if(e) e.classList.add('tlb'); });
+function tlSave(){ try{ localStorage.setItem(TL_KEY, JSON.stringify(TL)); }catch(e){} }
+function tlApply(){
+  tlLayer.style.setProperty('--tl-op', String(TL.op));
+  TL_BTNS.forEach(d => {
+    const e = document.getElementById(d.id); if(!e) return; const c = TL.b[d.id] || {};
+    if(typeof c.x === 'number'){ e.style.left = (c.x * 100) + '%'; e.style.top = (c.y * 100) + '%'; e.style.right = 'auto'; e.style.bottom = 'auto'; e.style.translate = '-50% -50%'; }
+    else{ e.style.left = e.style.top = e.style.right = e.style.bottom = e.style.translate = ''; }
+    e.style.scale = (c.s && c.s !== 1) ? String(c.s) : '';
+    e.classList.toggle('tl-off', d.nw ? !c.on : !!c.off);   // os botões novos vêm desligados
+    e.dataset.n = tlName(d);
+  });
+}
+tlApply();
+let tlEd = null;
+function tlName(d){ return LTX(d.pt, d.en); }
+function tlBarBuild(){
+  let bar = document.getElementById('tlBar');
+  if(!bar){ bar = document.createElement('div'); bar.id = 'tlBar'; document.body.appendChild(bar); }
+  const d = TL_BTNS.find(x => x.id === tlEd.sel), c = (d && TL.b[d.id]) || {};
+  const on = d ? (d.nw ? !!c.on : !c.off) : false;
+  bar.innerHTML = '<b>' + LTX('EDITAR BOTÕES', 'EDIT BUTTONS') + '</b><span>' + (d ? tlName(d) : LTX('toque num botão e arraste', 'tap a button and drag')) + '</span>' +
+    (d ? '<label>' + LTX('Tamanho', 'Size') + ' <input type="range" id="tlSize" min="50" max="200" value="' + Math.round((c.s || 1) * 100) + '"></label>' +
+         '<label><input type="checkbox" id="tlOn"' + (on ? ' checked' : '') + '> ' + LTX('Mostrar', 'Show') + '</label>' +
+         '<button type="button" id="tlOne">' + LTX('Padrão deste', 'Reset this') + '</button>' : '') +
+    '<label>' + LTX('Opacidade', 'Opacity') + ' <input type="range" id="tlOp" min="25" max="100" value="' + Math.round(TL.op * 100) + '"></label>' +
+    '<button type="button" id="tlAll">' + LTX('Restaurar tudo', 'Reset all') + '</button><button type="button" id="tlCancel">' + LTX('Cancelar', 'Cancel') + '</button><button type="button" class="pri" id="tlDone">' + LTX('SALVAR', 'SAVE') + '</button>';
+  const q = id => bar.querySelector('#' + id);
+  if(d){
+    q('tlSize').oninput = e => { (TL.b[d.id] = TL.b[d.id] || {}).s = +e.target.value / 100; tlApply(); };
+    q('tlOn').onchange = e => { const k = TL.b[d.id] = TL.b[d.id] || {}; if(d.nw) k.on = e.target.checked; else k.off = !e.target.checked; tlApply(); };
+    q('tlOne').onclick = () => { delete TL.b[d.id]; tlApply(); tlBarBuild(); };
+  }
+  q('tlOp').oninput = e => { TL.op = +e.target.value / 100; tlApply(); };
+  q('tlAll').onclick = () => { TL = { b:{}, op:1 }; tlApply(); tlBarBuild(); };
+  q('tlCancel').onclick = () => tlLeave(false);
+  q('tlDone').onclick = () => tlLeave(true);
+}
+function tlSelect(id){ tlEd.sel = id; TL_BTNS.forEach(d => { const e = document.getElementById(d.id); if(e) e.classList.toggle('tl-sel', d.id === id); }); tlBarBuild(); }
+function tlEnter(){
+  if(tlEd) return;
+  tlEd = { snap:JSON.stringify(TL), sel:null };
+  tlEd.reopen = settingsModal.style.display === 'flex';
+  settingsModal.style.display = 'none';
+  tlEd.home = tlLayer.parentNode; tlEd.next = tlLayer.nextSibling; document.body.appendChild(tlLayer);   /* sai do #game para ficar acima dos menus */
+  document.body.classList.add('tl-editing');
+  tlBarBuild();
+}
+function tlLeave(save){
+  if(!tlEd) return;
+  if(save) tlSave(); else { try{ TL = JSON.parse(tlEd.snap); }catch(e){ TL = { b:{}, op:1 }; } tlApply(); }
+  const re = tlEd.reopen, home = tlEd.home, next = tlEd.next; tlEd = null;
+  document.body.classList.remove('tl-editing');
+  if(home){ home.insertBefore(tlLayer, next && next.parentNode === home ? next : null); }
+  TL_BTNS.forEach(d => { const e = document.getElementById(d.id); if(e) e.classList.remove('tl-sel'); });
+  applyControlScheme();
+  if(re){ openSettingsMenu(); try{ switchSettingsTab('tabControls'); }catch(e){} }
+}
+tlLayer.addEventListener('pointerdown', e => {
+  if(!tlEd) return;
+  e.stopPropagation(); e.preventDefault();
+  const b = e.target.closest('.tlb'); if(!b) return;
+  tlSelect(b.id);
+  const lr = tlLayer.getBoundingClientRect(), r = b.getBoundingClientRect();
+  const dx = r.left + r.width / 2 - e.clientX, dy = r.top + r.height / 2 - e.clientY;
+  const mv = ev => {
+    const x = Math.max(.03, Math.min(.97, (ev.clientX + dx - lr.left) / lr.width)), y = Math.max(.05, Math.min(.95, (ev.clientY + dy - lr.top) / lr.height));
+    const k = TL.b[b.id] = TL.b[b.id] || {}; k.x = x; k.y = y; tlApply();
+  };
+  const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+  window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  mv(e);
+}, true);
+window.addEventListener('keydown', e => { if(tlEd && e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); tlLeave(false); } }, true);
+
 /* ----- tela REMAPEAR (aba CONTROLES) ----- */
 (function(){
   const list = document.getElementById('bindList'), wl = document.getElementById('bindWpnList');
@@ -14721,7 +14939,7 @@ function switchSettingsTab(tabId) {
     document.getElementById('bindHint').textContent = T('Clique numa ação e aperte a nova tecla ou botão do mouse (ESC cancela). Se a tecla já estiver em uso, as duas ações trocam de lugar. Fica salvo neste aparelho.', 'Click an action, then press the new key or mouse button (ESC cancels). If the key is already used, the two actions swap. Saved on this device.');
     document.getElementById('bindWpnSum').textContent = T('ATALHOS DAS ARMAS', 'WEAPON SHORTCUTS');
     document.getElementById('bindReset').textContent = T('RESTAURAR PADRÃO', 'RESTORE DEFAULTS');
-    bindRefreshStatic();
+    bindRefreshStatic(); if(window.gpBindRender) window.gpBindRender();
   };
   window.bindRefreshStatic = function(){
     const L = id => bindLabel(id);
@@ -14749,8 +14967,48 @@ function switchSettingsTab(tabId) {
     });
   }
   list.addEventListener('click', onClick); wl.addEventListener('click', onClick);
+  /* ---- controle de videogame ---- */
+  const gl = document.getElementById('gpBindList'); let gpListeningId = null;
+  window.gpBindRender = function(){
+    gl.textContent = '';
+    GP_DEFS.forEach(d => {
+      const r = document.createElement('div'); r.className = 'bind-row';
+      const sp = document.createElement('span'); sp.textContent = T(d.pt, d.en);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'bind-btn'; b.dataset.gid = d.id;
+      if(gpListeningId === d.id){ b.classList.add('listening'); b.textContent = T('APERTE UM BOTÃO…', 'PRESS A BUTTON…'); } else b.textContent = gpBindLabel(d.id);
+      r.appendChild(sp); r.appendChild(b); gl.appendChild(r);
+    });
+    document.getElementById('gpBindTitle').textContent = T('REMAPEAR CONTROLE (XBOX / PLAYSTATION)', 'REBIND GAMEPAD (XBOX / PLAYSTATION)');
+    document.getElementById('gpBindHint').textContent = T('Clique numa ação e aperte o novo botão do controle (START cancela). Se o botão já estiver em uso, as duas ações trocam de lugar. START continua sendo a pausa. Fica salvo neste aparelho.', 'Click an action, then press the new gamepad button (START cancels). If the button is already used, the two actions swap. START stays as pause. Saved on this device.');
+    document.getElementById('gpBindReset').textContent = T('RESTAURAR PADRÃO DO CONTROLE', 'RESTORE GAMEPAD DEFAULTS');
+    document.getElementById('tlTitle').textContent = T('BOTÕES DE TOQUE (CELULAR)', 'TOUCH BUTTONS (MOBILE)');
+    document.getElementById('tlHint').textContent = T('Arraste cada botão para onde quiser, mude o tamanho, esconda os que não usa e ligue os extras (arma anterior, centralizar câmera). Fica salvo neste aparelho.', 'Drag each button anywhere, resize it, hide the ones you do not use and turn on the extras (previous weapon, center camera). Saved on this device.');
+    document.getElementById('tlEditBtn').textContent = T('EDITAR BOTÕES DE TOQUE', 'EDIT TOUCH BUTTONS');
+    document.getElementById('tlResetBtn').textContent = T('RESTAURAR BOTÕES DE TOQUE', 'RESTORE TOUCH BUTTONS');
+    gpRefreshStatic();
+  };
+  window.gpRefreshStatic = function(){   // a coluna "XBOX / PS" da ajuda mostra os botões atuais
+    const map = { ctlCamCenter:'recenter', ctlFire:'fire', ctlReload:'reload', ctlScope:'aim', ctlFireMode:'firemode', ctlShop:'shop', ctlLastWeapon:'quickswap', ctlInteract:'interact', ctlJump:'jump', ctlKick:'kick', ctlChat:'chat' };
+    document.querySelectorAll('#colGp .controls-row').forEach(r => {
+      const lab = r.children[0], val = r.children[1]; if(!lab || !val) return;
+      const k = lab.getAttribute('data-i18n'); 
+      if(map[k]){ val.removeAttribute('data-i18n'); val.textContent = gpBindLabel(map[k]); }
+      else if(k === 'ctlWeapons'){ val.removeAttribute('data-i18n'); val.textContent = gpBtnName(gpTok('prevwpn')[0]) + ' / ' + gpBtnName(gpTok('nextwpn')[0]); }
+    });
+  };
+  gl.addEventListener('click', e => {
+    const b = e.target.closest('.bind-btn'); if(!b) return;
+    const id = b.dataset.gid;
+    if(gamepadIndex === null){ try{ uiToast(T('Conecte um controle e aperte qualquer botão nele.', 'Connect a gamepad and press any button on it.'), 'err'); }catch(x){} return; }
+    gpListen = null; gpListeningId = id; window.gpBindRender();
+    gpListen = { t0:performance.now(), done: idx => { gpListeningId = null; if(idx !== null){ gpAssign(id, idx); try{ SFX.menuAccept(); }catch(x){} } window.gpBindRender(); } };
+  });
+  document.getElementById('gpBindReset').addEventListener('click', () => { gpListen = null; gpListeningId = null; gpBindResetAll(); window.gpBindRender(); try{ SFX.menuSelect(); }catch(x){} });
+  document.getElementById('tlEditBtn').addEventListener('click', () => { try{ SFX.menuSelect(); }catch(x){} tlEnter(); });
+  document.getElementById('tlResetBtn').addEventListener('click', () => { TL = { b:{}, op:1 }; tlSave(); tlApply(); try{ SFX.menuSelect(); }catch(x){} });
+  window.addEventListener('keydown', e => { if(gpListen && e.key === 'Escape'){ const L = gpListen; gpListen = null; L.done(null); } }, true);
   document.getElementById('bindReset').addEventListener('click', () => { bindListen = null; listeningId = null; bindResetAll(); window.bindRender(); try{ SFX.menuSelect(); }catch(x){} });
-  window.bindRender();
+  window.bindRender(); window.gpBindRender();
 })();
 /* ponte para o estilo Windows XP (script separado, fora deste escopo): sons, música do menu, aba e idioma */
 window.dzGame = {
@@ -14822,7 +15080,6 @@ document.getElementById('unlockDebugBtn').addEventListener('click', () => {
   if (window.dzJdTry && window.dzJdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['jd']); document.getElementById('debugPassInput').value = ''; return; }   // código do JDoodle
   if (window.dzEdTry && window.dzEdTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['ed']); document.getElementById('debugPassInput').value = ''; return; }   // código do editor de texto
   if (window.dzEmuTry && window.dzEmuTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['emu']); document.getElementById('debugPassInput').value = ''; return; }   // seletor de emuladores
-  if (window.dzW95Try && window.dzW95Try(inputPass)) { document.getElementById('debugPassInput').value = ''; return; }   // código do Windows 95
   { const sid = window.dzEmuSysTry && window.dzEmuSysTry(inputPass); if (sid) { window.dzExtrasGrant && window.dzExtrasGrant([sid]); document.getElementById('debugPassInput').value = ''; return; } }   // códigos dos consoles novos (nes123, snes123, md123)
   if (window.dzMgTry && window.dzMgTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['games']); document.getElementById('debugPassInput').value = ''; return; }   // código dos joguinhos (sinuca, velha, dinossauro)
   if (window.dzGbaTry && window.dzGbaTry(inputPass)) { window.dzExtrasGrant && window.dzExtrasGrant(['gba']); document.getElementById('debugPassInput').value = ''; return; }   // código do emulador de GBA
@@ -18217,7 +18474,7 @@ let loopErrs = 0;
 let lastFrameAt = 0;
 function gameLoop(now){
   /* emulador de GBA aberto: o DEAD ZONE fica parado por baixo (poupa CPU/GPU, importante no Xbox One) */
-  if(((window.dzGba && window.dzGba.isOpen()) || (window.dzW95 && window.dzW95.isOpen())) && !(typeof NET !== 'undefined' && NET.mode)){ lastTime = now; try{ pollGamepad(); }catch(e){} requestAnimationFrame(gameLoop); return; }   /* o jogo fica parado, mas o controle continua navegando na lista de ROMs */
+  if((window.dzGba && window.dzGba.isOpen()) && !(typeof NET !== 'undefined' && NET.mode)){ lastTime = now; try{ pollGamepad(); }catch(e){} requestAnimationFrame(gameLoop); return; }   /* o jogo fica parado, mas o controle continua navegando na lista de ROMs */
   if(fpsCap > 0){
     const iv = 1000 / fpsCap, el = now - lastFrameAt;
     if(el < iv - 1){ requestAnimationFrame(gameLoop); return; }
@@ -18989,7 +19246,7 @@ function chatSubmit(){
   document.getElementById('chatSend').addEventListener('click', chatSubmit);
   document.getElementById('chatBtn').addEventListener('click', () => { if(chatOpen) chatCloseInput(); else chatOpenInput(); });
   window.addEventListener('keydown', e => {   // Enter abre o chat durante a partida online
-    if(e.key !== 'Enter' || e.repeat || chatOpen || (e.target && e.target.tagName === 'INPUT')) return;
+    if(!bm('chat', e.key.toLowerCase()) || e.repeat || chatOpen || (e.target && e.target.tagName === 'INPUT')) return;
     if(!chatInGame() || settingsModal.style.display === 'flex') return;
     e.preventDefault(); chatOpenInput();
   });
@@ -27614,6 +27871,7 @@ const extOf = n => (n.name.split('.').pop() || '').toLowerCase();
 const appOnTop = () => ['edOverlay', 'jdOverlay', 'paintOverlay'].some(i => { const o = $(i); return o && o.classList.contains('open'); });
 const exToast = (a, b, k) => { try{ if(typeof uiToast === 'function') uiToast(tr(a, b), k || 'ok'); }catch(e){} };
 async function nodeFile(n){
+  if(n.fake && n.text != null) return new File([n.text], n.name, { type:'text/plain' });
   if(n.blob) return (n.blob instanceof File) ? n.blob : new File([n.blob], n.name, { type:n.mime || n.blob.type || '' });
   if(n.url){ const r = await fetch(n.url), b = await r.blob(); return new File([b], n.name, { type:n.mime || b.type || '' }); }
   throw new Error('empty');
@@ -27662,6 +27920,7 @@ function openWithItems(n){   /* itens "Abrir com" do menu de contexto (tema XP) 
 function openNode(n){
   const k = kind(n);
   if(k === 'd'){ go(n.id); return; }
+  if(n.fake && n.text == null){ openFake(n); return; }
   if(k === 'a' || k === 'v'){
     const sib = nodes.filter(x => x.parent === n.parent && (kind(x) === 'a' || kind(x) === 'v')).sort((a, b) => a.name.localeCompare(b.name));
     if(window.dzWmp) window.dzWmp.setList(sib.map(x => ({ name:x.name, blob:x.blob, url:x.url, id:x.id, v:kind(x) === 'v' })), sib.indexOf(n)); return;
@@ -27714,11 +27973,102 @@ async function load(){
   try{ nodes = (await tx('readonly', s => s.getAll())) || []; }catch(e){ nodes = []; }
   let tv = ''; try{ tv = localStorage.getItem('dz_fx_tree') || ''; }catch(e){}
   if(tv !== '2' || !nodes.length){ ensureTree(); try{ localStorage.setItem('dz_fx_tree', '2'); }catch(e){} }
-  await loadRemote();
+  await loadRemote(); loadFake();
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}   /* pede ao navegador para não apagar os arquivos salvos */
 }
 /* Estrutura padrão (como no Windows): Área de Trabalho, Downloads, Favoritos, Meus Documentos (Minhas Imagens › Amostras de imagens, Minhas Músicas › Amostras de músicas, Meus Vídeos), Arquivos de Programas, Windows */
 const TREE = [['Área de Trabalho'], ['Downloads'], ['Favoritos'], ['Meus Documentos', ['Minhas Imagens', ['Amostras de imagens']], ['Minhas Músicas', ['Amostras de músicas']], ['Meus Vídeos']], ['Arquivos de Programas'], ['Windows']];
+
+/* ===== PROGRAMAS "FALSOS" (só para encher o C:\ e parecer um Windows de verdade) =====
+   COMO FUNCIONA: FAKE_TREE descreve pastas e arquivos de mentira. Eles NÃO ficam salvos no navegador (são recriados em memória toda vez que o Explorador abre,
+   como os arquivos do GitHub) e são protegidos (não dá para apagar/renomear/mover, como arquivos do sistema). Para ADICIONAR algo é só incluir uma linha:
+     F('nome.ext', tamanhoEmKB)                         arquivo que, ao abrir, mostra "não pode ser aberto" (dll, dat, hlp...)
+     F('app.exe', 120, { run:'paint' })                 .exe que ABRE de verdade um app do jogo: calc ed jd paint fx wmp daw games emu
+     F('leiame.txt', 2, { text:'conteúdo...' })         texto que abre no Editor de Texto
+     D('Pasta', F(...), D('Subpasta', ...))             pasta (pode ter pastas dentro)
+   Opções extras: ic:NÚMERO_DO_ÍCONE (folha WinIcons_32.png) e tp:'Tipo exibido'. */
+const FAKE_T = Date.UTC(2004, 7, 4, 12, 0);
+const D = (name, ...c) => ({ d:name, c:c });
+const F = (name, kb, o) => Object.assign({ f:name, kb:kb }, o || {});
+const FK_ICON = { exe:143, dll:309, sys:309, dat:309, ocx:309, drv:309, cpl:309, ini:303, inf:303, cfg:303, txt:306, log:306, hlp:25, chm:25, ttf:317, fon:313, bmp:418, wav:416, mid:416, cab:179, msi:179, scr:143, cat:309, ax:309, tlb:309, nls:309, lnk:210 };
+const FK_TYPE = { exe:['Aplicativo', 'Application'], dll:['Extensão de aplicativo', 'Application extension'], sys:['Arquivo de sistema', 'System file'], dat:['Arquivo DAT', 'DAT File'], ocx:['Controle ActiveX', 'ActiveX control'],
+  drv:['Driver de dispositivo', 'Device driver'], cpl:['Item do Painel de Controle', 'Control Panel item'], ini:['Definições de configuração', 'Configuration settings'], inf:['Informações de instalação', 'Setup information'],
+  cfg:['Definições de configuração', 'Configuration settings'], txt:['Documento de texto', 'Text Document'], log:['Documento de texto', 'Text Document'], hlp:['Arquivo de Ajuda', 'Help file'], chm:['Ajuda HTML compilada', 'Compiled HTML Help'],
+  ttf:['Fonte TrueType', 'TrueType font file'], fon:['Fonte', 'Font file'], bmp:['Imagem bitmap', 'Bitmap Image'], wav:['Som do Windows', 'Wave Sound'], mid:['Sequência MIDI', 'MIDI Sequence'], cab:['Gabinete (CAB)', 'Cabinet File'], msi:['Pacote do Windows Installer', 'Windows Installer Package'],
+  scr:['Protetor de tela', 'Screen Saver'], cat:['Catálogo de segurança', 'Security Catalog'], ax:['Filtro DirectShow', 'DirectShow filter'], tlb:['Biblioteca de tipos', 'Type library'], nls:['Arquivo NLS', 'NLS File'] };
+const LEIAME = (nome, extra) => nome + '\r\n' + '='.repeat(nome.length) + '\r\n\r\nObrigado por usar ' + nome + '.\r\n\r\n' + (extra || 'Este programa faz parte do seu computador Dead Zone XP.') + '\r\n\r\nPara iniciar, use o menu Iniciar > Todos os Programas.\r\n\r\n(c) Dead Zone Software. Todos os direitos reservados.\r\n';
+const FAKE_TREE = {
+  'Arquivos de Programas': [
+    D('Calculadora Legal', F('calc.exe', 114, { run:'calc' }), F('calc.hlp', 38), F('leiame.txt', 1, { text:LEIAME('Calculadora Legal') }), F('unins000.exe', 76, { run:'unins' })),
+    D('Editor de Texto Legal', F('editor.exe', 68, { run:'ed' }), F('editor.hlp', 52), F('leiame.txt', 1, { text:LEIAME('Editor de Texto Legal', 'Abre arquivos .txt, .md, .csv e muito mais.') }), F('unins000.exe', 76, { run:'unins' })),
+    D('Código Legal', F('codigo.exe', 212, { run:'jd' }), D('Plugins', F('realce.dll', 96), F('formatar.dll', 54)), F('leiame.txt', 1, { text:LEIAME('Código Legal', 'Editor de código com realce de sintaxe.') }), F('unins000.exe', 76, { run:'unins' })),
+    D('Paint', F('mspaint.exe', 330, { run:'paint', ic:7 }), F('mspaint.hlp', 61), F('leiame.txt', 1, { text:LEIAME('Paint') })),
+    D('Estúdio de Música', F('studio.exe', 940, { run:'daw' }), D('Instrumentos', F('piano.dat', 2048), F('bateria.dat', 3072), F('baixo.dat', 1536)), F('studio.ini', 1), F('unins000.exe', 76, { run:'unins' })),
+    D('Explorador de Arquivos', F('explorer.exe', 1010, { run:'fx', ic:224 }), F('explorer.hlp', 44)),
+    D('Windows Media Player', F('wmplayer.exe', 196, { run:'wmp', ic:11 }), F('wmpcd.dll', 112), F('wmpui.dll', 450), F('wmp.ini', 1), D('Skins', F('Headspace.wmz', 220), F('Revert.wmz', 95), F('Classico.wmz', 140)), F('mplayer2.exe', 24, { run:'wmp', ic:11 })),
+    D('Jogos', F('jogos.exe', 880, { run:'games' }), F('Paciencia.exe', 150, { run:'games' }), F('Campo Minado.exe', 98, { run:'games' }), F('placar.dat', 4), F('jogos.hlp', 33)),
+    D('Emuladores', F('emulador.exe', 3400, { run:'emu' }), D('Cores', F('gba_core.dll', 1800), F('snes_core.dll', 2100), F('n64_core.dll', 3900)), D('Saves', F('leiame.txt', 1, { text:LEIAME('Emuladores', 'Os saves dos jogos ficam guardados no navegador.') })), F('emulador.ini', 1)),
+    D('Internet Explorer', F('iexplore.exe', 93, { ic:175 }), F('ieproxy.dll', 80), F('hmmapi.dll', 56), D('Connection Wizard', F('icwconn1.exe', 214), F('icwconn2.exe', 94), F('icwhelp.dll', 40))),
+    D('Outlook Express', F('msimn.exe', 244, { ic:175 }), F('msoe.dll', 3200), F('wab.exe', 280), F('oeimport.dll', 64)),
+    D('Movie Maker', F('moviemk.exe', 4900, { ic:143 }), D('Shared', F('mmeffect.dll', 700), F('mmtrans.dll', 540))),
+    D('Messenger', F('msmsgs.exe', 1600, { ic:143 }), F('msgsc.dll', 900), F('msgslang.dll', 120)),
+    D('NetMeeting', F('conf.exe', 440), F('nmchat.dll', 130), F('nmwb.dll', 330)),
+    D('MSN Gaming Zone', D('Windows', F('zclientm.exe', 480), F('zrt.dll', 210))),
+    D('Online Services', F('desktop.ini', 1), F('leiame.txt', 1, { text:LEIAME('Online Services', 'Serviços online não estão disponíveis nesta versão.') })),
+    D('Common Files', D('Microsoft Shared', D('MSInfo', F('msinfo32.exe', 330), F('msinfo.dll', 780)), D('Web Folders', F('msonsext.dll', 160), F('msnpxy.dll', 90)), D('Speech', F('spcommon.dll', 120)), D('VGX', F('vgx.dll', 820), F('vgx.dat', 12))), D('System', D('ado', F('msado15.dll', 520), F('msadox.dll', 96)), F('msado15.dll', 520), F('wab32.dll', 640)), D('Services', F('sqlmap.ini', 1))),
+    D('Windows NT', D('Acessórios', F('wordpad.exe', 214), F('mspaint.exe', 330, { run:'paint', ic:7 }), F('hypertrm.exe', 76)), D('Pinball', F('PINBALL.EXE', 540), F('PINBALL.MID', 28), F('PINBALL.DAT', 1100))),
+    D('WindowsUpdate', F('wuaucpl.cpl', 280), F('wupdinfo.log', 6, { text:'Windows Update - registro\r\n2004-08-04 12:01:07  Nenhuma atualização pendente.\r\n2004-08-04 12:01:08  Verificação concluída.\r\n' })),
+    D('Uninstall Information', F('desktop.ini', 1)),
+    D('xerox', F('xrxctrl.dll', 410))
+  ],
+  'Windows': [
+    F('explorer.exe', 1010, { run:'fx', ic:224 }), F('notepad.exe', 68, { run:'ed', ic:306 }), F('regedit.exe', 140, { ic:312 }), F('winhelp.exe', 252, { ic:25 }), F('winhlp32.exe', 296, { ic:25 }),
+    F('win.ini', 1, { text:'; for 16-bit app support\r\n[fonts]\r\n[extensions]\r\n[mci extensions]\r\n[files]\r\n[Mail]\r\nMAPI=1\r\n' }),
+    F('system.ini', 1, { text:'; for 16-bit app support\r\n[386Enh]\r\nwoafont=dosapp.fon\r\nEGA80WOA.FON=EGA80WOA.FON\r\n[drivers]\r\nwave=mmdrv.dll\r\ntimer=timer.drv\r\n[mci]\r\n' }),
+    F('system.log', 14, { text:'Dead Zone XP - registro do sistema\r\nInicialização concluída com sucesso.\r\n' }), F('WindowsUpdate.log', 22, { text:'Nenhuma atualização pendente.\r\n' }), F('setuplog.txt', 31, { text:'Instalação do Windows concluída.\r\n' }),
+    F('Coffee Bean.bmp', 17, { ic:418 }), F('Prairie Wind.bmp', 770, { ic:418 }), F('Soap Bubbles.bmp', 41, { ic:418 }), F('Zapotec.bmp', 22, { ic:418 }),
+    F('bootstat.dat', 2), F('twain_32.dll', 50), F('hh.exe', 11, { ic:25 }), F('taskman.exe', 32), F('winnt.bmp', 78, { ic:418 }),
+    D('system32', F('calc.exe', 114, { run:'calc' }), F('cmd.exe', 389, { ic:143 }), F('mspaint.exe', 330, { run:'paint', ic:7 }), F('mplayer2.exe', 24, { run:'wmp', ic:11 }), F('taskmgr.exe', 78, { ic:143 }), F('notepad.exe', 68, { run:'ed', ic:306 }),
+      F('kernel32.dll', 989), F('user32.dll', 577), F('gdi32.dll', 276), F('shell32.dll', 8461), F('ntdll.dll', 706), F('advapi32.dll', 617), F('comctl32.dll', 1032), F('winmm.dll', 178), F('msvcrt.dll', 343), F('ole32.dll', 1169), F('wininet.dll', 659), F('mshtml.dll', 3200), F('ntoskrnl.exe', 2000), F('hal.dll', 128),
+      F('config.nt', 1, { text:'REM Windows NT MS-DOS Startup File\r\ndos=high, umb\r\ndevice=%SystemRoot%\\system32\\himem.sys\r\nfiles=40\r\n' }), F('autoexec.nt', 1, { text:'@echo off\r\nlh %SystemRoot%\\system32\\mscdexnt.exe\r\n' }),
+      D('drivers', F('disk.sys', 12), F('atapi.sys', 96), F('tcpip.sys', 360), F('ndis.sys', 180), F('usbhub.sys', 58)),
+      D('config', F('SAM', 256), F('SECURITY', 256), F('SOFTWARE', 9000), F('SYSTEM', 3200)),
+      D('spool', D('PRINTERS', F('leiame.txt', 1, { text:'Fila de impressão vazia.\r\n' }))), D('wbem', F('wbemcore.dll', 520), F('repdrvfs.dll', 270))),
+    D('Fonts', F('arial.ttf', 275), F('arialbd.ttf', 271), F('times.ttf', 328), F('timesbd.ttf', 330), F('cour.ttf', 291), F('verdana.ttf', 139), F('tahoma.ttf', 357), F('tahomabd.ttf', 307), F('trebuc.ttf', 150), F('comic.ttf', 123), F('georgia.ttf', 202), F('impact.ttf', 61), F('symbol.ttf', 64), F('marlett.ttf', 54), F('vga850.fon', 6), F('serife.fon', 66)),
+    D('Temp', F('~DF2A41.tmp', 0), F('Cab1234.tmp', 12)),
+    D('Web', D('Wallpaper', F('Bliss.bmp', 1400, { ic:418 }), F('Autumn.jpg', 150, { ic:418 })), D('Printers', F('leiame.txt', 1, { text:'Páginas da Web de impressoras.\r\n' }))),
+    D('Help', F('windows.chm', 2400), F('tours.chm', 800), F('glossary.chm', 110)),
+    D('Cursors', F('arrow_i.cur', 4, { ic:143 }), F('hand_i.cur', 4, { ic:143 })),
+    D('Media', F('Windows XP Startup.wav', 424, { ic:416 }), F('Windows XP Shutdown.wav', 288, { ic:416 }), F('Windows XP Error.wav', 160, { ic:416 }), F('tada.wav', 170, { ic:416 }), F('chimes.wav', 12, { ic:416 }), F('ding.wav', 11, { ic:416 })),
+    D('Registration', F('crmlog.dll', 160)), D('Prefetch', F('NTOSBOOT-B00DFAAD.pf', 90), F('EXPLORER.EXE-082F38A9.pf', 12), F('LOGONUI.EXE-0BB3ACDB.pf', 28)),
+    D('inf', F('hdaudio.inf', 24), F('usb.inf', 36), F('display.inf', 80), F('netrasa.inf', 20)),
+    D('Installer', F('leiame.txt', 1, { text:'Cache do Windows Installer.\r\n' }))
+  ]
+};
+function fakeExt(name){ const i = name.lastIndexOf('.'); return i < 0 ? '' : name.slice(i + 1).toLowerCase(); }
+function loadFake(){
+  const add = (items, parent, pre) => items.forEach(it => {
+    if(!it || (!it.d && !it.f)) return;
+    const id = 'p:' + pre + (it.d || it.f);
+    if(it.d){ if(!nodes.some(n => n.id === id)) nodes.push({ id:id, parent:parent, name:it.d, type:'d', t:FAKE_T, sys:true, fake:true }); add(it.c, id, pre + it.d + '/'); return; }
+    if(nodes.some(n => n.id === id)) return;
+    const e = fakeExt(it.f);
+    nodes.push({ id:id, parent:parent, name:it.f, type:'f', mime:'', size:Math.round((it.kb || 0) * 1024), t:FAKE_T, sys:true, fake:true, run:it.run, text:it.text, ic:(it.ic != null ? it.ic : (FK_ICON[e] != null ? FK_ICON[e] : null)), tp:it.tp || (FK_TYPE[e] ? tr(FK_TYPE[e][0], FK_TYPE[e][1]) : null) });
+  });
+  Object.keys(FAKE_TREE).forEach(k => { const root = nodes.find(n => n.type === 'd' && n.parent === 'root' && n.name === k); if(root) add(FAKE_TREE[k], root.id, k + '/'); });
+}
+/* abrir um arquivo falso: .exe de app real abre o app; o resto mostra a mensagem que o Windows mostraria */
+function openFake(n){
+  const R = n.run, go = (api, fn) => { try{ if(api && api[fn || 'open']) { api[fn || 'open'](); return true; } }catch(e){} return false; };
+  const ok = (R === 'calc' && go(window.dzCalc)) || (R === 'ed' && go(window.dzEd)) || (R === 'jd' && go(window.dzJd)) || (R === 'paint' && go(window.dzPaint)) || (R === 'wmp' && go(window.dzWmp)) ||
+    (R === 'daw' && go(window.dzDaw)) || (R === 'games' && go(window.dzMg)) || (R === 'emu' && (window.dzEmuOpenHub ? (window.dzEmuOpenHub(), true) : false)) || (R === 'fx');
+  if(R && ok){ if(R !== 'fx') { const o = { calc:'calcOverlay', ed:'edOverlay', jd:'jdOverlay', paint:'paintOverlay', wmp:'wmpOverlay', daw:'dawOverlay', games:'mgOverlay' }[R]; const el = o && $(o); if(el) el.style.zIndex = '99995'; } return; }
+  if(R === 'unins') return note(tr('Desinstalar', 'Uninstall'), tr('Este programa faz parte do sistema e não pode ser desinstalado.', 'This program is part of the system and cannot be uninstalled.'));
+  const e = fakeExt(n.name);
+  if(e === 'exe' || e === 'scr' || e === 'msi' || e === 'cpl') return note(n.name, tr('Não foi possível iniciar "' + n.name + '". Este programa não está disponível neste computador.', 'Could not start "' + n.name + '". This program is not available on this computer.'));
+  note(tr('Abrir com', 'Open With'), tr('O Windows não pode abrir este arquivo:\n\n' + n.name + '\n\nPara abrir este arquivo, o Windows precisa saber qual programa o criou.', 'Windows cannot open this file:\n\n' + n.name + '\n\nTo open this file, Windows needs to know what program created it.'));
+}
+const icOf = n => (n.ic != null ? n.ic : XI[kind(n)]);
 const RBASE = 'assets/winxp/Arquivos/';   /* espelha o C:\ do Explorador; manifest.json (gerado pela Action) lista os arquivos */
 async function loadRemote(){
   try{
@@ -27775,7 +28125,7 @@ const xmk = (t, c, h) => { const e = document.createElement(t); if(c) e.classNam
 const pt = () => { try{ return (typeof LTX === 'function') ? LTX('pt', 'en') === 'pt' : true; }catch(e){ return true; } };
 const nf = n => Number(n || 0).toLocaleString(pt() ? 'pt-BR' : 'en-US');
 const fmtG = b => (b / 1073741824).toLocaleString(pt() ? 'pt-BR' : 'en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' GB';
-const typeOf = n => { const k = kind(n), e = (n.name.split('.').pop() || '').toUpperCase(); return k === 'd' ? tr('Pasta de arquivos', 'File Folder') : k === 'a' ? tr('Arquivo de áudio', 'Audio file') + ' (' + e + ')' : k === 'v' ? tr('Arquivo de vídeo', 'Video file') + ' (' + e + ')' : k === 'i' ? tr('Imagem', 'Image') + ' (' + e + ')' : k === 't' ? tr('Documento de texto', 'Text document') : tr('Arquivo', 'File') + (e && e !== n.name.toUpperCase() ? ' ' + e : ''); };
+const typeOf = n => { if(n.tp) return n.tp; const k = kind(n), e = (n.name.split('.').pop() || '').toUpperCase(); return k === 'd' ? tr('Pasta de arquivos', 'File Folder') : k === 'a' ? tr('Arquivo de áudio', 'Audio file') + ' (' + e + ')' : k === 'v' ? tr('Arquivo de vídeo', 'Video file') + ' (' + e + ')' : k === 'i' ? tr('Imagem', 'Image') + ' (' + e + ')' : k === 't' ? tr('Documento de texto', 'Text document') : tr('Arquivo', 'File') + (e && e !== n.name.toUpperCase() ? ' ' + e : ''); };
 const dt = t => { const d = new Date(t || Date.now()); return d.toLocaleDateString(pt() ? 'pt-BR' : 'en-US') + ' ' + d.toLocaleTimeString(pt() ? 'pt-BR' : 'en-US', { hour:'2-digit', minute:'2-digit' }); };
 function xpath(id){ if(id === 'mc') return tr('Meu Computador', 'My Computer'); const p = []; let c = id; while(c && c !== 'root'){ const n = nodes.find(x => x.id === c); if(!n) break; p.unshift(n.name); c = n.parent; } return 'C:\\' + p.join('\\'); }
 function go(id){ if(id === cwd) return; hist.push(cwd); fwd = []; cwd = id; sel = null; render(); }
@@ -27796,7 +28146,7 @@ function props(what){
   const title = drv ? tr('Propriedades de Disco Local (C:)', 'Local Disk (C:) Properties') : tr('Propriedades de ', 'Properties of ') + (n ? n.name : '');
   d.innerHTML = '<div class="xpPrT"><span></span><button type="button">✕</button></div><div class="xpPrTab"><b>' + tr('Geral', 'General') + '</b></div><div class="xpPrB"></div><div class="xpPrF"></div>';
   d.querySelector('.xpPrT span').textContent = title; const b = d.querySelector('.xpPrB'), f = d.querySelector('.xpPrF');
-  const head = xmk('div', 'xpPrH'); head.appendChild(xic(drv ? 76 : XI[kind(n)], 32)); const nm = xmk('b'); nm.textContent = drv ? '' : n.name; head.appendChild(nm); b.appendChild(head); b.appendChild(xmk('hr'));
+  const head = xmk('div', 'xpPrH'); head.appendChild(xic(drv ? 76 : icOf(n), 32)); const nm = xmk('b'); nm.textContent = drv ? '' : n.name; head.appendChild(nm); b.appendChild(head); b.appendChild(xmk('hr'));
   const row = (a, v) => { const r = xmk('div', 'xpPrR'); r.appendChild(xmk('span', '', a)); const s = xmk('span'); s.innerHTML = v; r.appendChild(s); b.appendChild(r); };
   if(drv){
     const used = est.usage || 0, total = est.quota || 0, free = Math.max(0, total - used), own = nodes.reduce((s, x) => s + (x.size || 0), 0);
@@ -27880,10 +28230,10 @@ function renderXp(skip){
     if(!ks.length) m.appendChild(xmk('div', 'xpEmpty', q ? tr('Nenhum item encontrado.', 'No items found.') : tr('Esta pasta está vazia. Use “Importar arquivos do aparelho” (ou arraste arquivos para cá).', 'This folder is empty. Use “Import files from device” (or drop files here).')));
     else if(vmode === 'details'){
       const t = xmk('table', 'xpDt', '<thead><tr><th>' + tr('Nome', 'Name') + '</th><th>' + tr('Tamanho', 'Size') + '</th><th>' + tr('Tipo', 'Type') + '</th><th>' + tr('Data de modificação', 'Date Modified') + '</th></tr></thead><tbody></tbody>');
-      ks.forEach(n => { const r = xmk('tr'); r.dataset.id = n.id; if(sel === n.id) r.classList.add('sel'); const c0 = xmk('td'); c0.appendChild(xic(XI[kind(n)], 16)); const s = xmk('span'); s.textContent = n.name; c0.appendChild(s); r.appendChild(c0);
+      ks.forEach(n => { const r = xmk('tr'); r.dataset.id = n.id; if(sel === n.id) r.classList.add('sel'); const c0 = xmk('td'); c0.appendChild(xic(icOf(n), 16)); const s = xmk('span'); s.textContent = n.name; c0.appendChild(s); r.appendChild(c0);
         [n.type === 'd' ? '' : fmt(n.size || 0), typeOf(n), dt(n.t)].forEach(v => { const c = xmk('td'); c.textContent = v; r.appendChild(c); }); r.onclick = e => { e.stopPropagation(); pick(n.id, () => openNode(n), r); }; t.lastChild.appendChild(r); });
       m.appendChild(t);
-    } else { const g = xmk('div', 'xpGrid'); m.appendChild(g); ks.forEach(n => g.appendChild(xicon(n.id, XI[kind(n)], n.name, () => openNode(n), vmode === 'list' ? 16 : 32))); }
+    } else { const g = xmk('div', 'xpGrid'); m.appendChild(g); ks.forEach(n => g.appendChild(xicon(n.id, icOf(n), n.name, () => openNode(n), vmode === 'list' ? 16 : 32))); }
   }
   paintPane(); paintStatus();
   if(!skip){ try{ navigator.storage.estimate().then(e => { if(e.usage !== est.usage || e.quota !== est.quota){ est = e; if(isOpen() && isXp() && !xrn) renderXp(true); } }); }catch(e){} }
@@ -28313,7 +28663,7 @@ function save(list){
   mem = list.slice();
   try{ localStorage.setItem(KEY, JSON.stringify(list)); }catch(e){}
 }
-let have = load().filter(id => id !== 'w95');   /* Windows 95 escondido: só abre digitando win95 */
+let have = load();
 
 /* ---- apps de utilidade ---- */
 /* ---- ícones modernos (estilo padrão): SVG vetorial, sem imagens; no XP continuam os emojis/ícones do Windows ---- */
@@ -28329,7 +28679,6 @@ window.DZI = (function(){
     paint: T('#f97316', '<path d="M24 9C14 9 8 16 8 24c0 9 7 15 16 15 3 0 4-2 3-4s0-4 3-4h6c3 0 5-2 5-5 0-8-8-13-17-13z" ' + W + ' opacity=".96"/><circle cx="17" cy="20" r="2.7" fill="#ef4444"/><circle cx="24" cy="15" r="2.7" fill="#eab308"/><circle cx="32" cy="19" r="2.7" fill="#22c55e"/><circle cx="16" cy="29" r="2.7" fill="#3b82f6"/>'),
     fx: T('#f59e0b', '<path d="M9 14a3 3 0 0 1 3-3h8l4 4h12a3 3 0 0 1 3 3v3H9z" ' + W + ' opacity=".7"/><rect x="9" y="19" width="30" height="19" rx="3" ' + W + '/>'),
     wmp: T('#8b5cf6', '<circle cx="24" cy="24" r="13" ' + W + ' opacity=".96"/><path d="M21 17.5 31 24l-10 6.5z" fill="#8b5cf6"/>'),
-    w95: T('#0ea5e9', [[11,11],[25,11],[11,25],[25,25]].map(a => '<rect x="' + a[0] + '" y="' + a[1] + '" width="12" height="12" rx="2" ' + W + ' opacity=".95"/>').join('')),
     hub: T('#6d5dfc', '<path d="M14 18h20a8 8 0 0 1 8 8v2a5 5 0 0 1-9 3l-2-3H17l-2 3a5 5 0 0 1-9-3v-2a8 8 0 0 1 8-8z" ' + W + '/><path d="M13 23h8M17 19v8" stroke="#6d5dfc" stroke-width="2.6" stroke-linecap="round"/><circle cx="31" cy="22" r="2" fill="#6d5dfc"/><circle cx="35" cy="26" r="2" fill="#6d5dfc"/>'),
     velha: T('#ef4444', '<path d="M19 10v28M29 10v28M10 19h28M10 29h28" ' + S + ' stroke-width="2.6" opacity=".9"/><path d="M12 12l5 5M17 12l-5 5" ' + S + ' stroke-width="2.4"/><circle cx="24" cy="24" r="3.3" ' + S + ' stroke-width="2.4"/>'),
     cobra: T('#22c55e', '<path d="M13 33h14a6 6 0 0 0 0-12h-8a4 4 0 0 1 0-8h14" ' + S + ' stroke-width="5"/><circle cx="35" cy="13" r="4" ' + W + '/><circle cx="36" cy="12" r="1.2" fill="#16a34a"/>'),
@@ -28353,7 +28702,6 @@ const APPS = [
   { id:'paint',icon:'🎨', pt:'PAINT', en:'PAINT', open: () => window.dzPaint.open() },
   { id:'fx',   icon:'📁', pt:'EXPLORADOR DE ARQUIVOS', en:'FILE EXPLORER', open: () => window.dzEx.open() },
   { id:'wmp',  icon:'🎵', pt:'MEDIA PLAYER', en:'MEDIA PLAYER', open: () => window.dzWmp.open() },
-  { id:'w95',  icon:'🪟', pt:'WINDOWS 95', en:'WINDOWS 95', open: () => window.dzW95.open() }
 ];
 function emuList(){
   const all = window.dzEmus || [];
@@ -28438,7 +28786,7 @@ function refresh(){
 /* ---- chamado quando um código certo é digitado ---- */
 window.dzExtrasGrant = function(ids){
   const had = hasAny();
-  (ids || []).forEach(id => { if(id !== 'w95' && have.indexOf(id) < 0) have.push(id); });
+  (ids || []).forEach(id => { if(have.indexOf(id) < 0) have.push(id); });
   save(have); refresh();
   if(!had){ try{ if(typeof uiToast === 'function') uiToast(tr('Aba EXTRAS liberada nas configurações', 'EXTRAS tab unlocked in settings'), 'ok'); }catch(e){} }
 };
@@ -28825,357 +29173,6 @@ html.console.dz-gba-play #gbaOverlay{visibility:visible}   /* o DEAD ZONE parado
 })();
 </script>
 
-<style id="dzW95Style">
-/* ===== WINDOWS 95 (emulador v86, aba EXTRAS) ===== */
-#w95Overlay{position:fixed;inset:0;z-index:99990;display:none;background:#05040c;padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));box-sizing:border-box;font-family:inherit;color:#f1eaff;touch-action:manipulation}
-#w95Overlay.open{display:block}
-#w95Box{width:100%;height:100%;display:flex;flex-direction:column;gap:6px;background:#0d0b07;border:2px solid #6a4bd8;border-radius:8px;padding:6px;box-sizing:border-box;overflow:hidden}
-#w95Head{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-#w95Logo{font-size:13px;font-weight:800;letter-spacing:2px;margin-right:6px}
-#w95Logo span{font-size:10px;opacity:.6;margin-left:6px;letter-spacing:1px}
-.w95b{font:inherit;font-size:12px;font-weight:700;letter-spacing:.5px;color:#f0d9a0;background:#17130b;border:1px solid rgba(232,185,58,.4);border-radius:5px;cursor:var(--xc-link);padding:0 10px;min-height:34px;display:inline-flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent}
-.w95b[disabled]{opacity:.4;cursor:var(--xc-arrow)}
-.w95b.go{background:#1d4d12;border-color:#39ff14;color:#d9ffd0}
-.w95b.clr{border-color:#c94b2c;color:#ffb09a}
-.w95b.set{border-color:#39ff14}
-#w95Mem{font:inherit;font-size:12px;color:#f0d9a0;background:#17130b;border:1px solid rgba(232,185,58,.4);border-radius:5px;min-height:34px;padding:0 6px}
-#w95Sp{flex:1}
-#w95Body{position:relative;flex:1;min-height:0;background:#000;border-radius:4px;overflow:hidden}
-#w95Frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;display:none}
-#w95Body.run #w95Frame{display:block}
-#w95Msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;overflow:auto;text-align:center;font-size:13px;line-height:1.5;color:#d8cfff}
-#w95Body.run #w95Msg{inset:auto 0 0 0;padding:6px 10px;background:rgba(0,0,0,.7);font-size:12px;pointer-events:none}
-#w95Body.run #w95Msg.ok{display:none}
-#w95Msg.err{color:#ff9a8a}
-#w95Msg b{color:#e8b93a}
-#w95Msg .w95h{max-width:560px;text-align:left}
-#w95Msg ul{margin:6px 0;padding-left:18px}
-</style>
-
-<div id="w95Overlay" aria-hidden="true">
-  <div id="w95Box" role="dialog" aria-label="Windows 95">
-    <div id="w95Head">
-      <div id="w95Logo">WINDOWS 95<span>v86</span></div>
-      <button type="button" class="w95b" id="w95HdBtn">💽 DISCO (.img)</button>
-      <button type="button" class="w95b" id="w95CdBtn">💿 CD (.iso)</button>
-      <button type="button" class="w95b" id="w95FdBtn">💾 DISQUETE (.img)</button>
-      <select id="w95Mem" title="Memória RAM"><option value="32">32 MB</option><option value="64" selected>64 MB</option><option value="128">128 MB</option></select>
-      <button type="button" class="w95b go" id="w95Go" disabled>▶ INICIAR</button>
-      <button type="button" class="w95b" id="w95Safe" title="Aperta F5 sozinho durante o boot (modo seguro do Windows 95)">🛡 SEGURO: NÃO</button>
-      <span id="w95Sp"></span>
-      <button type="button" class="w95b" id="w95Cad" disabled>⌨ CTRL+ALT+DEL</button>
-      <button type="button" class="w95b" id="w95Mouse" disabled>🖱 MOUSE</button>
-      <button type="button" class="w95b" id="w95Info" disabled>🔍 INFO</button>
-      <button type="button" class="w95b" id="w95Test">🧪 TESTE</button>
-      <button type="button" class="w95b" id="w95Fs">⛶ TELA CHEIA</button>
-      <button type="button" class="w95b clr" id="w95Close">✕ FECHAR</button>
-    </div>
-    <div id="w95Body">
-      <iframe id="w95Frame" title="Windows 95" allow="autoplay; fullscreen"></iframe>
-      <div id="w95Msg"></div>
-      <pre id="w95Dbg" style="display:none;position:absolute;left:6px;top:6px;margin:0;padding:6px 8px;max-width:calc(100% - 12px);background:rgba(0,0,0,.8);color:#7CFC00;font:11px/1.4 monospace;white-space:pre-wrap;pointer-events:none;z-index:5"></pre>
-    </div>
-    <div id="w95Keys" style="display:none;flex-wrap:wrap;gap:6px"></div>
-    <input type="file" id="w95HdIn" style="display:none">
-    <input type="file" id="w95CdIn" accept=".iso,.img,.bin" style="display:none">
-    <input type="file" id="w95FdIn" accept=".img,.ima,.flp,.vfd,.dsk" style="display:none">
-  </div>
-</div>
-
-<script id="dzW95Script">
-/* ===== WINDOWS 95 DE VERDADE (aba EXTRAS) =====
-   Emulador de PC x86 em JavaScript (v86), baixado da internet quando você aperta INICIAR. O Windows em si NÃO vem
-   no jogo: você escolhe a SUA imagem de disco (.img de um Windows 95 já instalado, ou um .iso de CD + disquete de boot).
-   O emulador roda dentro de um iframe, então o teclado e o mouse vão só para o Windows (nada move o personagem).
-   Libere com o código W95_SECRET_CODE no campo de SENHA do menu DEBUG (o código "utility" NÃO libera mais; o Windows 95 não aparece na aba EXTRAS). */
-(function(){
-'use strict';
-const W95_SECRET_CODE = 'win95';
-const $ = id => document.getElementById(id);
-const ov = $('w95Overlay'), body = $('w95Body'), msgEl = $('w95Msg');
-let frame = $('w95Frame');
-const isOpen = () => ov.classList.contains('open');
-const WIN95_DIR = 'win95/';   /* pasta no GitHub: win95.json (lista) + imagens + (opcional) libv86.js, v86.wasm, seabios.bin, vgabios.bin */
-const files = { hd: null, cd: null, fd: null };
-let items = [], itemsLoaded = false;
-const abs = p => new URL(p, location.href).href;
-const coarse = () => !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
-let urls = [], running = false, muted = false, safe = false;
-
-/* ---- áudio do jogo mudo enquanto o Windows está aberto ---- */
-function mute(){ if(muted) return; muted = true; try{ window.dzAudio.minimum(); window.dzAudio.setHardMute(true); }catch(e){} }
-function unmute(){ if(!muted) return; muted = false; try{ window.dzAudio.restore(); window.dzAudio.setHardMute(false); }catch(e){} }
-
-/* ---- código que roda DENTRO do iframe (injetado como texto) ---- */
-function frameMain(){
-  var J = 'https://cdn.jsdelivr.net/npm/v86@latest/', C = 'https://copy.sh/v86/';
-  var CANDS = [
-    { l: J + 'build/libv86.js', w: J + 'build/v86.wasm', b: J + 'bios/seabios.bin', v: J + 'bios/vgabios.bin' },
-    { l: C + 'build/libv86.js', w: C + 'build/v86.wasm', b: C + 'bios/seabios.bin', v: C + 'bios/vgabios.bin' }
-  ];
-  var sw = 640, sh = 400, emu = null;
-  var exc = { pf: 0, n: {}, last: [], resets: 0, pre: '', rb: [], err: '', hook: '?' };
-  var cl = [];
-  ['log', 'warn', 'error'].forEach(function(k){ var f0 = console[k]; console[k] = function(){ try{ cl.push(k + ': ' + Array.prototype.slice.call(arguments).join(' ').slice(0, 110)); if(cl.length > 6) cl.shift(); }catch(e){} return f0.apply(console, arguments); }; });
-  window.addEventListener('error', function(e){ try{ cl.push('ERRO: ' + String(e.message).slice(0, 110)); if(cl.length > 6) cl.shift(); }catch(x){} });
-  function fit(){
-    if(!emu) return;
-    var s = Math.max(0.1, Math.min(window.innerWidth / sw, window.innerHeight / sh));
-    try{ emu.screen_set_scale(s, s); }catch(e){}
-  }
-  window.addEventListener('resize', fit);
-  window.dzRun = function(cfg, status){
-    var i = 0;
-    if(cfg.local) CANDS.unshift({ l: cfg.local + 'libv86.js', w: cfg.local + 'v86.wasm', b: cfg.local + 'seabios.bin', v: cfg.local + 'vgabios.bin' });
-    function tryNext(){
-      if(i >= CANDS.length){ status('Não consegui baixar o emulador v86. Confira a internet (o jogo precisa acessar cdn.jsdelivr.net) e tente de novo.', 1); return; }
-      var c = CANDS[i++];
-      status('Baixando o emulador… (' + i + '/' + CANDS.length + ')');
-      var s = document.createElement('script'); s.src = c.l;
-      s.onload = function(){ if(!(window.V86 || window.V86Starter)){ tryNext(); return; } boot(c); };
-      s.onerror = function(){ s.remove(); tryNext(); };
-      document.head.appendChild(s);
-    }
-    function boot(c){
-      var V = window.V86 || window.V86Starter, o;
-      status('Iniciando o PC virtual…');
-      o = { wasm_path: c.w, memory_size: cfg.mem * 1048576, vga_memory_size: 8 * 1048576, screen_container: document.getElementById('sc'),
-            bios: { url: c.b }, vga_bios: { url: c.v }, autostart: true };
-      o.cpu_exception_hook = function(n){
-        try{
-          if(n === 14){ exc.pf++; return false; }
-          var c = emu && emu.v86 && emu.v86.cpu;
-          exc.n[n] = (exc.n[n] || 0) + 1;
-          exc.last.push('#' + n + '@' + (c ? ((c.sreg[1] >>> 0).toString(16) + ':' + (c.instruction_pointer[0] >>> 0).toString(16)) : '?'));
-          if(exc.last.length > 8) exc.last.shift();
-        }catch(e){}
-        return false;
-      };
-      var inPM = 0;
-      setInterval(function(){
-        try{
-          var cs = emu.v86.cpu.sreg[1] >>> 0;
-          if(cs === 0x28) inPM = 1;
-          else if(cs === 0xf000 && inPM){ inPM = 0; exc.resets++; exc.pre = exc.last.join(' ');
-            if(exc.resets <= 3) setTimeout(function(){ try{ emu.restart(); }catch(e){ exc.err = 'restart: ' + e; } }, 800);
-          }
-        }catch(e){}
-      }, 250);
-      if(cfg.hd) o.hda = { url: cfg.hd };
-      if(cfg.cd) o.cdrom = { url: cfg.cd };
-      if(cfg.fd) o.fda = { url: cfg.fd };
-      try{ emu = new V(o); }catch(e){ status('Erro ao criar o emulador: ' + (e && e.message || e), 1); return; }
-      window.emu = emu;
-      try{
-        var cp = emu.v86 && emu.v86.cpu;
-        if(cp){
-          cp.cpu_exception_hook = o.cpu_exception_hook; exc.hook = typeof cp.cpu_exception_hook;
-          ['reboot_internal', 'reset_cpu'].forEach(function(k){
-            if(typeof cp[k] !== 'function') return;
-            var f = cp[k];
-            cp[k] = function(){ try{ exc.rb.push(k + ' <- ' + String(new Error().stack).split('\n').slice(2, 5).join(' | ').replace(/https?:\/\/[^ )]*\//g, '')); if(exc.rb.length > 4) exc.rb.shift(); }catch(e){} return f.apply(this, arguments); };
-          });
-        } else exc.err = 'sem cpu';
-      }catch(e){ exc.err = String(e); }
-      var failed = false;
-      emu.add_listener('download-progress', function(e){
-        var mb = function(n){ return (n / 1048576).toFixed(1) + ' MB'; };
-        status('Baixando a imagem… ' + (e && e.total ? mb(e.loaded) + ' de ' + mb(e.total) + ' (' + Math.round(e.loaded / e.total * 100) + '%)' : (e && e.loaded ? mb(e.loaded) : '')));
-      });
-      emu.add_listener('download-error', function(e){ failed = true; status('Falha ao baixar um arquivo (' + ((e && (e.file_name || e.url)) || 'BIOS/disco') + '). Confira o link, o CORS e a internet.', 1); });
-      emu.add_listener('emulator-ready', function(){
-        status('Ligando o PC… a tela pode ficar preta por até 1 minuto. Aguarde.');
-        setTimeout(function(){ if(!failed) status('', 0, 1); }, 30000);
-      });
-      if(cfg.safe) emu.add_listener('emulator-ready', function(){ var n = 0, t = setInterval(function(){ try{ emu.keyboard_send_scancodes([0x3F, 0xBF]); }catch(e){} if(++n > 200) clearInterval(t); }, 300); });
-      emu.add_listener('screen-set-size', function(a){ if(a && a.length >= 2){ sw = a[0] || sw; sh = a[1] || sh; } fit(); });
-      setupTouch();
-    }
-    tryNext();
-  };
-  function setupTouch(){
-    var el = document.getElementById('sc'), lx = 0, ly = 0, t0 = 0, moved = 0, lp = 0, two = 0;
-    function click(btn){ try{ var d = [0, 0, 0]; d[btn] = true; emu.bus.send('mouse-click', d); setTimeout(function(){ emu.bus.send('mouse-click', [0, 0, 0]); }, 60); }catch(e){} }
-    el.style.touchAction = 'none';
-    el.addEventListener('touchstart', function(e){
-      e.preventDefault(); var t = e.touches[0]; lx = t.clientX; ly = t.clientY; t0 = Date.now(); moved = 0; two = e.touches.length > 1;
-      clearTimeout(lp); lp = setTimeout(function(){ if(!moved && !two){ click(2); t0 = 0; } }, 550);
-    }, { passive: false });
-    el.addEventListener('touchmove', function(e){
-      e.preventDefault(); var t = e.touches[0], dx = t.clientX - lx, dy = t.clientY - ly; lx = t.clientX; ly = t.clientY;
-      moved += Math.abs(dx) + Math.abs(dy);
-      if(moved > 8) clearTimeout(lp);
-      try{ emu.bus.send('mouse-delta', [dx * 1.8, -dy * 1.8]); }catch(x){}
-    }, { passive: false });
-    el.addEventListener('touchend', function(e){
-      e.preventDefault(); clearTimeout(lp);
-      if(t0 && moved < 10 && Date.now() - t0 < 300) click(two ? 2 : 0);
-    }, { passive: false });
-  }
-  window.dzKey = function(n){
-    var m = { enter: [0x1C, 0x9C], esc: [0x01, 0x81], tab: [0x0F, 0x8F], bs: [0x0E, 0x8E], del: [0xE0, 0x53, 0xE0, 0xD3], f5: [0x3F, 0xBF], f8: [0x42, 0xC2], up: [0xE0, 0x48, 0xE0, 0xC8], down: [0xE0, 0x50, 0xE0, 0xD0], left: [0xE0, 0x4B, 0xE0, 0xCB], right: [0xE0, 0x4D, 0xE0, 0xCD] };
-    try{ if(m[n]) emu.keyboard_send_scancodes(m[n]); }catch(e){}
-  };
-  window.dzText = function(t){ try{ emu.keyboard_send_text(t); }catch(e){} };
-  window.dzInfo = function(){
-    var r = [], c = document.querySelector('#sc canvas'), d = document.querySelector('#sc div');
-    try{ r.push('CPU rodando: ' + emu.is_running()); }catch(e){ r.push('CPU rodando: ?'); }
-    try{ r.push('instruções: ' + emu.get_instruction_counter()); }catch(e){}
-    r.push('tela VM: ' + sw + 'x' + sh + ' | iframe: ' + innerWidth + 'x' + innerHeight);
-    r.push('canvas: ' + (c ? ((c.style.display || 'css') + ' ' + c.width + 'x' + c.height + ' css ' + (c.style.width || '-') + 'x' + (c.style.height || '-')) : 'sem'));
-    r.push('texto: ' + (d ? ((d.style.display || 'css') + ' | ' + (d.textContent || '').replace(/\s+/g, ' ').slice(0, 140)) : 'sem'));
-    try{
-      var m = emu.read_memory(0xB8000, 4000), tx = '';
-      for(var k = 0; k < 4000; k += 2){ var ch = m[k]; tx += (ch >= 32 && ch < 127) ? String.fromCharCode(ch) : ' '; if((k / 2) % 80 === 79) tx += '\n'; }
-      tx = tx.replace(/ +\n/g, '\n').replace(/\n+/g, '\n').trim();
-      r.push('memória de texto (B8000): ' + (tx ? '\n' + tx.slice(0, 400) : '(vazia)'));
-    }catch(e){ r.push('memória de texto: erro ' + e); }
-    r.push('reinícios do Windows: ' + exc.resets + ' | PF: ' + exc.pf);
-    r.push('exceções: ' + JSON.stringify(exc.n));
-    r.push('últimas: ' + (exc.last.join(' ') || '-') + ' | hook: ' + exc.hook + (exc.err ? ' | ' + exc.err : ''));
-    r.push('reset por: ' + (exc.rb.join(' ## ') || '-'));
-    r.push('console: ' + (cl.join(' ## ') || '-'));
-    if(exc.pre) r.push('antes do reinício: ' + exc.pre);
-    try{
-      var cpu = emu.v86.cpu, vga = cpu.devices.vga;
-      r.push('VGA: gráfico=' + vga.graphical_mode + ' svga=' + vga.svga_enabled + ' ' + (vga.svga_width || 0) + 'x' + (vga.svga_height || 0));
-      r.push('EIP: 0x' + (cpu.instruction_pointer[0] >>> 0).toString(16) + ' CS: 0x' + (cpu.sreg[1] >>> 0).toString(16));
-    }catch(e){ r.push('VGA/EIP: indisponível'); }
-    return r.join('\n');
-  };
-  window.dzCad = function(){ try{ emu.keyboard_send_scancodes([0x1D, 0x38, 0x53, 0xD3, 0xB8, 0x9D]); }catch(e){} };
-  window.dzMouse = function(){ try{ emu.lock_mouse(); }catch(e){} };
-}
-
-/* ---- interface ---- */
-function help(){
-  msgEl.className = ''; body.classList.remove('run');
-  msgEl.innerHTML = '<div class="w95h"><b>Windows 95 original, rodando num PC virtual (v86).</b><br>O Windows não vem junto: escolha a sua imagem.<ul>' +
-    '<li><b>💽 DISCO (.img)</b> — imagem de um <b>Windows 95 já instalado</b> (arquivo bruto, ex.: win95.img). É o jeito mais fácil: escolha e aperte INICIAR.</li>' +
-    '<li><b>💿 CD (.iso)</b> + <b>💾 DISQUETE (.img)</b> — só para instalar do zero (o Windows 95 não dá boot sozinho pelo CD).</li></ul>' +
-    'Não precisa de BIOS: ela é baixada junto com o emulador (precisa de internet na hora de iniciar). Formatos .vhd, .vmdk e .qcow2 não servem: converta para .img bruto.<br>' +
-    'Ou coloque as imagens na pasta <b>win95/</b> do GitHub e liste em <b>win95/win95.json</b> (veja win95/README.md): elas aparecem aqui embaixo.</div>';
-  if(items.length){
-    const l = document.createElement('div'); l.style.cssText = 'display:flex;flex-direction:column;gap:6px;width:min(420px,100%)';
-    items.forEach(it => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'w95b';
-      const ty = it.type === 'cd' ? '💿' : it.type === 'fd' ? '💾' : '💽';
-      b.textContent = ty + ' ' + (it.title || it.file);
-      b.onclick = () => {
-        const k = it.type === 'cd' ? 'cd' : it.type === 'fd' ? 'fd' : 'hd';
-        files[k] = { name: it.title || it.file, url: /^https?:/i.test(it.file) ? it.file : abs(WIN95_DIR + encodeURI(it.file).replace(/%2F/g, '/')) };
-        refresh(); if(k === 'hd') start();
-      };
-      l.appendChild(b);
-    });
-    msgEl.appendChild(l);
-  }
-}
-async function loadList(){
-  if(itemsLoaded) return; itemsLoaded = true;
-  try{
-    const r = await fetch(WIN95_DIR + 'win95.json', { cache: 'no-store' });
-    if(r.ok){ const j = await r.json(); items = (Array.isArray(j) ? j : (j.images || j.games || [])).filter(x => x && x.file); }
-  }catch(e){}
-  if(isOpen() && !running) help();
-}
-function keysBar(){
-  const k = $('w95Keys'); if(k.dataset.ok) return; k.dataset.ok = 1;
-  [['Aa', 'text'], ['⏎', 'enter'], ['Esc', 'esc'], ['Tab', 'tab'], ['⌫', 'bs'], ['Del', 'del'], ['F5', 'f5'], ['F8', 'f8'], ['◀', 'left'], ['▲', 'up'], ['▼', 'down'], ['▶', 'right']].forEach(a => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'w95b'; b.textContent = a[0]; b.style.minWidth = '40px';
-    b.onclick = () => { try{ if(a[1] === 'text'){ const t = prompt('Texto para digitar no Windows:'); if(t) frame.contentWindow.dzText(t); } else frame.contentWindow.dzKey(a[1]); }catch(e){} };
-    k.appendChild(b);
-  });
-}
-function refresh(){
-  [['hd', 'w95HdBtn', '💽 DISCO'], ['cd', 'w95CdBtn', '💿 CD'], ['fd', 'w95FdBtn', '💾 DISQUETE']].forEach(a => {
-    const b = $(a[1]), f = files[a[0]];
-    b.classList.toggle('set', !!f); b.textContent = f ? a[2] + ': ' + (f.name.length > 16 ? f.name.slice(0, 14) + '…' : f.name) : a[2] + (a[0] === 'cd' ? ' (.iso)' : ' (.img)');
-  });
-  $('w95Go').disabled = !(files.hd || files.cd || files.fd);
-  $('w95Go').textContent = running ? '⟲ REINICIAR' : '▶ INICIAR';
-}
-function status(t, err, ok){
-  msgEl.className = (err ? 'err' : '') + (ok ? ' ok' : '');
-  if(t || err) msgEl.textContent = t;
-  if(ok) try{ frame.contentWindow.focus(); }catch(e){}
-}
-function killVM(){
-  running = false; body.classList.remove('run');
-  try{ frame.contentWindow.emu && frame.contentWindow.emu.destroy(); }catch(e){}
-  const nf = frame.cloneNode(false); frame.replaceWith(nf); frame = nf;   /* iframe novo = documento limpo na hora */
-  urls.forEach(u => { try{ URL.revokeObjectURL(u); }catch(e){} }); urls = [];
-  $('w95Cad').disabled = true; $('w95Mouse').disabled = true; $('w95Info').disabled = true; $('w95Keys').style.display = 'none';
-  if(dbgT){ clearInterval(dbgT); dbgT = 0; } $('w95Dbg').style.display = 'none';
-}
-function start(test){
-  if(test !== true && !(files.hd || files.cd || files.fd)) return;
-  killVM();
-  const mk = f => { if(!f) return null; if(f.url) return f.url; const u = URL.createObjectURL(f); urls.push(u); return u; };
-  const cfg = test === true ? { fd: 'https://i.copy.sh/freedos722.img', mem: 32, local: abs(WIN95_DIR) } : { hd: mk(files.hd), cd: mk(files.cd), fd: mk(files.fd), mem: parseInt($('w95Mem').value, 10) || 64, safe: safe, local: abs(WIN95_DIR) };
-  body.classList.add('run'); running = true; refresh(); status('Preparando…');
-  const doc = frame.contentDocument; doc.open();
-  doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#sc{width:100%;height:100%;display:flex;align-items:center;justify-content:center}#sc canvas{display:block}#sc div{color:#ccc;font:14px monospace;white-space:pre}</style></head><body><div id="sc"><div></div><canvas></canvas></div></body></html>');
-  doc.close();
-  const s = doc.createElement('script'); s.textContent = '(' + frameMain.toString() + ')()'; doc.body.appendChild(s);
-  $('w95Cad').disabled = false; $('w95Mouse').disabled = false; $('w95Info').disabled = false;
-  if(coarse()){ keysBar(); $('w95Keys').style.display = 'flex'; }
-  try{ frame.contentWindow.dzRun(cfg, status); }catch(e){ status('Erro ao iniciar: ' + (e && e.message || e), 1); }
-}
-function pick(key, input){
-  input.value = ''; input.onchange = () => { const f = input.files && input.files[0]; if(f){ files[key] = f; refresh(); } };
-  input.click();
-}
-$('w95HdBtn').onclick = () => pick('hd', $('w95HdIn'));
-$('w95CdBtn').onclick = () => pick('cd', $('w95CdIn'));
-$('w95FdBtn').onclick = () => pick('fd', $('w95FdIn'));
-let dbgT = 0;
-$('w95Info').onclick = () => {
-  const p = $('w95Dbg');
-  if(dbgT){ clearInterval(dbgT); dbgT = 0; p.style.display = 'none'; return; }
-  const upd = () => { try{ p.textContent = frame.contentWindow.dzInfo(); }catch(e){ p.textContent = 'sem info: ' + e; } };
-  p.style.display = 'block'; upd(); dbgT = setInterval(upd, 1500);
-};
-$('w95Safe').onclick = () => { safe = !safe; $('w95Safe').textContent = '🛡 SEGURO: ' + (safe ? 'SIM' : 'NÃO'); $('w95Safe').classList.toggle('set', safe); };
-$('w95Go').onclick = () => start();
-$('w95Test').onclick = () => start(true);
-$('w95Cad').onclick = () => { try{ frame.contentWindow.dzCad(); frame.contentWindow.focus(); }catch(e){} };
-$('w95Mouse').onclick = () => { try{ frame.contentWindow.dzMouse(); frame.contentWindow.focus(); }catch(e){} };
-$('w95Fs').onclick = () => { try{ if(document.fullscreenElement) document.exitFullscreen(); else (ov.requestFullscreen || ov.webkitRequestFullscreen).call(ov); }catch(e){} };
-$('w95Close').onclick = () => close();
-
-function open(){
-  if(isOpen()) return;
-  ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false'); mute();
-  try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
-  if(!running) help(); refresh(); loadList();
-}
-function close(){
-  if(!isOpen()) return;
-  killVM(); help(); refresh();
-  try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
-  ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true'); unmute();
-}
-
-/* teclas fora do Windows (foco na página) nunca movem o personagem */
-['keydown', 'keyup', 'keypress'].forEach(t => window.addEventListener(t, e => {
-  if(!isOpen() || ov.contains(e.target)) return;
-  if(window.dzVk && window.dzVk.isOpen()) return;
-  e.stopImmediatePropagation();
-}, true));
-ov.addEventListener('keydown', e => e.stopPropagation());
-ov.addEventListener('keyup', e => e.stopPropagation());
-
-/* gatilho secreto (campo de SENHA do menu DEBUG) e registro na aba EXTRAS */
-window.dzW95Try = function(v){
-  if(String(v || '').trim().toLowerCase() !== W95_SECRET_CODE.toLowerCase()) return false;
-  open(); return true;
-};
-window.dzW95 = { open, close, isOpen };
-help(); refresh();
-})();
-</script>
-
 <style id="dzEmuFxStyle">
 /* fundo animado (canvas) e painel de ajustes ⚙, compartilhados pelo hub e pela lista de jogos */
 .fxBg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;border-radius:inherit;display:none}
@@ -29271,13 +29268,13 @@ html.console .emuIcoBtn{width:clamp(52px,7vh,76px);height:clamp(52px,7vh,76px);f
 #tabExtras .xt-row .btn.xt-emu:hover{border-color:var(--xc)}
 #tabExtras .xt-row .btn.xt-hub{min-height:64px;font-weight:800;letter-spacing:1px}
 
-/* ===== CONTRASTE DAS LISTAS SUSPENSAS DOS MENUS EXTRAS (JDoodle, editor, Windows 95) ===== */
-#jdLang,.jsel,.es,#w95Mem,#jdOverlay select,#edOverlay select,#tabExtras select{color-scheme:dark;color:#fbefd9 !important;background-color:#1a120a !important}
-#jdLang option,.jsel option,.es option,#w95Mem option,#jdOverlay select option,#edOverlay select option,#tabExtras select option,
-#jdLang optgroup,.jsel optgroup,.es optgroup,#w95Mem optgroup{background-color:#1a120a !important;color:#fbefd9 !important;font-weight:700;padding:6px 10px}
-#jdLang option:checked,.jsel option:checked,.es option:checked,#w95Mem option:checked,
-#jdLang option:hover,.jsel option:hover,.es option:hover,#w95Mem option:hover{background-color:#e8b93a !important;background-image:linear-gradient(#e8b93a,#e8b93a) !important;color:#140d05 !important}
-#jdLang option:disabled,.jsel option:disabled,.es option:disabled,#w95Mem option:disabled{color:#8c7a58 !important}
+/* ===== CONTRASTE DAS LISTAS SUSPENSAS DOS MENUS EXTRAS (JDoodle, editor) ===== */
+#jdLang,.jsel,.es,#jdOverlay select,#edOverlay select,#tabExtras select{color-scheme:dark;color:#fbefd9 !important;background-color:#1a120a !important}
+#jdLang option,.jsel option,.es option option,#jdOverlay select option,#edOverlay select option,#tabExtras select option,
+#jdLang optgroup,.jsel optgroup,.es optgroup optgroup{background-color:#1a120a !important;color:#fbefd9 !important;font-weight:700;padding:6px 10px}
+#jdLang option:checked,.jsel option:checked,.es option:checked option:checked,
+#jdLang option:hover,.jsel option:hover,.es option:hover option:hover{background-color:#e8b93a !important;background-image:linear-gradient(#e8b93a,#e8b93a) !important;color:#140d05 !important}
+#jdLang option:disabled,.jsel option:disabled,.es option:disabled option:disabled{color:#8c7a58 !important}
 
 /* ===== EMULADOR: menu único (☰ MENU) ===== */
 #gbaMoreWrap{display:none;position:relative}
@@ -31040,7 +31037,8 @@ html.dz-xp #mgBox.xp-small .mgslot{min-height:60px}
 html.dz-xp #emuBox>canvas.fxBg{position:absolute;inset:0;z-index:0}
 html.dz-xp #gbaOverlay:not(.playing) #gbaList>*:not(.gbarom){background:rgba(8,5,20,.82)!important;border-radius:10px;color:#f1eaff!important}
 html.dz-xp #gbaOverlay.xp-full{bottom:0!important;z-index:100025!important;padding:0!important;background:#000!important}
-html.dz-xp #gbaOverlay.xp-full #gbaBox{width:100%!important;height:100%!important;border:0!important;border-radius:0!important;padding:0!important}
+html.dz-xp #gbaOverlay.xp-full{top:0!important;left:0!important;right:0!important;display:flex!important;align-items:center;justify-content:center}
+html.dz-xp #gbaOverlay.xp-full #gbaBox{position:relative!important;left:auto!important;top:auto!important;transform:none!important;margin:0 auto!important;width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important}
 html.dz-xp #gbaOverlay.xp-full .xpTb{display:none}
 .xpFsX{display:none;position:absolute;top:6px;right:6px;z-index:100026;padding:5px 10px;border:1px solid rgba(255,255,255,.6);border-radius:4px;background:rgba(0,0,0,.55);color:#fff;font:12px var(--xf);cursor:var(--xc-link);opacity:.55}
 .xpFsX:hover{opacity:1}
@@ -31247,6 +31245,12 @@ function task(k, ic, label){
     bar.appendChild(b); tasks[k] = b; }
   if(b.dataset.l !== label){ b.dataset.l = label; b.textContent = ''; const s = mkEl('span'); s.textContent = label; b.append(ico(ic, 16), s); }
   return b;
+}
+let hiddenWins = [];
+function showDeskToggle(){   /* "Mostrar a área de trabalho": minimiza tudo; de novo, traz de volta as mesmas janelas */
+  const open = Object.keys(tasks).filter(k => !isMin(k));
+  if(open.length){ hiddenWins = open; open.forEach(minimize); }
+  else{ hiddenWins.forEach(k => { if(tasks[k]) restore(k); }); hiddenWins = []; }
 }
 function untask(k){ if(tasks[k]){ tasks[k].remove(); delete tasks[k]; } if(activeKey === k) activeKey = null; }
 
@@ -31986,13 +31990,28 @@ function buildDesk(){
   const fb = (a, ic, t) => { const b = m.querySelector('[data-a="' + a + '"]'); b.append(ico(ic, 20), document.createTextNode(' ' + t)); b.onclick = () => { xps('windows_xp_menu_command', .8); powerDlg(a); }; };
   fb('logoff', I.key, tr('Fazer Logoff', 'Log Off')); fb('off', I.power, tr('Desligar', 'Turn Off'));
   document.body.append(d, bar, m); paintWp();
-  d.addEventListener('contextmenu', deskCtx); bar.addEventListener('contextmenu', e => e.preventDefault()); renderQl();
+  d.addEventListener('contextmenu', deskCtx); bar.addEventListener('contextmenu', e => { e.preventDefault(); if(e.target.closest('.xpTask,#xpQl button,#xpStart,#xpTray button')) return;
+    const any = Object.keys(tasks).length > 0;
+    ctx(e, [[hiddenWins.length || !any ? tr('Restaurar janelas', 'Show open windows') : tr('Mostrar a área de trabalho', 'Show the Desktop'), any ? showDeskToggle : null, true], '-',
+      [tr('Minimizar todas as janelas', 'Minimize all windows'), any ? () => { Object.keys(tasks).filter(k => !isMin(k)).forEach(minimize); } : null], '-', [tr('Propriedades', 'Properties'), () => controlPanel('look')]]); }); renderQl();
   { const fb = mkEl('button'); fb.type = 'button'; fb.id = 'xpTrFs'; $('xpTray').insertBefore(fb, $('xpTrSnd')); fb.onclick = () => { xps('windows_navigation_start', .8); deskFs(); }; fsSync(); }
   setIc($('xpTrSnd'), I.sound, 16); $('xpTrSnd').onclick = () => { xps('windows_navigation_start', .8); controlPanel('snd'); };
   $('xpClk').style.cursor = 'default'; $('xpClk').onclick = () => controlPanel('time');
   d.addEventListener('click', () => { menu(false); d.querySelectorAll('.xpIc.sel').forEach(x => x.classList.remove('sel')); });
   document.addEventListener('pointerdown', e => { const mm = $('xpMenu'); if(mm && mm.classList.contains('on') && !e.target.closest('#xpMenu,#xpStart')) menu(false); }, true);
   document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('xpModal') && $('xpModal').classList.contains('on')) closeModal(); else if($('xpMenu').classList.contains('on')) menu(false); } });
+  /* atalhos de teclado do Windows na área de trabalho */
+  document.addEventListener('keydown', e => {
+    if(style !== 'xp' || !document.documentElement.classList.contains('xp-desk')) return;
+    if(e.target.closest && e.target.closest('input,textarea,select,[contenteditable="true"]')) return;
+    if($('xpModal') && $('xpModal').classList.contains('on')) return;
+    if(e.ctrlKey && e.key === 'Escape'){ e.preventDefault(); const on = !$('xpMenu').classList.contains('on'); if(on){ xps('windows_xp_start', .8); fillStartMenu(); } menu(on); return; }
+    if(e.key === 'd' && e.metaKey){ e.preventDefault(); showDeskToggle(); return; }
+    if(activeKey) return;   /* só age quando nenhuma janela está em foco */
+    const sel = document.querySelector('#xpIcons .xpIc.sel'); if(!sel) return;
+    if(e.key === 'Delete'){ e.preventDefault(); trashShortcut(itemOf(sel.dataset.k)); }
+    else if(e.key === 'Enter'){ e.preventDefault(); const it = itemOf(sel.dataset.k); if(it) launch(it); }
+  });
   $('xpStart').onclick = e => { e.stopPropagation(); const willOpen = !$('xpMenu').classList.contains('on'); if(willOpen){ xps('windows_xp_start', .8); fillStartMenu(); } menu(); };
   const all = $('xpSmAll'), fly = $('xpFly');
   all.onclick = e => { e.stopPropagation(); xps('windows_navigation_start', .8); fly.classList.toggle('on'); };
