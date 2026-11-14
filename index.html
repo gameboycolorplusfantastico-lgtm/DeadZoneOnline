@@ -14247,6 +14247,13 @@ function pollGamepad(){
     gpPrevButtons = gp.buttons.map(b => b.pressed);
     return;
   }
+  // Área de trabalho XP aberta: o controle vira um mouse virtual (ponteiro)
+  if(window.dzPadCursor && window.dzPadCursor.update(gp, btn, prev)){
+    gpVec.x = 0; gpVec.y = 0; gpTurn = 0; gpLook = 0;
+    fireHeld = false; gpFireHeld = false; gpTriggerWasHeld = false;
+    gpPrevButtons = gp.buttons.map(b => b.pressed);
+    return;
+  }
   const menuRoot = gpUpdateMenuRoot();
   if(menuRoot){
     gpMenuUpdate(gp, menuRoot, btn, prev);
@@ -14456,6 +14463,15 @@ function gpUpdateMenuRoot(){
 function gpMenuMove(root, dx, dy){
   const list = gpFocusables(root);
   if(!gpMenuEl || !list.includes(gpMenuEl)){ gpSetFocus(gpDefaultFocus(list), true); return; }
+  /* Aba CONTROLES (remapear): as colunas de botões ficam à direita de sliders/caixas largas, então a busca espacial
+     pulava a lista toda (no Xbox não dava para chegar nos botões). Aqui, cima/baixo andam na ORDEM da tela.
+     No console o teclado/mouse não existe: a lista de teclas é pulada e vai direto para os botões do controle. */
+  if(dy !== 0 && dx === 0 && root.id === 'settingsModal' && gpMenuEl.closest && gpMenuEl.closest('#tabControls')){
+    const skipKb = !!window.DZ_CONSOLE;
+    const seq = list.filter(e => e.closest('#tabControls') && !(skipKb && (e.closest('#bindList,#bindWpnList') || e.id === 'bindReset')));
+    const ci = seq.indexOf(gpMenuEl), nx = ci >= 0 ? seq[ci + dy] : null;
+    if(nx){ gpSetFocus(nx); return; }
+  }
   const cr = gpMenuEl.getBoundingClientRect();
   const cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2;
   /* 1º: vizinho ALINHADO (mesma linha para esq/dir, mesma coluna para cima/baixo), o mais próximo.
@@ -19567,6 +19583,197 @@ function chatSubmit(){
   }, true));
 
   window.dzVk = { wanted, menuWanted, isOpen: () => S.open, open, close, pad, key, forInput };
+})();
+
+
+/* ===== PONTEIRO VIRTUAL DO CONTROLE (área de trabalho XP no Xbox / consoles) =====
+   Com o controle conectado e a área de trabalho XP aberta, o analógico esquerdo move um ponteiro de mouse.
+   A = clique (segura = arrastar, 2 cliques rápidos = duplo clique) · X = botão direito · B = fechar/voltar · Y/START = menu Iniciar
+   LT = devagar · RT = clique · analógico direito = rolar · R3 = centralizar. Campos de texto abrem o teclado virtual. */
+(function(){
+  const root = document.documentElement, PID = 77;
+  let el = null, hint = null, x = 0, y = 0, inited = false, hover = null, down = null, cap = null, downBtn = 0, lastClk = {t:0,x:0,y:0,el:null}, lastT = 0, kind = '', hx = 0, hy = 0, hintT = 0;
+  const imgs = {};
+  const active = () => root.classList.contains('xp-desk');
+  function cssCur(name){
+    if(imgs[name]) return imgs[name];
+    const v = getComputedStyle(root).getPropertyValue('--xc-' + name).trim(), m = v.match(/url\((.*?)\)\s*(\d+)\s+(\d+)/);
+    return imgs[name] = m ? { u: 'url(' + m[1] + ')', x: +m[2], y: +m[3] } : { u: '', x: 0, y: 0 };
+  }
+  function mk(){
+    el = document.createElement('div'); el.id = 'dzPadCur';
+    el.style.cssText = 'position:fixed;left:0;top:0;width:32px;height:32px;z-index:2147483647;pointer-events:none;display:none;background-repeat:no-repeat;will-change:transform';
+    document.body.appendChild(el);
+    hint = document.createElement('div'); hint.id = 'dzPadHint';
+    hint.style.cssText = 'position:fixed;right:8px;bottom:34px;z-index:2147483646;pointer-events:none;background:rgba(0,0,0,.72);color:#fff;font:11px Tahoma,Arial,sans-serif;padding:5px 8px;border-radius:4px;display:none;line-height:1.5';
+    hint.innerHTML = '<b>A</b> ' + 'clique · <b>X</b> botão direito · <b>B</b> fechar · <b>Y</b> Iniciar · <b>LT</b> lento · <b>LB/RB</b> trocar janela · <b>R-stick</b> rolar';
+    document.body.appendChild(hint);
+  }
+  function setKind(k){
+    if(k === kind || !el) return; kind = k; const c = cssCur(k); el.style.backgroundImage = c.u; hx = c.x; hy = c.y;
+  }
+  function kindOf(t){
+    if(!t || !t.closest) return 'arrow';
+    if(t.closest('button:disabled,input:disabled,select:disabled,textarea:disabled')) return 'no';
+    if(t.closest('input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=button],[type=submit]),textarea,[contenteditable=true],[contenteditable=""]')) return 'text';
+    if(t.closest('a[href],button,summary,select,label[for],[role=button],[onclick],input,.xpIc,.xpLk,.xpTbb,.xpMb,.xpDi,.xpBh')) return 'link';
+    return 'arrow';
+  }
+  const chain = n => { const a = []; while(n){ a.push(n); n = n.parentNode; } return a; };
+  function ev(t, type, o, Ctor){
+    if(!t) return null;
+    const C = Ctor || (type.startsWith('pointer') ? PointerEvent : MouseEvent);
+    const init = Object.assign({ bubbles: true, cancelable: true, composed: true, view: window, clientX: x, clientY: y, screenX: x, screenY: y, button: 0, buttons: 0 }, o || {});
+    if(C === PointerEvent) Object.assign(init, { pointerId: PID, pointerType: 'mouse', isPrimary: true, width: 1, height: 1, pressure: init.buttons ? .5 : 0 });
+    const e = new C(type, init); t.dispatchEvent(e); return e;
+  }
+  function setHover(t){
+    if(t === hover) return;
+    const old = hover; hover = t;
+    const a = chain(old), b = chain(t);
+    if(old){ ev(old, 'pointerout'); ev(old, 'mouseout', { relatedTarget: t }); a.filter(n => n.nodeType === 1 && !b.includes(n)).forEach(n => { ev(n, 'pointerleave', { bubbles: false }); ev(n, 'mouseleave', { bubbles: false, relatedTarget: t }); }); }
+    if(t){ ev(t, 'pointerover'); ev(t, 'mouseover', { relatedTarget: old }); b.filter(n => n.nodeType === 1 && !a.includes(n)).reverse().forEach(n => { ev(n, 'pointerenter', { bubbles: false }); ev(n, 'mouseenter', { bubbles: false, relatedTarget: old }); }); }
+    setKind(kindOf(t));
+  }
+  // setPointerCapture com ponteiro virtual: nosso próprio "capture" (o do navegador recusaria o id)
+  const oSet = Element.prototype.setPointerCapture, oRel = Element.prototype.releasePointerCapture, oHas = Element.prototype.hasPointerCapture;
+  Element.prototype.setPointerCapture = function(id){ if(id === PID){ cap = this; return; } return oSet.call(this, id); };
+  Element.prototype.releasePointerCapture = function(id){ if(id === PID){ if(cap === this) cap = null; return; } return oRel.call(this, id); };
+  Element.prototype.hasPointerCapture = function(id){ return id === PID ? cap === this : oHas.call(this, id); };
+
+  const under = () => { if(el) el.style.display = 'none'; const t = document.elementFromPoint(x, y); if(el) el.style.display = 'block'; return t; };
+  function move(){
+    const t = under();
+    if(!down) setHover(t); else setHover(t);
+    const dst = cap || t || document.body;
+    ev(dst, 'pointermove', { buttons: down ? (downBtn === 2 ? 2 : 1) : 0 });
+    ev(dst, 'mousemove', { buttons: down ? (downBtn === 2 ? 2 : 1) : 0 });
+    if(down && down.range) setRange(down.range);
+  }
+  function setRange(r){
+    const b = r.getBoundingClientRect(), f = Math.max(0, Math.min(1, (x - b.left) / Math.max(1, b.width)));
+    const mn = +r.min || 0, mx = r.max === '' ? 100 : +r.max, st = +r.step || 1;
+    const v = Math.round((mn + f * (mx - mn)) / st) * st; if(String(v) === r.value) return;
+    r.value = v; r.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  const focusable = t => t && t.closest && t.closest('input,textarea,select,button,[tabindex],[contenteditable=true],[contenteditable=""]');
+  const textLike = t => t && t.closest && t.closest('input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file],[type=button],[type=submit],[type=image],[type=hidden]),textarea,[contenteditable=true],[contenteditable=""]');
+  function press(b){
+    const t = under() || document.body; setHover(t); down = { t, x, y }; downBtn = b;
+    ev(t, 'pointerdown', { button: b, buttons: b === 2 ? 2 : 1 });
+    const md = ev(t, 'mousedown', { button: b, buttons: b === 2 ? 2 : 1, detail: 1 });
+    if(b === 0){
+      const f = focusable(t);
+      if(f && !f.disabled && !(md && md.defaultPrevented)){ try{ f.focus({ preventScroll: true }); }catch(_){} } else if(!(md && md.defaultPrevented) && document.activeElement && document.activeElement !== document.body){ try{ document.activeElement.blur(); }catch(_){} }
+      const r = t.closest && t.closest('input[type=range]'); if(r && !r.disabled){ down.range = r; setRange(r); }
+    }
+  }
+  function release(b){
+    if(!down) return; const d = down; down = null;
+    const t = cap || under() || document.body; cap = null;
+    const o = { button: b, buttons: 0 };
+    ev(t, 'pointerup', o); ev(t, 'mouseup', o);
+    if(b === 2){ ev(d.t, 'contextmenu', { button: 2, buttons: 0 }); return; }
+    if(d.range){ d.range.dispatchEvent(new Event('change', { bubbles: true })); return; }
+    // clique = soltou sobre o mesmo elemento (ou um ancestral comum)
+    let ct = t === d.t ? t : (chain(d.t).find(n => n.nodeType === 1 && n.contains(t)) || null);
+    if(!ct || ct === document.documentElement && t !== d.t) return;
+    const now = performance.now(), dbl = (now - lastClk.t < 500 && Math.hypot(x - lastClk.x, y - lastClk.y) < 8 && lastClk.el === ct);
+    const sel = ct.closest && ct.closest('select');
+    if(sel && !sel.disabled){
+      const n = sel.options.length; if(n){ sel.selectedIndex = (sel.selectedIndex + 1) % n; sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      return;
+    }
+    const tl = textLike(ct);
+    if(tl && !tl.disabled && (!tl.readOnly || tl.dataset.dzRo === '1')) openVk(tl);   // antes do clique, para o teclado do jogo não abrir a versão simples
+    ev(ct, 'click', { detail: dbl ? 2 : 1 });
+    if(dbl){ ev(ct, 'dblclick', { detail: 2 }); lastClk = { t: 0, x: 0, y: 0, el: null }; } else lastClk = { t: now, x, y, el: ct };
+  }
+  function openVk(f){
+    const vk = window.dzVk; if(!vk || vk.isOpen()) return;
+    const rich = f.isContentEditable, multi = rich || f.tagName === 'TEXTAREA';
+    const title = (f.getAttribute('placeholder') || f.getAttribute('aria-label') || f.title || (multi ? 'TEXTO' : '')).slice(0, 40);
+    vk.open({
+      title, value: multi ? '' : f.value, max: multi ? 400 : (f.maxLength > 0 ? f.maxLength : 80), upper: false,
+      onOk: t => {
+        if(multi){
+          if(!t) return; try{ f.focus({ preventScroll: true }); }catch(_){}
+          if(rich){ document.execCommand('insertText', false, t); }
+          else { const e = f.selectionEnd == null ? f.value.length : f.selectionEnd; f.setRangeText(t, e, e, 'end'); f.dispatchEvent(new Event('input', { bubbles: true })); }
+        } else {
+          f.value = t; f.dispatchEvent(new Event('input', { bubbles: true })); f.dispatchEvent(new Event('change', { bubbles: true }));
+          // Enter para confirmar (renomear, pesquisar...)
+          if(f.dataset.dzEnter !== '0'){ window.dzPadT = 0; const o = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true }; f.dispatchEvent(new KeyboardEvent('keydown', o)); f.dispatchEvent(new KeyboardEvent('keyup', o)); }
+        }
+      }
+    });
+  }
+  function scrollable(t){
+    for(let n = t; n && n !== document.documentElement; n = n.parentElement){
+      const cs = getComputedStyle(n);
+      if(/(auto|scroll)/.test(cs.overflowY) && n.scrollHeight > n.clientHeight + 1) return n;
+    }
+    return null;
+  }
+  function back(){
+    const cx = document.getElementById('xpCx'); if(cx && cx.classList.contains('on')){ cx.classList.remove('on'); return; }
+    const dd = document.querySelector('.xpDd'); if(dd){ dd.remove(); return; }
+    const menu = document.getElementById('xpMenu');
+    if(menu && getComputedStyle(menu).display !== 'none' && menu.classList.contains('on')){ const b = document.getElementById('xpStart'); if(b) b.click(); return; }
+    const t = under(), scopes = '.xpModal,.xpWin,#calcBox,#edBox,#jdBox,#paintBox,#mgBox,#emuBox,#lgBox,#gbaBox,#exBox,#wmpBox';
+    let w = t && t.closest && t.closest(scopes);
+    if(!w){ const all = Array.from(document.querySelectorAll(scopes)).filter(n => n.offsetParent !== null || getComputedStyle(n).position === 'fixed'); w = all[all.length - 1]; }
+    if(w){ const c = w.querySelector('.cl,button.close,[data-close],.xpClose,.tbX'); if(c){ c.click(); return; } }
+    window.dzPadT = 0; const o = { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true };
+    (document.activeElement || document.body).dispatchEvent(new KeyboardEvent('keydown', o));
+  }
+  let ptrInApps = false;   // L3 nos apps (calculadora, editor...): troca entre ponteiro e navegação por foco
+  function yielding(btn, prev){
+    let root = null; try{ root = gpActiveMenuRoot(); }catch(_){}
+    const gba = document.getElementById('gbaOverlay');
+    if(gba && getComputedStyle(gba).display !== 'none') return true;   // emulador: o controle é do jogo
+    if(!root || !/^(gba|emu|lg|ed|calc|jd|daw|paint|ex|wmp|mg)Overlay$/.test(root.id)) return false;   // só os apps; o menu principal fica escondido atrás da área de trabalho
+    if(btn(10) && !prev(10)) ptrInApps = !ptrInApps;
+    return !ptrInApps;
+  }
+  function update(gp, btn, prev){
+    if(active() && yielding(btn, prev)){ if(el){ el.style.display = 'none'; hint.style.display = 'none'; } return false; }
+    if(!active()){ if(el){ el.style.display = 'none'; hint.style.display = 'none'; } if(inited){ inited = false; down = null; cap = null; hover = null; } return false; }
+    if(!el) mk();
+    if(!inited){ inited = true; x = x || innerWidth / 2; y = y || innerHeight / 2; lastT = performance.now(); hintT = lastT; setKind('arrow'); }
+    const now = performance.now(), dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+    const dz = v => { const a = Math.abs(v); return a < .16 ? 0 : Math.sign(v) * (a - .16) / .84; };
+    let ax = dz(gp.axes[0] || 0), ay = dz(gp.axes[1] || 0);
+    if(btn(14)) ax -= 1; if(btn(15)) ax += 1; if(btn(12)) ay -= 1; if(btn(13)) ay += 1;
+    const slow = gp.buttons[6] ? Math.max(gp.buttons[6].value || 0, gp.buttons[6].pressed ? 1 : 0) : 0;
+    const spd = (innerWidth > 900 ? 820 : 640) * (1 - .8 * slow);
+    const mag = Math.hypot(ax, ay), cur = mag > 1 ? 1 / mag : 1;
+    const moved = mag > 0;
+    if(moved){ const k = Math.pow(Math.min(1, mag), 1.6) / Math.max(mag, .001); x += ax * k * spd * dt * (mag > 1 ? cur : 1); y += ay * k * spd * dt * (mag > 1 ? cur : 1); }
+    if(btn(11) && !prev(11)){ x = innerWidth / 2; y = innerHeight / 2; }
+    x = Math.max(0, Math.min(innerWidth - 1, x)); y = Math.max(0, Math.min(innerHeight - 1, y));
+    el.style.display = 'block'; el.style.transform = 'translate(' + (x - hx) + 'px,' + (y - hy) + 'px)';
+    if(now - hintT < 9000 || btn(8)) hint.style.display = 'block'; else hint.style.display = 'none';
+    if(moved || !hover) move();
+    // cliques
+    const L = btn(0) || btn(7), Lp = prev(0) || prev(7);
+    if(L && !Lp && !down) press(0);
+    else if(!L && Lp && down && downBtn === 0) release(0);
+    if(btn(2) && !prev(2) && !down) press(2);
+    else if(!btn(2) && prev(2) && down && downBtn === 2) release(2);
+    if(btn(1) && !prev(1)) back();
+    if((btn(3) && !prev(3)) || (btn(9) && !prev(9))){ const b = document.getElementById('xpStart'); if(b) b.click(); }
+    if(btn(4) && !prev(4) && window.dzXp && window.dzXp.cycle) window.dzXp.cycle(-1);   // LB: janela anterior
+    if(btn(5) && !prev(5) && window.dzXp && window.dzXp.cycle) window.dzXp.cycle(1);    // RB: próxima janela
+    // rolar
+    const sy = dz(gp.axes[3] || 0);
+    if(sy){
+      const t = hover || under(), w = ev(t, 'wheel', { deltaY: sy * 60, deltaMode: 0 }, WheelEvent);
+      if(!(w && w.defaultPrevented)){ const sc = scrollable(t); if(sc) sc.scrollTop += sy * 900 * dt; }
+    }
+    return true;
+  }
+  window.dzPadCursor = { update, active };
 })();
 
 function netHostOnData(p, d){
@@ -28008,27 +28215,36 @@ const FAKE_TREE = {
     D('Windows Media Player', F('wmplayer.exe', 196, { run:'wmp', ic:11 }), F('wmpcd.dll', 112), F('wmpui.dll', 450), F('wmp.ini', 1), D('Skins', F('Headspace.wmz', 220), F('Revert.wmz', 95), F('Classico.wmz', 140)), F('mplayer2.exe', 24, { run:'wmp', ic:11 })),
     D('Jogos', F('jogos.exe', 880, { run:'games' }), F('Paciencia.exe', 150, { run:'games' }), F('Campo Minado.exe', 98, { run:'games' }), F('placar.dat', 4), F('jogos.hlp', 33)),
     D('Emuladores', F('emulador.exe', 3400, { run:'emu' }), D('Cores', F('gba_core.dll', 1800), F('snes_core.dll', 2100), F('n64_core.dll', 3900)), D('Saves', F('leiame.txt', 1, { text:LEIAME('Emuladores', 'Os saves dos jogos ficam guardados no navegador.') })), F('emulador.ini', 1)),
-    D('Internet Explorer', F('iexplore.exe', 93, { ic:175 }), F('ieproxy.dll', 80), F('hmmapi.dll', 56), D('Connection Wizard', F('icwconn1.exe', 214), F('icwconn2.exe', 94), F('icwhelp.dll', 40))),
-    D('Outlook Express', F('msimn.exe', 244, { ic:175 }), F('msoe.dll', 3200), F('wab.exe', 280), F('oeimport.dll', 64)),
-    D('Movie Maker', F('moviemk.exe', 4900, { ic:143 }), D('Shared', F('mmeffect.dll', 700), F('mmtrans.dll', 540))),
-    D('Messenger', F('msmsgs.exe', 1600, { ic:143 }), F('msgsc.dll', 900), F('msgslang.dll', 120)),
-    D('NetMeeting', F('conf.exe', 440), F('nmchat.dll', 130), F('nmwb.dll', 330)),
+    D('Internet Explorer', F('iexplore.exe', 93, { ic:175, run:'fk:ie' }), F('ieproxy.dll', 80), F('hmmapi.dll', 56), D('Connection Wizard', F('icwconn1.exe', 214), F('icwconn2.exe', 94), F('icwhelp.dll', 40))),
+    D('Outlook Express', F('msimn.exe', 244, { ic:175, run:'fk:oe' }), F('msoe.dll', 3200), F('wab.exe', 280), F('oeimport.dll', 64)),
+    D('Movie Maker', F('moviemk.exe', 4900, { ic:143, run:'fk:mm' }), D('Shared', F('mmeffect.dll', 700), F('mmtrans.dll', 540))),
+    D('Messenger', F('msmsgs.exe', 1600, { ic:143, run:'fk:msn' }), F('msgsc.dll', 900), F('msgslang.dll', 120)),
+    D('NetMeeting', F('conf.exe', 440, { run:'fk:conf' }), F('nmchat.dll', 130), F('nmwb.dll', 330)),
     D('MSN Gaming Zone', D('Windows', F('zclientm.exe', 480), F('zrt.dll', 210))),
     D('Online Services', F('desktop.ini', 1), F('leiame.txt', 1, { text:LEIAME('Online Services', 'Serviços online não estão disponíveis nesta versão.') })),
     D('Common Files', D('Microsoft Shared', D('MSInfo', F('msinfo32.exe', 330), F('msinfo.dll', 780)), D('Web Folders', F('msonsext.dll', 160), F('msnpxy.dll', 90)), D('Speech', F('spcommon.dll', 120)), D('VGX', F('vgx.dll', 820), F('vgx.dat', 12))), D('System', D('ado', F('msado15.dll', 520), F('msadox.dll', 96)), F('msado15.dll', 520), F('wab32.dll', 640)), D('Services', F('sqlmap.ini', 1))),
-    D('Windows NT', D('Acessórios', F('wordpad.exe', 214), F('mspaint.exe', 330, { run:'paint', ic:7 }), F('hypertrm.exe', 76)), D('Pinball', F('PINBALL.EXE', 540), F('PINBALL.MID', 28), F('PINBALL.DAT', 1100))),
-    D('WindowsUpdate', F('wuaucpl.cpl', 280), F('wupdinfo.log', 6, { text:'Windows Update - registro\r\n2004-08-04 12:01:07  Nenhuma atualização pendente.\r\n2004-08-04 12:01:08  Verificação concluída.\r\n' })),
+    D('Windows NT', D('Acessórios', F('wordpad.exe', 214, { run:'ed', ic:306 }), F('mspaint.exe', 330, { run:'paint', ic:7 }), F('hypertrm.exe', 76)), D('Pinball', F('PINBALL.EXE', 540), F('PINBALL.MID', 28), F('PINBALL.DAT', 1100))),
+    D('WindowsUpdate', F('wuaucpl.cpl', 280, { run:'fk:wupdmgr' }), F('wupdinfo.log', 6, { text:'Windows Update - registro\r\n2004-08-04 12:01:07  Nenhuma atualização pendente.\r\n2004-08-04 12:01:08  Verificação concluída.\r\n' })),
     D('Uninstall Information', F('desktop.ini', 1)),
-    D('xerox', F('xrxctrl.dll', 410))
+    D('xerox', F('xrxctrl.dll', 410)),
+    D('Microsoft Office', D('Office11', F('WINWORD.EXE', 12900, { ic:308 }), F('EXCEL.EXE', 10400), F('POWERPNT.EXE', 7800), F('OUTLOOK.EXE', 11600, { run:'fk:oe', ic:175 }), F('MSACCESS.EXE', 6200), F('1046', 0)), D('Templates', F('Normal.dot', 28), F('Blank.xlt', 12)), F('leiame.txt', 1, { text:LEIAME('Microsoft Office', 'Pacote de escritório (somente ilustrativo).') })),
+    D('Adobe', D('Acrobat 6.0', D('Reader', F('AcroRd32.exe', 3600), F('AcroRd32.dll', 6400), D('Help', F('reader.chm', 880)), D('plug_ins', F('Annots.api', 740), F('Search.api', 310))))),
+    D('WinRAR', F('WinRAR.exe', 660), F('Rar.exe', 330), F('UnRAR.exe', 210), F('Rar.txt', 52, { text:'WinRAR - arquivador de arquivos compactados.\r\n' }), F('license.txt', 4, { text:'Licença de avaliação de 40 dias.\r\n' })),
+    D('Winamp', F('winamp.exe', 1200), F('winamp.ini', 2), D('Plugins', F('in_mp3.dll', 220), F('out_wave.dll', 80), F('vis_nsfs.dll', 130)), D('Skins', F('Bento.wsz', 410), F('Classic.wsz', 160))),
+    D('Java', D('j2re1.4.2_05', D('bin', F('java.exe', 24), F('javaw.exe', 24), F('javaws.exe', 28)), D('lib', F('rt.jar', 21500), F('charsets.jar', 1600)))),
+    D('Nero', D('Nero 6', F('nero.exe', 8400), F('NeroExpress.exe', 2200), F('nero.ini', 3))),
+    D('Messenger Plus!', F('MsgPlus.exe', 780), F('MsgPlusLive.dll', 1100)),
+    D('Windows Defender', F('MpCmdRun.exe', 280), F('MsMpEng.exe', 12600)),
+    D('Reference Assemblies', D('Microsoft', D('Framework', F('v3.0', 0))))
   ],
   'Windows': [
-    F('explorer.exe', 1010, { run:'fx', ic:224 }), F('notepad.exe', 68, { run:'ed', ic:306 }), F('regedit.exe', 140, { ic:312 }), F('winhelp.exe', 252, { ic:25 }), F('winhlp32.exe', 296, { ic:25 }),
+    F('explorer.exe', 1010, { run:'fx', ic:224 }), F('notepad.exe', 68, { run:'ed', ic:306 }), F('regedit.exe', 140, { ic:312, run:'fk:reg' }), F('winhelp.exe', 252, { ic:25, run:'fk:hh' }), F('winhlp32.exe', 296, { ic:25, run:'fk:hh' }),
     F('win.ini', 1, { text:'; for 16-bit app support\r\n[fonts]\r\n[extensions]\r\n[mci extensions]\r\n[files]\r\n[Mail]\r\nMAPI=1\r\n' }),
     F('system.ini', 1, { text:'; for 16-bit app support\r\n[386Enh]\r\nwoafont=dosapp.fon\r\nEGA80WOA.FON=EGA80WOA.FON\r\n[drivers]\r\nwave=mmdrv.dll\r\ntimer=timer.drv\r\n[mci]\r\n' }),
     F('system.log', 14, { text:'Dead Zone XP - registro do sistema\r\nInicialização concluída com sucesso.\r\n' }), F('WindowsUpdate.log', 22, { text:'Nenhuma atualização pendente.\r\n' }), F('setuplog.txt', 31, { text:'Instalação do Windows concluída.\r\n' }),
     F('Coffee Bean.bmp', 17, { ic:418 }), F('Prairie Wind.bmp', 770, { ic:418 }), F('Soap Bubbles.bmp', 41, { ic:418 }), F('Zapotec.bmp', 22, { ic:418 }),
-    F('bootstat.dat', 2), F('twain_32.dll', 50), F('hh.exe', 11, { ic:25 }), F('taskman.exe', 32), F('winnt.bmp', 78, { ic:418 }),
-    D('system32', F('calc.exe', 114, { run:'calc' }), F('cmd.exe', 389, { ic:143 }), F('mspaint.exe', 330, { run:'paint', ic:7 }), F('mplayer2.exe', 24, { run:'wmp', ic:11 }), F('taskmgr.exe', 78, { ic:143 }), F('notepad.exe', 68, { run:'ed', ic:306 }),
+    F('bootstat.dat', 2), F('twain_32.dll', 50), F('hh.exe', 11, { ic:25, run:'fk:hh' }), F('taskman.exe', 32), F('winnt.bmp', 78, { ic:418 }),
+    D('system32', F('calc.exe', 114, { run:'calc' }), F('cmd.exe', 389, { ic:143, run:'fk:cmd' }), F('mspaint.exe', 330, { run:'paint', ic:7 }), F('mplayer2.exe', 24, { run:'wmp', ic:11 }), F('taskmgr.exe', 78, { ic:143, run:'fk:tm' }), F('notepad.exe', 68, { run:'ed', ic:306 }),
       F('kernel32.dll', 989), F('user32.dll', 577), F('gdi32.dll', 276), F('shell32.dll', 8461), F('ntdll.dll', 706), F('advapi32.dll', 617), F('comctl32.dll', 1032), F('winmm.dll', 178), F('msvcrt.dll', 343), F('ole32.dll', 1169), F('wininet.dll', 659), F('mshtml.dll', 3200), F('ntoskrnl.exe', 2000), F('hal.dll', 128),
       F('config.nt', 1, { text:'REM Windows NT MS-DOS Startup File\r\ndos=high, umb\r\ndevice=%SystemRoot%\\system32\\himem.sys\r\nfiles=40\r\n' }), F('autoexec.nt', 1, { text:'@echo off\r\nlh %SystemRoot%\\system32\\mscdexnt.exe\r\n' }),
       D('drivers', F('disk.sys', 12), F('atapi.sys', 96), F('tcpip.sys', 360), F('ndis.sys', 180), F('usbhub.sys', 58)),
@@ -28061,6 +28277,7 @@ function loadFake(){
 function openFake(n){
   const R = n.run, go = (api, fn) => { try{ if(api && api[fn || 'open']) { api[fn || 'open'](); return true; } }catch(e){} return false; };
   const ok = (R === 'calc' && go(window.dzCalc)) || (R === 'ed' && go(window.dzEd)) || (R === 'jd' && go(window.dzJd)) || (R === 'paint' && go(window.dzPaint)) || (R === 'wmp' && go(window.dzWmp)) ||
+    (R && R.indexOf('fk:') === 0 && !!(window.dzXp && window.dzXpFake && window.dzXpFake.open(R.slice(3)))) ||
     (R === 'daw' && go(window.dzDaw)) || (R === 'games' && go(window.dzMg)) || (R === 'emu' && (window.dzEmuOpenHub ? (window.dzEmuOpenHub(), true) : false)) || (R === 'fx');
   if(R && ok){ if(R !== 'fx') { const o = { calc:'calcOverlay', ed:'edOverlay', jd:'jdOverlay', paint:'paintOverlay', wmp:'wmpOverlay', daw:'dawOverlay', games:'mgOverlay' }[R]; const el = o && $(o); if(el) el.style.zIndex = '99995'; } return; }
   if(R === 'unins') return note(tr('Desinstalar', 'Uninstall'), tr('Este programa faz parte do sistema e não pode ser desinstalado.', 'This program is part of the system and cannot be uninstalled.'));
@@ -31751,13 +31968,18 @@ function fillStartMenu(){
     const b = mkEl('button', 'mi'); b.type = 'button'; b.append(ico(ic, px)); const tx = mkEl('span', 'tx', '<b></b>' + (sub ? '<small></small>' : '')); tx.firstChild.textContent = t; if(sub) tx.lastChild.textContent = sub; b.appendChild(tx);
     b.onclick = () => { xps('windows_xp_menu_command', .8); menu(false); fn(); }; par.appendChild(b); return b;
   };
-  list.slice(0, 6).forEach(it => { const b = mi(L, it.ic, 32, it.t, it.g, () => launch(it)); b.onclick = () => launch(it); b.addEventListener('contextmenu', e => itemCtx(e, it)); });
+  const FK = () => window.dzXpFake;
+  mi(L, 175, 32, 'Internet Explorer', tr('Internet', 'Internet'), () => FK() && FK().ie()); mi(L, 175, 32, 'Outlook Express', tr('E-mail', 'E-mail'), () => FK() && FK().oe()); L.appendChild(mkEl('hr'));
+  list.slice(0, 4).forEach(it => { const b = mi(L, it.ic, 32, it.t, it.g, () => launch(it)); b.onclick = () => launch(it); b.addEventListener('contextmenu', e => itemCtx(e, it)); });
   let g = '';
   list.forEach(it => { if(it.g !== g){ g = it.g; const h = mkEl('div', 'fh'); h.textContent = g; F.appendChild(h); } const b = mi(F, it.ic, 16, it.t, '', () => launch(it)); b.onclick = () => launch(it); b.addEventListener('contextmenu', e => itemCtx(e, it)); });
-  if(!list.length) F.appendChild(mkEl('div', 'fh', tr('(Vazio)', '(Empty)')));
+  const extra = [[tr('Internet', 'Internet'), [['Internet Explorer', 175, 'ie'], ['Outlook Express', 175, 'oe'], ['MSN Messenger', 143, 'msn']]], [tr('Acessórios', 'Accessories'), [[tr('Prompt de Comando', 'Command Prompt'), 143, 'cmd'], [tr('Gerenciador de Tarefas', 'Task Manager'), 143, 'tm'], [tr('Editor do Registro', 'Registry Editor'), 312, 'reg'], [tr('Windows Movie Maker', 'Windows Movie Maker'), 143, 'mm'], [tr('Windows Update', 'Windows Update'), 25, 'wu']]]];
+  extra.forEach(g => { const h = mkEl('div', 'fh'); h.textContent = g[0]; F.appendChild(h); g[1].forEach(a => mi(F, a[1], 16, a[0], '', () => window.dzXpFake && window.dzXpFake.open(a[2]))); });
+  if(!list.length && !extra.length) F.appendChild(mkEl('div', 'fh', tr('(Vazio)', '(Empty)')));
   const R1 = (ic, t, fn) => mi(R, ic, 24, t, '', fn);
   R1(I.pc, tr('Meu Computador', 'My Computer'), myComputer).addEventListener('contextmenu', e => itemCtx(e, itemOf('sys:pc'))); R1(I.bin, tr('Lixeira', 'Recycle Bin'), recycleBin).addEventListener('contextmenu', e => itemCtx(e, itemOf('sys:bin')));
   R.appendChild(mkEl('hr')); R1(I.cp, tr('Painel de Controle', 'Control Panel'), () => controlPanel());
+  R1(I.search, tr('Pesquisar', 'Search'), () => window.dzEx && window.dzEx.open()); R1(I.help, tr('Ajuda e Suporte', 'Help and Support'), () => window.dzXpFake && window.dzXpFake.open('help')); R1(I.app, tr('Executar...', 'Run...'), () => window.dzXpFake && window.dzXpFake.runDlg());
   R1(I.app, fsLabel(), () => deskFs());
   R.appendChild(mkEl('hr')); R1(I.help, tr('Sobre o Windows', 'About Windows'), aboutBox); R1(I.folder, tr('Configurações', 'Settings'), () => leaveDesk());
 }
@@ -32276,7 +32498,338 @@ function pictureViewer(items, idx, o){
   return w;
 }
 
-window.dzXp = { setWallpaper, binChanged, pictureViewer, ico, setIc, xps, I, section, open, close, setStyle, isOpen: () => root.classList.contains('xp-desk'), style: () => style };
+
+function cycleWins(d){   /* LB / RB no controle: alterna entre as janelas abertas */
+  const ks = Object.keys(tasks); if(!ks.length) return;
+  let i = ks.indexOf(activeKey); i = i < 0 ? (d > 0 ? -1 : 0) : i; const k = ks[(i + d + ks.length) % ks.length];
+  restore(k);
+}
+
+/* ===== APLICATIVOS FALSOS NO ESTILO WINDOWS XP (só pra dar vida ao sistema; não fazem nada de verdade) ===== */
+(function(){
+  const css = document.createElement('style');
+  css.textContent = `
+.xpWin .fkBody{flex:1;min-height:0;display:flex;flex-direction:column;background:#fff;color:#000;font:11px var(--xf);overflow:hidden}
+.fkTool{display:flex;align-items:center;gap:2px;flex:none;padding:3px 6px;background:#ece9d8;border-bottom:1px solid #d6d2c2}
+.fkTool .xpTbb{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 6px;border:1px solid transparent;border-radius:3px;background:none;font:11px var(--xf);color:#000;cursor:var(--xc-link)}
+.fkTool .xpTbb:hover:not(:disabled){border-color:#b0ad9c;background:#f6f4ea}
+.fkAddr{display:flex;align-items:center;gap:6px;flex:none;padding:3px 6px;background:#ece9d8;border-bottom:1px solid #d6d2c2;color:#6b6b5e}
+.fkAddr input{flex:1;min-width:0;height:21px;padding:0 4px;border:1px solid #7f9db9;background:#fff;color:#000;font:11px var(--xf);-webkit-user-select:text;user-select:text}
+.fkPage{flex:1;min-height:0;overflow:auto;background:#fff;padding:16px 22px;font:12px Verdana,Tahoma,sans-serif;line-height:1.5}
+.fkPage h1{font:700 16px Verdana,Tahoma;color:#000;margin:0 0 10px;padding-bottom:4px;border-bottom:1px solid #999}
+.fkPage li{margin:3px 0}.fkPage a{color:#00e;text-decoration:underline;cursor:var(--xc-link)}
+.fkStat{flex:none;display:flex;gap:10px;align-items:center;height:20px;padding:0 8px;background:#ece9d8;border-top:1px solid #aca899;color:#444}
+.fkStat span{flex:1}
+.fkSplit{flex:1;min-height:0;display:flex}
+.fkSide{width:150px;flex:none;overflow:auto;background:#fff;border-right:2px solid #d6d2c2;padding:4px}
+.fkItem{display:flex;align-items:center;gap:4px;padding:2px 4px;cursor:default;white-space:nowrap}
+.fkItem.sel{background:#316ac5;color:#fff}
+.fkTbl{width:100%;border-collapse:collapse;font:11px var(--xf)}
+.fkTbl th{position:sticky;top:0;text-align:left;font-weight:400;padding:3px 6px;background:linear-gradient(180deg,#fff,#ece9d8);border:1px solid #c3c1b3;border-top:0}
+.fkTbl td{padding:2px 6px;white-space:nowrap;cursor:default}
+.fkTbl tr.sel td{background:#316ac5;color:#fff}
+.fkCmd{flex:1;min-height:0;background:#000;color:#c0c0c0;font:13px "Lucida Console",Consolas,monospace;padding:4px;overflow:auto;cursor:text}
+.fkCmd pre{margin:0;white-space:pre-wrap;word-break:break-all;font:inherit}
+.fkCmd .ln{display:flex}.fkCmd .ln span{white-space:pre}
+.fkCmd input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#c0c0c0;font:inherit;padding:0;caret-color:#c0c0c0}
+.fkTabs{display:flex;gap:0;padding:6px 8px 0;background:#ece9d8}
+.fkTabs button{padding:3px 12px;border:1px solid #919b9c;border-bottom:0;border-radius:3px 3px 0 0;background:#f3f2ea;font:11px var(--xf);color:#000;margin-right:-1px;cursor:var(--xc-link)}
+.fkTabs button.on{background:#fcfcfe;padding-top:5px;margin-top:-2px;position:relative;z-index:1}
+.fkPanel{flex:1;min-height:0;margin:0 8px;border:1px solid #919b9c;background:#fcfcfe;overflow:auto;display:flex;flex-direction:column}
+.fkFoot{flex:none;display:flex;align-items:center;gap:10px;padding:6px 8px;background:#ece9d8}
+.fkFoot span{flex:1;color:#333}
+.fkGraph{height:84px;margin:8px;border:2px inset #aca899;background:#000;position:relative}
+.fkGraph canvas{width:100%;height:100%;display:block}
+.fkMsn{flex:1;background:linear-gradient(180deg,#fff,#e9f1fb);display:flex;flex-direction:column;align-items:center;padding:16px 26px;gap:8px}
+.fkMsn input{width:100%;height:23px;padding:0 5px;border:1px solid #7f9db9;font:12px var(--xf);background:#fff;color:#000;-webkit-user-select:text;user-select:text}
+.fkMsn label{align-self:flex-start;color:#333}
+.fkMsn .lg{font:700 22px Tahoma,Verdana;color:#2a6fc2;letter-spacing:-1px;margin:8px 0 4px}
+.fkMsn .lg i{display:inline-block;width:26px;height:26px;border-radius:50%;vertical-align:-5px;background:radial-gradient(circle at 35% 30%,#8fe27a,#3aa22a 65%);margin-right:4px}
+.fkRun{display:flex;flex-direction:column;gap:12px;padding:16px 18px;background:#ece9d8;font:11px var(--xf);color:#000}
+.fkRun .r1{display:flex;gap:10px;align-items:flex-start}
+.fkRun .r2{display:flex;align-items:center;gap:8px}
+.fkRun .r2 input{flex:1;height:21px;padding:0 4px;border:1px solid #7f9db9;background:#fff;color:#000;font:11px var(--xf);-webkit-user-select:text;user-select:text}
+.fkRun .r3{display:flex;justify-content:flex-end;gap:6px}
+.fkMm{flex:1;min-height:0;display:flex}
+.fkMm .p{overflow:auto;padding:10px;background:linear-gradient(180deg,#7ba2e7,#6375d6);width:190px;flex:none}
+.fkMm .m{flex:1;display:flex;flex-direction:column;min-width:0}
+.fkMm .c{flex:1;background:#fff;padding:10px;color:#666;display:flex;align-items:center;justify-content:center;text-align:center}
+.fkMm .s{flex:none;height:92px;background:#e3ecf8;border-top:2px solid #a2b5d6;display:flex;align-items:center;justify-content:center;color:#5a6b8c}
+.fkMm .mon{flex:none;width:180px;background:#dfe4ee;display:flex;flex-direction:column;align-items:center;padding:8px;gap:6px}
+.fkMm .mon div{width:160px;height:120px;background:#000}
+`;
+  document.head.appendChild(css);
+  const $$ = (s, r) => (r || document).querySelector(s);
+  const ICN = { ie:175, oe:175, msn:143, cmd:143, tm:143, mm:143, reg:312, run:143, wu:25 };
+  const unavailable = (t) => msgBox({ title:t, icon:I.info, text:tr('Este recurso não está disponível neste computador.', 'This feature is not available on this computer.') });
+  const flagHdr = () => '';
+  /* corpo + barra de menus + barra de status padrão */
+  function shell(id, title, o, menus){
+    const w = win(id, ICN[id] != null ? ICN[id] : I.app, title, o);
+    if(!w.fresh) return null;
+    w.setTitle = t => { w.title = t; const e = w.tb.querySelector('.xpTt'); if(e) e.textContent = t; };
+    const body = mkEl('div', 'fkBody'); w.fk = body;
+    w.el.append(menuBar(w, menus || [[tr('Arquivo', 'File'), [[tr('Sair', 'Exit'), () => w.close()]]]]), body);
+    return w;
+  }
+  const tbtn = (ic, t, fn, off) => { const b = mkEl('button', 'xpTbb'); b.type = 'button'; if(ic != null) b.append(ico(ic, 20)); b.append(mkEl('span', '', '')); b.lastChild.textContent = t; if(off) b.disabled = true; else b.onclick = () => { xps('windows_navigation_start', .8); fn && fn(); }; return b; };
+  const stdHelp = [tr('Ajuda', 'Help'), [[tr('Sobre o Windows', 'About Windows'), aboutBox]]];
+  const nowStr = () => { const d = new Date(), p = n => String(n).padStart(2, '0'); return { d: p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear(), t: p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()) }; };
+
+  /* ---------- Internet Explorer ---------- */
+  function ie(){
+    const w = shell('ie', tr('Página inicial - Microsoft Internet Explorer', 'Home Page - Microsoft Internet Explorer'), { w:700, h:470 }, [[tr('Arquivo', 'File'), [[tr('Abrir...', 'Open...'), () => unavailable(tr('Abrir', 'Open'))], '-', [tr('Fechar', 'Close'), () => w.close()]]], [tr('Editar', 'Edit'), [[tr('Copiar', 'Copy'), null], [tr('Selecionar tudo', 'Select All'), null]]], [tr('Exibir', 'View'), [[tr('Atualizar', 'Refresh'), () => w.fkNav && w.fkNav(-1)]]], [tr('Favoritos', 'Favorites'), [[tr('(Vazio)', '(Empty)'), null]]], [tr('Ferramentas', 'Tools'), [[tr('Opções da Internet...', 'Internet Options...'), () => unavailable(tr('Opções da Internet', 'Internet Options'))]]], stdHelp]); if(!w) return;
+    const hist = ['about:home'], H = { i:0 };
+    const bar = mkEl('div', 'fkTool'), addr = mkEl('div', 'fkAddr'), page = mkEl('div', 'fkPage'), st = mkEl('div', 'fkStat', '<span></span>');
+    const inp = mkEl('input'); inp.type = 'text'; inp.setAttribute('aria-label', tr('Endereço', 'Address')); inp.spellcheck = false;
+    const go = mkEl('button', 'xpBtn', tr('Ir', 'Go')); go.type = 'button'; go.style.minWidth = '40px';
+    addr.append(mkEl('span', '', tr('Endereço', 'Address')), inp, go);
+    const back = tbtn(I.help, '', null, true), fwd = tbtn(null, '', null, true);
+    const mkNav = () => {
+      bar.innerHTML = '';
+      const bb = tbtn(null, '◀ ' + tr('Voltar', 'Back'), () => nav(H.i - 1, true), H.i <= 0), ff = tbtn(null, tr('Avançar', 'Forward') + ' ▶', () => nav(H.i + 1, true), H.i >= hist.length - 1);
+      bar.append(bb, ff, tbtn(null, '✖ ' + tr('Parar', 'Stop'), null, true), tbtn(null, '⟳ ' + tr('Atualizar', 'Refresh'), () => nav(H.i, true)), tbtn(I.folder, tr('Página inicial', 'Home'), () => push('about:home')), mkEl('i', 'xpTsep'), tbtn(I.search, tr('Pesquisar', 'Search'), () => unavailable(tr('Pesquisar', 'Search'))), tbtn(null, '★ ' + tr('Favoritos', 'Favorites'), () => unavailable(tr('Favoritos', 'Favorites'))));
+    };
+    const errPage = u => '<h1>' + tr('A página não pode ser exibida', 'The page cannot be displayed') + '</h1><p>' + tr('A página que você está procurando está atualmente indisponível. O site pode estar enfrentando dificuldades técnicas, ou talvez seja necessário ajustar as configurações do seu navegador.', 'The page you are looking for is currently unavailable. The Web site might be experiencing technical difficulties, or you may need to adjust your browser settings.') + '</p><hr size="1"><p>' + tr('Tente o seguinte:', 'Please try the following:') + '</p><ul><li>' + tr('Clique no botão <b>Atualizar</b> ou tente novamente mais tarde.', 'Click the <b>Refresh</b> button, or try again later.') + '</li><li>' + tr('Se você digitou o endereço da página na barra de endereços, verifique se ele foi digitado corretamente.', 'If you typed the page address in the Address bar, make sure that it is spelled correctly.') + '</li><li>' + tr('Para verificar suas configurações de conexão, clique no menu <b>Ferramentas</b> e em <b>Opções da Internet</b>.', 'To check your connection settings, click the <b>Tools</b> menu, and then click <b>Internet Options</b>.') + '</li></ul><p>' + tr('Não é possível localizar o servidor ou erro de DNS', 'Cannot find server or DNS Error') + '<br>Internet Explorer<br><small style="color:#666">' + u.replace(/[<>&]/g, '') + '</small></p>';
+    const homePage = () => '<div style="text-align:center;margin-top:8px"><div style="font:700 28px Tahoma,Verdana;color:#245edb;letter-spacing:-1px"><span style="display:inline-block;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8fe27a,#3aa22a 65%);vertical-align:-6px"></span> Dead Zone <i style="color:#e2531f">XP</i></div><p style="color:#666;margin:4px 0 14px">' + tr('Bem-vindo ao Internet Explorer', 'Welcome to Internet Explorer') + '</p></div><div style="max-width:420px;margin:0 auto;border:1px solid #7f9db9;padding:10px 14px;background:#f5f8fd"><b>' + tr('Navegar sem internet', 'Browsing offline') + '</b><p style="margin:4px 0 0">' + tr('Este navegador faz parte do visual do Windows XP e <b>não acessa a internet de verdade</b>. Os links abaixo mostram a clássica página de erro.', 'This browser is part of the Windows XP look and <b>does not reach the real Internet</b>. The links below show the classic error page.') + '</p></div><p style="text-align:center;margin-top:14px"><a data-u="http://www.msn.com">MSN.com</a> &nbsp;·&nbsp; <a data-u="http://www.hotmail.com">Hotmail</a> &nbsp;·&nbsp; <a data-u="http://windowsupdate.microsoft.com">Windows Update</a> &nbsp;·&nbsp; <a data-u="http://www.microsoft.com">Microsoft</a></p>';
+    function paint(){
+      const u = hist[H.i]; inp.value = u === 'about:home' ? '' : u; if(u === 'about:home') inp.placeholder = 'about:home';
+      page.innerHTML = u === 'about:home' ? homePage() : u === 'about:blank' ? '' : errPage(u);
+      page.querySelectorAll('a[data-u]').forEach(a => a.onclick = () => push(a.dataset.u));
+      const t = u === 'about:home' ? tr('Página inicial', 'Home Page') : u === 'about:blank' ? tr('Em branco', 'Blank') : tr('A página não pode ser exibida', 'The page cannot be displayed');
+      w.setTitle(t + ' - Microsoft Internet Explorer');
+      st.firstChild.textContent = tr('Concluído', 'Done'); mkNav();
+    }
+    function nav(i, rel){ if(i < 0 || i >= hist.length) return; H.i = i; st.firstChild.textContent = tr('Abrindo página...', 'Opening page...'); setTimeout(paint, rel ? 220 : 380); }
+    function push(u){
+      u = String(u || '').trim(); if(!u) return;
+      if(!/^[a-z]+:/i.test(u) && u !== 'about:home' && u !== 'about:blank') u = 'http://' + u;
+      hist.length = H.i + 1; hist.push(u); nav(hist.length - 1);
+    }
+    w.fkNav = () => nav(H.i, true);
+    go.onclick = () => push(inp.value);
+    inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); push(inp.value); } });
+    inp.dataset.dzEnter = '1';
+    st.append(mkEl('span', '', tr('Internet', 'Internet')));
+    w.fk.append(bar, addr, page, st); paint();
+    w.menusEl = null;
+  }
+
+  /* ---------- Outlook Express ---------- */
+  function oe(){
+    const w = shell('oe', tr('Caixa de entrada - Outlook Express', 'Inbox - Outlook Express'), { w:720, h:480 }, [
+      [tr('Arquivo', 'File'), [[tr('Sair', 'Exit'), () => w.close()]]], [tr('Editar', 'Edit'), [[tr('Copiar', 'Copy'), null]]], [tr('Exibir', 'View'), [[tr('Layout...', 'Layout...'), null]]], [tr('Ferramentas', 'Tools'), [[tr('Enviar e receber', 'Send/Receive'), () => sendRecv()]]], [tr('Mensagem', 'Message'), [[tr('Nova mensagem', 'New Message'), () => compose()]]], stdHelp]); if(!w) return;
+    const folders = [[tr('Caixa de entrada', 'Inbox'), 1], [tr('Caixa de saída', 'Outbox'), 0], [tr('Itens enviados', 'Sent Items'), 0], [tr('Itens excluídos', 'Deleted Items'), 0], [tr('Rascunhos', 'Drafts'), 0]];
+    const mails = [
+      { f:tr('Equipe do Outlook Express', 'The Outlook Express Team'), s:tr('Bem-vindo ao Outlook Express 6', 'Welcome to Outlook Express 6'), d:'14/08/2004', b:tr('Bem-vindo ao Outlook Express 6!\n\nCom o Outlook Express você pode trocar e-mails com amigos e familiares, ler grupos de notícias e manter seus contatos no Catálogo de Endereços.\n\nObs.: neste computador Dead Zone XP o serviço de e-mail é apenas de enfeite — nenhuma mensagem é enviada de verdade.', 'Welcome to Outlook Express 6!\n\nWith Outlook Express you can exchange e-mail with friends and family, read newsgroups and keep your contacts in the Address Book.\n\nNote: on this Dead Zone XP computer the e-mail service is just for show — no message is really sent.') },
+      { f:'Dead Zone XP', s:tr('Dicas para começar', 'Tips to get started'), d:'14/08/2004', b:tr('Olá!\n\n• Clique no botão Iniciar para abrir os programas.\n• Arraste a Lixeira para onde quiser.\n• Mude o papel de parede no Painel de Controle.\n• Use o Prompt de Comando e digite "help".\n\nBom divertimento!', 'Hello!\n\n• Click the Start button to open programs.\n• Drag the Recycle Bin wherever you like.\n• Change the wallpaper in Control Panel.\n• Open Command Prompt and type "help".\n\nHave fun!') },
+      { f:'Microsoft', s:tr('Faça o tour do Windows XP', 'Take the Windows XP tour'), d:'14/08/2004', b:tr('Descubra o que há de novo no Windows XP.\n\nO tour do Windows XP mostra, em poucos minutos, a nova área de trabalho, o menu Iniciar e os recursos de música e fotos.', 'Discover what is new in Windows XP.\n\nThe Windows XP tour shows, in a few minutes, the new desktop, the Start menu and the music and photo features.') }
+    ];
+    const split = mkEl('div', 'fkSplit'), side = mkEl('div', 'fkSide'), right = mkEl('div', '', ''); right.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column';
+    const list = mkEl('div', '', ''); list.style.cssText = 'flex:1;min-height:60px;overflow:auto;border-bottom:2px solid #d6d2c2'; const prev = mkEl('div', 'fkPage'); prev.style.cssText += ';flex:1.2;white-space:pre-wrap;padding:10px 14px;font:12px Tahoma,Verdana';
+    const tool = mkEl('div', 'fkTool');
+    function sendRecv(){ xps('windows_navigation_start', .8); msgBox({ title:tr('Outlook Express', 'Outlook Express'), icon:I.err, text:'<p>' + tr('Não foi possível encontrar o servidor de e-mail. Verifique sua conexão de rede e tente novamente.', 'Could not find the mail server. Check your network connection and try again.') + '</p><p>Conta: pop.dzxp.local · Erro 0x800CCC0D</p>', sound:'windows_xp_error' }); }
+    function compose(){
+      const id = 'oeNew' + Date.now(), c = win(id, I.app, tr('Nova mensagem', 'New Message'), { w:560, h:400 }); if(!c.fresh) return;
+      const b = mkEl('div', 'fkBody'), f = (l, ph) => { const r = mkEl('div', 'fkAddr'); const i = mkEl('input'); i.type = 'text'; i.placeholder = ph || ''; r.append(mkEl('span', '', l), i); r.firstChild.style.width = '60px'; return r; };
+      const ta = mkEl('textarea'); ta.style.cssText = 'flex:1;border:0;outline:0;resize:none;padding:8px;font:12px Tahoma,Verdana;background:#fff;color:#000;-webkit-user-select:text;user-select:text';
+      const t = mkEl('div', 'fkTool'); t.append(tbtn(null, '✉ ' + tr('Enviar', 'Send'), () => { sendRecv(); }), tbtn(null, '📎 ' + tr('Anexar', 'Attach'), () => unavailable(tr('Anexar', 'Attach'))));
+      b.append(t, f(tr('Para:', 'To:')), f(tr('Cc:', 'Cc:')), f(tr('Assunto:', 'Subject:')), ta);
+      c.el.append(menuBar(c, [[tr('Arquivo', 'File'), [[tr('Fechar', 'Close'), () => c.close()]]]]), b);
+    }
+    tool.append(tbtn(null, '✉ ' + tr('Criar e-mail', 'Create Mail'), compose), tbtn(null, tr('Responder', 'Reply'), null, true), tbtn(null, tr('Encaminhar', 'Forward'), null, true), mkEl('i', 'xpTsep'), tbtn(null, '⟳ ' + tr('Enviar/receber', 'Send/Recv'), sendRecv), tbtn(I.folder, tr('Endereços', 'Addresses'), () => unavailable(tr('Catálogo de Endereços', 'Address Book'))));
+    let curF = 0, curM = 0;
+    function drawSide(){ side.innerHTML = ''; side.append(mkEl('div', 'fkItem', '<b>Outlook Express</b>')); folders.forEach((f, i) => { const it = mkEl('div', 'fkItem' + (i === curF ? ' sel' : '')); it.style.paddingLeft = '14px'; it.append(ico(I.folder, 16)); const s = mkEl('span'); s.textContent = f[0] + (f[1] && i === 0 ? ' (' + f[1] + ')' : ''); if(i === 0) s.style.fontWeight = 700; it.append(s); it.onclick = () => { curF = i; drawSide(); drawList(); }; side.append(it); }); }
+    function drawList(){
+      list.innerHTML = ''; const t = mkEl('table', 'fkTbl'); t.innerHTML = '<thead><tr><th style="width:24px"></th><th>' + tr('De', 'From') + '</th><th>' + tr('Assunto', 'Subject') + '</th><th>' + tr('Recebido', 'Received') + '</th></tr></thead>';
+      const tb = mkEl('tbody'); t.append(tb);
+      (curF === 0 ? mails : []).forEach((m, i) => { const r = mkEl('tr', i === curM ? 'sel' : ''); r.innerHTML = '<td>✉</td><td></td><td></td><td></td>'; r.children[1].textContent = m.f; r.children[2].textContent = m.s; r.children[3].textContent = m.d; if(!m.read) r.style.fontWeight = 700; r.onclick = () => { m.read = true; curM = i; drawList(); }; tb.append(r); });
+      list.append(t);
+      const m = curF === 0 ? mails[curM] : null;
+      prev.textContent = m ? (tr('De: ', 'From: ') + m.f + '\n' + tr('Assunto: ', 'Subject: ') + m.s + '\n' + '──────────────────\n' + m.b) : tr('Não há mensagens nesta pasta.', 'There are no messages in this folder.');
+      w.setTitle && w.setTitle(folders[curF][0] + ' - Outlook Express');
+    }
+    right.append(list, prev); split.append(side, right); w.fk.append(tool, split); drawSide(); drawList();
+  }
+
+  /* ---------- MSN Messenger ---------- */
+  function msn(){
+    const w = shell('msn', 'MSN Messenger', { w:300, h:430 }, [[tr('Arquivo', 'File'), [[tr('Sair', 'Exit'), () => w.close()]]], [tr('Contatos', 'Contacts'), [[tr('Adicionar um contato...', 'Add a Contact...'), null]]], [tr('Ações', 'Actions'), [[tr('Entrar', 'Sign In'), () => signIn()]]], [tr('Ferramentas', 'Tools'), [[tr('Opções...', 'Options...'), null]]], stdHelp]); if(!w) return;
+    const b = mkEl('div', 'fkMsn'); b.innerHTML = '<div class="lg"><i></i>MSN Messenger</div><div style="color:#2a6fc2;font-weight:700;margin-bottom:6px">' + tr('Entre com seu .NET Passport', 'Sign in with your .NET Passport') + '</div>';
+    const l1 = mkEl('label', '', tr('Endereço de e-mail:', 'E-mail address:')), i1 = mkEl('input'); i1.type = 'text'; i1.placeholder = 'nome@hotmail.com'; i1.spellcheck = false;
+    const l2 = mkEl('label', '', tr('Senha:', 'Password:')), i2 = mkEl('input'); i2.type = 'password'; i2.setAttribute('aria-label', tr('Senha', 'Password'));
+    const ck = mkEl('label', '', '<input type="checkbox" style="width:auto;height:auto"> ' + tr('Entrar automaticamente', 'Sign me in automatically')); ck.style.display = 'flex'; ck.style.gap = '4px'; ck.style.alignItems = 'center';
+    const bt = mkEl('button', 'xpBtn def', tr('Entrar', 'Sign In')); bt.type = 'button'; bt.style.marginTop = '8px';
+    function signIn(){
+      if(!i1.value.trim()){ msgBox({ title:'MSN Messenger', icon:I.info, text:tr('Digite seu endereço de e-mail do .NET Passport.', 'Type your .NET Passport e-mail address.') }); return; }
+      bt.disabled = true; bt.textContent = tr('Entrando...', 'Signing in...');
+      setTimeout(() => { bt.disabled = false; bt.textContent = tr('Entrar', 'Sign In'); msgBox({ title:'MSN Messenger', icon:I.err, text:'<p>' + tr('O MSN Messenger não pôde conectar-se ao serviço. O serviço pode estar temporariamente indisponível ou sua conexão com a Internet está desativada.', 'MSN Messenger could not connect to the service. The service may be temporarily unavailable or your Internet connection is down.') + '</p><p>' + tr('Código do erro', 'Error code') + ': 81000306</p>', sound:'windows_xp_error' }); }, 900);
+    }
+    bt.onclick = signIn; i2.addEventListener('keydown', e => { if(e.key === 'Enter') signIn(); });
+    b.append(l1, i1, l2, i2, ck, bt, mkEl('div', '', '<small style="color:#666;margin-top:14px;display:block;text-align:center">' + tr('Serviço apenas ilustrativo.', 'Illustrative service only.') + '</small>'));
+    w.fk.append(b);
+  }
+
+  /* ---------- Prompt de Comando ---------- */
+  function cmd(){
+    const w = shell('cmd', tr('Prompt de comando', 'Command Prompt'), { w:660, h:380 }, null); if(!w) return;
+    w.el.querySelector('.xpMbar') && w.el.querySelector('.xpMbar').remove();
+    const user = (typeof userName === 'function' ? userName() : 'Usuario');
+    const FS = { 'C:\\': ['<DIR>|WINDOWS', '<DIR>|Arquivos de Programas', '<DIR>|Documents and Settings', '<DIR>|Temp', '1234|AUTOEXEC.BAT', '0|CONFIG.SYS', '211|boot.ini', '47564|ntldr', '295536|NTDETECT.COM'], 'C:\\WINDOWS': ['<DIR>|system32', '<DIR>|Fonts', '<DIR>|Temp', '<DIR>|Media', '1010664|explorer.exe', '69120|notepad.exe', '1400|win.ini', '211|system.ini'], 'C:\\Arquivos de Programas': ['<DIR>|Internet Explorer', '<DIR>|Outlook Express', '<DIR>|Windows Media Player', '<DIR>|Messenger', '<DIR>|Movie Maker'], 'C:\\Documents and Settings': ['<DIR>|' + user, '<DIR>|All Users'], 'C:\\Temp': [] };
+    let cwd = 'C:\\'; const out = mkEl('div', 'fkCmd'), log = mkEl('pre'), ln = mkEl('div', 'ln'), ps = mkEl('span'), inp = mkEl('input'); inp.type = 'text'; inp.spellcheck = false; inp.autocomplete = 'off'; inp.setAttribute('aria-label', tr('Comando', 'Command'));
+    ln.append(ps, inp); out.append(log, ln); w.fk.append(out);
+    const hist = []; let hi = 0;
+    const P = () => { ps.textContent = cwd + '>'; };
+    const echo = t => { log.textContent += t + '\n'; };
+    echo('Microsoft Windows XP [Versão 5.1.2600]\n(C) Copyright 1985-2001 Microsoft Corp.\n');
+    const pad = (s, n) => String(s).padStart(n, ' ');
+    const run = line => {
+      const raw = line.trim(); if(!raw) return; const parts = raw.split(/\s+/), c = parts[0].toLowerCase(), arg = raw.slice(parts[0].length).trim();
+      const nd = nowStr();
+      switch(c){
+        case 'help': echo('Para obter mais informações sobre um comando, digite HELP nome-do-comando\nCD        Exibe ou altera o diretório atual.\nCLS       Limpa a tela.\nDATE      Exibe a data.\nDIR       Exibe os arquivos e subdiretórios de um diretório.\nECHO      Exibe mensagens.\nEXIT      Sai do programa CMD.EXE.\nHOSTNAME  Exibe o nome do computador.\nIPCONFIG  Exibe a configuração de IP.\nPING      Testa uma conexão de rede.\nSTART     Abre um programa (calc, notepad, mspaint, iexplore...).\nSYSTEMINFO Exibe informações do sistema.\nTIME      Exibe a hora.\nTITLE     Altera o título da janela.\nVER       Exibe a versão do Windows.\nWHOAMI    Exibe o usuário atual.\nTASKLIST  Lista os processos.\n'); break;
+        case 'cls': log.textContent = ''; break;
+        case 'ver': echo('\nMicrosoft Windows XP [Versão 5.1.2600]\n'); break;
+        case 'echo': echo(arg || 'ECHO está ativado.'); break;
+        case 'date': echo('A data atual é: ' + nd.d); break;
+        case 'time': echo('A hora atual é: ' + nd.t + ',00'); break;
+        case 'hostname': echo('DEADZONE-XP'); break;
+        case 'whoami': echo('deadzone-xp\\' + user.toLowerCase()); break;
+        case 'title': w.setTitle && w.setTitle(arg || tr('Prompt de comando', 'Command Prompt')); break;
+        case 'color': break;
+        case 'dir': {
+          echo(' O volume na unidade C não tem nome.\n O número de série do volume é 4A2F-91C3\n\n Pasta de ' + cwd + '\n');
+          const items = FS[cwd] || []; let files = 0, bytes = 0, dirs = 2;
+          echo(nd.d + '  12:01      <DIR>          .'); echo(nd.d + '  12:01      <DIR>          ..');
+          items.forEach(i => { const [a, n] = i.split('|'); if(a === '<DIR>'){ dirs++; echo(nd.d + '  12:01      <DIR>          ' + n); } else { files++; bytes += +a; echo(nd.d + '  12:01 ' + pad(Number(a).toLocaleString('pt-BR'), 14) + ' ' + n); } });
+          echo(pad(files, 15) + ' arquivo(s) ' + pad(bytes.toLocaleString('pt-BR'), 14) + ' bytes\n' + pad(dirs, 15) + ' pasta(s)   ' + pad('8.412.360.704', 14) + ' bytes disponíveis\n'); break; }
+        case 'cd': case 'chdir': {
+          if(!arg){ echo(cwd); break; }
+          if(arg === '\\' || /^c:\\?$/i.test(arg)){ cwd = 'C:\\'; break; }
+          if(arg === '..'){ const i = cwd.lastIndexOf('\\'); cwd = i <= 2 ? 'C:\\' : cwd.slice(0, i); break; }
+          const cand = (cwd === 'C:\\' ? 'C:\\' : cwd + '\\') + arg.replace(/\\$/, ''), k = Object.keys(FS).find(x => x.toLowerCase() === cand.toLowerCase());
+          if(k) cwd = k; else echo('O sistema não pode encontrar o caminho especificado.'); break; }
+        case 'ipconfig': echo('\nConfiguração de IP do Windows\n\nAdaptador Ethernet Conexão local:\n\n        Sufixo DNS específico de conexão. : dzxp.local\n        Endereço IP . . . . . . . . . . . : 192.168.0.12\n        Máscara de sub-rede . . . . . . . : 255.255.255.0\n        Gateway padrão. . . . . . . . . . : 192.168.0.1\n'); break;
+        case 'ping': { const h = arg || 'localhost'; echo('\nDisparando contra ' + h + ' com 32 bytes de dados:\n'); for(let i = 0; i < 4; i++) echo('Resposta de 127.0.0.1: bytes=32 tempo<1ms TTL=128'); echo('\nEstatísticas do Ping para 127.0.0.1:\n    Pacotes: Enviados = 4, Recebidos = 4, Perdidos = 0 (0% de perda)\n'); break; }
+        case 'tasklist': echo('\nNome da imagem                 PID Nome da sessão  Uso de memória\n========================= ====== ================ ==============\nSystem Idle Process            0 Console                  28 K\nSystem                         4 Console                 244 K\nexplorer.exe                1580 Console              18.936 K\ncmd.exe                     2044 Console               2.460 K\n'); break;
+        case 'systeminfo': echo('\nNome do host:                   DEADZONE-XP\nNome do sistema operacional:    Microsoft Windows XP Professional\nVersão do sistema operacional:  5.1.2600 Service Pack 2 Compilação 2600\nProcessador:                    x86 Family 6 Model 15 ~2400 Mhz\nMemória física total:           1.024 MB\n'); break;
+        case 'start': { const a = arg.toLowerCase().replace(/\.exe$/, ''); if(!runProgram(a)) echo('O sistema não pode encontrar o arquivo ' + arg + '.'); break; }
+        case 'exit': w.close(); return;
+        default: if(!runProgram(c.replace(/\.exe$/, ''))) echo("'" + parts[0] + "' não é reconhecido como um comando interno\nou externo, um programa operável ou um arquivo em lotes.\n");
+      }
+    };
+    inp.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){ e.preventDefault(); const v = inp.value; log.textContent += cwd + '>' + v + '\n'; if(v.trim()) hist.push(v); hi = hist.length; inp.value = ''; run(v); P(); out.scrollTop = out.scrollHeight; }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); if(hi > 0) inp.value = hist[--hi]; }
+      else if(e.key === 'ArrowDown'){ e.preventDefault(); inp.value = hi < hist.length - 1 ? hist[++hi] : (hi = hist.length, ''); }
+    });
+    out.addEventListener('pointerup', () => { if(!getSelection().toString()) inp.focus(); });
+    P(); setTimeout(() => { try{ inp.focus(); }catch(e){} }, 50);
+  }
+
+  /* ---------- Gerenciador de Tarefas ---------- */
+  function tm(){
+    let tab = 0, timer = 0, cpuH = Array(60).fill(3);
+    const w = shell('tm', tr('Gerenciador de Tarefas do Windows', 'Windows Task Manager'), { w:480, h:470, onClose: () => clearInterval(timer) }, [[tr('Arquivo', 'File'), [[tr('Sair do Gerenciador de Tarefas', 'Exit Task Manager'), () => w.close()]]], [tr('Opções', 'Options'), [[tr('Sempre visível', 'Always on Top'), null, true]]], [tr('Exibir', 'View'), [[tr('Atualizar agora', 'Refresh Now'), () => draw()]]], stdHelp]); if(!w) return;
+    const user = (typeof userName === 'function' ? userName() : 'Usuario');
+    const P = [['System Idle Process', 'SYSTEM', 0, 28], ['System', 'SYSTEM', 0, 244], ['smss.exe', 'SYSTEM', 0, 388], ['csrss.exe', 'SYSTEM', 1, 3280], ['winlogon.exe', 'SYSTEM', 0, 4120], ['services.exe', 'SYSTEM', 0, 3000], ['lsass.exe', 'SYSTEM', 0, 1996], ['svchost.exe', 'SYSTEM', 0, 4320], ['svchost.exe', 'SERVIÇO DE REDE', 0, 3760], ['svchost.exe', 'SERVIÇO LOCAL', 0, 3480], ['spoolsv.exe', 'SYSTEM', 0, 3188], ['explorer.exe', user, 2, 18936], ['ctfmon.exe', user, 0, 3052], ['taskmgr.exe', user, 1, 3920], ['deadzone.exe', user, 4, 61240]];
+    const tabs = mkEl('div', 'fkTabs'), panel = mkEl('div', 'fkPanel'), foot = mkEl('div', 'fkFoot');
+    ['Aplicativos|Applications', 'Processos|Processes', 'Desempenho|Performance'].forEach((t, i) => { const [p, e] = t.split('|'); const b = mkEl('button', i === tab ? 'on' : '', tr(p, e)); b.type = 'button'; b.onclick = () => { tab = i; tabs.querySelectorAll('button').forEach((x, j) => x.classList.toggle('on', j === i)); draw(); }; tabs.append(b); });
+    tab = 1; tabs.children[1].classList.add('on'); tabs.children[0].classList.remove('on');
+    const sel = { i: -1 };
+    function draw(){
+      panel.innerHTML = ''; foot.innerHTML = '';
+      let tot = 0;
+      if(tab === 0){
+        const t = mkEl('table', 'fkTbl'); t.innerHTML = '<thead><tr><th>' + tr('Tarefa', 'Task') + '</th><th>' + tr('Status', 'Status') + '</th></tr></thead>'; const tb = mkEl('tbody'); t.append(tb);
+        document.querySelectorAll('.xpWin').forEach((x, i) => { const n = x.querySelector('.xpTt'); const r = mkEl('tr', i === sel.i ? 'sel' : ''); r.innerHTML = '<td></td><td>' + tr('Executando', 'Running') + '</td>'; r.firstChild.textContent = (n && n.textContent) || x.id.replace('xpW_', ''); r.onclick = () => { sel.i = i; draw(); }; tb.append(r); });
+        panel.append(t); const end = mkEl('button', 'xpBtn', tr('Finalizar tarefa', 'End Task')); end.type = 'button'; end.onclick = () => { const x = document.querySelectorAll('.xpWin')[sel.i]; if(x && x.id !== 'xpW_tm'){ const k = x.id.replace('xpW_', ''); try{ wins.get(k).close(); }catch(e){} sel.i = -1; draw(); } };
+        const nw = mkEl('button', 'xpBtn', tr('Nova tarefa...', 'New Task...') ); nw.type = 'button'; nw.onclick = runDlg; foot.append(mkEl('span', '', tr('Processos: ', 'Processes: ') + P.length), end, nw);
+      } else if(tab === 1){
+        const t = mkEl('table', 'fkTbl'); t.innerHTML = '<thead><tr><th>' + tr('Nome da imagem', 'Image Name') + '</th><th>' + tr('Nome do usuário', 'User Name') + '</th><th>CPU</th><th>' + tr('Uso de memória', 'Mem Usage') + '</th></tr></thead>'; const tb = mkEl('tbody'); t.append(tb);
+        P.forEach((p, i) => { if(i) p.cpu = Math.max(0, Math.round(p[2] + (Math.random() * 3 - 1))); });
+        P.forEach((p, i) => { const c = i === 0 ? Math.max(0, 100 - P.slice(1).reduce((a, q) => a + (q.cpu || 0), 0)) : p.cpu; tot += i ? p.cpu : 0; const r = mkEl('tr', i === sel.i ? 'sel' : ''); r.innerHTML = '<td></td><td></td><td></td><td></td>'; r.children[0].textContent = p[0]; r.children[1].textContent = p[1]; r.children[2].textContent = String(i ? p.cpu : c).padStart(2, '0'); r.children[3].textContent = p[3].toLocaleString('pt-BR') + ' K'; r.onclick = () => { sel.i = i; draw(); }; tb.append(r); });
+        panel.append(t); const end = mkEl('button', 'xpBtn', tr('Finalizar processo', 'End Process')); end.type = 'button';
+        end.onclick = () => { if(sel.i < 0) return; msgBox({ title:tr('Aviso do Gerenciador de Tarefas', 'Task Manager Warning'), icon:I.err, text:'<p>' + tr('Não foi possível finalizar o processo.', 'Unable to terminate process.') + '</p><p>' + tr('Acesso negado.', 'Access is denied.') + '</p>', sound:'windows_xp_error' }); };
+        foot.append(mkEl('span', '', tr('Processos: ', 'Processes: ') + P.length + '   CPU: ' + Math.min(99, tot) + '%'), end);
+      } else {
+        const g = mkEl('div', 'fkGraph'), cv = mkEl('canvas'); g.append(cv); const info = mkEl('div'); info.style.cssText = 'padding:4px 10px;line-height:1.7';
+        cpuH.push(Math.min(99, 2 + Math.round(Math.random() * 6))); cpuH.shift(); panel.append(mkEl('div', '', '<div style="padding:8px 10px 0"><b>' + tr('Uso da CPU', 'CPU Usage') + ': ' + cpuH[cpuH.length - 1] + '%</b></div>'), g, info);
+        info.innerHTML = tr('Total de processos', 'Total processes') + ': ' + P.length + '<br>' + tr('Memória física total', 'Physical memory total') + ': 1.048.576 K<br>' + tr('Disponível', 'Available') + ': 612.480 K<br>' + tr('Cache do sistema', 'System cache') + ': 244.920 K';
+        requestAnimationFrame(() => { const W = cv.width = Math.max(10, g.clientWidth), H = cv.height = Math.max(10, g.clientHeight), x = cv.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, W, H); x.strokeStyle = '#0a4a0a'; for(let i = 0; i < W; i += 12){ x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); } for(let j = 0; j < H; j += 12){ x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); } x.strokeStyle = '#3cff3c'; x.beginPath(); cpuH.forEach((v, i) => { const px = i / (cpuH.length - 1) * W, py = H - v / 100 * H; i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke(); });
+        foot.append(mkEl('span', '', tr('Processos: ', 'Processes: ') + P.length + '   CPU: ' + cpuH[cpuH.length - 1] + '%'));
+      }
+    }
+    w.fk.append(tabs, panel, foot); draw(); timer = setInterval(() => { if(!document.body.contains(w.el)){ clearInterval(timer); return; } if(tab !== 0) draw(); }, 1500);
+  }
+
+  /* ---------- Movie Maker ---------- */
+  function mm(){
+    const w = shell('mm', tr('Sem título - Windows Movie Maker', 'Untitled - Windows Movie Maker'), { w:700, h:470 }, [[tr('Arquivo', 'File'), [[tr('Sair', 'Exit'), () => w.close()]]], [tr('Editar', 'Edit'), [[tr('Desfazer', 'Undo'), null]]], [tr('Exibir', 'View'), [[tr('Storyboard', 'Storyboard'), null]]], [tr('Ferramentas', 'Tools'), [[tr('Títulos e créditos', 'Titles and Credits'), () => unavailable('Movie Maker')]]], [tr('Clip', 'Clip'), [[tr('Adicionar à linha do tempo', 'Add to Timeline'), null]]], [tr('Reproduzir', 'Play'), [[tr('Reproduzir clip', 'Play Clip'), null]]], stdHelp]); if(!w) return;
+    const tool = mkEl('div', 'fkTool'); ['Salvar|Save', 'Abrir|Open', 'Tarefas|Tasks', 'Coleções|Collections'].forEach(t => { const [p, e] = t.split('|'); tool.append(tbtn(null, tr(p, e), () => unavailable('Movie Maker'))); });
+    const main = mkEl('div', 'fkMm'), p = mkEl('div', 'p'), m = mkEl('div', 'm');
+    const box = (t, links) => { const b = mkEl('div', 'xpBox sp'), h = mkEl('button', 'xpBh', '<span></span><i></i>'), c = mkEl('div', 'xpBc'); h.type = 'button'; h.firstChild.textContent = t; links.forEach(l => c.append(link(I.app, l, () => unavailable('Movie Maker')))); h.onclick = () => b.classList.toggle('shut'); b.append(h, c); return b; };
+    p.append(box(tr('Tarefas do filme', 'Movie Tasks'), [tr('1. Capturar vídeo', '1. Capture Video'), tr('Importar vídeo', 'Import video'), tr('Importar imagens', 'Import pictures'), tr('Importar áudio ou música', 'Import audio or music')]), box(tr('2. Editar filme', '2. Edit Movie'), [tr('Exibir efeitos de vídeo', 'View video effects'), tr('Exibir transições de vídeo', 'View video transitions'), tr('Criar títulos ou créditos', 'Make titles or credits')]), box(tr('3. Concluir o filme', '3. Finish Movie'), [tr('Salvar no meu computador', 'Save to my computer'), tr('Enviar por e-mail', 'Send in e-mail')]));
+    const c = mkEl('div', 'c', tr('Arraste um clipe de vídeo ou imagem para a linha do tempo.<br><small>(Nenhum clipe nesta coleção)</small>', 'Drag a video clip or picture to the timeline.<br><small>(No clips in this collection)</small>'));
+    const s = mkEl('div', 's', tr('Para começar a criar o filme, importe vídeo, imagens ou áudio.', 'To start making a movie, import video, pictures or audio.'));
+    m.append(c, s); const mon = mkEl('div', 'mon', '<div></div><span style="color:#445">00:00:00.00</span>'); main.append(p, m, mon); w.fk.append(tool, main);
+  }
+
+  /* ---------- Editor do Registro ---------- */
+  function reg(){
+    const w = shell('reg', tr('Editor do Registro', 'Registry Editor'), { w:660, h:430 }, [[tr('Arquivo', 'File'), [[tr('Sair', 'Exit'), () => w.close()]]], [tr('Editar', 'Edit'), [[tr('Novo', 'New'), null]]], [tr('Exibir', 'View'), [[tr('Barra de status', 'Status Bar'), null, true]]], [tr('Favoritos', 'Favorites'), [[tr('Adicionar aos favoritos', 'Add to Favorites'), null]]], stdHelp]); if(!w) return;
+    const T = { 'Meu Computador': { 'HKEY_CLASSES_ROOT': { '.txt': [['(Padrão)', 'REG_SZ', 'txtfile'], ['Content Type', 'REG_SZ', 'text/plain']], '.exe': [['(Padrão)', 'REG_SZ', 'exefile']] }, 'HKEY_CURRENT_USER': { 'Control Panel': { 'Desktop': [['(Padrão)', 'REG_SZ', '(valor não definido)'], ['Wallpaper', 'REG_SZ', 'C:\\WINDOWS\\Web\\Wallpaper\\Bliss.bmp'], ['ScreenSaveTimeOut', 'REG_SZ', '600']], 'Colors': [['Background', 'REG_SZ', '58 110 165'], ['ButtonFace', 'REG_SZ', '236 233 216']] }, 'Software': { 'Microsoft': { 'Windows': [['(Padrão)', 'REG_SZ', '(valor não definido)']] } } }, 'HKEY_LOCAL_MACHINE': { 'HARDWARE': [['(Padrão)', 'REG_SZ', '(valor não definido)']], 'SOFTWARE': { 'Microsoft': { 'Windows NT': { 'CurrentVersion': [['ProductName', 'REG_SZ', 'Microsoft Windows XP'], ['CurrentVersion', 'REG_SZ', '5.1'], ['CurrentBuildNumber', 'REG_SZ', '2600'], ['RegisteredOwner', 'REG_SZ', (typeof userName === 'function' ? userName() : 'Usuario')]] } } }, 'SYSTEM': [['(Padrão)', 'REG_SZ', '(valor não definido)']] }, 'HKEY_USERS': {}, 'HKEY_CURRENT_CONFIG': {} } };
+    const split = mkEl('div', 'fkSplit'), side = mkEl('div', 'fkSide'), right = mkEl('div'); right.style.cssText = 'flex:1;min-width:0;overflow:auto'; side.style.width = '230px';
+    const st = mkEl('div', 'fkStat', '<span></span>'); const open = new Set(['Meu Computador']); let selP = 'Meu Computador';
+    const vals = o => Array.isArray(o) ? o : [['(Padrão)', 'REG_SZ', '(valor não definido)']];
+    function node(name, o, path, depth){
+      const p = path ? path + '\\' + name : name, isObj = o && !Array.isArray(o), kids = isObj ? Object.keys(o) : [];
+      const it = mkEl('div', 'fkItem' + (p === selP ? ' sel' : '')); it.style.paddingLeft = (4 + depth * 14) + 'px';
+      const ar = mkEl('span', '', kids.length ? (open.has(p) ? '▾' : '▸') : ''); ar.style.cssText = 'width:10px;text-align:center'; it.append(ar, ico(I.folder, 16)); const s = mkEl('span'); s.textContent = name; it.append(s);
+      it.onclick = () => { selP = p; if(kids.length) open.has(p) ? open.delete(p) : open.add(p); draw(); };
+      side.append(it); if(open.has(p)) kids.forEach(k => node(k, o[k], p, depth + 1));
+    }
+    function get(p){ const parts = p.split('\\'); let o = T; for(const k of parts){ if(o && typeof o === 'object' && !Array.isArray(o)) o = o[k]; else return null; } return o; }
+    function draw(){
+      side.innerHTML = ''; Object.keys(T).forEach(k => node(k, T[k], '', 0));
+      right.innerHTML = ''; const t = mkEl('table', 'fkTbl'); t.innerHTML = '<thead><tr><th>' + tr('Nome', 'Name') + '</th><th>' + tr('Tipo', 'Type') + '</th><th>' + tr('Dados', 'Data') + '</th></tr></thead>'; const tb = mkEl('tbody'); t.append(tb);
+      vals(get(selP)).forEach(v => { const r = mkEl('tr'); r.innerHTML = '<td></td><td></td><td></td>'; v.forEach((x, i) => r.children[i].textContent = x); r.onclick = () => { tb.querySelectorAll('tr').forEach(q => q.classList.remove('sel')); r.classList.add('sel'); }; r.ondblclick = () => msgBox({ title:tr('Editar valor da cadeia', 'Edit String'), icon:I.err, text:tr('Não é possível editar: acesso negado ao registro.', 'Cannot edit: access to the registry is denied.') }); tb.append(r); });
+      right.append(t); st.firstChild.textContent = selP;
+    }
+    split.append(side, right); w.fk.append(split, st); draw();
+  }
+
+  /* ---------- Executar... ---------- */
+  function runDlg(){
+    const d = mkEl('div', 'xpDlg'), tb = mkTb(I.app, tr('Executar', 'Run'), { min:false }); tb.classList.remove('off'); d.appendChild(tb);
+    tb.querySelector('.cl').onclick = closeModal; drag(tb, d);
+    const b = mkEl('div', 'fkRun'); b.innerHTML = '<div class="r1"><span></span><div style="flex:1">' + tr('Digite o nome de um programa, pasta, documento ou recurso da Internet e o Windows o abrirá para você.', 'Type the name of a program, folder, document, or Internet resource, and Windows will open it for you.') + '</div></div><div class="r2"><span>' + tr('Abrir:', 'Open:') + '</span></div><div class="r3"></div>';
+    b.firstChild.firstChild.replaceWith(ico(I.app, 32));
+    const inp = mkEl('input'); inp.type = 'text'; inp.spellcheck = false; inp.placeholder = 'cmd'; $$('.r2', b).append(inp);
+    const ok = mkEl('button', 'xpBtn def', 'OK'), cn = mkEl('button', 'xpBtn', tr('Cancelar', 'Cancel')); ok.type = cn.type = 'button';
+    const doRun = () => { const v = inp.value.trim(); if(!v){ return; } const n = v.toLowerCase().replace(/\.exe$/, ''); if(runProgram(n)){ closeModal(); return; }
+      closeModal(); msgBox({ title:v, icon:I.err, text:tr('O Windows não pode encontrar \'' + v.replace(/[<>&]/g, '') + '\'. Verifique se você digitou o nome corretamente e tente novamente.', 'Windows cannot find \'' + v.replace(/[<>&]/g, '') + '\'. Make sure you typed the name correctly, and then try again.'), sound:'windows_xp_error' }); };
+    ok.onclick = doRun; cn.onclick = closeModal; inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); doRun(); } });
+    $$('.r3', b).append(ok, cn); d.appendChild(b); openModal(d, true); setTimeout(() => { try{ inp.focus(); }catch(e){} }, 50);
+  }
+
+  /* nome digitado -> programa */
+  const PROGS = {
+    iexplore: () => ie(), iexplorer: () => ie(), 'internet explorer': () => ie(), msimn: () => oe(), msmsgs: () => msn(), cmd: () => cmd(), taskmgr: () => tm(), moviemk: () => mm(), regedit: () => reg(), regedt32: () => reg(), run: () => runDlg(),
+    calc: () => window.dzCalc && window.dzCalc.open(), notepad: () => window.dzEd && window.dzEd.open(), wordpad: () => window.dzEd && window.dzEd.open(), write: () => window.dzEd && window.dzEd.open(), mspaint: () => window.dzPaint && window.dzPaint.open(), pbrush: () => window.dzPaint && window.dzPaint.open(),
+    explorer: () => window.dzEx && window.dzEx.open(), wmplayer: () => window.dzWmp && window.dzWmp.open(), mplayer2: () => window.dzWmp && window.dzWmp.open(), winver: () => aboutBox(), control: () => controlPanel(), 'control panel': () => controlPanel(),
+    freecell: () => window.dzMg && window.dzMg.open(), sol: () => window.dzMg && window.dzMg.open(), winmine: () => window.dzMg && window.dzMg.open(), spider: () => window.dzMg && window.dzMg.open(),
+    conf: () => msgBox({ title:'NetMeeting', icon:I.err, text:tr('O NetMeeting não pôde ser iniciado: não há placa de vídeo compatível.', 'NetMeeting could not start: no compatible video device was found.'), sound:'windows_xp_error' }),
+    wupdmgr: () => msgBox({ title:'Windows Update', icon:I.info, text:'<p><b>' + tr('Seu computador está atualizado.', 'Your computer is up to date.') + '</b></p><p>' + tr('Não há atualizações disponíveis neste momento.', 'There are no updates available at this time.') + '</p>' }),
+    hh: () => msgBox({ title:tr('Ajuda e Suporte', 'Help and Support'), icon:I.help, text:tr('O Centro de Ajuda e Suporte não está disponível neste computador.', 'Help and Support Center is not available on this computer.') }),
+    mstsc: () => msgBox({ title:tr('Conexão de Área de Trabalho Remota', 'Remote Desktop Connection'), icon:I.err, text:tr('Não foi possível iniciar a Conexão de Área de Trabalho Remota.', 'Could not start Remote Desktop Connection.') }),
+    mplay32: () => window.dzWmp && window.dzWmp.open(), charmap: () => msgBox({ title:tr('Mapa de Caracteres', 'Character Map'), icon:I.info, text:tr('Mapa de Caracteres não está disponível neste computador.', 'Character Map is not available on this computer.') })
+  };
+  function runProgram(n){ n = String(n || '').trim().toLowerCase(); const f = PROGS[n]; if(!f) return false; try{ f(); }catch(e){ return false; } return true; }
+  window.dzXpFake = { ie, oe, msn, cmd, tm, mm, reg, runDlg, runProgram, open: (id) => runProgram({ ie:'iexplore', oe:'msimn', msn:'msmsgs', cmd:'cmd', tm:'taskmgr', mm:'moviemk', reg:'regedit', run:'run', nm:'conf', wu:'wupdmgr', help:'hh' }[id] || id) };
+})();
+
+window.dzXp = { fakeApp: id => window.dzXpFake && window.dzXpFake.open(id), cycle: d => cycleWins(d), setWallpaper, binChanged, pictureViewer, ico, setIc, xps, I, section, open, close, setStyle, isOpen: () => root.classList.contains('xp-desk'), style: () => style };
 })();
 </script>
 
