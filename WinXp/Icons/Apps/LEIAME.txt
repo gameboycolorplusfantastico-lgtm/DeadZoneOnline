@@ -1,0 +1,2 @@
+Ícones extras do menu XP (pacote Windows-XP-3.1, licença GPL v2 - ver LICENSE).
+ie, oe, outlook, msn, cmd, reg, tm, mm, run, wu, user, help, search, net, wmp, globe, logoff, switch, standby, restart, yt (yt = desenho próprio).
