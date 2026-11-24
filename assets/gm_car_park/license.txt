@@ -1,0 +1,11 @@
+Model Information:
+* title:	Gm_car_park
+* source:	https://sketchfab.com/3d-models/gm-car-park-7ee4112d561c4a8ba82a6c1b9e243f67
+* author:	CHANO (https://sketchfab.com/pedroribeiro.1104)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Gm_car_park" (https://sketchfab.com/3d-models/gm-car-park-7ee4112d561c4a8ba82a6c1b9e243f67) by CHANO (https://sketchfab.com/pedroribeiro.1104) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
