@@ -2167,6 +2167,7 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
         <option value="81">CS_MONASTERY_DM</option>
         <option value="82">CS_DOWNHILL</option>
         <option value="83">CS_POOL_DAY</option>
+        <option value="84">GM_CAR_PARK</option>
       </select>
     </div>
 
@@ -4386,7 +4387,7 @@ const LEVEL_THEMES = {};
 // Qual categoria cada mapa usa (índice em LEVEL_DEFINITIONS). 74 (FNAF) e 75 (Futebol) têm estilo próprio.
 const MAP_CATEGORY = {
   PARK:       [2, 4, 10, 11, 12, 13, 16, 24, 33, 35, 37, 42, 46, 55, 63, 64, 65, 76, 77, 80, 81],
-  INDUSTRIAL: [0, 5, 6, 17, 22, 26, 27, 30, 34, 36, 45, 47, 50, 52, 54, 66, 67, 72, 73],
+  INDUSTRIAL: [0, 5, 6, 17, 22, 26, 27, 30, 34, 36, 45, 47, 50, 52, 54, 66, 67, 72, 73, 84],
   URBAN:      [1, 3, 7, 8, 14, 15, 18, 20, 23, 28, 29, 38, 39, 40, 41, 43, 44, 48, 49, 51, 57, 58, 59, 60, 61, 62, 68, 69, 70, 71, 78, 79],
   HOUSE:      [21, 31, 53, 56],
   METRO:      [9, 19, 25, 32, 83],
@@ -5328,7 +5329,7 @@ const I18N = {
     lvl80: "CS_MONASTERY", lvl80Desc: "Estilo Counter-Strike: Mosteiro no alto de um platô com quatro rampas, corredor interno estreito, casas de telhado e lago ao sudoeste.",
     lvl81: "CS_MONASTERY_DM", lvl81Desc: "Estilo Counter-Strike: Mosteiro no platô com quatro rampas (uma em escada), telhados e lago. T ao sul, CT ao norte. (Deathmatch / CTF)",
     lvl82: "CS_DOWNHILL", lvl82Desc: "Estilo Counter-Strike: Montanha estreita e bem comprida, em 5 patamares ligados por rampas em zigue-zague. T no topo, CT na base. Dá para pular os penhascos e descer rápido (dano leve), mas para subir só pelas rampas. (Deathmatch / CTF)",
-    lvl83: "CS_POOL_DAY", lvl83Desc: "Estilo Counter-Strike: Piscinão interno minúsculo, inspirado em Pool Day. Lado vermelho (T) a oeste, azul (CT) a leste e uma piscina grande no salão do meio. Tiroteio curto e frenético. (Deathmatch / CTF)",
+    lvl84: "GM_CAR_PARK", lvl84Desc: "Estacionamento subterrâneo (modelo 3D de CHANO, CC-BY-4.0) em planta: corredor em anel com pilares e carros de cobertura. Também existe em 3D no menu DEBUG.", lvl83: "CS_POOL_DAY", lvl83Desc: "Estilo Counter-Strike: Piscinão interno minúsculo, inspirado em Pool Day. Lado vermelho (T) a oeste, azul (CT) a leste e uma piscina grande no salão do meio. Tiroteio curto e frenético. (Deathmatch / CTF)",
     socHomeLabel: "SEU TIME (BRASILEIRÃO):", socAwayLabel: "ADVERSÁRIO:", ctlKick: "Chutar (Futebol)", ctlJump: "Pular", ctlTouchKick: "BOTÃO CHUTE", ctlTouchJump: "BOTÃO PULO", ctlScope: "Zoom (snipers)", ctlFireMode: "Modo de tiro (auto / semi / rajada)", ctlKbScope: "CLIQUE DIR. / Z", ctlTouchScope: "BOTÃO ZOOM", ctlTouchMode: "BOTÃO MODO",
     dmTeamLabel: "SEU LADO:", dmTeamCT: "CONTRA-TERRORISTAS", dmTeamT: "TERRORISTAS", dmTeamRandom: "🎲 ALEATÓRIO",
     matchEndLabel: "FIM DA PARTIDA:", menuColorLabel: "COR DO MENU:", hudSeparateLabel: "COR DA HUD DIFERENTE DO MENU", hudColorLabel: "COR DA HUD:", mcBlue: "AZUL", mcOrange: "LARANJA", mcWhite: "BRANCO", mcBlack: "PRETO", mcGreen: "VERDE", mcPink: "ROSA CHOQUE", mc_red: "VERMELHO", mc_purple: "ROXO", mc_cyan: "CIANO", mc_yellow: "AMARELO", mc_olive: "OLIVA (CS:S)", mc_lime: "LIMÃO NEON", matchEndScore: "POR PONTUAÇÃO", matchEndTime: "POR TEMPO", matchEndNone: "SEM LIMITE", matchGoalKills: "META DE ABATES", matchGoalCaps: "META DE CAPTURAS", matchGoalLoss: "BAIXAS CT PARA OS T VENCEREM", matchTimeLbl: "TEMPO DA PARTIDA", matchMinUnit: "MIN",
@@ -5484,7 +5485,7 @@ const I18N = {
     lvl80: "CS_MONASTERY", lvl80Desc: "Counter-Strike style: Monastery on top of a plateau with four ramps, a narrow inner corridor, roofed houses and a lake in the southwest.",
     lvl81: "CS_MONASTERY_DM", lvl81Desc: "Counter-Strike style: Monastery on the plateau with four ramps (one is a stair), roofs and a lake. T in the south, CT in the north. (Deathmatch / CTF)",
     lvl82: "CS_DOWNHILL", lvl82Desc: "Counter-Strike style: A narrow, very long mountain in 5 terraces linked by zig-zag ramps. T on the summit, CT at the base. You can jump off the cliffs to go down fast (light damage), but climbing back is only by the ramps. (Deathmatch / CTF)",
-    lvl83: "CS_POOL_DAY", lvl83Desc: "Counter-Strike style: A tiny indoor swimming hall inspired by Pool Day. Red side (T) in the west, blue side (CT) in the east and a big pool in the middle hall. Short, frantic fights. (Deathmatch / CTF)",
+    lvl84: "GM_CAR_PARK", lvl84Desc: "Underground car park (3D model by CHANO, CC-BY-4.0) as a floor plan: a ring corridor with pillars and cars for cover. Also available in full 3D in the DEBUG menu.", lvl83: "CS_POOL_DAY", lvl83Desc: "Counter-Strike style: A tiny indoor swimming hall inspired by Pool Day. Red side (T) in the west, blue side (CT) in the east and a big pool in the middle hall. Short, frantic fights. (Deathmatch / CTF)",
     socHomeLabel: "YOUR TEAM (BRASILEIRÃO):", socAwayLabel: "OPPONENT:", ctlKick: "Kick (Soccer)", ctlJump: "Jump", ctlTouchKick: "KICK BUTTON", ctlTouchJump: "JUMP BUTTON", ctlScope: "Zoom (snipers)", ctlFireMode: "Fire mode (auto / semi / burst)", ctlKbScope: "RIGHT CLICK / Z", ctlTouchScope: "ZOOM BUTTON", ctlTouchMode: "MODE BUTTON",
     dmTeamLabel: "YOUR SIDE:", dmTeamCT: "COUNTER-TERRORISTS", dmTeamT: "TERRORISTS", dmTeamRandom: "🎲 RANDOM",
     matchEndLabel: "MATCH END:", menuColorLabel: "MENU COLOR:", hudSeparateLabel: "HUD COLOR DIFFERENT FROM MENU", hudColorLabel: "HUD COLOR:", mcBlue: "BLUE", mcOrange: "ORANGE", mcWhite: "WHITE", mcBlack: "BLACK", mcGreen: "GREEN", mcPink: "HOT PINK", mc_red: "RED", mc_purple: "PURPLE", mc_cyan: "CYAN", mc_yellow: "YELLOW", mc_olive: "OLIVE (CS:S)", mc_lime: "NEON LIME", matchEndScore: "BY SCORE", matchEndTime: "BY TIME", matchEndNone: "NO LIMIT", matchGoalKills: "KILL TARGET", matchGoalCaps: "CAPTURE TARGET", matchGoalLoss: "CT LOSSES FOR T TO WIN", matchTimeLbl: "MATCH TIME", matchMinUnit: "MIN",
@@ -9228,6 +9229,19 @@ function nmPiscina() {
     dmZones: { T: { x0: 1, y0: 8, x1: 3, y1: 17 }, CT: { x0: 23, y0: 8, x1: 25, y1: 17 } } };
   LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, ldef);
   LEVEL_THEMES[LEVEL_DEFINITIONS.length - 2] = STYLES.METRO;
+  LEVEL_DIFFICULTY.splice(LEVEL_DIFFICULTY.length - 1, 0, 2);
+})();
+
+
+// ---------- 6) GM_CAR_PARK: o estacionamento 3D (CHANO, CC-BY-4.0) convertido em planta para o motor do jogo ----------
+// Gerado a partir da geometria do modelo 3D (cortes de parede entre 0,35 e 2,4 m, 1 tile = 1 m). Todos os modos funcionam aqui; o visualizador 3D continua no menu DEBUG.
+const GMCP_ROWS = ["########################################################################", "########################################################################", "############################......###......#############################", "############################......###......#############################", "########..........##.######........#........##....##....##.....#########", "########..........##.###.#.........#........##....##...###.....#########", "########.............###...........#...................###.....#########", "########..........##.######.......##........##....##...###.....#########", "########...##.....##.######.......##........##....##...####....#########", "#######...........##.######.......###.......##....##...........#########", "##...................................................................###", "##...................................................................###", "##...............................#...#...............................###", "##...................................................................###", "#######.........................................................########", "#######............#.......######.....##....##....##............########", "#######...........##.......######.....##....###...##............########", "######.......#######.......######.....##....###...##.....#...........###", "#######......#######.......###..............###...#######............###", "#######......#######.......###.##.....##....###...#######............###", "####........########.......######.....##....###...#######............###", "##..........##############################################.....#########", "##..........##############################################.....#########", "##...........#############################################.....#########", "###..##......##..#####################################.###.....###.#####", "###..##......##..#####################################.###.....###.#####", "#######...........##################################.................###", "#######......##....#..###########################..#....#............###", "#######...........##..###########################..#.................###", "##...........##.......###########################.......#............###", "##................##..###########################..#...........#########", "##...........##....#..###########################..#....#......#########", "##................##################################...........#########", "###..##......##..###################..################.###.....###.#####", "###..##......##..###################..################.###.....###.#####", "##...........##...####.....#########..##############....#............###", "##.......#........####.....#########...#############.................###", "##......####.##............##..####....#####............#............###", "##......######....##...........##......#####.......#.................###", "##.....########...##...........##..............#####....#............###", "###..##.#######..###.....####..##.............########.###.....###.#####", "###..##....####..##################.##################.###.....###.#####", "#####.............################..################............########", "#######...........################..################...........#########", "#######......##....##############....###############....#......#########", "##.####...........################....##############.................###", "##...........##...#################...##############....#......#########", "##................#################...##############...........#########", "##...........##....################.################....#......#########", "##................#################.################...........###.#####", "###..##......##..#####################################.###.....###.#####", "###..##......##..#####################################.###.....###.#####", "#######...........##################################.................###", "#######...........##################################.................###", "#######...........##################################.................###", "##...........###########......###.....#####....#####.................###", "##...........###########...............####....#####.................###", "##...........##########.................###....#####.................###", "#######......#....#####.......###.....#####....#####.....#...........###", "#######...........#####.......#####.#.#####....#####.................###", "#######.............................................####.............###", "#######...........................................######........#....###", "##...............................................#######.............###", "##...............................................######..............###", "##................................................##.................###", "#######.........##..............................................########", "########...#########........########..#####.......##...####....#########", "####################........#########.#####.......##...###.....#########", "####################.......##########.#####.......##...###.....#########", "###################.........###############............####....#########", "####################........###############.......##...####....#########", "####################........###############.......##....###....#########", "########################################################################", "########################################################################", "########################################################################"];
+(function gmRegisterCarPark(){
+  const ldef = { keyName: 'lvl84', w: 72, h: 75, grid: dmParseGrid(GMCP_ROWS), heights: dmFlatH(72, 75, () => 0),
+    spawn: { x: 31.0, y: 4.0, angle: Math.PI / 2 }, waveSpawnRadius: 18,
+    dmZones: { T: { x0: 28, y0: 2, x1: 33, y1: 5 }, CT: { x0: 32, y0: 60, x1: 37, y1: 63 } } };
+  LEVEL_DEFINITIONS.splice(LEVEL_DEFINITIONS.length - 1, 0, ldef);
+  LEVEL_THEMES[LEVEL_DEFINITIONS.length - 2] = STYLES.INDUSTRIAL;
   LEVEL_DIFFICULTY.splice(LEVEL_DIFFICULTY.length - 1, 0, 2);
 })();
 
@@ -33072,16 +33086,20 @@ function css(){
   '#gmCredit{position:absolute;left:0;right:0;bottom:4px;text-align:center;font-size:10px;color:#9a9;opacity:.8;pointer-events:none;padding:0 8px}' +
   '#gmMsg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#000;font-size:15px;text-align:center;padding:20px}' +
   '#gmBarW{width:min(70vw,360px);height:10px;border:1px solid #39ff14}#gmBar{height:100%;width:0;background:#39ff14}' +
-  '#gmTouch{position:absolute;left:0;right:0;bottom:22px;display:none;justify-content:space-between;padding:0 14px;z-index:2}' +
+  '#gmCross{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;pointer-events:none;background:linear-gradient(#39ff14,#39ff14) center/2px 100% no-repeat,linear-gradient(#39ff14,#39ff14) center/100% 2px no-repeat;opacity:.85}' +
+  '#gmStat{position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:16px;color:#fff;text-shadow:0 0 4px #000,0 0 4px #000;pointer-events:none;white-space:pre-line}' +
+  '#gmFlash{position:absolute;inset:0;background:#f00;opacity:0;pointer-events:none}#gmBig{position:absolute;left:0;right:0;top:34%;text-align:center;font-size:30px;color:#ff4a3a;text-shadow:0 0 6px #000;pointer-events:none;white-space:pre-line}' +
+  '#gmTouch{position:absolute;left:0;right:0;bottom:70px;display:none;justify-content:space-between;padding:0 14px;z-index:2}' +
+  '#gmTouchX{display:none}' + '#gmTouchOld{position:absolute;left:0;right:0;bottom:22px;display:none;justify-content:space-between;padding:0 14px;z-index:2}' +
   '#gmTouch button{background:rgba(0,0,0,.55);color:#39ff14;border:1px solid #39ff14;font:inherit;padding:14px 18px}';
   document.head.appendChild(s);
 }
 
 function build(){
   ov = document.createElement('div'); ov.id = 'gmOverlay';
-  ov.innerHTML = '<canvas id="gmCanvas"></canvas><div id="gmHud"></div><button id="gmClose" type="button"></button>' +
+  ov.innerHTML = '<canvas id="gmCanvas"></canvas><div id="gmCross"></div><div id="gmStat"></div><div id="gmBig"></div><div id="gmFlash"></div><div id="gmHud"></div><button id="gmClose" type="button"></button>' +
     '<div id="gmMsg"><div id="gmMsgT"></div><div id="gmBarW"><div id="gmBar"></div></div></div>' +
-    '<div id="gmTouch"><button type="button" data-k="fly"></button><button type="button" data-k="up">▲</button><button type="button" data-k="down">▼</button></div>' +
+    '<div id="gmTouch"><button type="button" data-k="fly"></button><button type="button" data-k="fire">FIRE</button><button type="button" data-k="up">▲</button><button type="button" data-k="down">▼</button></div>' +
     '<div id="gmCredit">"Gm_car_park" by CHANO (sketchfab.com/pedroribeiro.1104) — CC-BY-4.0</div>';
   document.body.appendChild(ov);
   cv = ov.querySelector('#gmCanvas'); hud = ov.querySelector('#gmHud'); bar = ov.querySelector('#gmBar'); msg = ov.querySelector('#gmMsg');
@@ -33090,13 +33108,14 @@ function build(){
   if ('ontouchstart' in window) tb.style.display = 'flex';
   tb.querySelector('[data-k=fly]').textContent = T('VOAR', 'FLY');
   tb.addEventListener('click', function(e){ var k = e.target.getAttribute && e.target.getAttribute('data-k'); if (k === 'fly') cam.fly = !cam.fly; });
-  ['up','down'].forEach(function(k){
+  ['up','down','fire'].forEach(function(k){
     var b = tb.querySelector('[data-k=' + k + ']');
     b.addEventListener('touchstart', function(e){ keys['t' + k] = 1; e.preventDefault(); }, { passive:false });
     b.addEventListener('touchend', function(){ keys['t' + k] = 0; });
   });
   // mouse look (pointer lock) + arrastar com o dedo/mouse
-  cv.addEventListener('mousedown', function(){ if (!('ontouchstart' in window) && cv.requestPointerLock) { try { cv.requestPointerLock(); } catch(e){} } });
+  cv.addEventListener('mousedown', function(e){ if (e.button === 0) keys.Mouse = 1; if (!('ontouchstart' in window) && cv.requestPointerLock) { try { cv.requestPointerLock(); } catch(e){} } });
+  document.addEventListener('mouseup', function(){ keys.Mouse = 0; });
   document.addEventListener('mousemove', function(e){ if (!open) return; if (document.pointerLockElement === cv) { look.dx += e.movementX; look.dy += e.movementY; } });
   var tid = null, tx = 0, ty = 0, mx = 0, my = 0, mid = null;
   cv.addEventListener('touchstart', function(e){
@@ -33123,7 +33142,8 @@ function build(){
     if (e.code === 'Escape') { close(); return; }
     if (e.code === 'KeyF' && !e.repeat) cam.fly = !cam.fly;
     if (e.code === 'KeyH' && !e.repeat) showHud = !showHud;
-    if (e.code === 'KeyR' && !e.repeat) respawn();
+    if (e.code === 'KeyT' && !e.repeat) newGame();
+    if (e.code === 'KeyQ' && !e.repeat) reload();
     keys[e.code] = 1;
   }, true);
   window.addEventListener('keyup', function(e){ if (!open) return; e.stopPropagation(); keys[e.code] = 0; }, true);
@@ -33247,7 +33267,7 @@ function load(){
     st = { G:G, bvs:bvs, draws:draws, bmin:bmin, bmax:bmax, tris:tris, bin:bin };
     buildColl();
     msg.style.display = 'none'; loading = false;
-    respawn();
+    respawn(); newGame();
   }).catch(function(e){
     loading = false; st = null;
     var el = msg.firstChild;
@@ -33380,9 +33400,11 @@ function frame(t){
     else if (b === 4) cam.fly = !cam.fly;         // LB
     else if (b === 3) showHud = !showHud;         // Y
     else if (b === 8 || b === 9) { }              // select/start: nada
-    else if (b === 5) respawn();                  // RB
+    else if (b === 5) newGame();                  // RB
+    else if (b === 2 && !cam.fly) reload();       // X
   });
   if (!open) return;
+  if (!st) return;
   var turn = 2.3 * dt;
   cam.yaw += look.dx * .0024 + P.rx * turn; cam.pitch -= look.dy * .0024 + P.ry * turn; look.dx = look.dy = 0;
   cam.pitch = Math.max(-1.5, Math.min(1.5, cam.pitch));
@@ -33391,13 +33413,13 @@ function frame(t){
     var fw = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) - P.ly - (keys.ty || 0);
     var sd = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0) + P.lx + (keys.tx || 0);
     var l = Math.sqrt(fw * fw + sd * sd); if (l > 1) { fw /= l; sd /= l; }
-    var run = keys.ShiftLeft || keys.ShiftRight || P.rt > .5 ? 1.9 : 1;
+    var run = keys.ShiftLeft || keys.ShiftRight || P.lt > .5 ? 1.9 : 1;
     var sp = (cam.fly ? 9 : 4.2) * S * run * (cam.fly ? 1.6 : 1);
     var cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw);
     var mx = (sy * fw + cy * sd) * sp * dt, mz = (-cy * fw + sy * sd) * sp * dt;
     if (cam.fly) {
       cam.x += mx; cam.z += mz; cam.y += Math.sin(cam.pitch) * fw * sp * dt;
-      cam.y += ((keys.Space || keys.tup || P.a ? 1 : 0) - (keys.ControlLeft || keys.KeyC || keys.tdown || P.x ? 1 : 0)) * sp * .6 * dt;
+      cam.y += ((keys.Space || keys.tup || P.a ? 1 : 0) - (keys.ControlLeft || keys.KeyC || keys.tdown || (cam.fly && P.x) ? 1 : 0)) * sp * .6 * dt;
     } else {
       var rad = .35 * S;
       if (!blocked(cam.x, cam.y, cam.z, mx, 0, rad)) cam.x += mx;
@@ -33409,12 +33431,14 @@ function frame(t){
       else { cam.y += (want - cam.y) * Math.min(1, dt * 18); cam.vy = 0; if ((keys.Space) && false) cam.vy = 0; }
     }
   }
+  gameTick(dt, P);
   draw();
+  hudGame();
   if (showHud) {
     hud.style.display = 'block';
     hud.textContent = 'GM CAR PARK · ' + (cam.fly ? T('VOO', 'FLY') : T('ANDANDO', 'WALK')) + '\n' +
-      T('WASD mover · mouse olhar (clique) · Shift correr · F voar · Espaço/Ctrl sobe/desce · R reiniciar · H esconde · Esc sai', 'WASD move · mouse look (click) · Shift run · F fly · Space/Ctrl up/down · R respawn · H hide · Esc exit') + '\n' +
-      T('Controle: analógicos mover/olhar · RT correr · LB voar (A sobe, X desce) · RB reiniciar · Y esconde · B sai', 'Pad: sticks move/look · RT run · LB fly (A up, X down) · RB respawn · Y hide · B exit');
+      T('WASD mover · mouse olhar · CLIQUE atira · Q recarrega · Shift corre · F voa · T recomeça · H esconde · Esc sai', 'WASD move · mouse look · CLICK shoots · Q reload · Shift run · F fly · T restart · H hide · Esc exit') + '\n' +
+      T('Controle: analógicos mover/olhar · RT atira · LT corre · X recarrega · LB voa · RB recomeça · Y esconde · B sai', 'Pad: sticks move/look · RT shoot · LT run · X reload · LB fly · RB restart · Y hide · B exit');
   } else hud.style.display = 'none';
 }
 function draw(){
@@ -33438,11 +33462,136 @@ function draw(){
     gl.drawElements(gl.TRIANGLES, d.ai.count, gl.UNSIGNED_INT, d.ai.byteOffset || 0);
   }
   void last;
+  drawZombies(G);
 }
 function bind(loc, acc, n){
   if (loc < 0) return; var v = st.bvs[acc.bufferView];
   gl.bindBuffer(gl.ARRAY_BUFFER, v.b); gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, n, gl.FLOAT, false, v.stride, acc.byteOffset || 0);
+}
+
+/* ---------- jogo dentro do mapa: zumbis, tiro, ondas ---------- */
+var G3 = { hp:100, score:0, wave:0, zs:[], ammo:30, mag:30, reloadT:0, fireT:0, over:false, toSpawn:0, spawnT:0, flash:0, waveT:0, t:0, kills:0, msg:'', msgT:0 };
+var cube = null;
+function rnd(a, b){ return a + Math.random() * (b - a); }
+function newGame(){
+  G3.hp = 100; G3.score = 0; G3.wave = 0; G3.zs = []; G3.ammo = G3.mag; G3.reloadT = 0; G3.over = false; G3.kills = 0; G3.flash = 0;
+  respawn(); nextWave();
+}
+function nextWave(){
+  G3.wave++; G3.toSpawn = 4 + G3.wave * 3; G3.spawnT = 1.5;
+  G3.msg = T('ONDA ', 'WAVE ') + G3.wave; G3.msgT = 2.5; G3.hp = Math.min(100, G3.hp + 25);
+}
+function reload(){ if (G3.over || G3.reloadT > 0 || G3.ammo >= G3.mag) return; G3.reloadT = 1.5; }
+function spawnZ(){
+  if (!st) return;
+  var b0 = st.bmin, b1 = st.bmax, fl = cam.y - 1.65 * S;
+  for (var i = 0; i < 60; i++) {
+    var x = rnd(b0[0], b1[0]), z = rnd(b0[2], b1[2]), g = groundY(x, b0[1] + 1.4 * S, z);
+    if (g < -1e8) continue;
+    var dx = x - cam.x, dz = z - cam.z, d = Math.sqrt(dx * dx + dz * dz);
+    if (d < 12 * S || d > 70 * S) continue;
+    if (i < 45 && Math.abs(g - fl) > 1.5 * S) continue;
+    G3.zs.push({ x:x, y:g, z:z, hp:100 + G3.wave * 12, sp:Math.min(3.4, 1.5 + G3.wave * .12 + Math.random() * .4) * S, atk:0, ph:Math.random() * 6, yaw:0, hurt:0 });
+    return;
+  }
+}
+function rayWorld(o, d, maxT){
+  var best = maxT, seen = {}, step = CELL * .5;
+  for (var t = 0; t <= maxT; t += step) {
+    var px = o[0] + d[0] * t, pz = o[2] + d[2] * t, cx = Math.floor((px - gx0) / CELL), cz = Math.floor((pz - gz0) / CELL), k = cz * gw + cx;
+    if (cx < 0 || cz < 0 || cx >= gw || cz >= gh || seen[k]) continue; seen[k] = 1;
+    var c = grid[k]; if (!c) continue;
+    for (var i = 0; i < c.length; i++) { var r = rayTri(o, d, c[i], best); if (r >= 0 && r < best) best = r; }
+  }
+  return best;
+}
+function shoot(){
+  var cp = Math.cos(cam.pitch), d = [Math.sin(cam.yaw) * cp, Math.sin(cam.pitch), -Math.cos(cam.yaw) * cp], o = [cam.x, cam.y, cam.z];
+  var wall = rayWorld(o, d, 80 * S), bz = null, bt = wall;
+  G3.zs.forEach(function(z){
+    var h = .35 * S, lo = [z.x - h, z.y, z.z - h], hi = [z.x + h, z.y + 1.8 * S, z.z + h], t0 = 0, t1 = bt, ok = true;
+    for (var a = 0; a < 3; a++) {
+      if (Math.abs(d[a]) < 1e-9) { if (o[a] < lo[a] || o[a] > hi[a]) ok = false; }
+      else { var u = (lo[a] - o[a]) / d[a], v = (hi[a] - o[a]) / d[a]; if (u > v) { var q = u; u = v; v = q; } if (u > t0) t0 = u; if (v < t1) t1 = v; if (t0 > t1) ok = false; }
+    }
+    if (ok && t0 < bt) { bt = t0; bz = z; bz._hy = o[1] + d[1] * t0 - z.y; }
+  });
+  if (bz) {
+    var dm = bz._hy > 1.45 * S ? 70 : 34; bz.hp -= dm; bz.hurt = .12;
+    if (bz.hp <= 0) { G3.zs.splice(G3.zs.indexOf(bz), 1); G3.kills++; G3.score += bz._hy > 1.45 * S ? 150 : 100; }
+  }
+}
+function gameTick(dt, P){
+  G3.t += dt; if (G3.msgT > 0) G3.msgT -= dt; if (G3.flash > 0) G3.flash -= dt * 1.6;
+  if (G3.over) { if (P.a && cam.fly === false && false) newGame(); return; }
+  if (G3.reloadT > 0) { G3.reloadT -= dt; if (G3.reloadT <= 0) G3.ammo = G3.mag; }
+  if (G3.fireT > 0) G3.fireT -= dt;
+  var fire = keys.Mouse && document.pointerLockElement === cv || keys.KeyJ || keys.tfire || P.rt > .5;
+  if (fire && G3.fireT <= 0 && G3.reloadT <= 0) {
+    if (G3.ammo > 0) { G3.ammo--; G3.fireT = .11; shoot(); cam.pitch += .004; if (G3.ammo === 0) reload(); }
+    else reload();
+  }
+  if (G3.toSpawn > 0 && G3.zs.length < 14) { G3.spawnT -= dt; if (G3.spawnT <= 0) { spawnZ(); G3.toSpawn--; G3.spawnT = Math.max(.5, 2 - G3.wave * .1); } }
+  else if (G3.toSpawn <= 0 && G3.zs.length === 0) { G3.waveT += dt; if (G3.waveT > 3) { G3.waveT = 0; nextWave(); } }
+  var rad = .3 * S;
+  for (var i = G3.zs.length - 1; i >= 0; i--) {
+    var z = G3.zs[i], dx = cam.x - z.x, dz = cam.z - z.z, d = Math.sqrt(dx * dx + dz * dz) || 1;
+    if (z.hurt > 0) z.hurt -= dt;
+    z.yaw = Math.atan2(dx, dz); z.ph += dt * 6;
+    if (d > 1.0 * S) {
+      var ux = dx / d, uz = dz / d, mx = ux * z.sp * dt, mz = uz * z.sp * dt, ey = z.y + 1.65 * S, mv = false;
+      if (!blocked(z.x, ey, z.z, mx, 0, rad)) { z.x += mx; mv = true; }
+      if (!blocked(z.x, ey, z.z, 0, mz, rad)) { z.z += mz; mv = true; }
+      if (!mv) { var sx = -uz * z.sp * dt * (i % 2 ? 1 : -1), sz = ux * z.sp * dt * (i % 2 ? 1 : -1); if (!blocked(z.x, ey, z.z, sx, sz, rad)) { z.x += sx; z.z += sz; } }
+    }
+    var g = groundY(z.x, z.y + .6 * S, z.z);
+    if (g > -1e8) z.y += (g - z.y) * Math.min(1, dt * 14); else { z.y -= 9 * S * dt; if (z.y < st.bmin[1] - 25 * S) { G3.zs.splice(i, 1); G3.toSpawn++; continue; } }
+    if (d < 1.2 * S && Math.abs(cam.y - 1.65 * S - z.y) < 1.4 * S) {
+      z.atk -= dt;
+      if (z.atk <= 0) { z.atk = .9; G3.hp -= 8 + G3.wave; G3.flash = .5; if (G3.hp <= 0) { G3.hp = 0; G3.over = true; } }
+    } else z.atk = Math.min(z.atk, .3);
+  }
+}
+function hudGame(){
+  var st2 = document.getElementById('gmStat'), big = document.getElementById('gmBig'), fl = document.getElementById('gmFlash');
+  st2.textContent = '♥ ' + Math.round(G3.hp) + '   ' + (G3.reloadT > 0 ? T('RECARREGANDO...', 'RELOADING...') : '⁍ ' + G3.ammo + '/' + G3.mag) + '   ' + T('ONDA ', 'WAVE ') + G3.wave + '   ' + T('ZUMBIS ', 'ZOMBIES ') + (G3.zs.length + G3.toSpawn) + '   ' + T('PONTOS ', 'SCORE ') + G3.score;
+  big.textContent = G3.over ? T('VOCÊ MORREU\nOnda ', 'YOU DIED\nWave ') + G3.wave + ' · ' + G3.score + T(' pontos\nT ou RB para recomeçar', ' pts\nT or RB to restart') : (G3.msgT > 0 ? G3.msg : '');
+  fl.style.opacity = G3.over ? .35 : Math.max(0, Math.min(.5, G3.flash));
+}
+function initCube(){
+  var f = [[0,0,1,[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]],[0,0,-1,[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,-1]],[1,0,0,[1,-1,1],[1,-1,-1],[1,1,-1],[1,1,1]],[-1,0,0,[-1,-1,-1],[-1,-1,1],[-1,1,1],[-1,1,-1]],[0,1,0,[-1,1,1],[1,1,1],[1,1,-1],[-1,1,-1]],[0,-1,0,[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1]]];
+  var v = [];
+  f.forEach(function(q){ [0,1,2,0,2,3].forEach(function(i){ var p = q[3 + i]; v.push(p[0] * .5, p[1] * .5, p[2] * .5, q[0], q[1], q[2]); }); });
+  var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(v), gl.STATIC_DRAW);
+  cube = b;
+}
+function box(Gp, bx, by, bz, yaw, ox, oy, oz, sx, sy, sz, col, tint){
+  var c = Math.cos(yaw), s = Math.sin(yaw);
+  var m = new Float32Array([c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s * sz, 0, c * sz, 0, bx + c * ox + s * oz, by + oy, bz - s * ox + c * oz, 1]);
+  gl.uniformMatrix4fv(Gp.uM, false, m); gl.uniformMatrix3fv(Gp.uNM, false, new Float32Array([c, 0, -s, 0, 1, 0, s, 0, c]));
+  gl.uniform3f(Gp.uCol, col[0] + tint, col[1] + tint * .3, col[2] + tint * .3); gl.drawArrays(gl.TRIANGLES, 0, 36);
+}
+function drawZombies(Gp){
+  if (!G3.zs.length) return;
+  if (!cube) initCube();
+  gl.uniform1f(Gp.uHas, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, cube);
+  gl.enableVertexAttribArray(Gp.aP); gl.vertexAttribPointer(Gp.aP, 3, gl.FLOAT, false, 24, 0);
+  gl.enableVertexAttribArray(Gp.aN); gl.vertexAttribPointer(Gp.aN, 3, gl.FLOAT, false, 24, 12);
+  if (Gp.aT >= 0) { gl.disableVertexAttribArray(Gp.aT); gl.vertexAttrib2f(Gp.aT, 0, 0); }
+  var k = S;
+  G3.zs.forEach(function(z){
+    var tn = z.hurt > 0 ? .5 : 0, sw = Math.sin(z.ph) * .18 * k, y = z.yaw;
+    box(Gp, z.x, z.y, z.z, y, -.12 * k, .4 * k, sw, .2 * k, .8 * k, .22 * k, [.16, .2, .4], tn);
+    box(Gp, z.x, z.y, z.z, y, .12 * k, .4 * k, -sw, .2 * k, .8 * k, .22 * k, [.16, .2, .4], tn);
+    box(Gp, z.x, z.y, z.z, y, 0, 1.12 * k, 0, .52 * k, .66 * k, .28 * k, [.36, .42, .3], tn);
+    box(Gp, z.x, z.y, z.z, y, -.34 * k, 1.3 * k, .3 * k, .14 * k, .14 * k, .62 * k, [.3, .5, .28], tn);
+    box(Gp, z.x, z.y, z.z, y, .34 * k, 1.3 * k, .3 * k, .14 * k, .14 * k, .62 * k, [.3, .5, .28], tn);
+    box(Gp, z.x, z.y, z.z, y, 0, 1.64 * k, 0, .3 * k, .3 * k, .3 * k, [.34, .52, .3], tn);
+    box(Gp, z.x, z.y, z.z, y, -.07 * k, 1.68 * k, .16 * k, .06 * k, .06 * k, .04 * k, [.9, .1, .1], 0);
+    box(Gp, z.x, z.y, z.z, y, .07 * k, 1.68 * k, .16 * k, .06 * k, .06 * k, .04 * k, [.9, .1, .1], 0);
+  });
 }
 
 function openMap(){
@@ -33464,7 +33613,7 @@ function close(){
   var sm = document.getElementById('settingsModal');
   if (sm && settingsWasOpen) sm.style.display = 'flex';
 }
-window.dzGm3d = { open: openMap, close: close, state: function(){ return { st: !!st, cam: cam, S: S, bmin: st && st.bmin, bmax: st && st.bmax }; }, cam: cam, keys: keys };
+window.dzGm3d = { g3: G3, spawn: spawnZ, tick: function(d){ gameTick(d, {rt:0,lt:0}); }, open: openMap, close: close, state: function(){ return { st: !!st, cam: cam, S: S, bmin: st && st.bmin, bmax: st && st.bmax }; }, cam: cam, keys: keys };
 
 function wire(){
   var g = document.getElementById('dbgGoMapBtn'); if (!g || document.getElementById('dbgGm3dBtn')) return;
