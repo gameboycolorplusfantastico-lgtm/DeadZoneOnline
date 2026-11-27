@@ -2642,6 +2642,9 @@ html[data-hud="lime"]{--cs-hud:#c6ff1a;--cs-hud-glow:rgba(170,230,0,.6);--cs-hud
 
         <div class="set-sec" data-i18n="dbgSecPlayer">JOGADOR</div>
         <div class="setting-group">
+          <label class="checkbox-label"><input type="checkbox" id="dbgSonic"><span>MODO SONIC (overlay 3ª pessoa · sem armas · pulo 2x homing · tiro boost · R spin dash · F stomp)</span></label>
+        </div>
+        <div class="setting-group">
           <label class="checkbox-label"><input type="checkbox" id="dbgGodMode"><span data-i18n="dbgGodMode">Vida Infinita (God Mode)</span></label>
         </div>
         <div class="setting-group">
@@ -2915,6 +2918,7 @@ Object.values(MODE_ICONS).forEach(url => {
 })();
 
 const debugOptions = {
+  sonic: false,       // debug: Modo Sonic (overlay em 3ª pessoa, sem armas)
   freeRoam: false,    // debug: mapa escolhido sem partida/bots
   freeBots: false,    // true = liga os bots/inimigos normais no mapa do debug
   godMode: false,
@@ -10892,6 +10896,7 @@ function shopUpdateBtn(){
   }
 }
 function shopOpenMenu(){
+  if(sonicOn()) return;
   if(!started || gameOver || !shopOn() || dmPlayerDead || countdownActive || settingsModal.style.display === 'flex') return;
   if(!shop.built){ shopBuild(); shop.built = true; }
   shopBuild();
@@ -11235,7 +11240,7 @@ function dmKillPlayer(){
 }
 
 function dmDamagePlayer(amount, attacker){
-  if(dmPlayerDead || debugOptions.godMode) return;
+  if(dmPlayerDead || debugOptions.godMode || sonicInvuln()) return;
   player.health -= amount;
   if(player.health <= 0){ kfReport(attacker || null, 'host'); dmKillPlayer(); return; }
   triggerDamageFlash();
@@ -11749,6 +11754,7 @@ function socResetPositions(){
 
 // ---------- ações do jogador ----------
 function socPlayerKick(){
+  if(sonicOn()){ sonicStomp(); return; }   // Modo Sonic: chute = stomp / slide
   if(!soc || gameOver || dmPlayerDead || countdownActive || soc.phase !== 'play' || settingsModal.style.display === 'flex') return;
   if(soc.test && !socTestInPitch()) return;
   const now = performance.now();
@@ -11768,6 +11774,7 @@ function socPlayerKick(){
   socNetKick(player.x, player.y);
 }
 function socPlayerJump(){   // pulo: vale em todos os modos (inclusive multiplayer, a altura z já é sincronizada)
+  if(sonicOn()){ sonicJump(); if(socJump.v > 3.5) SFX.footstep(); return; }
   if(!started || gameOver || dmPlayerDead || countdownActive || settingsModal.style.display === 'flex') return;
   if(socJump.z > 0.001) return;
   socJump.v = 2.8;
@@ -11784,7 +11791,7 @@ function playerLand(impact){
   if(impact > FALL_SAFE_V) playerFallHurt(Math.round((impact - FALL_SAFE_V) * FALL_DMG_K));
 }
 function playerFallHurt(dmg){
-  if(dmg <= 0 || WATER.state > 0 || currentGameMode === 'fnaf' || gameOver || dmPlayerDead || debugOptions.godMode) return;
+  if(dmg <= 0 || WATER.state > 0 || currentGameMode === 'fnaf' || gameOver || dmPlayerDead || debugOptions.godMode || sonicOn()) return;
   if(NET.mode === 'client' && isTeamMode && isTeamMode()) return;   // o host controla a vida em modos de equipe
   if(currentGameMode !== 'waves'){ dmDamagePlayer(dmg); return; }
   player.health -= dmg;
@@ -13725,6 +13732,7 @@ function initWeaponUI(){
 }
 
 function reloadWeapon(){
+  if(sonicOn()){ sonicSpinTap(); return; }   // Modo Sonic: recarregar = spin dash
   if(AssetLoader.isHolding()) return;   // tela de loading: o jogo inteiro fica em pausa
   if(gameOver || countdownActive || settingsModal.style.display === 'flex') return;
   if(player.isReloading) return;
@@ -15495,6 +15503,7 @@ dbgFogRange.addEventListener('input', e => { document.getElementById('dbgFogVal'
 function dbgSyncUI(){
   document.getElementById('dbgZomMarkers').checked = !!zomMarkersOn;
   dbgGodMode.checked = !!debugOptions.godMode;
+  document.getElementById('dbgSonic').checked = !!debugOptions.sonic;
   dbgNoClip.checked = !!debugOptions.noClip;
   dbgInfAmmo.checked = !!debugOptions.infAmmo;
   dbgPauseEnemies.checked = !!debugOptions.pauseEnemies;
@@ -15699,6 +15708,7 @@ document.getElementById('applySettingsBtn').addEventListener('click', ()=>{
   SFX.menuAccept();
   zomMarkersOn = document.getElementById('dbgZomMarkers').checked;
   debugOptions.godMode = dbgGodMode.checked;
+  debugOptions.sonic = document.getElementById('dbgSonic').checked && !NET.mode;
   debugOptions.noClip = dbgNoClip.checked;
   debugOptions.infAmmo = dbgInfAmmo.checked;
   debugOptions.pauseEnemies = dbgPauseEnemies.checked;
@@ -16989,6 +16999,7 @@ function drawSprites(horizon){
   const sprites = [];
   enemies.forEach(en=>{ if(en.health>-999) sprites.push({x:en.x,y:en.y,obj:en,kind:'enemy'}); });
   pickups.forEach(p=>{ if(!p.taken) sprites.push({x:p.x,y:p.y,obj:p,kind:'pickup'}); });
+  if(SN && SN.spr) sprites.push({x:SN.spr.x,y:SN.spr.y,obj:SN,kind:'sonic'});   // Modo Sonic: o jogador aparece em 3ª pessoa
   if(ctf){ ['T','CT'].forEach(t=>{ const f = ctf.flags[t]; if(f.state !== 'carried') sprites.push({x:f.x,y:f.y,obj:f,kind:'flag'}); }); }
   if(soc){ sprites.push({x:soc.ball.x,y:soc.ball.y,obj:soc.ball,kind:'socball'}); soc.props.forEach(p=>sprites.push({x:p.x,y:p.y,obj:p,kind:p.kind})); }
 
@@ -17022,7 +17033,7 @@ function drawSprites(horizon){
 
     // Desloca o sprite verticalmente conforme a diferença de altura entre o
     // jogador e o tile onde o alvo está (mesmo sistema usado nas paredes).
-    const floorZ = ((s.kind === 'enemy' || s.kind === 'hostage' || s.kind === 'pickup') && s.obj.z !== undefined) ? s.obj.z : heightAt(s.x, s.y) * HEIGHT_UNIT;
+    const floorZ = s.kind === 'sonic' ? SN.spr.z : ((s.kind === 'enemy' || s.kind === 'hostage' || s.kind === 'pickup') && s.obj.z !== undefined) ? s.obj.z : heightAt(s.x, s.y) * HEIGHT_UNIT;
     const zShift = (player.z - floorZ) * size;
 
     // Visível se alguma coluna não está bloqueada por parede nem por degrau/teto mais perto.
@@ -17035,7 +17046,8 @@ function drawSprites(horizon){
     }
     if(!visible) return;
 
-    if(s.kind==='enemy'){ drawEnemySprite(s.obj, screenX, horizon, size, dist, zShift); }
+    if(s.kind==='sonic'){ drawSonicSprite(screenX, horizon, size, dist, zShift); }
+    else if(s.kind==='enemy'){ drawEnemySprite(s.obj, screenX, horizon, size, dist, zShift); }
     else if(s.kind==='flag'){ drawFlagSprite(s.obj, screenX, horizon, size, dist, zShift); }
     else if(s.kind==='hostage'){ drawHostageSprite(s.obj, screenX, horizon, size, dist, zShift); }
     else if(s.kind==='beacon'){ drawRescueBeacon(screenX, horizon, size, dist, zShift); }
@@ -17559,7 +17571,8 @@ function updatePlayer(dt){
   const _pxPrev = player.x, _pyPrev = player.y;
   const mag = Math.hypot(moveF,strafe);
   player.moving = mag>0.05;
-  if(mag>0){
+  if(sonicOn()){ sonicMove(dt, moveF, strafe, mag); }
+  else if(mag>0){
     const nfF = moveF/Math.max(1,mag)*Math.min(1,mag);
     const nfS = strafe/Math.max(1,mag)*Math.min(1,mag);
     const dirX = Math.cos(player.angle), dirY = Math.sin(player.angle);
@@ -17604,6 +17617,7 @@ function updatePlayer(dt){
     if(p.taken) return;
     if(p.gg && (p.gg.held || p.gg.fly)) return;   // Gravity Gun: item na mão / voando não é coletado
     if(p.type === 'zwall' || p.type === 'zbox') return;   // estações de compra do Zumbi: só com o botão de interagir
+    if((p.type === 'weapon' || p.type === 'ammo') && sonicOn()) return;   // Modo Sonic: não pega armas nem munição
     if((p.x-player.x)**2+(p.y-player.y)**2 < 0.36){
       // Limite de 2 armas: com os slots cheios, a arma do chão só é pega pela troca manual (E / toque / A).
       if(p.type==='weapon' && !player.unlockedWeapons[p.weaponId] && ownedWeaponCount() >= MAX_WEAPON_SLOTS) return;
@@ -17728,6 +17742,7 @@ function zomRandomBoxWeapon(){
   return pool[Math.floor(Math.random() * pool.length)];
 }
 function zomFindCand(){
+  if(sonicOn()) return null;
   if(!zomOn() || gameOver || countdownActive || settingsModal.style.display === 'flex') return null;
   let best = ZOM_USE_SQ, c = null;
   pickups.forEach(p => {
@@ -18074,6 +18089,7 @@ function updateSwapPrompt(){
 }
 
 function trySwapWeapon(){
+  if(sonicOn()) return;
   const p = swapCandidate;
   if(!p || p.taken || gameOver || countdownActive || dmPlayerDead || settingsModal.style.display === 'flex') return;
   const en = currentLang === 'en';
@@ -18108,6 +18124,7 @@ function addAmmoAll(pentes) {
 }
 
 function tryFire(fromBurst){
+  if(sonicOn()) return;   // Modo Sonic: sem armas (o tiro vira boost)
   if(burstLeft > 0 && !fromBurst) return;   // rajada em andamento
   if(AssetLoader.isHolding()) return;   // tela de loading: o jogo inteiro fica em pausa
   if(shopOpen) return;
@@ -18461,7 +18478,7 @@ function updateEnemies(dt, now){
       if(now - en.lastAttack > 1000){
         en.lastAttack = now;
         SFX.zombieScream();
-        if(tg.ent){ netDamageRemote(tg.ent, en.dmg); } else if(!debugOptions.godMode){
+        if(tg.ent){ netDamageRemote(tg.ent, en.dmg); } else if(!debugOptions.godMode && !sonicInvuln()){
           player.health -= en.dmg;
           triggerDamageFlash();
           SFX.hurt();
@@ -18503,6 +18520,324 @@ function updateEnemies(dt, now){
 let lastTime = performance.now();
 let loopErrs = 0;
 let lastFrameAt = 0;
+// ============ MODO SONIC (overlay · só no menu DEBUG) ============
+// Liga em DEBUG > JOGADOR > "Modo Sonic". O jogo continua o mesmo (mapas, modos, bots, placar): só o jogador vira o Sonic, em 3ª pessoa.
+// A câmera fica atrás do personagem (mesma direção da 1ª pessoa, só que à distância) e o Sonic é desenhado como um sprite 3D animado por cima do mapa.
+// Sem armas: o tiro vira BOOST, recarregar vira SPIN DASH, pular duas vezes vira HOMING ATTACK e o botão de chute/F vira STOMP/SLIDE.
+// Modelo: "Xbox 360 - Sonic Unleashed - Sonic The Hedgehog" (SonicModelArchive, CC-BY-4.0) em assets/sonic/sonic.glb.
+var SN = {
+  on: false, vx: 0, vy: 0, run: 0, hd: 0, ph: 0, t: 0, spin: 0, boost: 100, boostLock: false, boostIdle: 0, boosting: false,
+  dash: null, charge: 0, chargeT: 0, ball: false, airUsed: false, wasAir: false, stomping: false, camD: 1.7, camReal: 1.7, spr: null,
+  ix: 0, iy: 0, il: 0, shake: 0, ac: null, hudOk: false, gfxAsked: false, rel: 0, hudB: -1, ghostT: 0
+};
+function sonicOn(){
+  return !!(debugOptions.sonic && SN && started && !gameOver && !dmPlayerDead && !(typeof NET !== 'undefined' && NET.mode));
+}
+function sonicInvuln(){ return !!(SN && sonicOn() && (SN.dash || SN.boosting || (SN.ball && SN.wasAir))); }
+function sonicAir(){ return socJump.z > 0.02 || socJump.v > 0.01; }
+function sonicAngDiff(a, b){ let d = a - b; while(d > Math.PI) d -= 2 * Math.PI; while(d < -Math.PI) d += 2 * Math.PI; return d; }
+
+function sonicSfx(kind, a){
+  try{
+    if(!SN.ac) SN.ac = new (window.AudioContext || window.webkitAudioContext)();
+    const ac = SN.ac; if(ac.state === 'suspended') ac.resume();
+    const o = ac.createOscillator(), g = ac.createGain(), now = ac.currentTime;
+    let f0 = 400, f1 = 800, dur = 0.12, type = 'square', vol = 0.05;
+    if(kind === 'jump'){ f0 = 320; f1 = 760; dur = 0.13; }
+    else if(kind === 'homing'){ f0 = 500; f1 = 1500; dur = 0.16; type = 'sawtooth'; vol = 0.05; }
+    else if(kind === 'rev'){ f0 = 160 + a * 380; f1 = f0 + 160; dur = 0.15; type = 'triangle'; vol = 0.08; }
+    else if(kind === 'release'){ f0 = 1100; f1 = 220; dur = 0.32; type = 'sawtooth'; vol = 0.07; }
+    else if(kind === 'boost'){ f0 = 140; f1 = 520; dur = 0.28; type = 'sawtooth'; vol = 0.06; }
+    else if(kind === 'stomp'){ f0 = 240; f1 = 50; dur = 0.22; vol = 0.08; }
+    else if(kind === 'bounce'){ f0 = 500; f1 = 900; dur = 0.09; type = 'triangle'; vol = 0.06; }
+    o.type = type; o.frequency.setValueAtTime(f0, now); o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), now + dur);
+    g.gain.setValueAtTime(vol, now); g.gain.exponentialRampToValueAtTime(0.0008, now + dur);
+    o.connect(g); g.connect(ac.destination); o.start(now); o.stop(now + dur + 0.02);
+  }catch(e){}
+}
+
+// dano usando as mesmas regras de abate do tiro (pontos, modos de equipe, Gun Game, ondas)
+function sonicHit(en, dmg){
+  if(!en || !en.alive || en.ally || en.remote) return;
+  if(en.fnaf){ fnafAnimatronicHit(en, dmg); return; }
+  en.health -= dmg;
+  if(en.health <= 0){
+    en.alive = false;
+    gpRumble(0.3, 0.8, 110);
+    if(en.testDummy){
+      en.respawnAt = performance.now() + TEST_DUMMY_RESPAWN_MS;
+      flashMsg(LT('ALVO ABATIDO (RENASCE EM 5s)', 'TARGET DOWN (RESPAWNS IN 5s)'));
+      SFX.kill();
+    } else if(isTeamMode() && currentGameMode !== 'gungame'){
+      score += 1; flashMsg(LT('INIMIGO ABATIDO (+1)', 'ENEMY DOWN (+1)')); SFX.hit(); SFX.botPain();
+    } else {
+      score += 150; zomAdd(ZOM_KILL_PTS); flashMsg(I18N[currentLang].enemyKilled); SFX.kill();
+    }
+    if(en.testDummy){ /* sem placar */ }
+    else if(currentGameMode === 'gungame'){ if(isGunBots()) dmOnKill(en, dmPlayerTeam, true); gunGameOnPlayerKill(); }
+    else if(isTeamMode()) dmOnKill(en, dmPlayerTeam, true);
+    else enemiesKilledInWave++;
+    updateHUD();
+  } else {
+    SFX.hit(); zomAdd(ZOM_HIT_PTS);
+    if(isTeamMode() && !en.testDummy) SFX.botPain();
+  }
+}
+function sonicTargets(fn){
+  enemies.forEach(en => { if(en.alive && !en.ally && !en.remote && en.health > -999) fn(en); });
+}
+function sonicFindTarget(){
+  let best = null, bs = Infinity;
+  sonicTargets(en => {
+    const dx = en.x - player.x, dy = en.y - player.y, d = Math.hypot(dx, dy);
+    if(d > 7 || d < 0.3) return;
+    const a = Math.abs(sonicAngDiff(Math.atan2(dy, dx), player.angle));
+    if(a > 1.25 || !hasLineOfSight(player.x, player.y, en.x, en.y)) return;
+    const s = d * (1 + a * 1.6);
+    if(s < bs){ bs = s; best = en; }
+  });
+  return best;
+}
+
+// ---------- ações (entradas reaproveitadas: pular, tiro, recarregar, chute) ----------
+function sonicCanAct(){
+  return started && !gameOver && !dmPlayerDead && !countdownActive && settingsModal.style.display !== 'flex' && !shopOpen;
+}
+function sonicJump(){
+  const S = SN; if(!sonicCanAct()) return;
+  if(S.chargeT > 0){ sonicRelease(); return; }
+  if(!sonicAir()){ socJump.v = 4.1; S.ball = true; S.stomping = false; sonicSfx('jump'); return; }
+  if(S.airUsed || S.dash) return;
+  S.airUsed = true;
+  const tg = sonicFindTarget();
+  if(tg){ S.dash = { kind: 'homing', tgt: tg, t: 0.9, vx: 0, vy: 0, dmg: 100 }; S.ball = true; sonicSfx('homing'); }
+  else {
+    const dx = S.il > 0.1 ? S.ix / S.il : Math.cos(player.angle), dy = S.il > 0.1 ? S.iy / S.il : Math.sin(player.angle);
+    S.dash = { kind: 'air', vx: dx * 13, vy: dy * 13, t: 0.24, dmg: 35 }; S.ball = true; if(socJump.v < 0.6) socJump.v = 0.6; sonicSfx('homing');
+  }
+}
+function sonicSpinTap(){
+  const S = SN; if(!sonicCanAct() || sonicAir() || S.dash) return;
+  S.charge = Math.min(1, S.charge + (S.chargeT > 0 ? 0.28 : 0.4)); S.chargeT = 0.7; S.ball = true;
+  sonicSfx('rev', S.charge);
+}
+function sonicRelease(){
+  const S = SN; if(S.chargeT <= 0 && S.charge <= 0) return;
+  const c = Math.max(0.3, S.charge), dx = S.il > 0.1 ? S.ix / S.il : Math.cos(player.angle), dy = S.il > 0.1 ? S.iy / S.il : Math.sin(player.angle), sp = 9 + 6 * c;
+  S.dash = { kind: 'spin', vx: dx * sp, vy: dy * sp, t: 0.55 + 0.5 * c, dmg: 85 };
+  S.charge = 0; S.chargeT = 0; S.ball = true; sonicSfx('release');
+}
+function sonicStomp(){
+  const S = SN; if(!sonicCanAct()) return;
+  if(sonicAir()){ S.stomping = true; S.dash = null; socJump.v = -9.5; S.ball = true; sonicSfx('stomp'); return; }
+  if(S.dash || S.chargeT > 0) return;
+  const dx = S.il > 0.1 ? S.ix / S.il : Math.cos(player.angle), dy = S.il > 0.1 ? S.iy / S.il : Math.sin(player.angle);
+  S.dash = { kind: 'slide', vx: dx * 9, vy: dy * 9, t: 0.5, dmg: 50 }; S.ball = true; sonicSfx('release');
+}
+
+// ---------- movimento (substitui o andar normal; com passos curtos para não atravessar parede fina) ----------
+function sonicApproach(v, t, step){ return v < t ? Math.min(t, v + step) : Math.max(t, v - step); }
+function sonicContact(){
+  const S = SN; let dmg = 0;
+  if(S.dash) dmg = S.dash.dmg;
+  else if(S.boosting) dmg = 55;
+  else if(S.ball && socJump.v < 0 && sonicAir()) dmg = 45;
+  if(!dmg) return;
+  const now = performance.now();
+  sonicTargets(en => {
+    if(en._snT && now - en._snT < 280) return;
+    if(Math.hypot(en.x - player.x, en.y - player.y) > 0.55) return;
+    const ez = en.z !== undefined ? en.z : heightAt(en.x, en.y) * HEIGHT_UNIT;
+    if(Math.abs(player.z - ez) > 0.7) return;
+    en._snT = now; sonicHit(en, dmg); SN.shake = 0.12;
+    if(S.dash && S.dash.kind === 'homing'){ S.dash = null; socJump.v = 3.4; S.airUsed = false; sonicSfx('bounce'); }
+    else if(!S.dash && !S.boosting && S.ball){ socJump.v = 3.2; S.airUsed = false; sonicSfx('bounce'); }
+  });
+}
+function sonicLand(){
+  const S = SN;
+  if(S.stomping){
+    S.stomping = false; S.shake = 0.3; sonicSfx('stomp');
+    sonicTargets(en => { if(Math.hypot(en.x - player.x, en.y - player.y) <= 1.7){ en._snT = performance.now(); sonicHit(en, 70); } });
+  }
+  S.airUsed = false; if(!S.dash && S.chargeT <= 0) S.ball = false;
+}
+function sonicMove(dt, moveF, strafe, mag){
+  const S = SN; S.t += dt;
+  const ang = player.angle, dx = Math.cos(ang), dy = Math.sin(ang), px = -dy, py = dx;
+  let ix = 0, iy = 0, il = 0;
+  if(!countdownActive && mag > 0.05){ const k = Math.min(1, mag) / Math.max(1, mag); ix = (dx * moveF + px * strafe) * k; iy = (dy * moveF + py * strafe) * k; il = Math.hypot(ix, iy); }
+  const air = sonicAir();
+  if(air) S.wasAir = true; else if(S.wasAir){ S.wasAir = false; sonicLand(); }
+  // boost (tiro): gasta a barra, recarrega sozinha
+  const can = sonicCanAct() && !S.chargeT && !S.dash;
+  if(fireHeld && can && !S.boostLock && S.boost > 0){
+    if(!S.boosting){ sonicSfx('boost'); }
+    S.boosting = true; S.boostIdle = 0; S.boost = Math.max(0, S.boost - 26 * dt);
+    if(S.boost <= 0){ S.boostLock = true; S.boosting = false; }
+  } else {
+    S.boosting = false; S.boostIdle += dt;
+    if(S.boostIdle > 0.4) S.boost = Math.min(100, S.boost + 22 * dt);
+    if(S.boostLock && S.boost >= 25) S.boostLock = false;
+  }
+  if(S.boosting && il < 0.1){ ix = dx; iy = dy; il = 1; }
+  S.ix = ix; S.iy = iy; S.il = il;
+  if(!air && !S.dash) S.run = Math.max(0, Math.min(1, S.run + (il > 0.1 ? dt / 1.3 : -dt / 0.5)));
+  let want = (3.3 + 3.1 * S.run) * debugOptions.speed;
+  if(S.boosting) want = 11.5 * debugOptions.speed;
+  // carga do spin dash: parado, solta sozinho se parar de apertar
+  if(S.chargeT > 0){ S.chargeT -= dt; want = 0; if(S.chargeT <= 0) sonicRelease(); }
+  if(S.dash){
+    const D = S.dash; D.t -= dt;
+    if(D.kind === 'homing'){
+      if(!D.tgt || !D.tgt.alive){ S.dash = null; }
+      else {
+        const tx = D.tgt.x - player.x, ty = D.tgt.y - player.y, tl = Math.hypot(tx, ty) || 1;
+        D.vx = tx / tl * 17; D.vy = ty / tl * 17; if(socJump.v < 0) socJump.v = 0;
+      }
+    }
+    if(S.dash){ S.vx = D.vx; S.vy = D.vy; if(D.kind === 'air' && socJump.v < 0.2) socJump.v = Math.max(socJump.v, 0.2); }
+    if(S.dash && D.t <= 0){ S.vx *= 0.55; S.vy *= 0.55; S.dash = null; if(!sonicAir() && S.chargeT <= 0) S.ball = false; }
+  } else {
+    const tx = il > 0.05 ? ix / il * want : 0, ty = il > 0.05 ? iy / il * want : 0;
+    const acc = (air ? 14 : (il > 0.05 ? 26 : 16)) * dt;
+    S.vx = sonicApproach(S.vx, tx, acc); S.vy = sonicApproach(S.vy, ty, acc);
+  }
+  if(countdownActive){ S.vx = S.vy = 0; }
+  // anda em passos curtos (um eixo por vez, como o andar normal)
+  const sp = Math.hypot(S.vx, S.vy), n = Math.max(1, Math.ceil(sp * dt / 0.08)), h = dt / n;
+  for(let i = 0; i < n && sp > 0.01; i++){
+    const vx = S.vx * h, vy = S.vy * h; let mx = false, my = false;
+    if(Math.abs(vx) > 1e-6 && canMove(player.x + vx, player.y)){ player.x += vx; mx = true; }
+    if(Math.abs(vy) > 1e-6 && canMove(player.x, player.y + vy)){ player.y += vy; my = true; }
+    if(!mx && !my){
+      S.vx *= 0.25; S.vy *= 0.25; S.run *= 0.4;
+      if(S.dash && S.dash.kind !== 'homing') S.dash.t = 0;
+      break;
+    }
+    if(S.dash || S.boosting || S.ball) sonicContact();
+  }
+  if(!S.dash && !S.boosting && S.ball && sonicAir()) sonicContact();
+  const spd = Math.hypot(S.vx, S.vy);
+  player.moving = spd > 0.5;
+  // direção do corpo e fase da corrida
+  if(S.chargeT > 0) S.hd += sonicAngDiff(ang, S.hd) * Math.min(1, dt * 12);
+  else if(spd > 0.6) S.hd += sonicAngDiff(Math.atan2(S.vy, S.vx), S.hd) * Math.min(1, dt * 14);
+  S.ph += dt * (5 + spd * 1.7);
+  S.spin += dt * (S.chargeT > 0 ? 30 : (S.dash ? 22 : 14 + spd));
+  S.shake = Math.max(0, S.shake - dt);
+  S.camD += ((S.boosting ? 2.3 : 1.7 + Math.min(0.35, spd * 0.028)) - S.camD) * Math.min(1, dt * 5);
+}
+
+// ---------- câmera em 3ª pessoa: renderiza com a câmera deslocada para trás e desenha o Sonic como sprite ----------
+function sonicCast(){
+  if(!sonicOn()){ SN.spr = null; castAndDraw(); return; }
+  const rx = player.x, ry = player.y, rz = player.z;
+  const bx = Math.cos(player.angle), by = Math.sin(player.angle), hh = heightAt(rx, ry);
+  let d = 0; const want = SN.camD, step = 0.07;
+  while(d < want){
+    const nx = rx - bx * (d + step), ny = ry - by * (d + step);
+    if(boxHitsWall(nx, ny, 0.12) || !hasLineOfSight(rx, ry, nx, ny) || heightAt(nx, ny) - hh > 0.5 || (hh - heightAt(nx, ny) > 1.2)) break;
+    d += step;
+  }
+  SN.camReal = d;
+  SN.spr = { x: rx, y: ry, z: rz };
+  player.x = rx - bx * d; player.y = ry - by * d; player.z = rz + 0.14 + (SN.shake > 0 ? (Math.random() - 0.5) * 0.04 : 0);
+  try{ castAndDraw(); } finally { player.x = rx; player.y = ry; player.z = rz; SN.spr = null; }
+}
+
+// ---------- desenho do Sonic (sprite 3D animado, no mesmo canvas de baixa resolução do jogo) ----------
+function sonicPose(){
+  const S = SN, spd = Math.hypot(S.vx, S.vy), air = sonicAir();
+  let st = 'idle';
+  if(S.chargeT > 0) st = 'charge';
+  else if(S.dash || S.stomping) st = 'ball';
+  else if(air) st = S.ball ? 'ball' : 'fall';
+  else if(spd > 0.5) st = S.boosting ? 'boost' : 'run';
+  const rel = sonicAngDiff(S.hd, player.angle);
+  S.rel += sonicAngDiff(rel, S.rel) * 0.5;
+  return { st: st, ph: S.ph, sp: Math.min(1, spd / 9), t: S.t, spin: (st === 'ball' || st === 'charge') ? S.spin : 0, yaw: -S.rel, yOff: st === 'charge' ? -0.04 : 0 };
+}
+function sonicEnsureGfx(){
+  if(SN.gfxAsked) return; SN.gfxAsked = true;
+  try{ if(window.dzSonicGfx) window.dzSonicGfx.load('assets/sonic/sonic.glb'); }catch(e){}
+}
+function drawSonicSprite(sx, horizon, size, dist, zShift){
+  const S = SN; if(S.camReal < 0.4) return;
+  sonicEnsureGfx();
+  const footY = horizon + size * 0.5 + zShift;
+  const H = size * 0.52, Sq = Math.max(24, Math.min(160, Math.round(H / 0.78 / 4) * 4));
+  const pose = sonicPose();
+  const gfx = window.dzSonicGfx && window.dzSonicGfx.ready() ? window.dzSonicGfx : null;
+  const cxm = sx, cym = footY - Sq * 0.4;
+  drawGroundShadow(sx, footY, Sq * 0.16, 1);
+  ctx.save();
+  // brilho da bola (giro / spin dash / homing)
+  if(pose.st === 'ball' || pose.st === 'charge'){
+    const g = ctx.createRadialGradient(cxm, cym, Sq * 0.03, cxm, cym, Sq * 0.3);
+    g.addColorStop(0, 'rgba(190,225,255,0.55)'); g.addColorStop(1, 'rgba(40,90,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cxm, cym, Sq * 0.3, 0, 7); ctx.fill();
+  }
+  if(pose.st === 'charge'){   // poeira do spin dash
+    ctx.fillStyle = 'rgba(210,190,150,0.6)';
+    for(let i = 0; i < 5; i++){ const a = Math.random() * 6.28, r = Sq * (0.12 + Math.random() * 0.12); ctx.fillRect(sx + Math.cos(a) * r * 1.4 - 1, footY - Math.abs(Math.sin(a)) * r * 0.6 - 1, 2, 2); }
+  }
+  const r = gfx ? gfx.render(Sq, pose) : null;
+  if(r){
+    const dx = Math.round(sx - Sq / 2), dy = Math.round(footY - r.feet * Sq);
+    ctx.imageSmoothingEnabled = false;
+    if(S.boosting || (S.dash && S.dash.kind !== 'slide')){   // rastro (imagens fantasma) + rajadas de velocidade
+      ctx.globalAlpha = 0.28; const k = 1.16; ctx.drawImage(r.canvas, 0, 0, Sq, Sq, Math.round(sx - Sq * k / 2), Math.round(footY - r.feet * Sq * k - Sq * 0.03), Math.round(Sq * k), Math.round(Sq * k));
+      ctx.globalAlpha = 0.14; const k2 = 1.34; ctx.drawImage(r.canvas, 0, 0, Sq, Sq, Math.round(sx - Sq * k2 / 2), Math.round(footY - r.feet * Sq * k2 - Sq * 0.06), Math.round(Sq * k2), Math.round(Sq * k2));
+      ctx.globalAlpha = 1;
+    }
+    ctx.drawImage(r.canvas, 0, 0, Sq, Sq, dx, dy, Sq, Sq);
+  } else {
+    // modelo ainda carregando (ou sem WebGL): bolinha azul no lugar
+    ctx.fillStyle = '#1b3fd6'; ctx.beginPath(); ctx.ellipse(sx, footY - Sq * 0.3, Sq * 0.14, Sq * 0.3, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#f2c89a'; ctx.beginPath(); ctx.arc(sx, footY - Sq * 0.5, Sq * 0.08, 0, 7); ctx.fill();
+  }
+  if(S.boosting){   // linhas de velocidade
+    ctx.strokeStyle = 'rgba(170,215,255,0.45)'; ctx.lineWidth = 1;
+    const w = SCREEN_W, h = SCREEN_H, c0x = w / 2, c0y = horizon;
+    for(let i = 0; i < 14; i++){
+      const a = Math.random() * 6.283, r0 = h * (0.42 + Math.random() * 0.2), r1 = r0 + h * (0.18 + Math.random() * 0.25);
+      ctx.beginPath(); ctx.moveTo(c0x + Math.cos(a) * r0 * 1.6, c0y + Math.sin(a) * r0); ctx.lineTo(c0x + Math.cos(a) * r1 * 1.6, c0y + Math.sin(a) * r1); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+// ---------- HUD (barra de boost) e classe do corpo ----------
+function sonicSync(){
+  const on = sonicOn();
+  if(on !== SN.on){
+    SN.on = on; document.body.classList.toggle('sonic-mode', on);
+    if(on){
+      SN.vx = SN.vy = 0; SN.run = 0; SN.dash = null; SN.charge = SN.chargeT = 0; SN.boost = 100; SN.boostLock = false; SN.hd = player.angle; SN.rel = 0; SN.stomping = false; SN.ball = false;
+      sonicEnsureGfx();
+      flashMsg(LT('MODO SONIC · PULO 2x = HOMING · TIRO = BOOST · R = SPIN DASH · F = STOMP', 'SONIC MODE · JUMP 2x = HOMING · FIRE = BOOST · R = SPIN DASH · F = STOMP'));
+    } else { SN.spr = null; SN.boosting = false; }
+  }
+  if(!SN.hudOk){
+    SN.hudOk = true;
+    const st = document.createElement('style');
+    st.textContent = 'body.sonic-mode #viewmodelWrapper,body.sonic-mode #crosshair,body.sonic-mode #weaponIconBar,body.sonic-mode .cs-ammo,body.sonic-mode #scopeBtn,body.sonic-mode #modeBtn,body.sonic-mode #swapBtn,body.sonic-mode #swapPrompt,body.sonic-mode #hudMoney,body.sonic-mode #shopBtn,body.sonic-mode #zomPrompt{display:none!important}' +
+      'body.sonic-mode #reloadBtn{display:block!important}' +
+      '#sonicHud{display:none;position:absolute;left:50%;bottom:74px;transform:translateX(-50%);width:min(52vw,230px);pointer-events:none;z-index:30;text-align:center;font:700 11px/1.1 "Courier New",monospace;color:#9fd2ff;text-shadow:0 0 4px #000,0 0 4px #000;letter-spacing:1px}' +
+      'body.sonic-mode #sonicHud{display:block}' +
+      '#sonicHud .snb{height:9px;margin-top:3px;border:2px solid #0b2a6b;background:rgba(0,0,30,.55);transform:skewX(-18deg);overflow:hidden}' +
+      '#sonicHud .snb i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#1c6bff,#7fe4ff 60%,#fff6a0);transition:none}' +
+      '#sonicHud.lock .snb i{background:#d34}';
+    document.head.appendChild(st);
+    const hud = document.createElement('div'); hud.id = 'sonicHud'; hud.innerHTML = '<span id="sonicHudT">BOOST</span><div class="snb"><i id="sonicHudB"></i></div>';
+    (document.getElementById('game') || document.body).appendChild(hud);
+  }
+  if(on){
+    const q = Math.round(SN.boost); if(q !== SN.hudB){ SN.hudB = q; const b = document.getElementById('sonicHudB'); if(b) b.style.width = q + '%'; const h = document.getElementById('sonicHud'); if(h) h.classList.toggle('lock', SN.boostLock); }
+  }
+}
+
 function gameLoop(now){
   /* emulador de GBA aberto: o DEAD ZONE fica parado por baixo (poupa CPU/GPU, importante no Xbox One) */
   if((window.dzGba && window.dzGba.isOpen()) && !(typeof NET !== 'undefined' && NET.mode)){ lastTime = now; try{ pollGamepad(); }catch(e){} requestAnimationFrame(gameLoop); return; }   /* o jogo fica parado, mas o controle continua navegando na lista de ROMs */
@@ -18552,7 +18887,8 @@ function gameStep(now){
     if(NET.mode !== 'client') spawnPickupsLogic(now);
     zomUpdate(now);
     ggUpdate(dt);
-    castAndDraw();
+    sonicSync();
+    sonicCast();
     if(!mmEco || ((mmTick++ & 1) === 0)) drawMinimap();
   } else {
     if(swapCandidate) updateSwapPrompt();
@@ -33624,6 +33960,289 @@ function wire(){
   var t = document.getElementById('dbgTestLevelBtn'); (t || g).insertAdjacentElement('afterend', b);
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
+})();
+
+</script>
+
+<script id="dzSonicGfxScript">
+(function(){
+'use strict';
+/* Sonic (modelo GLB com esqueleto) desenhado em WebGL num canvas pequeno, com animações procedurais por osso.
+   Uso: dzSonicGfx.load(url) -> Promise;  dzSonicGfx.render(px, pose) -> { canvas, feet }  (feet = fração (0-1) da altura do canvas onde fica o chão) */
+var gl = null, cv = null, prog = null, M = null, loaded = false, failed = false, loading = null;
+var NAMES = {};
+
+/* ---------- matemática (matrizes 4x4 coluna-major em Float64Array) ---------- */
+function ident(){ var m = new Float64Array(16); m[0] = m[5] = m[10] = m[15] = 1; return m; }
+function mul(a, b){
+  var o = new Float64Array(16);
+  for (var c = 0; c < 4; c++) for (var r = 0; r < 4; r++) {
+    o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3];
+  }
+  return o;
+}
+function trs(n){
+  if (n.matrix) return new Float64Array(n.matrix);
+  var t = n.translation || [0, 0, 0], q = n.rotation || [0, 0, 0, 1], s = n.scale || [1, 1, 1];
+  var x = q[0], y = q[1], z = q[2], w = q[3], m = new Float64Array(16);
+  m[0] = (1 - 2 * (y * y + z * z)) * s[0]; m[1] = 2 * (x * y + z * w) * s[0]; m[2] = 2 * (x * z - y * w) * s[0];
+  m[4] = 2 * (x * y - z * w) * s[1]; m[5] = (1 - 2 * (x * x + z * z)) * s[1]; m[6] = 2 * (y * z + x * w) * s[1];
+  m[8] = 2 * (x * z + y * w) * s[2]; m[9] = 2 * (y * z - x * w) * s[2]; m[10] = (1 - 2 * (x * x + y * y)) * s[2];
+  m[12] = t[0]; m[13] = t[1]; m[14] = t[2]; m[15] = 1; return m;
+}
+function rotAxis(ax, ay, az, ang){   // matriz 4x4 de rotação (Rodrigues), eixo unitário
+  var c = Math.cos(ang), s = Math.sin(ang), t = 1 - c, m = ident();
+  m[0] = t * ax * ax + c; m[1] = t * ax * ay + s * az; m[2] = t * ax * az - s * ay;
+  m[4] = t * ax * ay - s * az; m[5] = t * ay * ay + c; m[6] = t * ay * az + s * ax;
+  m[8] = t * ax * az + s * ay; m[9] = t * ay * az - s * ax; m[10] = t * az * az + c; return m;
+}
+function aroundPivot(R, p){   // T(p) * R * T(-p)
+  var m = new Float64Array(R);
+  m[12] = p[0] - (R[0] * p[0] + R[4] * p[1] + R[8] * p[2]);
+  m[13] = p[1] - (R[1] * p[0] + R[5] * p[1] + R[9] * p[2]);
+  m[14] = p[2] - (R[2] * p[0] + R[6] * p[1] + R[10] * p[2]);
+  return m;
+}
+function vrot(R, v){ return [R[0] * v[0] + R[4] * v[1] + R[8] * v[2], R[1] * v[0] + R[5] * v[1] + R[9] * v[2], R[2] * v[0] + R[6] * v[1] + R[10] * v[2]]; }
+function norm(v){ var l = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
+function swing(d, t){   // rotação mínima que leva a direção d até t
+  d = norm(d); t = norm(t);
+  var cx = d[1] * t[2] - d[2] * t[1], cy = d[2] * t[0] - d[0] * t[2], cz = d[0] * t[1] - d[1] * t[0];
+  var sl = Math.sqrt(cx * cx + cy * cy + cz * cz), dt = Math.max(-1, Math.min(1, d[0] * t[0] + d[1] * t[1] + d[2] * t[2]));
+  if (sl < 1e-6) { if (dt > 0) return ident(); return rotAxis(1, 0, 0, Math.PI); }
+  return rotAxis(cx / sl, cy / sl, cz / sl, Math.atan2(sl, dt));
+}
+function persp(fov, asp, n, f){
+  var t = 1 / Math.tan(fov / 2), m = new Float32Array(16);
+  m[0] = t / asp; m[5] = t; m[10] = (f + n) / (n - f); m[11] = -1; m[14] = 2 * f * n / (n - f); return m;
+}
+function lookAt(e, c, u){
+  var f = norm([c[0] - e[0], c[1] - e[1], c[2] - e[2]]);
+  var s = norm([f[1] * u[2] - f[2] * u[1], f[2] * u[0] - f[0] * u[2], f[0] * u[1] - f[1] * u[0]]);
+  var uu = [s[1] * f[2] - s[2] * f[1], s[2] * f[0] - s[0] * f[2], s[0] * f[1] - s[1] * f[0]];
+  var m = new Float32Array(16);
+  m[0] = s[0]; m[4] = s[1]; m[8] = s[2]; m[1] = uu[0]; m[5] = uu[1]; m[9] = uu[2]; m[2] = -f[0]; m[6] = -f[1]; m[10] = -f[2];
+  m[12] = -(s[0] * e[0] + s[1] * e[1] + s[2] * e[2]); m[13] = -(uu[0] * e[0] + uu[1] * e[1] + uu[2] * e[2]); m[14] = f[0] * e[0] + f[1] * e[1] + f[2] * e[2]; m[15] = 1;
+  return m;
+}
+function m4(a, b){ var o = new Float32Array(16); for (var c = 0; c < 4; c++) for (var r = 0; r < 4; r++) o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3]; return o; }
+
+/* ---------- carregamento ---------- */
+function readAcc(g, bin, i){
+  var a = g.accessors[i], v = g.bufferViews[a.bufferView], off = (v.byteOffset || 0) + (a.byteOffset || 0);
+  var nc = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 }[a.type], n = a.count;
+  var comp = { 5126: 4, 5123: 2, 5125: 4, 5121: 1 }[a.componentType], stride = v.byteStride || nc * comp;
+  var dv = new DataView(bin), out = a.componentType === 5126 ? new Float32Array(n * nc) : (a.componentType === 5125 ? new Uint32Array(n * nc) : new Uint16Array(n * nc));
+  for (var k = 0; k < n; k++) for (var c = 0; c < nc; c++) {
+    var p = off + k * stride + c * comp;
+    out[k * nc + c] = a.componentType === 5126 ? dv.getFloat32(p, true) : (a.componentType === 5125 ? dv.getUint32(p, true) : (comp === 2 ? dv.getUint16(p, true) : dv.getUint8(p)));
+  }
+  return out;
+}
+function sh(t, s){ var o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; }
+var VS = 'attribute vec3 aP;attribute vec3 aN;attribute vec2 aT;uniform mat4 uVP;uniform mat4 uM;varying vec2 vT;varying vec3 vN;' +
+  'void main(){gl_Position=uVP*uM*vec4(aP,1.);vT=aT;vN=mat3(uM)*aN;}';
+var FS = 'precision mediump float;uniform sampler2D uTex;uniform vec4 uTint;uniform float uHas;varying vec2 vT;varying vec3 vN;' +
+  'void main(){vec4 c=uHas>.5?texture2D(uTex,vT):vec4(.2,.35,.9,1.);if(c.a<.4)discard;vec3 n=normalize(vN);if(!gl_FrontFacing)n=-n;' +
+  'float l=.62+.38*max(dot(n,normalize(vec3(-.45,.7,-.55))),0.)+.12*max(n.y,0.);vec3 col=c.rgb*l;col=mix(col,uTint.rgb,uTint.a);gl_FragColor=vec4(col,1.);}';
+
+function load(url){
+  if (loaded) return Promise.resolve(true);
+  if (loading) return loading;
+  loading = fetch(url).then(function(r){ if (!r.ok) throw new Error(url + ' ' + r.status); return r.arrayBuffer(); }).then(function(buf){
+    var dv = new DataView(buf), jl = dv.getUint32(12, true);
+    var g = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
+    var bo = 20 + jl + 8, bin = buf.slice(bo);
+    cv = document.createElement('canvas'); cv.width = cv.height = 96;
+    gl = cv.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: true }) || cv.getContext('experimental-webgl');
+    if (!gl) throw new Error('WebGL');
+    prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    var imgs = g.images.map(function(im){
+      var v = g.bufferViews[im.bufferView], blob = new Blob([new Uint8Array(bin, v.byteOffset || 0, v.byteLength)], { type: im.mimeType });
+      return new Promise(function(res){ var i = new Image(); i.onload = function(){ res(i); }; i.onerror = function(){ res(null); }; i.src = URL.createObjectURL(blob); });
+    });
+    return Promise.all(imgs).then(function(I){ return { g: g, bin: bin, I: I }; });
+  }).then(function(d){
+    var g = d.g, bin = d.bin;
+    var tex = g.textures.map(function(t){
+      var im = d.I[t.source]; if (!im) return null;
+      var tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
+      var p2 = function(n){ return (n & (n - 1)) === 0; };
+      var src = im;
+      if (!p2(im.width) || !p2(im.height)) { var c = document.createElement('canvas'), w = 1; while (w * 2 <= im.width) w *= 2; c.width = c.height = w; c.getContext('2d').drawImage(im, 0, 0, w, w); src = c; }
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+      return tx;
+    });
+    var N = g.nodes, par = new Array(N.length).fill(-1);
+    N.forEach(function(n, i){ (n.children || []).forEach(function(c){ par[c] = i; }); });
+    var skin = g.skins[0], joints = skin.joints, ibm = readAcc(g, bin, skin.inverseBindMatrices);
+    // matriz de mundo do pai da raiz do esqueleto (nós 0,1,2,3 acumulados)
+    var root = skin.skeleton != null ? skin.skeleton : joints[0], base = ident(), chain = [], p = par[root];
+    while (p >= 0) { chain.unshift(p); p = par[p]; }
+    chain.forEach(function(i){ base = mul(base, trs(N[i])); });
+    var prims = [];
+    g.meshes.forEach(function(m){ m.primitives.forEach(function(pr){
+      var pos = readAcc(g, bin, pr.attributes.POSITION), nrm = readAcc(g, bin, pr.attributes.NORMAL), uv = readAcc(g, bin, pr.attributes.TEXCOORD_0);
+      var jj = readAcc(g, bin, pr.attributes.JOINTS_0), ww = readAcc(g, bin, pr.attributes.WEIGHTS_0), ix = readAcc(g, bin, pr.indices);
+      var idx16 = new Uint16Array(ix.length); for (var i = 0; i < ix.length; i++) idx16[i] = ix[i];
+      var mat = g.materials[pr.material] || {}, pb = mat.pbrMetallicRoughness || {}, ti = pb.baseColorTexture ? pb.baseColorTexture.index : -1;
+      var vb = gl.createBuffer(), ub = gl.createBuffer(), ib = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, ub); gl.bufferData(gl.ARRAY_BUFFER, uv, gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx16, gl.STATIC_DRAW);
+      prims.push({ pos: pos, nrm: nrm, jj: jj, ww: ww, n: pos.length / 3, out: new Float32Array(pos.length * 2), vb: vb, ub: ub, ib: ib, cnt: idx16.length, tex: ti >= 0 ? tex[ti] : null, name: mat.name || '' });
+    }); });
+    var order = [], visit = function(i){ order.push(i); (N[i].children || []).forEach(visit); };
+    visit(root);
+    var jidx = {}; joints.forEach(function(j, k){ jidx[j] = k; });
+    N.forEach(function(n, i){ if (n.name) NAMES[n.name] = i; });
+    M = { g: g, N: N, par: par, joints: joints, ibm: ibm, base: base, prims: prims, order: order, root: root, jidx: jidx, loc: N.map(trs),
+      W: N.map(function(){ return ident(); }), jm: joints.map(function(){ return new Float64Array(16); }) };
+    // localizações
+    M.u = { VP: gl.getUniformLocation(prog, 'uVP'), M: gl.getUniformLocation(prog, 'uM'), tex: gl.getUniformLocation(prog, 'uTex'), tint: gl.getUniformLocation(prog, 'uTint'), has: gl.getUniformLocation(prog, 'uHas') };
+    M.a = { P: gl.getAttribLocation(prog, 'aP'), N: gl.getAttribLocation(prog, 'aN'), T: gl.getAttribLocation(prog, 'aT') };
+    loaded = true; return true;
+  }).catch(function(e){ failed = true; try { console.error('dzSonicGfx', e); } catch(x){} return false; });
+  return loading;
+}
+function B(prefix){   // índice do nó cujo nome começa com o prefixo
+  var k = Object.keys(NAMES); for (var i = 0; i < k.length; i++) if (k[i].indexOf(prefix) === 0) return NAMES[k[i]];
+  return -1;
+}
+
+/* ---------- poses ---------- */
+function leg(a, k){ return [[0, -Math.cos(a), Math.sin(a)], [0, -Math.cos(a - k), Math.sin(a - k)]]; }
+function arm(side, b, e){ var o = side * 0.16; return [norm([o, -Math.cos(b), Math.sin(b)]), norm([o * 0.6, -Math.cos(b + e), Math.sin(b + e)])]; }
+
+/* calcula a pose e devolve as regras por nó: { aim:{nó:[dir,corpoR]}, rot:{nó:R4x4} } */
+function computePose(P){
+  var st = P.st, t = P.t, ph = P.ph, sp = Math.max(0, Math.min(1, P.sp));
+  var A = 0, K = 0, Bs = 0, Boff = 0, E = .2, lean = 0, bob = 0, tap = 0, spin = P.spin || 0, ball = false, up = 0;
+  if (st === 'idle') { A = 0; K = 0; Bs = 0; Boff = .08 + Math.sin(t * 2.2) * .03; E = .35; lean = Math.sin(t * 1.5) * .02; tap = Math.max(0, Math.sin(t * 9.5)) * (Math.floor(t / 2.6) % 3 === 2 ? 0.55 : 0); }
+  else if (st === 'run') { var q = Math.min(1, sp * 1.6); A = .45 + .8 * sp; K = .55 + 1.1 * sp; Bs = .5 - .25 * sp; Boff = -.15 - .75 * sp; E = .55 + .6 * sp; lean = .06 + .45 * sp; bob = Math.abs(Math.sin(ph)) * .03 * q; }
+  else if (st === 'boost') { A = 1.25; K = 1.7; Bs = .12; Boff = -1.35; E = 1.1; lean = .75; bob = 0; }
+  else if (st === 'fall') { A = 0; K = .4; Boff = 1.5; Bs = .25; E = .3; lean = .1; up = 1; }
+  else if (st === 'ball' || st === 'charge' || st === 'stomp') { ball = true; lean = 0; }
+  var rules = { aim: {}, rot: {}, bobY: bob };
+  var Rb = ident();   // rotação do corpo (inclinação + giro de bola), em torno do quadril
+  var hips = B('Hips_'), sp1 = B('Spine_'), sp2 = B('Spine1_'), neck = B('Neck_'), head = B('Head_');
+  var ang = lean + spin;
+  if (ang) Rb = rotAxis(1, 0, 0, ang);
+  rules.Rb = Rb;
+  if (hips >= 0 && ang) rules.rot[hips] = Rb;
+  var lg = function(side, a, k){   // devolve alvos coxa/canela já girados pelo corpo
+    var d = leg(a, k); return [vrot(Rb, d[0]), vrot(Rb, d[1])];
+  };
+  var aL = 0, aR = 0, kL = 0, kR = 0, bL = 0, bR = 0;
+  if (ball) {
+    aL = aR = 2.2; kL = kR = 2.7; bL = bR = 1.1; E = 2.3;
+  } else if (st === 'run' || st === 'boost') {
+    var s1 = Math.sin(ph), s2 = Math.sin(ph + Math.PI);
+    aL = A * s1; aR = A * s2;
+    kL = K * (0.5 - 0.5 * Math.cos(ph + 1.2)); kR = K * (0.5 - 0.5 * Math.cos(ph + 1.2 + Math.PI));
+    bL = -Bs * s1 + Boff; bR = -Bs * s2 + Boff;
+  } else if (st === 'fall') {
+    aL = .35; aR = -.25; kL = .4; kR = .9; bL = bR = Boff;
+  } else {   // idle
+    aL = 0; aR = -tap * .6; kL = 0; kR = tap * .9; bL = bR = Boff;
+  }
+  var tL = lg(1, aL, kL), tR = lg(-1, aR, kR);
+  var T = function(v){ return vrot(Rb, v); };
+  var aLarm = arm(1, bL, E), aRarm = arm(-1, bR, E);
+  // as direções dos membros ficam definidas no espaço do corpo (Rb); o X do Sonic (esquerda) é +X
+  var thL = B('Thigh_L'), thR = B('Thigh_R'), caL = B('Calf_L'), caR = B('Calf_R'), ftL = B('Foot_L'), ftR = B('Foot_R'), toL = B('Toe_L'), toR = B('Toe_R');
+  var uaL = B('UpperArm_L'), uaR = B('UpperArm_R'), faL = B('ForeArm_L'), faR = B('ForeArm_R'), haL = B('Hand_L'), haR = B('Hand_R');
+  var put = function(n, child, dir){ if (n >= 0 && child >= 0) rules.aim[n] = { c: child, d: dir }; };
+  put(thL, caL, tL[0]); put(caL, ftL, tL[1]); put(thR, caR, tR[0]); put(caR, ftR, tR[1]);
+  var ft = function(a, k){ return T(norm([0, -.28 - Math.sin(Math.max(0, a - k)) * .2, 1])); };
+  put(ftL, toL, ft(aL, kL)); put(ftR, toR, ft(aR, kR));
+  put(uaL, faL, T(aLarm[0])); put(faL, haL, T(aLarm[1])); put(uaR, faR, T(aRarm[0])); put(faR, haR, T(aRarm[1]));
+  // cauda e cabeça (movimento secundário)
+  var tail = B('Tail_'), tail1 = B('Tail1_');
+  var wag = Math.sin(t * (st === 'idle' ? 2 : 9)) * (st === 'idle' ? .18 : .35);
+  if (tail >= 0) rules.rot[tail] = rotAxis(0, 1, 0, wag);
+  if (ball) { if (sp1 >= 0) rules.rot[sp1] = rotAxis(1, 0, 0, .8); if (head >= 0) rules.rot[head] = rotAxis(1, 0, 0, .5); }
+  if (head >= 0 && !ball) rules.rot[head] = rotAxis(1, 0, 0, -lean * .55 + (st === 'idle' ? Math.sin(t * .9) * .05 : 0));
+  return rules;
+}
+
+function solve(rules){
+  var N = M.N, W = M.W, loc = M.loc;
+  for (var oi = 0; oi < M.order.length; oi++) {
+    var i = M.order[oi], p = M.par[i];
+    var Wi = mul((p < 0 || !M.inSkel(p)) ? M.base : W[p], loc[i]);
+    var a = rules.aim[i], r = rules.rot[i];
+    if (a) {
+      var cw = mul(Wi, loc[a.c]), pv = [Wi[12], Wi[13], Wi[14]], cp = [cw[12], cw[13], cw[14]];
+      var R = swing([cp[0] - pv[0], cp[1] - pv[1], cp[2] - pv[2]], a.d);
+      Wi = mul(aroundPivot(R, pv), Wi);
+    } else if (r) {
+      Wi = mul(aroundPivot(r, [Wi[12], Wi[13], Wi[14]]), Wi);
+    }
+    W[i] = Wi;
+  }
+}
+
+function skin(){
+  var jm = M.jm, W = M.W;
+  for (var k = 0; k < M.joints.length; k++) {
+    var m = mul(W[M.joints[k]], M.ibm.subarray(k * 16, k * 16 + 16)); jm[k] = m;
+  }
+  M.prims.forEach(function(P){
+    var o = P.out, pos = P.pos, nrm = P.nrm, jj = P.jj, ww = P.ww;
+    for (var v = 0; v < P.n; v++) {
+      var x = pos[v * 3], y = pos[v * 3 + 1], z = pos[v * 3 + 2], nx = nrm[v * 3], ny = nrm[v * 3 + 1], nz = nrm[v * 3 + 2];
+      var ox = 0, oy = 0, oz = 0, qx = 0, qy = 0, qz = 0;
+      for (var c = 0; c < 4; c++) {
+        var w = ww[v * 4 + c]; if (w <= 0) continue;
+        var m = jm[jj[v * 4 + c]];
+        ox += w * (m[0] * x + m[4] * y + m[8] * z + m[12]); oy += w * (m[1] * x + m[5] * y + m[9] * z + m[13]); oz += w * (m[2] * x + m[6] * y + m[10] * z + m[14]);
+        qx += w * (m[0] * nx + m[4] * ny + m[8] * nz); qy += w * (m[1] * nx + m[5] * ny + m[9] * nz); qz += w * (m[2] * nx + m[6] * ny + m[10] * nz);
+      }
+      o[v * 6] = ox; o[v * 6 + 1] = oy; o[v * 6 + 2] = oz; o[v * 6 + 3] = qx; o[v * 6 + 4] = qy; o[v * 6 + 5] = qz;
+    }
+  });
+}
+
+/* ---------- desenho ---------- */
+function render(px, P){
+  if (!loaded) return null;
+  px = Math.max(16, Math.min(256, px | 0));
+  if (cv.width !== px) { cv.width = cv.height = px; }
+  if (!M.inSkel) { var set = {}; M.order.forEach(function(i){ set[i] = 1; }); M.inSkel = function(i){ return !!set[i]; }; }
+  var rules = computePose(P);
+  solve(rules);
+  skin();
+  gl.viewport(0, 0, px, px);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE);
+  gl.useProgram(prog);
+  var yaw = P.yaw || 0, cy = Math.cos(yaw), sy = Math.sin(yaw);
+  var yo = (P.yOff || 0) + (rules.bobY || 0);
+  var model = new Float32Array([cy, 0, -sy, 0, 0, 1, 0, 0, sy, 0, cy, 0, 0, yo, 0, 1]);
+  var vp = m4(persp(0.5, 1, .3, 20), lookAt([0, 0.78, -2.75], [0, 0.5, 0], [0, 1, 0]));
+  gl.uniformMatrix4fv(M.u.VP, false, vp); gl.uniformMatrix4fv(M.u.M, false, model);
+  var tint = P.tint || [0, 0, 0, 0]; gl.uniform4f(M.u.tint, tint[0], tint[1], tint[2], tint[3]);
+  gl.uniform1i(M.u.tex, 0);
+  M.prims.forEach(function(Pm){
+    gl.bindBuffer(gl.ARRAY_BUFFER, Pm.vb); gl.bufferData(gl.ARRAY_BUFFER, Pm.out, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(M.a.P); gl.vertexAttribPointer(M.a.P, 3, gl.FLOAT, false, 24, 0);
+    gl.enableVertexAttribArray(M.a.N); gl.vertexAttribPointer(M.a.N, 3, gl.FLOAT, false, 24, 12);
+    gl.bindBuffer(gl.ARRAY_BUFFER, Pm.ub); gl.enableVertexAttribArray(M.a.T); gl.vertexAttribPointer(M.a.T, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform1f(M.u.has, Pm.tex ? 1 : 0);
+    if (Pm.tex) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, Pm.tex); }
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, Pm.ib);
+    gl.drawElements(gl.TRIANGLES, Pm.cnt, gl.UNSIGNED_SHORT, 0);
+  });
+  var clipY = vp[5] * yo + vp[13], clipW = vp[7] * yo + vp[15], ndcY = clipY / clipW;
+  return { canvas: cv, feet: 1 - (ndcY * .5 + .5) };
+}
+
+window.dzSonicGfx = { load: load, render: render, ready: function(){ return loaded; }, failed: function(){ return failed; }, names: function(){ return NAMES; }, _M: function(){ return M; } };
 })();
 
 </script>
